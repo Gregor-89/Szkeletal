@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.65b - Poprawka krytycznego błędu importu)
+// UI.JS (v0.65b - Poprawka krytycznego TypeError)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -294,6 +294,7 @@ export function gameOver(game, uiData) {
  */
 export function levelUp(game, player, hitTextPool, particlePool, settings, weapons, perkLevels) {
     console.log(`--- LEVEL UP (Poziom ${game.level + 1}) ---`);
+    console.log('[DEBUG-LVLUP-01] Rozpoczęcie levelUp. Sprawdzam PERK_CONFIG:', PERK_CONFIG);
     
     game.xp -= game.xpNeeded;
     game.level += 1;
@@ -328,7 +329,11 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
         
         if (game.running && !game.inMenu) {
             levelUpOverlay.style.display = 'flex';
+            
+            console.log('[DEBUG-LVLUP-02] Wywołuję updateStatsUI.');
             updateStatsUI(game, player, settings, weapons, statsDisplay);
+            
+            console.log('[DEBUG-LVLUP-03] Wywołuję showPerks.');
             showPerks(perkLevels); 
 
         } else {
@@ -345,18 +350,19 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
     const orbital = player.getWeapon(OrbitalWeapon);
     const nova = player.getWeapon(NovaWeapon);
 
-    // POPRAWKA v0.65: Użyj wartości z WEAPON_CONFIG jako fallback i PERK_CONFIG dla max
+    // POPRAWKA v0.65: Zabezpieczony dostęp za pomocą ?. oraz fallback ||
     const stats = [
         { icon: '⭐', label: 'Poziom', value: game.level },
         { icon: '❤️', label: 'Zdrowie', value: `${Math.floor(game.health)}/${game.maxHealth}` },
         { icon: '🏃', label: 'Prędkość gracza', value: player.speed.toFixed(2) },
         
-        { icon: '💥', label: 'Obrażenia', value: `${autoGun ? autoGun.bulletDamage.toFixed(0) : WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE} / ${PERK_CONFIG.damage.max + 1}` },
+        // Zabezpieczony dostęp do max
+        { icon: '💥', label: 'Obrażenia', value: `${autoGun ? autoGun.bulletDamage.toFixed(0) : WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE} / ${ (PERK_CONFIG.damage?.max || 6) + 1}` },
         { icon: '🔫', label: 'Szybkostrzelność', value: `${autoGun ? (1000 / autoGun.fireRate).toFixed(2) : (1000 / WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE).toFixed(2)}/s` },
-        { icon: '🎯', label: 'Multishot', value: `${autoGun ? autoGun.multishot : '0'} / ${PERK_CONFIG.multishot.max}` },
-        { icon: '➡️', label: 'Przebicie', value: `${autoGun ? autoGun.pierce : '0'} / ${PERK_CONFIG.pierce.max}` },
-        { icon: '🌀', label: 'Orbital', value: `${orbital ? orbital.level : '0'} / ${PERK_CONFIG.orbital.max}` },
-        { icon: '💫', label: 'Nova', value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova.max}` }
+        { icon: '🎯', label: 'Multishot', value: `${autoGun ? autoGun.multishot : '0'} / ${PERK_CONFIG.multishot?.max || 4}` },
+        { icon: '➡️', label: 'Przebicie', value: `${autoGun ? autoGun.pierce : '0'} / ${PERK_CONFIG.pierce?.max || 4}` },
+        { icon: '🌀', label: 'Orbital', value: `${orbital ? orbital.level : '0'} / ${PERK_CONFIG.orbital?.max || 5}` },
+        { icon: '💫', label: 'Nova', value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova?.max || 5}` }
     ];
     
     stats.forEach(s => {
@@ -374,9 +380,8 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
 }
 
 export function showPerks(perkLevels) {
-    console.log('[showPerks] Rozpoczynam. Filtruję dostępne perki...');
-    console.log('[showPerks] Otrzymane perkLevels:', JSON.parse(JSON.stringify(perkLevels)));
-
+    console.log('[DEBUG-SHOWPERKS-01] Rozpoczynam showPerks.');
+    
     // POPRAWKA v0.65: Filtr używa teraz 'perk.max' (który jest pobierany z PERK_CONFIG w perks.js)
     const avail = perkPool.filter(p => (perkLevels[p.id] || 0) < p.max);
     const picks = [];
@@ -417,7 +422,6 @@ export function showPerks(perkLevels) {
     }
 }
 
-// POPRAWKA v0.65: Używa UI_CONFIG.RESUME_TIMER zamiast 1.5s
 export function pickPerk(perk, game, perkLevels, settings, weapons, player) {
     if (!perk) {
         console.log('[pickPerk] Wybrano "Kontynuuj" (max level). Wznawiam grę.');

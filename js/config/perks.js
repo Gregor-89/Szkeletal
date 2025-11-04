@@ -1,5 +1,5 @@
 // ==============
-// PERKS.JS (v0.65 - Centralizacja Danych)
+// PERKS.JS (v0.65 - Centralizacja Danych - Poprawka stabilności)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
@@ -13,11 +13,12 @@ import { PERK_CONFIG } from './gameData.js';
  * aby mogły wchodzić w interakcję z nowym systemem broni gracza.
  * * POPRAWKA v0.65: Wszystkie wartości 'max' i 'value' są
  * pobierane dynamicznie z pliku gameData.js (z PERK_CONFIG).
+ * POPRAWKA STABILNOŚCI: Dodano fallback dla 'max' w przypadku problemów z inicjalizacją modułów.
  */
 export const perkPool = [
     {
         id: 'firerate', name: 'Szybszy ostrzał', desc:'+15% szybkostrzelności', 
-        max: PERK_CONFIG.firerate.max, 
+        max: PERK_CONFIG.firerate?.max || 5, 
         color:'#90caf9', emoji:'🔫',
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
@@ -30,7 +31,7 @@ export const perkPool = [
     },
     {
         id: 'damage', name: 'Silniejsze pociski', desc:'+1 obrażeń pocisków', 
-        max: PERK_CONFIG.damage.max, 
+        max: PERK_CONFIG.damage?.max || 6, 
         color:'#ef5350', emoji:'💥',
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
@@ -43,7 +44,7 @@ export const perkPool = [
     },
     {
         id: 'multishot', name: 'Multishot', desc:'+1 pocisk i większy rozrzut', 
-        max: PERK_CONFIG.multishot.max, 
+        max: PERK_CONFIG.multishot?.max || 4, 
         color:'#ffca28', emoji:'🎯',
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
@@ -56,7 +57,7 @@ export const perkPool = [
     },
     {
         id: 'pierce', name: 'Przebicie', desc:'+1 przebicia pocisków', 
-        max: PERK_CONFIG.pierce.max, 
+        max: PERK_CONFIG.pierce?.max || 4, 
         color:'#ab47bc', emoji:'➡️',
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
@@ -69,7 +70,7 @@ export const perkPool = [
     },
     {
         id: 'orbital', name: 'Orbital', desc:'Orbitujące ostrza zadają obrażenia', 
-        max: PERK_CONFIG.orbital.max, 
+        max: PERK_CONFIG.orbital?.max || 5, 
         color:'#80deea', emoji:'🌀',
         apply: (state, perk) => { 
             state.player.addWeapon(OrbitalWeapon, perk);
@@ -77,7 +78,7 @@ export const perkPool = [
     },
     {
         id: 'nova', name: 'Nova', desc:'Cykliczny wybuch pocisków wokół postaci', 
-        max: PERK_CONFIG.nova.max, 
+        max: PERK_CONFIG.nova?.max || 5, 
         color:'#ffd54f', emoji:'💫',
         apply: (state, perk) => { 
             state.player.addWeapon(NovaWeapon, perk);
@@ -85,7 +86,7 @@ export const perkPool = [
     },
     {
         id: 'speed', name: 'Szybkość ruchu', desc:'+10% prędkości gracza', 
-        max: PERK_CONFIG.speed.max, 
+        max: PERK_CONFIG.speed?.max || 4, 
         color:'#66bb6a', emoji:'🏃',
         apply: (state, perk) => { 
             // Używamy wartości z konfiguracji
@@ -94,7 +95,7 @@ export const perkPool = [
     },
     {
         id: 'pickup', name: 'Zasięg zbierania', desc:'+40% zasięgu pickupów', 
-        max: PERK_CONFIG.pickup.max, 
+        max: PERK_CONFIG.pickup?.max || 3, 
         color:'#b39ddb', emoji:'🧲',
         apply: (state, perk) => { 
             // Używamy wartości z konfiguracji
@@ -103,7 +104,7 @@ export const perkPool = [
     },
     {
         id: 'health', name: 'Zdrowie +', desc:'+20 maks. zdrowia i leczenie', 
-        max: PERK_CONFIG.health.max, 
+        max: PERK_CONFIG.health?.max || 3, 
         color:'#e57373', emoji:'❤️',
         apply: (state, perk) => {
             // Używamy wartości z konfiguracji

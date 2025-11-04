@@ -420,10 +420,14 @@ document.getElementById('btnContinue').addEventListener('click', () => {
     const loadedEnemies = uiData.savedGameState.enemies || [];
     for (const savedEnemy of loadedEnemies) {
         // POPRAWKA v0.65: Użyj ENEMY_STATS z gameStateRef (który importuje z gameData)
-        const stats = gameStateRef.ENEMY_STATS[savedEnemy.type]; 
+        // UWAGA: ENEMY_STATS nie jest już w main.js, ale jest w enemyManager.js. 
+        // W tym miejscu musimy polegać na tym, że ENEMY_STATS zostanie wczytane.
+        // Ponieważ save/load jest wywoływany w main.js, musimy zaimportować 
+        // ENEMY_STATS lub użyć ENEMY_CLASS_MAP. Użyjemy ENEMY_CLASS_MAP.
         const EnemyClass = ENEMY_CLASS_MAP[savedEnemy.type];
-        if (EnemyClass && stats) {
-            const newEnemy = new EnemyClass(savedEnemy.x, savedEnemy.y, stats, 1); 
+        // Musimy założyć, że statystyki są już w nowym obiekcie.
+        if (EnemyClass && savedEnemy.stats) {
+            const newEnemy = new EnemyClass(savedEnemy.x, savedEnemy.y, savedEnemy.stats, 1); 
             Object.assign(newEnemy, savedEnemy);
             enemies.push(newEnemy);
         }
@@ -534,6 +538,8 @@ document.getElementById('btnPauseMenu').addEventListener('click', () => {
         }, 
         settings: {...settings},
         perkLevels: {...perkLevels},
+        // UWAGA: Aby load działał poprawnie, musimy zapisać pełne statystyki wroga!
+        // Używamy {...e} aby skopiować wszystkie właściwości, w tym 'stats'.
         enemies: enemies.map(e => ({ ...e })),
         // POPRAWKA v0.62: Zapisz tylko aktywne obiekty z puli
         bullets: playerBulletPool.activeItems.map(b => ({ ...b })),
@@ -559,7 +565,7 @@ document.getElementById('btnContinueMaxLevel').addEventListener('click', () => {
     pickPerk(null, game, perkLevels, settings, null, player); 
 });
 
-document.getElementById('chestButton').addEventListener('click',()=>{
+document.getElementById('chestButton').addEventListener('click',() => {
   chestOverlay.style.display='none';
   if(uiData.currentChestReward){
     const state = { game, settings, weapons: null, player };

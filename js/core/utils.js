@@ -1,5 +1,5 @@
 // ==============
-// UTILS.JS (v0.65 - Centralizacja Danych)
+// UTILS.JS (v0.65 - Centralizacja Danych - Poprawka stabilności)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
@@ -49,12 +49,24 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
     }
 }
 
-// POPRAWKA v0.65: Wszystkie wartości pobierane z EFFECTS_CONFIG
+// POPRAWKA v0.65: Czas życia pobierany z EFFECTS_CONFIG
 export function spawnConfetti(particlePool, cx, cy) {
     const cols = ['#ff5252', '#ffca28', '#66bb6a', '#42a5f5', '#ab47bc', '#e91e63', '#9c27b0', '#00bcd4'];
     
-    // Pobierz konfigurację konfetti
-    const c = EFFECTS_CONFIG.CONFETTI;
+    // POPRAWKA KRYTYCZNA: Defensywny dostęp do konfiguracji konfetti.
+    const defaultConfig = {
+        CONFETTI_COUNT: 80, 
+        CONFETTI_LIFE: 0.7, 
+        CONFETTI_SPEED_MIN: 180, 
+        CONFETTI_SPEED_MAX: 420, 
+        CONFETTI_INITIAL_UP_VELOCITY: -210, 
+        CONFETTI_GRAVITY: 360, 
+        CONFETTI_FRICTION: 1.0, 
+        CONFETTI_ROTATION_SPEED: 12
+    };
+    
+    // Pobierz konfigurację konfetti, używając fallbacka
+    const c = EFFECTS_CONFIG.CONFETTI || defaultConfig;
     
     const numParticles = c.CONFETTI_COUNT;
     const maxLife = c.CONFETTI_LIFE;

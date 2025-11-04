@@ -1,5 +1,5 @@
 // ==============
-// WEAPON.JS (v0.65 - Pełna centralizacja danych)
+// WEAPON.JS (v0.65 - Pełna centralizacja danych - Poprawka stabilności)
 // Lokalizacja: /js/config/weapon.js
 // ==============
 
@@ -64,11 +64,16 @@ class Weapon {
 export class AutoGun extends Weapon {
     constructor(player) {
         super(player);
-        // POPRAWKA v0.65: Użyj wartości z WEAPON_CONFIG
-        this.fireRate = WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE;
-        this.bulletDamage = WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE;
-        this.bulletSpeed = WEAPON_CONFIG.AUTOGUN.BASE_SPEED;
-        this.bulletSize = WEAPON_CONFIG.AUTOGUN.BASE_SIZE;
+        
+        // POPRAWKA STABILNOŚCI: Dodanie defensywnego fallbacka do konfiguracji
+        const config = WEAPON_CONFIG.AUTOGUN || {};
+        
+        // POPRAWKA v0.65: Użyj wartości z WEAPON_CONFIG lub wartości domyślnych (500, 1, 864, 3)
+        this.fireRate = config.BASE_FIRE_RATE || 500;
+        this.bulletDamage = config.BASE_DAMAGE || 1;
+        this.bulletSpeed = config.BASE_SPEED || 864;
+        this.bulletSize = config.BASE_SIZE || 3;
+        
         this.multishot = 0;
         this.pierce = 0;
         
@@ -81,18 +86,21 @@ export class AutoGun extends Weapon {
     updateStats(perk) {
         if (!perk) return; // Wywołane przez addWeapon, a nie przez apply
         
+        // Zabezpieczenie przed brakiem konfiguracji perka
+        const config = PERK_CONFIG[perk.id] || {};
+        
         switch (perk.id) {
             case 'firerate':
-                this.fireRate *= PERK_CONFIG.firerate.value;
+                this.fireRate *= config.value;
                 break;
             case 'damage':
-                this.bulletDamage += PERK_CONFIG.damage.value;
+                this.bulletDamage += config.value;
                 break;
             case 'multishot':
-                this.multishot += PERK_CONFIG.multishot.value;
+                this.multishot += config.value;
                 break;
             case 'pierce':
-                this.pierce += PERK_CONFIG.pierce.value;
+                this.pierce += config.value;
                 break;
         }
     }
@@ -171,11 +179,11 @@ export class OrbitalWeapon extends Weapon {
     
     // POPRAWKA v0.65: Skalowanie pobierane z PERK_CONFIG
     updateStats() {
-        const c = PERK_CONFIG.orbital;
+        const c = PERK_CONFIG.orbital || {}; // POPRAWKA STABILNOŚCI: Dodanie defensywnego fallbacka
         
-        this.damage = c.DAMAGE_BASE + Math.floor(this.level / c.DAMAGE_LEVEL_DIVISOR);
-        this.radius = (c.RADIUS_BASE + c.RADIUS_PER_LEVEL * this.level) * c.RADIUS_MULTIPLIER;
-        this.speed = c.SPEED_BASE + c.SPEED_PER_LEVEL * this.level;
+        this.damage = (c.DAMAGE_BASE || 1) + Math.floor(this.level / (c.DAMAGE_LEVEL_DIVISOR || 2));
+        this.radius = ((c.RADIUS_BASE || 28) + (c.RADIUS_PER_LEVEL || 6) * this.level) * (c.RADIUS_MULTIPLIER || 1.5);
+        this.speed = (c.SPEED_BASE || 1.2) + (c.SPEED_PER_LEVEL || 0.2) * this.level;
         
         // Ta logika jest poprawna - dodaje nowy orbital, jeśli poziom jest wyższy niż liczba itemów
         while (this.items.length < this.level) {
@@ -278,10 +286,10 @@ export class NovaWeapon extends Weapon {
     
     // POPRAWKA v0.65: Skalowanie pobierane z PERK_CONFIG
     updateStats() {
-        const c = PERK_CONFIG.nova;
+        const c = PERK_CONFIG.nova || {}; // POPRAWKA STABILNOŚCI: Dodanie defensywnego fallbacka
         
-        this.cooldown = Math.max(c.COOLDOWN_MIN, (c.COOLDOWN_BASE - c.COOLDOWN_REDUCTION_PER_LEVEL * this.level));
-        this.bulletCount = Math.min(c.COUNT_MAX, c.COUNT_BASE + c.COUNT_PER_LEVEL * this.level);
+        this.cooldown = Math.max((c.COOLDOWN_MIN || 0.6), ((c.COOLDOWN_BASE || 2.2) - (c.COOLDOWN_REDUCTION_PER_LEVEL || 0.3) * this.level));
+        this.bulletCount = Math.min((c.COUNT_MAX || 24), (c.COUNT_BASE || 8) + (c.COUNT_PER_LEVEL || 2) * this.level);
         
         if (this.timer === 0) { 
              this.timer = this.cooldown;
@@ -297,10 +305,11 @@ export class NovaWeapon extends Weapon {
             
             const autoGun = this.player.getWeapon(AutoGun);
             // POPRAWKA v0.65: Użyj wartości z WEAPON_CONFIG jako fallback
-            const dmg = autoGun ? autoGun.bulletDamage : WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE;
+            const fallbackConfig = WEAPON_CONFIG.AUTOGUN || {};
+            const dmg = autoGun ? autoGun.bulletDamage : (fallbackConfig.BASE_DAMAGE || 1);
             const pierce = autoGun ? autoGun.pierce : 0;
-            const speed = autoGun ? autoGun.bulletSpeed : WEAPON_CONFIG.AUTOGUN.BASE_SPEED; // Już w px/s
-            const size = autoGun ? autoGun.bulletSize : WEAPON_CONFIG.AUTOGUN.BASE_SIZE;
+            const speed = autoGun ? autoGun.bulletSpeed : (fallbackConfig.BASE_SPEED || 864); // Już w px/s
+            const size = autoGun ? autoGun.bulletSize : (fallbackConfig.BASE_SIZE || 3);
 
             for (let i = 0; i < this.bulletCount; i++) {
                 const ang = (i / this.bulletCount) * Math.PI * 2;
