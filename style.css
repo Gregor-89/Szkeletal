@@ -1,0 +1,279 @@
+:root { --ui-panel:#2b2b2b; --ui-text:#fff; --ui-accent:#4caf50; --bar-bg:#333; --bar-fill:#4fc3f7; }
+body { margin:0; background:#1a1a1a; color:#fff; font-family:Arial, sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+#gameContainer { text-align:center; position:relative; }
+#title { margin:10px 0 6px 0; font-size:20px; letter-spacing:0.5px; }
+#xpBarOuter { position:relative; width:800px; max-width:100vw; height:12px; background:var(--bar-bg); border:1px solid #555; border-radius:6px; overflow:hidden; margin:0 auto 8px auto; }
+#xpBarFill { position:absolute; left:0; top:0; bottom:0; width:0%; background:linear-gradient(90deg, #4fc3f7, #81c784); transition:width .25s ease; }
+#gameCanvas { border:2px solid #444; background:linear-gradient(45deg,#2d2d2d 25%,#3d3d3d 25%,#3d3d3d 50%,#2d2d2d 50%,#2d2d2d 75%,#3d3d3d 75%,#3d3d3d); background-size:40px 40px; touch-action:none; }
+#gameInfo { margin-top:10px; display:flex; justify-content:space-between; width:800px; max-width:100vw; flex-wrap:wrap; gap:6px; }
+.stat { background:#333; padding:8px 10px; border-radius:8px; min-width:90px; flex:1; position:relative; font-size:12px; }
+.stat-progress { position:absolute; bottom:0; left:0; height:3px; background:linear-gradient(90deg, #4fc3f7, #81c784); border-radius:0 0 8px 8px; transition:width .3s ease; }
+
+/* POPRAWKA (Problem 3): Nadpisanie koloru paska postępu HP */
+#healthProgress {
+  background: linear-gradient(90deg, #f44336 0%, #ffa726 50%, #66bb6a 100%);
+}
+
+/* POPRAWKA (Problem 4): Użycie flexboxa do idealnego centrowania emoji */
+.stat-icon { 
+  display:inline-flex; /* Zmienione z inline-block */
+  align-items:center; /* Dodane centrowanie w pionie */
+  justify-content:center; /* Dodane centrowanie w poziomie */
+  width:16px; 
+  height:16px; 
+  margin-right:4px; 
+  border-radius:3px; 
+  vertical-align:middle; 
+  font-size:12px; 
+  line-height:1; /* Zapobiega problemom z wysokością linii emoji */
+}
+
+.overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.7); z-index:50; }
+.panel { background:var(--ui-panel); border:2px solid #555; border-radius:10px; padding:18px; width:min(95vw, 760px); box-shadow:0 10px 30px rgba(0,0,0,.6); max-height:90vh; overflow-y:auto; }
+
+/* Przezroczystość z v0.38 */
+#pauseOverlay, #resumeOverlay {
+  background: rgba(0, 0, 0, 0.10);
+}
+#pauseOverlay .panel, #resumeOverlay .panel {
+  background: rgba(43, 43, 43, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.panel h3 { margin:0 0 12px 0; }
+.btn { background:var(--ui-accent); color:#fff; border:none; padding:12px 20px; border-radius:8px; cursor:pointer; font-weight:bold; margin:4px; }
+.btn:hover { background:#45a049; }
+.btn-secondary { background:#607d8b; }
+.btn-secondary:hover { background:#546e7a; }
+.btn-danger { background:#f44336; }
+.btn-danger:hover { background:#e53935; }
+.btn-warning { background:#ff9800; }
+.btn-warning:hover { background:#fb8c00; }
+.row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.option { background:#3a3a3a; border:2px solid #666; border-radius:6px; padding:8px 10px; cursor:pointer; }
+
+.tabs { display:flex; gap:5px; margin-bottom:15px; border-bottom:2px solid #444; }
+.tab { padding:10px 20px; background:#333; border:none; color:#aaa; cursor:pointer; border-radius:8px 8px 0 0; font-weight:bold; }
+.tab.active { background:#4caf50; color:#fff; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+.dev-section { background:#1a1a1a; padding:12px; border-radius:6px; margin-bottom:12px; border:1px solid #444; }
+.dev-section h4 { margin:0 0 10px 0; color:#4caf50; font-size:14px; }
+.dev-control { margin:8px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.dev-control label { min-width:120px; font-size:13px; }
+.dev-control input[type="number"], .dev-control select { background:#333; color:#fff; border:1px solid #555; padding:6px; border-radius:4px; }
+.dev-control input[type="checkbox"] { width:18px; height:18px; }
+
+#guideContent { font-size:14px; text-align:left; line-height:1.6; }
+#guideContent h4 { margin:15px 0 8px; color:#81c784; }
+#guideContent ul { margin:6px 0 10px 16px; }
+#guideContent li { margin-bottom:4px; }
+.icon { display:inline-block; vertical-align:middle; margin-right:8px; }
+.ico-circle { width:14px; height:14px; border-radius:50%; border:2px solid #fff; }
+.ico-square { width:14px; height:14px; border:2px solid #111; }
+.ico-elite { position:relative; }
+.ico-elite::after { content:""; position:absolute; left:-1px; right:-1px; bottom:-6px; height:4px; background:#0f0; border:1px solid #111; }
+.detail { color:#aaa; font-size:12px; margin-left:4px; }
+
+#perks { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+.perk { background:#2f2f2f; border:2px solid #666; border-radius:10px; padding:12px; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.35); position:relative; }
+.perk:hover { transform: translateY(-2px); }
+.perk .badge { position:absolute; right:10px; top:10px; background:#111; color:#fff; padding:2px 6px; border-radius:6px; font-size:12px; border:1px solid #555; }
+.perk .picon { display:inline-block; width:16px; height:16px; border-radius:4px; border:1px solid #999; margin-right:6px; }
+.picon-emoji { font-size: 18px; vertical-align: middle; margin-right: 6px; }
+.perk h4 { margin:0 0 6px 0; font-size:16px; display:flex; align-items:center; gap:6px; }
+.perk p { margin:0; font-size:13px; color:#ddd; }
+
+#statsDisplay, #statsDisplayPause {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:10px;
+  margin-top:12px;
+  background:#1a1a1a;
+  border-radius:8px;
+  padding:12px;
+  border:1px solid #444;
+}
+.stat-item {
+  background:#2a2a2a;
+  padding:10px;
+  border-radius:6px;
+  border-left:3px solid #4CAF50;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.stat-item-icon {
+  width:32px;
+  height:32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+}
+.stat-item-content {
+  flex:1;
+}
+.stat-item-label {
+  font-size:11px;
+  color:#999;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.stat-item-value {
+  font-size:16px;
+  font-weight:bold;
+  color:#fff;
+}
+
+.chest-reward {
+  text-align:center;
+  margin:20px 0;
+}
+.chest-reward-icon {
+  font-size:72px;
+  margin-bottom:10px;
+  animation: chestPulse 1s ease-in-out infinite;
+}
+@keyframes chestPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+.chest-reward-name {
+  font-size:24px;
+  font-weight:bold;
+  color:#FFD700;
+  margin:10px 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.chest-reward-desc {
+  font-size:16px;
+  color:#ddd;
+  margin:10px 0;
+  line-height:1.5;
+}
+.chest-reward-level {
+  background:#333;
+  display:inline-block;
+  padding:8px 16px;
+  border-radius:20px;
+  margin-top:10px;
+  border:2px solid #555;
+}
+.chest-reward-level-bar {
+  width:200px;
+  height:8px;
+  background:#222;
+  border-radius:4px;
+  overflow:hidden;
+  margin:10px auto;
+}
+.chest-reward-level-fill {
+  height:100%;
+  background:linear-gradient(90deg, #4fc3f7, #81c784);
+  transition: width 0.5s ease;
+}
+#chestOverlay .panel {
+  overflow: hidden;
+}
+
+#joystickZone { position:absolute; right:10px; bottom:10px; width:140px; height:140px; touch-action:none; z-index:40; }
+#joystickZone.off { display:none; }
+#joystickBase, #joystick { position:absolute; border-radius:50%; opacity:.7; pointer-events:none; }
+#joystickBase { width:120px; height:120px; left:10px; top:10px; background:#222; border:3px solid #888; }
+#joystick { width:60px; height:60px; left:40px; top:40px; background:#4CAF50; border:3px solid #fff; }
+
+#resumeOverlay .panel { text-align:center; }
+#resumeText { font-size:24px; letter-spacing:1px; }
+
+#bonusPanel {
+  position: absolute;
+  top: 9px;
+  right: 21px;
+  z-index: 42;
+  display: flex;
+  gap: 13px;
+  font-size: 15px;
+}
+.bonus-emoji { font-size: 16px; vertical-align: middle; margin-right: 5px; }
+.bonus-icon { width: 20px; height: 20px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align:middle; }
+.bonus-magnet { background: #66bb6a; border:2px solid #fff; box-shadow: 0 0 4px #b2ff59;}
+.bonus-shield { background: #64b5f6; border:2px solid #fff; box-shadow: 0 0 5px #bbdefb;}
+.bonus-speed  { background: #ffd600; border:2px solid #fff; box-shadow: 0 0 5px #ffee58;}
+.bonus-freeze { background: #29b6f6; border:2px solid #fff; box-shadow: 0 0 5px #81d4fa;}
+.bonus-txt   {font-size:13px; font-weight:bold; color:#fff; padding-left:2px;}
+
+.hp-mini { position: absolute; pointer-events: none; z-index: 10; }
+.hp-mini-inner { width: 64px; height: 6px; background: #222; border: 1.5px solid #333; border-radius: 4px; overflow:hidden; margin-top: -8px; }
+.hp-mini-bar { height: 100%; border-radius: 4px 0 0 4px; background: linear-gradient(90deg, #f44336 0%, #ffa726 50%, #66bb6a 100%); transition: width 0.22s cubic-bezier(.84,.04,.13,.83); }
+
+#playerHPBarOuter { width: 190px; height: 14px; margin: 0 auto 0 auto; border-radius: 7px; background: #323232; border: 2px solid #555; overflow: hidden; position: relative; margin-bottom:2px; }
+#playerHPBarInner {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 1%;
+  background: linear-gradient(90deg, #f44336 0%, #ffa726 50%, #66bb6a 100%);
+  transition: width 0.22s cubic-bezier(.84,.04,.13,.83);
+}
+
+/* POPRAWKA 1, 2, 3: Style dla tekstu paska HP i XP (centrowanie, emoji) */
+#playerHPBarTxt, #xpBarTxt {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  top: 0;
+  bottom: 0;
+  color: #fff;
+  font-weight: bold;
+  font-size: 11px; /* Lekko zmniejszone, aby zmieścić emoji */
+  letter-spacing: 0.5px;
+  text-align: center;
+  text-shadow: 0 1px 3px #222b;
+  z-index: 5;
+  
+  /* POPRAWKA 2: Użycie flexboxa do idealnego centrowania */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1; /* Zapobiega problemom z wysokością linii */
+}
+
+#scoresTable { background:#1f1f1f; border-radius:8px; padding:12px; margin-top:12px; border:1px solid #555; }
+#scoresTable table { width:100%; border-collapse:collapse; }
+#scoresTable th, #scoresTable td { padding:6px 12px; text-align:left; border-bottom:1px solid #444; }
+#scoresTable th { background:#333; font-weight:bold; }
+#scoresTable tr:nth-child(even) { background:#252525; }
+
+/* POPRAWKA 4: Style dla przycisku czyszczenia wyników */
+.scores-container {
+  position: relative;
+}
+.btn-clear-scores {
+  position: absolute;
+  top: -2px; /* Dopasowanie do pozycji 'h4' */
+  right: 0;
+  padding: 6px 10px; /* Mniejszy przycisk */
+  font-size: 11px;
+  opacity: 0.7;
+}
+.btn-clear-scores:hover {
+  opacity: 1;
+}
+
+/* POPRAWKA 5: Styl podświetlenia nowego wyniku */
+.highlight-score {
+  background-color: #4CAF50 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+#instructions { margin-top:10px; font-size:12px; color:#aaa; padding:8px; background:#222; border-radius:6px; border:1px solid #333; }
+
+@media (max-width:850px){
+  #xpBarOuter{width:95vw;}
+  #gameCanvas{width:100vw!important; height:70vw!important; max-width:800px; max-height:600px;}
+  #gameInfo{width:95vw; max-width:98vw;}
+  #perks{grid-template-columns:1fr;}
+  #playerHPBarOuter{width:95vw;}
+  .stat { font-size:11px; min-width:70px; padding:6px 8px; }
+  .stat-icon { width:14px; height:14px; font-size:11px; }
+}
