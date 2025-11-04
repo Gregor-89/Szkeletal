@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.62 - Viewport Culling i Pula Obiektów)
+// DRAW.JS (v0.63b - Optymalizacja setFont)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -126,32 +126,53 @@ export function draw(ctx, canvas, game, stars, trails_deprecated, player, enemie
     }
 
     // POPRAWKA v0.62: Rysowanie tekstów obrażeń (z puli)
+    
+    // POPRAWKA v0.63b: Przeniesiono ustawienia fontu POZA pętlę!
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = 4;
+            
     for (let i = hitTexts.length - 1; i >= 0; i--) {
         const ht = hitTexts[i];
         // POPRAWKA v0.62e: Użyj maxLife (w sekundach) zamiast 40 (klatek)
         ctx.globalAlpha = Math.max(0, ht.life / ht.maxLife); 
         ctx.fillStyle = ht.color;
-        ctx.font = 'bold 14px Arial';
-        ctx.textAlign = 'center';
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.strokeText(ht.text, ht.x, ht.y);
+        // ctx.font = 'bold 14px Arial';     // USUNIĘTE (Przeniesione wyżej)
+        // ctx.textAlign = 'center';        // USUNIĘTE (Przeniesione wyżej)
+        
+        // POPRAWKA v0.63: Zastąp strokeText() cieniem
+        // ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; // USUNIĘTE (Przeniesione wyżej)
+        // ctx.shadowBlur = 4;                     // USUNIĘTE (Przeniesione wyżej)
+        // ctx.strokeStyle = '#000'; // USUNIĘTE (Wolne)
+        // ctx.lineWidth = 2;       // USUNIĘTE (Wolne)
+        // ctx.strokeText(ht.text, ht.x, ht.y); // USUNIĘTE (Wolne)
         ctx.fillText(ht.text, ht.x, ht.y);
     }
-    ctx.globalAlpha = 1; // Zresetuj alfę po tekstach
+    // POPRAWKA v0.63: Zresetuj alfę i cień po pętli
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
 
     // POPRAWKA v0.62: Usunięto pętlę 'confettis'. Jest teraz w 'particles'.
     
     // Rysowanie licznika FPS
     if (showFPS) {
+        // POPRAWKA v0.63b: Przeniesiono ustawienia fontu na początek bloku
         ctx.fillStyle = (fps >= 55) ? '#66bb6a' : (fps >= 40 ? '#ffca28' : '#ef5350');
         ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'left';
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
+        
+        // POPRAWKA v0.63: Zastąp strokeText() cieniem
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+        ctx.shadowBlur = 4;
+        // ctx.strokeStyle = '#000'; // USUNIĘTE (Wolne)
+        // ctx.lineWidth = 2;       // USUNIĘTE (Wolne)
+        
         const fpsText = `${fps} FPS`;
-        ctx.strokeText(fpsText, 10, 20);
+        // ctx.strokeText(fpsText, 10, 20); // USUNIĘTE (Wolne)
         ctx.fillText(fpsText, 10, 20);
+        
+        ctx.shadowBlur = 0; // Zresetuj cień
     }
 
     ctx.restore(); // Przywróć stan sprzed drżenia ekranu

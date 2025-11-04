@@ -1,5 +1,5 @@
 // ==============
-// PICKUP.JS (v0.56 - Integracja grafiki)
+// PICKUP.JS (v0.63 - Optymalizacja strokeText)
 // Lokalizacja: /js/entities/pickup.js
 // ==============
 
@@ -106,10 +106,15 @@ export class Pickup {
       ctx.fillStyle = '#fff';
       ctx.font = '12px Arial';
       ctx.textAlign = 'center';
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 3;
+      
+      // POPRAWKA v0.63: Zastąp strokeText() cieniem dla wydajności
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+      ctx.shadowBlur = 4;
+      // ctx.strokeStyle = '#000'; // USUNIĘTE (Wolne)
+      // ctx.lineWidth = 3;       // USUNIĘTE (Wolne)
+      
       const label = getPickupLabel(this.type);
-      ctx.strokeText(label, this.x, this.y + 20);
+      // ctx.strokeText(label, this.x, this.y + 20); // USUNIĘTE (Wolne)
       ctx.fillText(label, this.x, this.y + 20);
     }
     
