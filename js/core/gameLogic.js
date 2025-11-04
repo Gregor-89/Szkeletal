@@ -1,0 +1,114 @@
+// ==============
+// GAMELOGIC.JS (v0.62 - Pula Obiektów dla Gemów i Efektów)
+// Lokalizacja: /js/core/gameLogic.js
+// ==============
+
+import { keys, jVec } from '../ui/input.js';
+import { spawnEnemy, spawnElite } from '../managers/enemyManager.js';
+import { applyPickupSeparation, spawnConfetti } from './utils.js';
+import { checkCollisions } from '../managers/collisions.js';
+
+/**
+ * Główna funkcja aktualizująca stan gry, wywoływana z pętli w main.js.
+ */
+export function updateGame(state, dt, levelUpFn, openChestFn) {
+    const { 
+        game, player, settings, canvas,
+        enemies, eBullets, bullets, gems, pickups, stars, // 'bullets', 'eBullets', 'gems' to teraz 'activeItems'
+        particles, hitTexts, chests, particlePool // 'particles' i 'hitTexts' to 'activeItems'
+    } = state;
+
+    const playerMoved = player.update(dt, game, keys, jVec(), canvas);
+
+    // POPRAWKA v0.62: Użyj puli cząsteczek do tworzenia śladów
+    if (playerMoved && Math.random() < 0.15) {
+        if (particlePool) {
+            const particle = particlePool.get();
+            if (particle) {
+                // init(x, y, vx, vy, life, color, gravity, friction, size)
+                particle.init(player.x, player.y, 0, 0, 0.25, player.color, 0, (1.0 - 0.95), 6); // 0.25s życia
+            }
+        }
+    }
+
+    if (game.magnet) { game.magnetT -= dt; if (game.magnetT <= 0) game.magnet = false; }
+    if (game.shield) { game.shieldT -= dt; if (game.shieldT <= 0) game.shield = false; }
+    if (game.speedT > 0) game.speedT -= dt;
+    if (game.freezeT > 0) game.freezeT -= dt;
+
+    const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
+    if (Math.random() < spawnRate && enemies.length < settings.maxEnemies) {
+        state.enemyIdCounter = spawnEnemy(enemies, game, canvas, state.enemyIdCounter);
+    }
+
+    const timeSinceLastElite = game.time - settings.lastElite;
+    if (timeSinceLastElite > (settings.eliteInterval / 1000) / (game.hyper ? 1.15 : 1)) {
+        state.enemyIdCounter = spawnElite(enemies, game, canvas, state.enemyIdCounter);
+        settings.lastElite = game.time;
+    }
+
+    // --- Pętle Aktualizacji (Update Loops) ---
+
+    // Aktualizuj wrogów (nadal zwykła tablica)
+    for (const e of enemies) {
+        e.update(dt, player, game, state); 
+        e.applySeparation(dt, enemies);
+    }
+    
+    // Aktualizuj pociski gracza (z puli)
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        bullets[i].update(dt);
+    }
+    // Aktualizuj pociski wrogów (z puli)
+    for (let i = eBullets.length - 1; i >= 0; i--) {
+        eBullets[i].update(dt);
+    }
+    // Aktualizuj gemy (z puli)
+    for (let i = gems.length - 1; i >= 0; i--) {
+        gems[i].update(player, game, dt);
+    }
+    // POPRAWKA v0.62: Aktualizuj cząsteczki (z puli)
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update(dt);
+    }
+    // POPRAWKA v0.62: Aktualizuj teksty obrażeń (z puli)
+    for (let i = hitTexts.length - 1; i >= 0; i--) {
+        hitTexts[i].update(dt);
+    }
+
+    if (game.xp >= game.xpNeeded) {
+        levelUpFn(); 
+    }
+
+    // Aktualizuj pickupy (nadal zwykła tablica)
+    for (let i = pickups.length - 1; i >= 0; i--) {
+        const p = pickups[i];
+        p.update(dt);
+        if (p.isDead()) {
+            pickups.splice(i, 1);
+        }
+    }
+    
+    // Aktualizuj skrzynie (nadal zwykła tablica)
+    for (const c of chests) {
+        c.update(dt);
+    }
+
+    applyPickupSeparation(pickups, canvas);
+
+    // Aktualizuj gwiazdy (nadal zwykła tablica)
+    for (let i = 0; i < stars.length; i++) { stars[i].t = (stars[i].t || 0) + dt; }
+
+    state.dt = dt; 
+    for (const w of player.weapons) {
+        w.update(state);
+    }
+
+    checkCollisions(state); // Sprawdź kolizje dla wszystkich
+
+    if (game.triggerChestOpen) {
+        game.triggerChestOpen = false; 
+        openChestFn(); 
+        spawnConfetti(state.particlePool, player.x, player.y);
+    }
+}
