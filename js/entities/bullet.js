@@ -1,5 +1,5 @@
 // ==============
-// BULLET.JS (v0.61 - Implementacja Puli Obiektów)
+// BULLET.JS (v0.64 - Fizyka oparta na Delta Time)
 // Lokalizacja: /js/entities/bullet.js
 // ==============
 
@@ -30,8 +30,8 @@ class Bullet {
   init(x, y, vx, vy, size, damage, color) {
     this.x = x;
     this.y = y;
-    this.vx = vx;
-    this.vy = vy;
+    this.vx = vx; // Oczekuje teraz prędkości w px/sekundę
+    this.vy = vy; // Oczekuje teraz prędkości w px/sekundę
     this.size = size;
     this.damage = damage;
     this.color = color;
@@ -50,11 +50,12 @@ class Bullet {
   
   /**
    * Aktualizuje pozycję pocisku.
+   * POPRAWKA v0.64: Zastosowano fizykę opartą na dt.
    */
-  update() {
+  update(dt) {
     // Ta metoda jest teraz wywoływana tylko dla aktywnych pocisków
-    this.x += this.vx;
-    this.y += this.vy;
+    this.x += this.vx * dt; // Zastosuj dt
+    this.y += this.vy * dt; // Zastosuj dt
   }
   
   /**
@@ -75,11 +76,14 @@ class Bullet {
    * @returns {boolean}
    */
   isOffScreen(canvas) {
+    // Zwiększamy margines, aby pociski (które są teraz szybsze)
+    // nie "przeskoczyły" granicy w klatkach z niskim FPS
+    const margin = 50;
     return (
-      this.x < 0 ||
-      this.x > canvas.width ||
-      this.y < 0 ||
-      this.y > canvas.height
+      this.x < -margin ||
+      this.x > canvas.width + margin ||
+      this.y < -margin ||
+      this.y > canvas.height + margin
     );
   }
 }

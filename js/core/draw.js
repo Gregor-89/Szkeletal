@@ -1,12 +1,12 @@
 // ==============
-// DRAW.JS (v0.63b - Optymalizacja setFont)
+// DRAW.JS (v0.63c - Opcja pozycji FPS)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
 import { getPickupEmoji, getPickupColor, getPickupLabel } from './utils.js';
 
-// POPRAWKA v0.62: 'trails' i 'confettis' są teraz częścią 'particles'
-export function draw(ctx, canvas, game, stars, trails_deprecated, player, enemies, bullets, eBullets, gems, pickups, chests, particles, hitTexts, bombIndicators, confettis_deprecated, pickupStyleEmoji, pickupShowLabels, fps, showFPS) {
+// POPRAWKA v0.63c: Dodano 'fpsPosition' jako ostatni argument
+export function draw(ctx, canvas, game, stars, trails_deprecated, player, enemies, bullets, eBullets, gems, pickups, chests, particles, hitTexts, bombIndicators, confettis_deprecated, pickupStyleEmoji, pickupShowLabels, fps, showFPS, fpsPosition) {
     
     ctx.clearRect(0, 0, canvas.width, canvas.height); // Wyczyść canvas
 
@@ -157,20 +157,23 @@ export function draw(ctx, canvas, game, stars, trails_deprecated, player, enemie
     
     // Rysowanie licznika FPS
     if (showFPS) {
-        // POPRAWKA v0.63b: Przeniesiono ustawienia fontu na początek bloku
         ctx.fillStyle = (fps >= 55) ? '#66bb6a' : (fps >= 40 ? '#ffca28' : '#ef5350');
         ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'left';
         
         // POPRAWKA v0.63: Zastąp strokeText() cieniem
         ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
         ctx.shadowBlur = 4;
-        // ctx.strokeStyle = '#000'; // USUNIĘTE (Wolne)
-        // ctx.lineWidth = 2;       // USUNIĘTE (Wolne)
         
         const fpsText = `${fps} FPS`;
-        // ctx.strokeText(fpsText, 10, 20); // USUNIĘTE (Wolne)
-        ctx.fillText(fpsText, 10, 20);
+
+        // POPRAWKA v0.63c: Logika pozycji FPS
+        if (fpsPosition === 'right') {
+            ctx.textAlign = 'right';
+            ctx.fillText(fpsText, canvas.width - 10, 20);
+        } else {
+            ctx.textAlign = 'left';
+            ctx.fillText(fpsText, 10, 20);
+        }
         
         ctx.shadowBlur = 0; // Zresetuj cień
     }

@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.62 - Pula Obiektów dla Gemów i Efektów)
+// MAIN.JS (v0.63c - Opcja pozycji FPS)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -73,6 +73,7 @@ const ctx=canvas.getContext('2d');
 let pickupShowLabels = true;
 let pickupStyleEmoji = false;
 let showFPS = true;
+let fpsPosition = 'right'; // POPRAWKA v0.63c: Nowa zmienna dla pozycji FPS
 
 let animationFrameId = null;
 let startTime = 0;
@@ -169,8 +170,8 @@ const uiData = {
     canvas, ctx,
     animationFrameId, startTime, lastTime, savedGameState,
     loopCallback: loop, 
-    // POPRAWKA v0.62: Zaktualizowane wywołanie zwrotne 'drawCallback'
-    drawCallback: () => draw(ctx, canvas, game, stars, [], player, enemies, playerBulletPool.activeItems, enemyBulletPool.activeItems, gemsPool.activeItems, pickups, chests, particlePool.activeItems, hitTextPool.activeItems, bombIndicators, [], pickupStyleEmoji, pickupShowLabels, 0, false), // Pass 0 FPS, false
+    // POPRAWKA v0.63c: Przekazanie 'fpsPosition' do funkcji rysowania
+    drawCallback: () => draw(ctx, canvas, game, stars, [], player, enemies, playerBulletPool.activeItems, enemyBulletPool.activeItems, gemsPool.activeItems, pickups, chests, particlePool.activeItems, hitTextPool.activeItems, bombIndicators, [], pickupStyleEmoji, pickupShowLabels, 0, false, fpsPosition), 
     initStarsCallback: initStars,
     currentChestReward: null 
 };
@@ -298,8 +299,8 @@ function loop(currentTime){
     updateVisualEffects(dt, [], [], bombIndicators); 
 
     if(game.paused || !game.running){
-      // POPRAWKA v0.62: Przekazanie aktywnych obiektów z puli do rysowania
-      draw(ctx, canvas, game, stars, [], player, enemies, playerBulletPool.activeItems, enemyBulletPool.activeItems, gemsPool.activeItems, pickups, chests, particlePool.activeItems, hitTextPool.activeItems, bombIndicators, [], pickupStyleEmoji, pickupShowLabels, fps, showFPS);
+      // POPRAWKA v0.63c: Przekazanie 'fpsPosition' do funkcji rysowania
+      draw(ctx, canvas, game, stars, [], player, enemies, playerBulletPool.activeItems, enemyBulletPool.activeItems, gemsPool.activeItems, pickups, chests, particlePool.activeItems, hitTextPool.activeItems, bombIndicators, [], pickupStyleEmoji, pickupShowLabels, fps, showFPS, fpsPosition);
       
       if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
           lastUiUpdateTime = currentTime;
@@ -315,8 +316,8 @@ function loop(currentTime){
 
     update(dt); 
     
-    // POPRAWKA v0.62: Przekazanie aktywnych obiektów z puli do rysowania
-    draw(ctx, canvas, game, stars, [], player, enemies, playerBulletPool.activeItems, enemyBulletPool.activeItems, gemsPool.activeItems, pickups, chests, particlePool.activeItems, hitTextPool.activeItems, bombIndicators, [], pickupStyleEmoji, pickupShowLabels, fps, showFPS);
+    // POPRAWKA v0.63c: Przekazanie 'fpsPosition' do funkcji rysowania
+    draw(ctx, canvas, game, stars, [], player, enemies, playerBulletPool.activeItems, enemyBulletPool.activeItems, gemsPool.activeItems, pickups, chests, particlePool.activeItems, hitTextPool.activeItems, bombIndicators, [], pickupStyleEmoji, pickupShowLabels, fps, showFPS, fpsPosition);
     
     if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
         lastUiUpdateTime = currentTime;
@@ -351,6 +352,9 @@ document.getElementById('btnStart').addEventListener('click', () => {
   game.screenShakeDisabled = !document.getElementById('chkShake').checked;
   
   showFPS = !!(document.getElementById('chkFPS') && document.getElementById('chkFPS').checked);
+  // POPRAWKA v0.63c: Wczytanie opcji pozycji FPS
+  fpsPosition = (document.querySelector('input[name="fpspos"]:checked')||{value:'right'}).value;
+  
   pickupShowLabels = !!(document.getElementById('chkPickupLabels') && document.getElementById('chkPickupLabels').checked);
   pickupStyleEmoji = (document.querySelector('input[name="pickupstyle"]:checked')||{value:'emoji'}).value === 'emoji';
   

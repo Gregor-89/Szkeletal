@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.61 - Implementacja Puli Obiektów)
+// ENEMY.JS (v0.64b - Poprawka siły separacji)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -21,6 +21,7 @@ export class Enemy {
         this.type = stats.type || 'standard';
         this.hp = Math.floor(stats.hp * hpScale);
         this.maxHp = this.hp;
+        // POPRAWKA v0.64: Prędkość jest teraz w px/s (skalowanie odbywa się w enemyManager)
         this.speed = stats.speed;
         this.size = stats.size;
         this.damage = stats.damage;
@@ -46,7 +47,7 @@ export class Enemy {
 
     /**
      * Główna metoda aktualizacji. Domyślnie goni gracza.
-     * POPRAWKA v0.61: 'eBullets' zastąpione przez 'state'
+     * POPRAWKA v0.64: Zastosowano fizykę opartą na dt.
      */
     update(dt, player, game, state) {
         let isMoving = false;
@@ -59,6 +60,7 @@ export class Enemy {
             const dist = Math.hypot(dx, dy);
             
             let vx = 0, vy = 0;
+            // currentSpeed jest już w px/s (przeskalowane w getSpeed())
             let currentSpeed = this.getSpeed(game, dist);
 
             if (dist > 0.1) {
@@ -69,8 +71,10 @@ export class Enemy {
                 isMoving = true;
             }
 
-            this.x += vx + this.separationX * 0.5;
-            this.y += vy + this.separationY * 0.5;
+            // POPRAWKA v0.64: Zastosuj dt do finalnego ruchu
+            // separationX i Y są teraz również w px/s (dzięki v0.64b)
+            this.x += (vx + this.separationX * 0.5) * dt;
+            this.y += (vy + this.separationY * 0.5) * dt;
         }
         
         // Aktualizacja animacji
@@ -89,6 +93,7 @@ export class Enemy {
 
     /**
      * Oblicza separację od innych wrogów (wywoływane rzadziej z gameLogic)
+     * POPRAWKA v0.64b: Przeskalowanie siły separacji, aby pasowała do jednostek px/s
      */
     applySeparation(dt, enemies) {
         this.separationCooldown -= dt;
@@ -99,6 +104,7 @@ export class Enemy {
             this.separationY = 0;
             
             const separationRadius = this.getSeparationRadius();
+            const multiplier = 144; // MUSI pasować do mnożnika prędkości z v0.64!
             
             for (const other of enemies) {
                 if (this.id === other.id) continue;
@@ -109,8 +115,11 @@ export class Enemy {
                 
                 if (d < separationRadius && d > 0.1) {
                     const force = (separationRadius - d) / separationRadius;
-                    this.separationX += (odx / d) * force;
-                    this.separationY += (ody / d) * force;
+                    
+                    // POPRAWKA v0.64b: Skalujemy siłę (force) o ten sam mnożnik co prędkość,
+                    // aby obie siły działały w tej samej jednostce (px/s)
+                    this.separationX += (odx / d) * force * multiplier;
+                    this.separationY += (ody / d) * force * multiplier;
                 }
             }
         }
@@ -167,6 +176,7 @@ export class Enemy {
     // --- Metody Pomocnicze (mogą być nadpisane) ---
 
     getSpeed(game, dist) {
+        // Zwraca prędkość w px/s
         return this.speed * (game.freezeT > 0 ? 0.25 : 1) * (1 - (this.hitStun || 0));
     }
 
@@ -230,7 +240,7 @@ export class RangedEnemy extends Enemy {
 
     /**
      * Nadpisana metoda update dla wroga dystansowego.
-     * POPRAWKA v0.61: 'eBullets' zastąpione przez 'state'
+     * POPRAWKA v0.64: Zastosowano fizykę dt i przeskalowano prędkość pocisku.
      */
     update(dt, player, game, state) {
         // Logika ruchu i strzelania (zanim wywołamy logikę animacji)
@@ -243,20 +253,22 @@ export class RangedEnemy extends Enemy {
             const dist = Math.hypot(dx, dy);
             
             let vx = 0, vy = 0;
-            let currentSpeed = this.getSpeed(game, dist);
+            let currentSpeed = this.getSpeed(game, dist); // Prędkość w px/s
 
             if (dist < 180) { vx = -(dx / dist) * currentSpeed; vy = -(dy / dist) * currentSpeed; isMoving = true; } // Uciekaj
             else if (dist > 220) { vx = (dx / dist) * currentSpeed; vy = (dy / dist) * currentSpeed; isMoving = true; } // Podchodź
             else { vx = 0; vy = 0; } // Stój
             
-            this.x += vx + this.separationX * 0.5;
-            this.y += vy + this.separationY * 0.5;
+            // POPRAWKA v0.64: Zastosuj dt do finalnego ruchu
+            this.x += (vx + this.separationX * 0.5) * dt;
+            this.y += (vy + this.separationY * 0.5) * dt;
             
             // Strzelanie
             this.rangedCooldown -= dt;
             // POPRAWKA v0.61: Użyj puli obiektów
             if (this.rangedCooldown <= 0 && dist > 0.1 && state.eBulletsPool) {
-                const bulletSpeed = 3.5 * (game.freezeT > 0 ? 0.25 : 1);
+                // POPRAWKA v0.63c: Przeskalowanie prędkości pocisku na 144 FPS (3.5 * 144)
+                const bulletSpeed = 504 * (game.freezeT > 0 ? 0.25 : 1); // px/s (było 210)
                 
                 const bullet = state.eBulletsPool.get();
                 if (bullet) {

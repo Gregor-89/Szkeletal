@@ -1,5 +1,5 @@
 // ==============
-// WEAPON.JS (v0.62e - Pula Obiektów i Fizyka DT)
+// WEAPON.JS (v0.63c - Poprawka skalowania prędkości DT)
 // Lokalizacja: /js/config/weapon.js
 // ==============
 
@@ -11,11 +11,12 @@ import { areaNuke } from '../managers/effects.js';
 
 /**
  * Ustawienia początkowe broni (i inne, które tu pasują)
+ * POPRAWKA v0.63c: Przeskalowanie prędkości pocisku na 144 FPS (zamiast 60)
  */
 export const INITIAL_SETTINGS = {
     spawn: 0.02,
     maxEnemies: 110,
-    bulletSpeed: 6,
+    bulletSpeed: 864, // Było: 360 (teraz 6 * 144)
     bulletSize: 3,
     bulletDamage: 1,
     fireRate: 500,
@@ -72,7 +73,8 @@ export class AutoGun extends Weapon {
         super(player);
         this.fireRate = INITIAL_SETTINGS.fireRate;
         this.bulletDamage = INITIAL_SETTINGS.bulletDamage;
-        this.bulletSpeed = INITIAL_SETTINGS.bulletSpeed;
+        // POPRAWKA v0.64: Użyj przeskalowanej prędkości
+        this.bulletSpeed = INITIAL_SETTINGS.bulletSpeed; // Już jest w px/s
         this.bulletSize = INITIAL_SETTINGS.bulletSize;
         this.multishot = 0;
         this.pierce = 0;
@@ -122,6 +124,9 @@ export class AutoGun extends Weapon {
         const count = 1 + this.multishot;
         const spread = Math.min(0.4, 0.12 * this.multishot);
 
+        // Prędkość jest już w px/s
+        const finalSpeed = this.bulletSpeed * (game.hyper ? 1.15 : 1);
+
         for (let i = 0; i < count; i++) {
             const off = spread * (i - (count - 1) / 2);
             
@@ -130,8 +135,8 @@ export class AutoGun extends Weapon {
                 bullet.init(
                     this.player.x,
                     this.player.y,
-                    Math.cos(baseAng + off) * this.bulletSpeed * (game.hyper ? 1.15 : 1),
-                    Math.sin(baseAng + off) * this.bulletSpeed * (game.hyper ? 1.15 : 1),
+                    Math.cos(baseAng + off) * finalSpeed, // px/s
+                    Math.sin(baseAng + off) * finalSpeed, // px/s
                     this.bulletSize,
                     this.bulletDamage,
                     '#FFC107',
@@ -170,6 +175,8 @@ export class OrbitalWeapon extends Weapon {
     updateStats(perk) {
         this.damage = 1 + Math.floor(this.level / 2);
         this.radius = (28 + 6 * this.level) * 1.5;
+        // UWAGA: Prędkość orbitala (radiany/s) nie musi być skalowana *60,
+        // ponieważ była już poprawnie mnożona przez dt w v0.62.
         this.speed = (1.2 + 0.2 * this.level);
         
         while (this.items.length < this.level) {
@@ -184,6 +191,7 @@ export class OrbitalWeapon extends Weapon {
         // POPRAWKA v0.62: Pobranie pul obiektów
         const { dt, enemies, particlePool, hitTextPool, hitTexts, game, settings, gemsPool, pickups, chests } = state;
         
+        // Ta prędkość (radiany/s) jest już poprawnie mnożona przez dt.
         this.angle += this.speed * dt;
         
         for (let i = 0; i < this.items.length; i++) {
@@ -287,7 +295,8 @@ export class NovaWeapon extends Weapon {
             const autoGun = this.player.getWeapon(AutoGun);
             const dmg = autoGun ? autoGun.bulletDamage : INITIAL_SETTINGS.bulletDamage;
             const pierce = autoGun ? autoGun.pierce : 0;
-            const speed = autoGun ? autoGun.bulletSpeed : INITIAL_SETTINGS.bulletSpeed;
+            // POPRAWKA v0.64: Użyj przeskalowanej prędkości
+            const speed = autoGun ? autoGun.bulletSpeed : INITIAL_SETTINGS.bulletSpeed; // Już w px/s
             const size = autoGun ? autoGun.bulletSize : INITIAL_SETTINGS.bulletSize;
 
             for (let i = 0; i < this.bulletCount; i++) {
@@ -298,8 +307,8 @@ export class NovaWeapon extends Weapon {
                     bullet.init(
                         this.player.x,
                         this.player.y,
-                        Math.cos(ang) * speed,
-                        Math.sin(ang) * speed,
+                        Math.cos(ang) * speed, // px/s
+                        Math.sin(ang) * speed, // px/s
                         size,
                         dmg,
                         '#FFC107',

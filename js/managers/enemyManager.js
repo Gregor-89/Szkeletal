@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.62e - Pula Obiektów i Fizyka DT)
+// ENEMYMANAGER.JS (v0.63c - Poprawka skalowania prędkości DT)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -17,15 +17,16 @@ import {
 } from '../entities/pickup.js';
 import { Chest } from '../entities/chest.js';
 
+// POPRAWKA v0.63c: Przeskalowanie wszystkich bazowych prędkości na 144 FPS (zamiast 60)
 export const ENEMY_STATS = {
-    standard:   { type: 'standard',   hp: 3,   speed: 1.2, size: 10, damage: 5, color: '#FFC107', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } },
-    horde:      { type: 'horde',      hp: 3,   speed: 1.0, size: 8,  damage: 5, color: '#8BC34A', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } },
-    aggressive: { type: 'aggressive', hp: 3,   speed: 1.2, size: 10, damage: 5, color: '#2196F3', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } },
-    kamikaze:   { type: 'kamikaze',   hp: 2.4, speed: 1.1, size: 9,  damage: 8, color: '#FFEB3B', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } },
-    splitter:   { type: 'splitter',   hp: 4,   speed: 1.1, size: 12, damage: 5, color: '#EC407A', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } },
-    tank:       { type: 'tank',       hp: 9,   speed: 0.7, size: 14, damage: 5, color: '#795548', score: 20, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } },
-    ranged:     { type: 'ranged',     hp: 4,   speed: 1.0, size: 10, damage: 5, color: '#00BCD4', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } },
-    elite:      { type: 'elite',      hp: 24,  speed: 0.9, size: 18, damage: 5, color: '#9C27B0', score: 80, xp: 7, drops: {} }
+    standard:   { type: 'standard',   hp: 3,   speed: 173,  size: 10, damage: 5, color: '#FFC107', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } }, // 1.2 * 144
+    horde:      { type: 'horde',      hp: 3,   speed: 144,  size: 8,  damage: 5, color: '#8BC34A', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } }, // 1.0 * 144
+    aggressive: { type: 'aggressive', hp: 3,   speed: 173,  size: 10, damage: 5, color: '#2196F3', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } }, // 1.2 * 144
+    kamikaze:   { type: 'kamikaze',   hp: 2.4, speed: 158,  size: 9,  damage: 8, color: '#FFEB3B', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } }, // 1.1 * 144
+    splitter:   { type: 'splitter',   hp: 4,   speed: 158,  size: 12, damage: 5, color: '#EC407A', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } }, // 1.1 * 144
+    tank:       { type: 'tank',       hp: 9,   speed: 101,  size: 14, damage: 5, color: '#795548', score: 20, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } }, // 0.7 * 144
+    ranged:     { type: 'ranged',     hp: 4,   speed: 144,  size: 10, damage: 5, color: '#00BCD4', score: 10, xp: 1, drops: { heal: 0.04, magnet: 0.025, speed: 0.02, shield: 0.015, bomb: 0.01, freeze: 0.01 } }, // 1.0 * 144
+    elite:      { type: 'elite',      hp: 24,  speed: 130,  size: 18, damage: 5, color: '#9C27B0', score: 80, xp: 7, drops: {} } // 0.9 * 144
 };
 
 export const ENEMY_CLASS_MAP = {

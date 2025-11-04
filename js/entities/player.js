@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v0.57b - Stany animacji Idle/Walk)
+// PLAYER.JS (v0.63c - Poprawka skalowania prędkości DT)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -14,7 +14,8 @@ export class Player {
         this.size = 15;
 
         // Statystyki
-        this.speed = 3;
+        // POPRAWKA v0.63c: Przeskalowanie prędkości na 144 FPS (3 * 144) zamiast 60 FPS
+        this.speed = 432; // Było 180 (czyli 3 * 60)
         this.color = '#4CAF50';
         
         this.weapons = [];
@@ -43,7 +44,8 @@ export class Player {
     reset(canvasWidth, canvasHeight) {
         this.x = canvasWidth / 2;
         this.y = canvasHeight / 2;
-        this.speed = 3;
+        // POPRAWKA v0.63c: Przeskalowanie prędkości na 144 FPS (3 * 144)
+        this.speed = 432; // Było 180
         
         this.weapons = [];
         this.weapons.push(new AutoGun(this));
@@ -57,11 +59,13 @@ export class Player {
 
     /**
      * Aktualizuje ruch i animację gracza.
+     * POPRAWKA v0.64: Zastosowano fizykę opartą na dt.
      */
     update(dt, game, keys, jVec, canvas) {
         let vx = 0, vy = 0;
         
         const speedMul = (game.speedT > 0 ? 1.4 : 1) * (1 - (game.collisionSlowdown || 0));
+        // currentSpeed jest teraz w "px/sekundę"
         const currentSpeed = this.speed * speedMul;
         const maxSpeed = this.speed * 1.3 * speedMul;
 
@@ -77,15 +81,16 @@ export class Player {
         if (keys['a'] || keys['arrowleft']) vx -= currentSpeed;
         if (keys['d'] || keys['arrowright']) vx += currentSpeed;
 
-        // Normalizacja prędkości
+        // Normalizacja prędkości (wektor prędkości jest już w px/s)
         const sp = Math.hypot(vx, vy);
         if (sp > maxSpeed) {
             vx = (vx / sp) * maxSpeed;
             vy = (vy / sp) * maxSpeed;
         }
 
-        this.x += vx;
-        this.y += vy;
+        // POPRAWKA v0.64: Zastosuj dt do finalnego ruchu
+        this.x += vx * dt;
+        this.y += vy * dt;
         
         this.isMoving = (Math.abs(vx) > 0 || Math.abs(vy) > 0);
 

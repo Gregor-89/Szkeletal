@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.55 - Reorganizacja folderów)
+// DEV.JS (v0.63c - Poprawka błędu presetu prędkości)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -137,7 +137,9 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     
     player.reset(gameState.canvas.width, gameState.canvas.height); // Resetuje gracza i broń
     
-    player.speed = 3; 
+    // POPRAWKA v0.63c: Usunięto tę linię, która psuła fizykę DT.
+    // player.speed = 3; // USUNIĘTE (v0.63c)
+    
     game.pickupRange = 24;
     game.maxHealth = 100;
     game.health = 100;
