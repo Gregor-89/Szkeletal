@@ -1,10 +1,13 @@
 // ==============
-// UI.JS (v0.62e - Pula Obiektów i Poprawka Pauzy Konfetti)
+// UI.JS (v0.65b - Poprawka krytycznego błędu importu)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
 import { spawnConfetti, addHitText } from '../core/utils.js';
-import { INITIAL_SETTINGS } from '../config/weapon.js';
+// POPRAWKA v0.65b: Dodano brakujące importy PLAYER_CONFIG, PERK_CONFIG i UI_CONFIG
+import { 
+    GAME_CONFIG, WEAPON_CONFIG, PLAYER_CONFIG, PERK_CONFIG, UI_CONFIG 
+} from '../config/gameData.js';
 import { perkPool } from '../config/perks.js';
 import { initAudio, playSound } from '../services/audio.js';
 import { devSettings } from '../services/dev.js';
@@ -155,6 +158,7 @@ export function startRun(game, resetAll, uiData) {
     }
 }
 
+// POPRAWKA v0.65: Używa stałych z gameData.js
 export function resetAll(canvas, settings, perkLevels, uiData) {
     if (uiData.animationFrameId !== null) {
         cancelAnimationFrame(uiData.animationFrameId);
@@ -168,10 +172,15 @@ export function resetAll(canvas, settings, perkLevels, uiData) {
     
     if (devSettings.presetLoaded === false) {
         console.log("ResetAll: Wykonuję pełny reset statystyk.");
-        game.score = 0; game.level = 1; game.health = 100; game.maxHealth = 100; game.time = 0;
-        game.xp = 0; game.xpNeeded = 5; game.pickupRange = 24;
+        // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG i GAME_CONFIG
+        game.score = 0; game.level = 1; game.health = PLAYER_CONFIG.INITIAL_HEALTH; game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH; game.time = 0;
+        game.xp = 0; game.xpNeeded = GAME_CONFIG.INITIAL_XP_NEEDED; game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
         
-        Object.assign(settings, { ...INITIAL_SETTINGS });
+        Object.assign(settings, { 
+            spawn: GAME_CONFIG.INITIAL_SPAWN_RATE,
+            maxEnemies: GAME_CONFIG.MAX_ENEMIES,
+            eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL
+        });
         settings.lastFire = 0;
         settings.lastElite = 0;
 
@@ -229,7 +238,8 @@ export function pauseGame(game, settings, weapons, player) {
     pauseOverlay.style.display = 'flex';
 }
 
-export function resumeGame(game, timerDuration = 0.75) {
+// POPRAWKA v0.65: Używa stałej z UI_CONFIG
+export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
     game.manualPause = false;
     pauseOverlay.style.display = 'none';
     levelUpOverlay.style.display = 'none'; 
@@ -280,7 +290,7 @@ export function gameOver(game, uiData) {
 // --- OBSŁUGA PERKÓW I NAGRÓD ---
 
 /**
- * POPRAWKA v0.62e: Funkcja przyjmuje teraz pule obiektów i poprawioną logikę pauzy.
+ * POPRAWKA v0.65: Używa stałych z GAME_CONFIG do obliczania XP.
  */
 export function levelUp(game, player, hitTextPool, particlePool, settings, weapons, perkLevels) {
     console.log(`--- LEVEL UP (Poziom ${game.level + 1}) ---`);
@@ -302,14 +312,15 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
     game.shieldT = 3;
     addHitText(hitTextPool, hitTexts, player.x, player.y - 35, 0, '#90CAF9', 'Tarcza +3s');
 
-    game.xpNeeded = Math.floor(game.xpNeeded * 1.4) + 2;
+    // POPRAWKA v0.65: Użyj wartości z GAME_CONFIG
+    game.xpNeeded = Math.floor(game.xpNeeded * GAME_CONFIG.XP_GROWTH_FACTOR) + GAME_CONFIG.XP_GROWTH_ADD;
     
     // POPRAWKA v0.62e: Najpierw stwórz konfetti
     spawnConfetti(particlePool, player.x, player.y);
 
     console.log('[levelUp] Uruchamiam setTimeout do pokazania perków...');
 
-    // POPRAWKA v0.62e: Użyj 700ms (zamiast 1600ms) i pauzuj grę W ŚRODKU
+    // POPRAWKA v0.65: Użyj wartości z UI_CONFIG
     setTimeout(() => {
         console.log('[levelUp] setTimeout wykonany. Pauzuję grę i pokazuję perki.');
         
@@ -323,9 +334,10 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
         } else {
             console.warn('[levelUp] Warunki NIESPEŁNIONE (gra nierozpoczęta lub w menu). Nie pokazano perków.');
         }
-    }, 700); // Czekaj 0.7 sekundy
+    }, UI_CONFIG.LEVEL_UP_PAUSE); // Czekaj na czas z konfiguracji
 }
 
+// POPRAWKA v0.65: Używa stałych z WEAPON_CONFIG i PERK_CONFIG
 export function updateStatsUI(game, player, settings, weapons, targetElement = statsDisplay) {
     targetElement.innerHTML = '';
     
@@ -333,17 +345,18 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
     const orbital = player.getWeapon(OrbitalWeapon);
     const nova = player.getWeapon(NovaWeapon);
 
+    // POPRAWKA v0.65: Użyj wartości z WEAPON_CONFIG jako fallback i PERK_CONFIG dla max
     const stats = [
         { icon: '⭐', label: 'Poziom', value: game.level },
         { icon: '❤️', label: 'Zdrowie', value: `${Math.floor(game.health)}/${game.maxHealth}` },
         { icon: '🏃', label: 'Prędkość gracza', value: player.speed.toFixed(2) },
         
-        { icon: '💥', label: 'Obrażenia', value: `${autoGun ? autoGun.bulletDamage.toFixed(0) : '1'} / ${perkPool.find(p => p.id === 'damage').max + 1}` },
-        { icon: '🔫', label: 'Szybkostrzelność', value: `${autoGun ? (1000 / autoGun.fireRate).toFixed(2) : (1000 / INITIAL_SETTINGS.fireRate).toFixed(2)}/s` },
-        { icon: '🎯', label: 'Multishot', value: `${autoGun ? autoGun.multishot : '0'} / ${perkPool.find(p => p.id === 'multishot').max}` },
-        { icon: '➡️', label: 'Przebicie', value: `${autoGun ? autoGun.pierce : '0'} / ${perkPool.find(p => p.id === 'pierce').max}` },
-        { icon: '🌀', label: 'Orbital', value: `${orbital ? orbital.level : '0'} / ${perkPool.find(p => p.id === 'orbital').max}` },
-        { icon: '💫', label: 'Nova', value: `${nova ? nova.level : '0'} / ${perkPool.find(p => p.id === 'nova').max}` }
+        { icon: '💥', label: 'Obrażenia', value: `${autoGun ? autoGun.bulletDamage.toFixed(0) : WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE} / ${PERK_CONFIG.damage.max + 1}` },
+        { icon: '🔫', label: 'Szybkostrzelność', value: `${autoGun ? (1000 / autoGun.fireRate).toFixed(2) : (1000 / WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE).toFixed(2)}/s` },
+        { icon: '🎯', label: 'Multishot', value: `${autoGun ? autoGun.multishot : '0'} / ${PERK_CONFIG.multishot.max}` },
+        { icon: '➡️', label: 'Przebicie', value: `${autoGun ? autoGun.pierce : '0'} / ${PERK_CONFIG.pierce.max}` },
+        { icon: '🌀', label: 'Orbital', value: `${orbital ? orbital.level : '0'} / ${PERK_CONFIG.orbital.max}` },
+        { icon: '💫', label: 'Nova', value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova.max}` }
     ];
     
     stats.forEach(s => {
@@ -364,6 +377,7 @@ export function showPerks(perkLevels) {
     console.log('[showPerks] Rozpoczynam. Filtruję dostępne perki...');
     console.log('[showPerks] Otrzymane perkLevels:', JSON.parse(JSON.stringify(perkLevels)));
 
+    // POPRAWKA v0.65: Filtr używa teraz 'perk.max' (który jest pobierany z PERK_CONFIG w perks.js)
     const avail = perkPool.filter(p => (perkLevels[p.id] || 0) < p.max);
     const picks = [];
 
@@ -403,6 +417,7 @@ export function showPerks(perkLevels) {
     }
 }
 
+// POPRAWKA v0.65: Używa UI_CONFIG.RESUME_TIMER zamiast 1.5s
 export function pickPerk(perk, game, perkLevels, settings, weapons, player) {
     if (!perk) {
         console.log('[pickPerk] Wybrano "Kontynuuj" (max level). Wznawiam grę.');
@@ -412,6 +427,7 @@ export function pickPerk(perk, game, perkLevels, settings, weapons, player) {
     
     console.log(`[pickPerk] Wybrano perk: ${perk.id}`);
     
+    // Używa perk.max (pobranego z PERK_CONFIG)
     if ((perkLevels[perk.id] || 0) >= perk.max) {
         console.warn(`[pickPerk] Próba wybrania perka (${perk.id}), który jest już na max poziomie. To nie powinno się zdarzyć.`);
         return;
@@ -423,10 +439,12 @@ export function pickPerk(perk, game, perkLevels, settings, weapons, player) {
     perkLevels[perk.id] = (perkLevels[perk.id] || 0) + 1;
     playSound('PerkPick');
     
-    resumeGame(game, 1.5);
+    // Używa domyślnego czasu wznowienia
+    resumeGame(game); 
 }
 
 export function pickChestReward(perkLevels) {
+    // Używa perk.max (pobranego z PERK_CONFIG)
     const pool = perkPool.filter(p => (perkLevels[p.id] || 0) < p.max);
     if (!pool.length) return null;
     return pool[Math.floor(Math.random() * pool.length)];
@@ -438,6 +456,7 @@ export function openChest(game, perkLevels, uiData) {
 
     if (reward) {
         const currentLevel = perkLevels[reward.id] || 0;
+        // Używa reward.max (pobranego z PERK_CONFIG)
         const progress = ((currentLevel + 1) / reward.max) * 100;
         const iconHTML = reward.emoji ? `<span style="font-size:48px;">${reward.emoji}</span>` : `🎁`;
 

@@ -1,21 +1,24 @@
 // ==============
-// PLAYER.JS (v0.63c - Poprawka skalowania prędkości DT)
+// PLAYER.JS (v0.65 - Centralizacja Danych)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
 import { AutoGun } from '../config/weapon.js';
 import { get as getAsset } from '../services/assets.js';
+// POPRAWKA v0.65: Import nowej centralnej konfiguracji
+import { PLAYER_CONFIG } from '../config/gameData.js';
 
 export class Player {
     constructor(startX, startY) {
         // Pozycja i rozmiar
         this.x = startX;
         this.y = startY;
-        this.size = 15;
+        // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG
+        this.size = PLAYER_CONFIG.SIZE;
 
         // Statystyki
-        // POPRAWKA v0.63c: Przeskalowanie prędkości na 144 FPS (3 * 144) zamiast 60 FPS
-        this.speed = 432; // Było 180 (czyli 3 * 60)
+        // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG
+        this.speed = PLAYER_CONFIG.BASE_SPEED;
         this.color = '#4CAF50';
         
         this.weapons = [];
@@ -44,8 +47,8 @@ export class Player {
     reset(canvasWidth, canvasHeight) {
         this.x = canvasWidth / 2;
         this.y = canvasHeight / 2;
-        // POPRAWKA v0.63c: Przeskalowanie prędkości na 144 FPS (3 * 144)
-        this.speed = 432; // Było 180
+        // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG
+        this.speed = PLAYER_CONFIG.BASE_SPEED;
         
         this.weapons = [];
         this.weapons.push(new AutoGun(this));

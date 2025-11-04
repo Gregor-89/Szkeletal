@@ -1,11 +1,13 @@
 // ==============
-// DEV.JS (v0.63c - Poprawka błędu presetu prędkości)
+// DEV.JS (v0.65 - Pełna centralizacja danych)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
 import { findFreeSpotForPickup } from '../core/utils.js';
 import { perkPool } from '../config/perks.js';
-import { INITIAL_SETTINGS, AutoGun, OrbitalWeapon, NovaWeapon } from '../config/weapon.js';
+// POPRAWKA v0.65: Usunięto INITIAL_SETTINGS, zaimportowano nowe konfiguracje
+import { PLAYER_CONFIG, GAME_CONFIG, WEAPON_CONFIG } from '../config/gameData.js';
+import { AutoGun, OrbitalWeapon, NovaWeapon } from '../config/weapon.js';
 import { 
     HealPickup, MagnetPickup, ShieldPickup, 
     SpeedPickup, BombPickup, FreezePickup 
@@ -35,10 +37,11 @@ const PICKUP_CLASS_MAP = {
 let gameState = {};
 
 // Funkcja obliczająca XP potrzebne na dany poziom
+// POPRAWKA v0.65: Używa stałych z GAME_CONFIG
 function calculateXpNeeded(level) {
-    let xp = INITIAL_SETTINGS.xpNeeded || 5; 
+    let xp = GAME_CONFIG.INITIAL_XP_NEEDED || 5; 
     for (let i = 1; i < level; i++) {
-        xp = Math.floor(xp * 1.4) + 2;
+        xp = Math.floor(xp * GAME_CONFIG.XP_GROWTH_FACTOR) + GAME_CONFIG.XP_GROWTH_ADD;
     }
     return xp;
 }
@@ -56,8 +59,8 @@ function applyDevSettings() {
 
     if (!game.inMenu && game.running) {
         game.level = parseInt(document.getElementById('devLevel').value) || 1;
-        game.health = parseInt(document.getElementById('devHealth').value) || 100;
-        game.maxHealth = parseInt(document.getElementById('devMaxHealth').value) || 100;
+        game.health = parseInt(document.getElementById('devHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
+        game.maxHealth = parseInt(document.getElementById('devMaxHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
         game.xp = parseInt(document.getElementById('devXP').value) || 0;
         
         game.xpNeeded = calculateXpNeeded(game.level);
@@ -67,8 +70,8 @@ function applyDevSettings() {
         const nova = player.getWeapon(NovaWeapon);
 
         if (autoGun) {
-            autoGun.bulletDamage = parseInt(document.getElementById('devDamage').value) || 1;
-            autoGun.fireRate = parseInt(document.getElementById('devFireRate').value) || 500;
+            autoGun.bulletDamage = parseInt(document.getElementById('devDamage').value) || WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE;
+            autoGun.fireRate = parseInt(document.getElementById('devFireRate').value) || WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE;
             autoGun.multishot = parseInt(document.getElementById('devMultishot').value) || 0;
             autoGun.pierce = parseInt(document.getElementById('devPierce').value) || 0;
         }
@@ -82,8 +85,8 @@ function applyDevSettings() {
     }
 
     devSettings.godMode = document.getElementById('devGodMode').checked;
-    settings.spawn = parseFloat(document.getElementById('devSpawnRate').value) || 0.02;
-    settings.maxEnemies = parseInt(document.getElementById('devMaxEnemies').value) || 110;
+    settings.spawn = parseFloat(document.getElementById('devSpawnRate').value) || GAME_CONFIG.INITIAL_SPAWN_RATE;
+    settings.maxEnemies = parseInt(document.getElementById('devMaxEnemies').value) || GAME_CONFIG.MAX_ENEMIES;
 
     const enemySelect = document.getElementById('devEnemyType');
     devSettings.allowedEnemies = Array.from(enemySelect.selectedOptions).map(o => o.value);
@@ -133,16 +136,23 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     const { game, settings, perkLevels, player } = gameState;
 
     // Resetuj statystyki do stanu początkowego, aby uniknąć nakładania się
-    Object.assign(settings, { ...INITIAL_SETTINGS, lastFire: settings.lastFire, lastElite: settings.lastElite });
+    // POPRAWKA v0.65: Użyj wartości z GAME_CONFIG zamiast INITIAL_SETTINGS
+    Object.assign(settings, { 
+        spawn: GAME_CONFIG.INITIAL_SPAWN_RATE,
+        maxEnemies: GAME_CONFIG.MAX_ENEMIES,
+        eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL,
+        lastFire: settings.lastFire, 
+        lastElite: settings.lastElite 
+    });
     
     player.reset(gameState.canvas.width, gameState.canvas.height); // Resetuje gracza i broń
     
-    // POPRAWKA v0.63c: Usunięto tę linię, która psuła fizykę DT.
-    // player.speed = 3; // USUNIĘTE (v0.63c)
+    // POPRAWKA v0.64: Usunięto 'player.speed = 3', które psuło fizykę DT.
     
-    game.pickupRange = 24;
-    game.maxHealth = 100;
-    game.health = 100;
+    // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG
+    game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
+    game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH;
+    game.health = PLAYER_CONFIG.INITIAL_HEALTH;
 
     for (let key in perkLevels) {
         delete perkLevels[key];

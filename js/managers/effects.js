@@ -1,12 +1,12 @@
 // ==============
-// EFFECTS.JS (v0.62e - Pula Obiektów i Fizyka DT)
+// EFFECTS.JS (v0.65 - Centralizacja Danych)
 // Lokalizacja: /js/managers/effects.js
 // ==============
 
 import { limitedShake, addBombIndicator, findFreeSpotForPickup } from '../core/utils.js';
 import { devSettings } from '../services/dev.js';
-// POPRAWKA v0.62: Nie importujemy już Gem, bo nie tworzymy go tutaj
-// import { Gem } from '../entities/gem.js'; 
+// POPRAWKA v0.65: Import nowej centralnej konfiguracji
+import { EFFECTS_CONFIG } from '../config/gameData.js';
 import { 
     HealPickup, MagnetPickup, ShieldPickup, 
     SpeedPickup, BombPickup, FreezePickup 
@@ -24,11 +24,15 @@ const PICKUP_CLASS_MAP = {
 
 /**
  * Logika bomby: niszczy wrogów i tworzy efekty w danym promieniu.
- * POPRAWKA v0.62e: Przyjmuje pule obiektów i używa sekund
+ * POPRAWKA v0.65: Wartości fizyki cząsteczek pobierane z EFFECTS_CONFIG
  */
 export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators) {
-    for(let i=0;i<40;i++){
-      const angle = (i / 40) * Math.PI * 2;
+    
+    // Pobierz konfigurację efektów bomby
+    const c = EFFECTS_CONFIG;
+    
+    for(let i = 0; i < c.NUKE_PARTICLE_COUNT; i++){
+      const angle = (i / c.NUKE_PARTICLE_COUNT) * Math.PI * 2;
       const dist = Math.random() * r;
       
       // POPRAWKA v0.62: Użyj puli cząsteczek
@@ -38,9 +42,9 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
         p.init(
             cx + Math.cos(angle) * dist,
             cy + Math.sin(angle) * dist,
-            (Math.random()*2-1) * 5 * 60, // vx (px/s)
-            (Math.random()*2-1) * 5 * 60, // vy (px/s)
-            0.6, // life (było 35 klatek)
+            (Math.random()*2-1) * c.NUKE_PARTICLE_SPEED, // vx (px/s)
+            (Math.random()*2-1) * c.NUKE_PARTICLE_SPEED, // vy (px/s)
+            c.NUKE_PARTICLE_LIFE, // life (s)
             ['#ff6b00','#ff9500','#ffbb00','#fff59d'][Math.floor(Math.random()*4)], // color
             0, // gravity
             (1.0 - 0.98) // friction (0.02)

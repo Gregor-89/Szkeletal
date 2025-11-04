@@ -1,7 +1,10 @@
 // ==============
-// UTILS.JS (v0.62e - Pula Obiektów i Fizyka DT)
+// UTILS.JS (v0.65 - Centralizacja Danych)
 // Lokalizacja: /js/core/utils.js
 // ==============
+
+// POPRAWKA v0.65: Import nowej centralnej konfiguracji
+import { EFFECTS_CONFIG } from '../config/gameData.js';
 
 // --- EFEKTY WIZUALNE ---
 
@@ -46,21 +49,20 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
     }
 }
 
+// POPRAWKA v0.65: Wszystkie wartości pobierane z EFFECTS_CONFIG
 export function spawnConfetti(particlePool, cx, cy) {
     const cols = ['#ff5252', '#ffca28', '#66bb6a', '#42a5f5', '#ab47bc', '#e91e63', '#9c27b0', '#00bcd4'];
-    const numParticles = 80;
-    // POPRAWKA v0.62e: Zmiana czasu życia na 0.7s
-    const maxLife = 0.7; // Było 1.6s
-    // POPRAWKA v0.62e: Przeskalowanie wartości "na klatkę" na "na sekundę" (* 60)
-    const initialSpeedMin = 3 * 60;
-    const initialSpeedMax = 7 * 60;
-    const initialUpVelocity = -3.5 * 60;
-    const gravityPerSecond = 0.1 * 3600; // (0.1 * 60 * 60)
-    const frictionFactor = (1.0 - 0.99); // 1% zaniku na klatkę @ 60fps = 60% na sekundę? Nie.
-                                          // 1.0 - (1.0 - (frictionFactor * dt))
-                                          // (1.0 - 0.99) * 60 = 0.6 zaniku na sekundę?
-                                          // Zostawmy 0.01
-    const frictionPerSecond = 1.0; // 1.0 - Math.pow(0.99, 60); // ~0.45 = 45% zaniku na sekundę
+    
+    // Pobierz konfigurację konfetti
+    const c = EFFECTS_CONFIG.CONFETTI;
+    
+    const numParticles = c.CONFETTI_COUNT;
+    const maxLife = c.CONFETTI_LIFE;
+    const initialSpeedMin = c.CONFETTI_SPEED_MIN;
+    const initialSpeedMax = c.CONFETTI_SPEED_MAX;
+    const initialUpVelocity = c.CONFETTI_INITIAL_UP_VELOCITY;
+    const gravityPerSecond = c.CONFETTI_GRAVITY;
+    const frictionPerSecond = c.CONFETTI_FRICTION;
 
     for (let i = 0; i < numParticles; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -68,10 +70,10 @@ export function spawnConfetti(particlePool, cx, cy) {
         const life = maxLife * (0.7 + Math.random() * 0.3); // Czas życia w sekundach
 
         // POPRAWKA v0.62: Użyj puli obiektów zamiast .push()
-        const c = particlePool.get();
-        if (c) {
+        const p = particlePool.get();
+        if (p) {
             // init(x, y, vx, vy, life, color, gravity, friction, size, rotSpeed)
-            c.init(
+            p.init(
                 cx, cy,
                 Math.cos(angle) * speed, // px/s
                 Math.sin(angle) * speed + initialUpVelocity, // px/s
@@ -80,19 +82,20 @@ export function spawnConfetti(particlePool, cx, cy) {
                 gravityPerSecond, // px/s^2
                 frictionPerSecond, // % zaniku na sekundę
                 8 + Math.random() * 4, // size
-                (Math.random() - 0.5) * 0.2 * 60 // rad/s
+                (Math.random() - 0.5) * c.CONFETTI_ROTATION_SPEED // rad/s
             );
         }
     }
 }
 
+// POPRAWKA v0.65: Czas życia pobierany z EFFECTS_CONFIG
 export function addBombIndicator(bombIndicators, cx, cy, radius) {
     bombIndicators.push({
         x: cx,
         y: cy,
         maxRadius: radius,
         life: 0,
-        maxLife: 0.375 
+        maxLife: EFFECTS_CONFIG.BOMB_INDICATOR_LIFE 
     });
 }
 

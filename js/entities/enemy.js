@@ -1,11 +1,11 @@
 // ==============
-// ENEMY.JS (v0.64b - Poprawka siły separacji)
+// ENEMY.JS (v0.65 - Centralizacja Danych)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
 import { colorForEnemy } from '../core/utils.js';
-// POPRAWKA v0.61: Nie importujemy już EnemyBullet, bo nie tworzymy go tutaj
-// import { EnemyBullet } from './bullet.js'; 
+// POPRAWKA v0.65: Import nowej centralnej konfiguracji
+import { WEAPON_CONFIG } from '../config/gameData.js';
 import { get as getAsset } from '../services/assets.js';
 
 // === KLASA BAZOWA WRONIA ===
@@ -17,11 +17,10 @@ export class Enemy {
         this.id = 0; 
 
         // Statystyki
-        this.stats = stats;
+        this.stats = stats; // Statystyki są już pobierane z gameData.js (w enemyManager)
         this.type = stats.type || 'standard';
         this.hp = Math.floor(stats.hp * hpScale);
         this.maxHp = this.hp;
-        // POPRAWKA v0.64: Prędkość jest teraz w px/s (skalowanie odbywa się w enemyManager)
         this.speed = stats.speed;
         this.size = stats.size;
         this.damage = stats.damage;
@@ -240,7 +239,7 @@ export class RangedEnemy extends Enemy {
 
     /**
      * Nadpisana metoda update dla wroga dystansowego.
-     * POPRAWKA v0.64: Zastosowano fizykę dt i przeskalowano prędkość pocisku.
+     * POPRAWKA v0.65: Użyj wartości z WEAPON_CONFIG
      */
     update(dt, player, game, state) {
         // Logika ruchu i strzelania (zanim wywołamy logikę animacji)
@@ -267,8 +266,8 @@ export class RangedEnemy extends Enemy {
             this.rangedCooldown -= dt;
             // POPRAWKA v0.61: Użyj puli obiektów
             if (this.rangedCooldown <= 0 && dist > 0.1 && state.eBulletsPool) {
-                // POPRAWKA v0.63c: Przeskalowanie prędkości pocisku na 144 FPS (3.5 * 144)
-                const bulletSpeed = 504 * (game.freezeT > 0 ? 0.25 : 1); // px/s (było 210)
+                // POPRAWKA v0.65: Użyj wartości z WEAPON_CONFIG
+                const bulletSpeed = WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED * (game.freezeT > 0 ? 0.25 : 1); // px/s
                 
                 const bullet = state.eBulletsPool.get();
                 if (bullet) {

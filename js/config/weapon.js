@@ -1,28 +1,19 @@
 // ==============
-// WEAPON.JS (v0.63c - Poprawka skalowania prędkości DT)
+// WEAPON.JS (v0.65 - Pełna centralizacja danych)
 // Lokalizacja: /js/config/weapon.js
 // ==============
 
 import { limitedShake, addHitText } from '../core/utils.js';
 import { findClosestEnemy, killEnemy } from '../managers/enemyManager.js';
 import { playSound } from '../services/audio.js';
-// import { PlayerBullet } from '../entities/bullet.js'; // Już niepotrzebne
 import { areaNuke } from '../managers/effects.js';
+// POPRAWKA v0.65: Import nowej centralnej konfiguracji
+import { GAME_CONFIG, WEAPON_CONFIG, PERK_CONFIG } from './gameData.js';
 
 /**
- * Ustawienia początkowe broni (i inne, które tu pasują)
- * POPRAWKA v0.63c: Przeskalowanie prędkości pocisku na 144 FPS (zamiast 60)
+ * POPRAWKA v0.65: Usunięto stałą INITIAL_SETTINGS.
+ * Została przeniesiona do gameData.js (jako GAME_CONFIG i WEAPON_CONFIG).
  */
-export const INITIAL_SETTINGS = {
-    spawn: 0.02,
-    maxEnemies: 110,
-    bulletSpeed: 864, // Było: 360 (teraz 6 * 144)
-    bulletSize: 3,
-    bulletDamage: 1,
-    fireRate: 500,
-    eliteInterval: 24000,
-    xpNeeded: 5
-};
 
 // ===================================
 // KLASA BAZOWA BRONI
@@ -45,10 +36,12 @@ class Weapon {
 
     upgrade(perk) {
         this.level++;
-        this.updateStats(perk);
+        // Wywołujemy updateStats() bez argumentu,
+        // ponieważ teraz będzie ona pobierać dane z PERK_CONFIG
+        this.updateStats(); 
     }
     
-    updateStats(perk) {
+    updateStats() {
         // Domyślnie nic nie rób
     }
     
@@ -71,11 +64,11 @@ class Weapon {
 export class AutoGun extends Weapon {
     constructor(player) {
         super(player);
-        this.fireRate = INITIAL_SETTINGS.fireRate;
-        this.bulletDamage = INITIAL_SETTINGS.bulletDamage;
-        // POPRAWKA v0.64: Użyj przeskalowanej prędkości
-        this.bulletSpeed = INITIAL_SETTINGS.bulletSpeed; // Już jest w px/s
-        this.bulletSize = INITIAL_SETTINGS.bulletSize;
+        // POPRAWKA v0.65: Użyj wartości z WEAPON_CONFIG
+        this.fireRate = WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE;
+        this.bulletDamage = WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE;
+        this.bulletSpeed = WEAPON_CONFIG.AUTOGUN.BASE_SPEED;
+        this.bulletSize = WEAPON_CONFIG.AUTOGUN.BASE_SIZE;
         this.multishot = 0;
         this.pierce = 0;
         
@@ -83,19 +76,23 @@ export class AutoGun extends Weapon {
         this.cacheTimer = 0; 
     }
 
+    // Ta metoda jest teraz wywoływana przez perk.apply() w perks.js
+    // Wartości są modyfikowane bezpośrednio w perks.js
     updateStats(perk) {
+        if (!perk) return; // Wywołane przez addWeapon, a nie przez apply
+        
         switch (perk.id) {
             case 'firerate':
-                this.fireRate *= 0.85;
+                this.fireRate *= PERK_CONFIG.firerate.value;
                 break;
             case 'damage':
-                this.bulletDamage += 1;
+                this.bulletDamage += PERK_CONFIG.damage.value;
                 break;
             case 'multishot':
-                this.multishot += 1;
+                this.multishot += PERK_CONFIG.multishot.value;
                 break;
             case 'pierce':
-                this.pierce += 1;
+                this.pierce += PERK_CONFIG.pierce.value;
                 break;
         }
     }
@@ -172,13 +169,15 @@ export class OrbitalWeapon extends Weapon {
         this.updateStats(); 
     }
     
-    updateStats(perk) {
-        this.damage = 1 + Math.floor(this.level / 2);
-        this.radius = (28 + 6 * this.level) * 1.5;
-        // UWAGA: Prędkość orbitala (radiany/s) nie musi być skalowana *60,
-        // ponieważ była już poprawnie mnożona przez dt w v0.62.
-        this.speed = (1.2 + 0.2 * this.level);
+    // POPRAWKA v0.65: Skalowanie pobierane z PERK_CONFIG
+    updateStats() {
+        const c = PERK_CONFIG.orbital;
         
+        this.damage = c.DAMAGE_BASE + Math.floor(this.level / c.DAMAGE_LEVEL_DIVISOR);
+        this.radius = (c.RADIUS_BASE + c.RADIUS_PER_LEVEL * this.level) * c.RADIUS_MULTIPLIER;
+        this.speed = c.SPEED_BASE + c.SPEED_PER_LEVEL * this.level;
+        
+        // Ta logika jest poprawna - dodaje nowy orbital, jeśli poziom jest wyższy niż liczba itemów
         while (this.items.length < this.level) {
             this.items.push({ angle: Math.random() * Math.PI * 2, ox: 0, oy: 0 });
         }
@@ -277,9 +276,13 @@ export class NovaWeapon extends Weapon {
         this.updateStats(); 
     }
     
-    updateStats(perk) {
-        this.cooldown = Math.max(0.6, (2.2 - 0.3 * this.level));
-        this.bulletCount = Math.min(24, 8 + 2 * this.level);
+    // POPRAWKA v0.65: Skalowanie pobierane z PERK_CONFIG
+    updateStats() {
+        const c = PERK_CONFIG.nova;
+        
+        this.cooldown = Math.max(c.COOLDOWN_MIN, (c.COOLDOWN_BASE - c.COOLDOWN_REDUCTION_PER_LEVEL * this.level));
+        this.bulletCount = Math.min(c.COUNT_MAX, c.COUNT_BASE + c.COUNT_PER_LEVEL * this.level);
+        
         if (this.timer === 0) { 
              this.timer = this.cooldown;
         }
@@ -293,11 +296,11 @@ export class NovaWeapon extends Weapon {
             this.timer = this.cooldown;
             
             const autoGun = this.player.getWeapon(AutoGun);
-            const dmg = autoGun ? autoGun.bulletDamage : INITIAL_SETTINGS.bulletDamage;
+            // POPRAWKA v0.65: Użyj wartości z WEAPON_CONFIG jako fallback
+            const dmg = autoGun ? autoGun.bulletDamage : WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE;
             const pierce = autoGun ? autoGun.pierce : 0;
-            // POPRAWKA v0.64: Użyj przeskalowanej prędkości
-            const speed = autoGun ? autoGun.bulletSpeed : INITIAL_SETTINGS.bulletSpeed; // Już w px/s
-            const size = autoGun ? autoGun.bulletSize : INITIAL_SETTINGS.bulletSize;
+            const speed = autoGun ? autoGun.bulletSpeed : WEAPON_CONFIG.AUTOGUN.BASE_SPEED; // Już w px/s
+            const size = autoGun ? autoGun.bulletSize : WEAPON_CONFIG.AUTOGUN.BASE_SIZE;
 
             for (let i = 0; i < this.bulletCount; i++) {
                 const ang = (i / this.bulletCount) * Math.PI * 2;

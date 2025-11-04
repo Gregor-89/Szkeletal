@@ -1,11 +1,12 @@
 // ==============
-// PICKUP.JS (v0.63 - Optymalizacja strokeText)
+// PICKUP.JS (v0.65 - Centralizacja Danych)
 // Lokalizacja: /js/entities/pickup.js
 // ==============
 
 import { getPickupEmoji, getPickupColor, getPickupLabel } from '../core/utils.js';
-// POPRAWKA v0.56: Import menedżera zasobów
 import { get as getAsset } from '../services/assets.js';
+// POPRAWKA v0.65: Import nowej centralnej konfiguracji
+import { PICKUP_CONFIG } from '../config/gameData.js';
 
 /**
  * Klasa bazowa dla wszystkich pickupów (bonusów).
@@ -16,7 +17,8 @@ export class Pickup {
     this.y = y;
     this.type = type;
     this.r = 9;
-    this.life = 14; // Czas życia w sekundach
+    // POPRAWKA v0.65: Użyj wartości z PICKUP_CONFIG
+    this.life = PICKUP_CONFIG.BASE_LIFE; // Czas życia w sekundach
     this.pulsePhase = Math.random() * Math.PI * 2;
   }
   

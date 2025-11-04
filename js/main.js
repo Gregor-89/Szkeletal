@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.63c - Opcja pozycji FPS)
+// MAIN.JS (v0.65 - Centralizacja Danych)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -12,10 +12,12 @@ import { ObjectPool } from './core/objectPool.js';
 
 import { Player } from './entities/player.js';
 
+// POPRAWKA v0.65: Usunięto import INITIAL_SETTINGS
 import {
-    INITIAL_SETTINGS,
     AutoGun, OrbitalWeapon, NovaWeapon
 } from './config/weapon.js';
+// POPRAWKA v0.65: Import nowej centralnej konfiguracji
+import { PLAYER_CONFIG, GAME_CONFIG } from './config/gameData.js';
 
 import { draw } from './core/draw.js';
 
@@ -34,7 +36,8 @@ import { devSettings, initDevTools } from './services/dev.js';
 import { checkCollisions } from './managers/collisions.js';
 import { updateGame } from './core/gameLogic.js';
 import { initAudio, playSound, loadAudio } from './services/audio.js';
-import { ENEMY_CLASS_MAP, ENEMY_STATS } from './managers/enemyManager.js';
+// POPRAWKA v0.65: Import ENEMY_STATS jest teraz w enemyManager.js, nie tutaj
+import { ENEMY_CLASS_MAP } from './managers/enemyManager.js';
 import { PlayerBullet, EnemyBullet } from './entities/bullet.js';
 // POPRAWKA v0.62: Import nowych klas dla puli
 import { Gem } from './entities/gem.js';
@@ -73,7 +76,7 @@ const ctx=canvas.getContext('2d');
 let pickupShowLabels = true;
 let pickupStyleEmoji = false;
 let showFPS = true;
-let fpsPosition = 'right'; // POPRAWKA v0.63c: Nowa zmienna dla pozycji FPS
+let fpsPosition = 'right'; // POPRAWKA v0.64: Nowa zmienna dla pozycji FPS
 
 let animationFrameId = null;
 let startTime = 0;
@@ -86,9 +89,13 @@ let frameCount = 0;
 let lastUiUpdateTime = 0;
 const UI_UPDATE_INTERVAL = 100;
 
+// POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG i GAME_CONFIG
 const game={
-  score:0, level:1, health:100, maxHealth:100, time:0, running:false, paused:true, inMenu:true,
-  xp:0, xpNeeded:5, pickupRange:24, magnet:false, magnetT:0, shakeT:0, shakeMag:0, hyper:false,
+  score:0, level:1, health: PLAYER_CONFIG.INITIAL_HEALTH, maxHealth: PLAYER_CONFIG.INITIAL_HEALTH, 
+  time:0, running:false, paused:true, inMenu:true,
+  xp:0, xpNeeded: GAME_CONFIG.INITIAL_XP_NEEDED, 
+  pickupRange: PLAYER_CONFIG.INITIAL_PICKUP_RANGE, 
+  magnet:false, magnetT:0, shakeT:0, shakeMag:0, hyper:false,
   shield:false, shieldT:0, speedT:0, freezeT:0, screenShakeDisabled:false, manualPause:false,
   collisionSlowdown: 0,
   triggerChestOpen: false 
@@ -111,7 +118,14 @@ const gemsPool = new ObjectPool(Gem, 1000); // Pula dla Gemów XP
 const particlePool = new ObjectPool(Particle, 2000); // Pula dla cząsteczek, konfetti i śladów
 const hitTextPool = new ObjectPool(HitText, 100); // Pula dla tekstów obrażeń
 
-const settings={ ...INITIAL_SETTINGS, lastFire:0, lastElite:0 };
+// POPRAWKA v0.65: Użyj wartości z GAME_CONFIG
+const settings={ 
+    spawn: GAME_CONFIG.INITIAL_SPAWN_RATE,
+    maxEnemies: GAME_CONFIG.MAX_ENEMIES,
+    eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL,
+    lastFire:0, 
+    lastElite:0 
+};
 
 let perkLevels={};
 
@@ -170,7 +184,7 @@ const uiData = {
     canvas, ctx,
     animationFrameId, startTime, lastTime, savedGameState,
     loopCallback: loop, 
-    // POPRAWKA v0.63c: Przekazanie 'fpsPosition' do funkcji rysowania
+    // POPRAWKA v0.64: Przekazanie 'fpsPosition' do funkcji rysowania
     drawCallback: () => draw(ctx, canvas, game, stars, [], player, enemies, playerBulletPool.activeItems, enemyBulletPool.activeItems, gemsPool.activeItems, pickups, chests, particlePool.activeItems, hitTextPool.activeItems, bombIndicators, [], pickupStyleEmoji, pickupShowLabels, 0, false, fpsPosition), 
     initStarsCallback: initStars,
     currentChestReward: null 
@@ -299,7 +313,7 @@ function loop(currentTime){
     updateVisualEffects(dt, [], [], bombIndicators); 
 
     if(game.paused || !game.running){
-      // POPRAWKA v0.63c: Przekazanie 'fpsPosition' do funkcji rysowania
+      // POPRAWKA v0.64: Przekazanie 'fpsPosition' do funkcji rysowania
       draw(ctx, canvas, game, stars, [], player, enemies, playerBulletPool.activeItems, enemyBulletPool.activeItems, gemsPool.activeItems, pickups, chests, particlePool.activeItems, hitTextPool.activeItems, bombIndicators, [], pickupStyleEmoji, pickupShowLabels, fps, showFPS, fpsPosition);
       
       if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
@@ -316,7 +330,7 @@ function loop(currentTime){
 
     update(dt); 
     
-    // POPRAWKA v0.63c: Przekazanie 'fpsPosition' do funkcji rysowania
+    // POPRAWKA v0.64: Przekazanie 'fpsPosition' do funkcji rysowania
     draw(ctx, canvas, game, stars, [], player, enemies, playerBulletPool.activeItems, enemyBulletPool.activeItems, gemsPool.activeItems, pickups, chests, particlePool.activeItems, hitTextPool.activeItems, bombIndicators, [], pickupStyleEmoji, pickupShowLabels, fps, showFPS, fpsPosition);
     
     if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
@@ -352,7 +366,7 @@ document.getElementById('btnStart').addEventListener('click', () => {
   game.screenShakeDisabled = !document.getElementById('chkShake').checked;
   
   showFPS = !!(document.getElementById('chkFPS') && document.getElementById('chkFPS').checked);
-  // POPRAWKA v0.63c: Wczytanie opcji pozycji FPS
+  // POPRAWKA v0.64: Wczytanie opcji pozycji FPS
   fpsPosition = (document.querySelector('input[name="fpspos"]:checked')||{value:'right'}).value;
   
   pickupShowLabels = !!(document.getElementById('chkPickupLabels') && document.getElementById('chkPickupLabels').checked);
@@ -405,7 +419,8 @@ document.getElementById('btnContinue').addEventListener('click', () => {
     enemies.length = 0; 
     const loadedEnemies = uiData.savedGameState.enemies || [];
     for (const savedEnemy of loadedEnemies) {
-        const stats = ENEMY_STATS[savedEnemy.type];
+        // POPRAWKA v0.65: Użyj ENEMY_STATS z gameStateRef (który importuje z gameData)
+        const stats = gameStateRef.ENEMY_STATS[savedEnemy.type]; 
         const EnemyClass = ENEMY_CLASS_MAP[savedEnemy.type];
         if (EnemyClass && stats) {
             const newEnemy = new EnemyClass(savedEnemy.x, savedEnemy.y, stats, 1); 
