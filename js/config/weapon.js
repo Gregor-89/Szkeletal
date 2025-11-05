@@ -1,5 +1,5 @@
 // ==============
-// WEAPON.JS (v0.65 - Pełna centralizacja danych - Poprawka stabilności)
+// WEAPON.JS (v0.67 - Natychmiastowe Celowanie AutoGun)
 // Lokalizacja: /js/config/weapon.js
 // ==============
 
@@ -77,8 +77,9 @@ export class AutoGun extends Weapon {
         this.multishot = 0;
         this.pierce = 0;
         
-        this.cachedTarget = null;
-        this.cacheTimer = 0; 
+        // POPRAWKA V0.67: USUNIĘTO BUFOROWANIE CELU
+        // this.cachedTarget = null;
+        // this.cacheTimer = 0; 
     }
 
     // Ta metoda jest teraz wywoływana przez perk.apply() w perks.js
@@ -111,20 +112,16 @@ export class AutoGun extends Weapon {
         
         if (now - this.lastFire < this.fireRate / (game.hyper ? 1.2 : 1)) return;
         
-        this.cacheTimer -= dt;
-        if (this.cacheTimer <= 0 || !this.cachedTarget || this.cachedTarget.hp <= 0) {
-            this.cacheTimer = 0.1; 
-            const { enemy: tgt } = findClosestEnemy(this.player, enemies);
-            this.cachedTarget = tgt;
-        }
-
-        if (!this.cachedTarget) return; 
+        // POPRAWKA V0.67: Wyszukiwanie najbliższego celu w KAŻDEJ klatce strzelania
+        const { enemy: target } = findClosestEnemy(this.player, enemies);
+        
+        if (!target) return; 
         
         this.lastFire = now;
         playSound('Shoot');
 
-        const dx = this.cachedTarget.x - this.player.x;
-        const dy = this.cachedTarget.y - this.player.y;
+        const dx = target.x - this.player.x;
+        const dy = target.y - this.player.y;
         const baseAng = Math.atan2(dy, dx);
         const count = 1 + this.multishot;
         const spread = Math.min(0.4, 0.12 * this.multishot);
@@ -149,6 +146,8 @@ export class AutoGun extends Weapon {
                 );
             }
         }
+        
+        console.log('[DEBUG] js/config/weapon.js: AutoGun re-targeted instantly.');
     }
     
     toJSON() {
@@ -158,6 +157,7 @@ export class AutoGun extends Weapon {
             bulletDamage: this.bulletDamage,
             multishot: this.multishot,
             pierce: this.pierce
+            // USUNIĘTO: this.cachedTarget i this.cacheTimer z toJSON()
         };
     }
 }
@@ -223,8 +223,11 @@ export class OrbitalWeapon extends Weapon {
                 
                 const d = Math.hypot(it.ox - e.x, it.oy - e.y);
                 if (d < 5 + e.size * 0.5) {
-                    const dps = this.damage * this.collisionTimer;
-                    e.hp -= dps; 
+                    // POPRAWKA V0.67: Zmieniono obliczenie obrażeń na standardowe,
+                    // aby nie zadawało 0.05 (zaokrąglane do 0).
+                    const dmg = this.damage; 
+                    
+                    e.hp -= dmg; 
                     
                     // POPRAWKA v0.62e: Użyj puli cząsteczek i fizyki opartej na DT
                     const p = particlePool.get();
@@ -239,7 +242,8 @@ export class OrbitalWeapon extends Weapon {
                     }
                     
                     // POPRAWKA v0.62: Użyj puli hitText
-                    addHitText(hitTextPool, hitTexts, e.x, e.y, dps, '#80deea');
+                    // Używamy dmg (które jest liczbą całkowitą z definicji Orbitala)
+                    addHitText(hitTextPool, hitTexts, e.x, e.y, dmg, '#80deea');
                     
                     if (e.hp <= 0) {
                         // POPRAWKA v0.62: Przekaż pule do killEnemy

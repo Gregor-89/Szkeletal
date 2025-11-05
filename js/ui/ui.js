@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.65b - Poprawka krytycznego TypeError)
+// UI.JS (v0.67 - Poprawka wyrównania strzałki Perków)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -159,7 +159,7 @@ export function startRun(game, resetAll, uiData) {
 }
 
 // POPRAWKA v0.65: Używa stałych z gameData.js
-export function resetAll(canvas, settings, perkLevels, uiData) {
+export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     if (uiData.animationFrameId !== null) {
         cancelAnimationFrame(uiData.animationFrameId);
         uiData.animationFrameId = null;
@@ -184,7 +184,10 @@ export function resetAll(canvas, settings, perkLevels, uiData) {
         settings.lastFire = 0;
         settings.lastElite = 0;
 
-        uiData.player.reset(canvas.width, canvas.height);
+        // POPRAWKA V0.66: Użyj rozmiarów świata zamiast canvas.width/height
+        const worldWidth = canvas.width * (camera.worldWidth / camera.viewWidth);
+        const worldHeight = canvas.height * (camera.worldHeight / camera.viewHeight);
+        uiData.player.reset(worldWidth, worldHeight);
         
         for (let key in perkLevels) {
             delete perkLevels[key];
@@ -195,6 +198,14 @@ export function resetAll(canvas, settings, perkLevels, uiData) {
         settings.lastFire = 0;
         settings.lastElite = 0;
         devSettings.presetLoaded = false;
+        
+        // POPRAWKA V0.67: Upewnij się, że gracz jest na środku świata po resecie presetów
+        const worldWidth = canvas.width * (camera.worldWidth / camera.viewWidth);
+        const worldHeight = canvas.height * (camera.worldHeight / camera.viewHeight);
+        uiData.player.x = worldWidth / 2;
+        uiData.player.y = worldHeight / 2;
+        camera.offsetX = (worldWidth / 2) - (canvas.width / 2);
+        camera.offsetY = (worldHeight / 2) - (canvas.height / 2);
     }
 
     // Te rzeczy resetujemy ZAWSZE
@@ -296,6 +307,9 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
     console.log(`--- LEVEL UP (Poziom ${game.level + 1}) ---`);
     console.log('[DEBUG-LVLUP-01] Rozpoczęcie levelUp. Sprawdzam PERK_CONFIG:', PERK_CONFIG);
     
+    // KLUCZOWY FIX: PAUZA NATYCHMIAST PO ZDOBYCIU POZIOMU
+    game.paused = true;
+    
     game.xp -= game.xpNeeded;
     game.level += 1;
     
@@ -323,9 +337,9 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
 
     // POPRAWKA v0.65: Użyj wartości z UI_CONFIG
     setTimeout(() => {
-        console.log('[levelUp] setTimeout wykonany. Pauzuję grę i pokazuję perki.');
+        console.log('[levelUp] setTimeout wykonany. Pokazuję perki.');
         
-        game.paused = true; // Zapauzuj grę DOPIERO TERAZ
+        // PAUZA ZOSTAŁA PRZENIESIONA NA POCZĄTEK FUNKCJI
         
         if (game.running && !game.inMenu) {
             levelUpOverlay.style.display = 'flex';
@@ -412,7 +426,8 @@ export function showPerks(perkLevels) {
             el.className = 'perk';
             const iconHTML = perk.emoji ? `<span class="picon-emoji">${perk.emoji}</span>` : `<span class="picon" style="background:${perk.color || '#999'}"></span>`;
             
-            el.innerHTML = `<span class="badge">Poziom ${lvl} → ${lvl + 1}</span><h4>${iconHTML}${perk.name}</h4><p>${perk.desc}</p>`;
+            // POPRAWKA V0.67: Użycie symbolu »
+            el.innerHTML = `<span class="badge">Poziom ${lvl} » ${lvl + 1}</span><h4>${iconHTML}${perk.name}</h4><p>${perk.desc}</p>`;
             
             el.onclick = () => { 
                 if(window.wrappedPickPerk) window.wrappedPickPerk(perk); 
@@ -471,7 +486,7 @@ export function openChest(game, perkLevels, uiData) {
         <div class="chest-reward-name">${reward.name}</div>
         <div class="chest-reward-desc">${reward.desc}</div>
         <div class="chest-reward-level">
-          Poziom: ${currentLevel} → ${currentLevel + 1} (z ${reward.max})
+          Poziom: ${currentLevel} » ${currentLevel + 1} (z ${reward.max})
         </div>
         <div class="chest-reward-level-bar">
           <div class="chest-reward-level-fill" style="width:${progress}%;"></div>

@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.66 - Finalna Synchronizacja Pikseli)
+// DRAW.JS (v0.67 - Ostateczne Usunięcie Logu)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -51,8 +51,7 @@ export function draw(ctx, canvas, game, stars, trails_deprecated, player, enemie
     // POPRAWKA v0.66: GŁÓWNA TRANSFORMACJA KAMERY
     // KLUCZOWY FIX: Zaokrąglenie Kamery jest już wykonane w gameLogic.js! Używamy camera.offsetX/Y.
     ctx.translate(-camera.offsetX, -camera.offsetY);
-    // Log diagnostyczny
-    console.log('[DEBUG] js/core/draw.js: ctx.translate uses Math.round for pixel sync');
+    // Log diagnostyczny (USUNIĘTY)
 
     // --- Rysowanie WZORU TŁA (MIGRACJA Z CSS DO CANVAS) ---
     const tileSize = 40;
@@ -140,7 +139,7 @@ export function draw(ctx, canvas, game, stars, trails_deprecated, player, enemie
         if (g.x < cullLeft || g.x > cullRight || g.y < cullTop || g.y > cullBottom) {
             continue;
         }
-        // KLUCZOWY FIX: UPRASZCZAMY: Nie musimy przywracać pozycji, ponieważ tylko przesuwamy rysowanie.
+        // KLUCZOWY FIX: UPRASZCZA
         const originalX = g.x;
         const originalY = g.y;
         
@@ -182,7 +181,7 @@ export function draw(ctx, canvas, game, stars, trails_deprecated, player, enemie
         if (c.x < cullLeft || c.x > cullRight || c.y < cullTop || c.y > cullBottom) {
             continue;
         }
-        // KLUCZOWY FIX: UPRASZCZAMY
+        // KLUCZOWY FIX: UPRASZCZA
         const originalX = c.x;
         const originalY = c.y;
         

@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.66 - Wprowadzenie Kamery i Świata Gry)
+// GAMEDATA.JS (v0.67 - Konfetti Fix)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -156,12 +156,13 @@ export const EFFECTS_CONFIG = {
   BOMB_INDICATOR_LIFE: 0.375, // Czas trwania animacji (w sekundach)
   
   // Konfetti (poziom wyżej / skrzynia)
+  // POPRAWKA V0.67: Parametry starszej wersji (przeliczone na sekundy)
   CONFETTI_COUNT: 80, // Ilość cząsteczek
-  CONFETTI_LIFE: 0.7, // Czas życia (w sekundach)
-  CONFETTI_SPEED_MIN: 180, // Min. prędkość początkowa (px/s)
-  CONFETTI_SPEED_MAX: 420, // Max. prędkość początkowa (px/s)
-  CONFETTI_INITIAL_UP_VELOCITY: -210, // Siła wystrzału w górę (px/s)
-  CONFETTI_GRAVITY: 360, // Grawitacja (px/s^2)
+  CONFETTI_LIFE: 1.67, // Czas życia (100 klatek / 60 FPS)
+  CONFETTI_SPEED_MIN: 180, // Min. prędkość początkowa (3 px/klatkę * 60)
+  CONFETTI_SPEED_MAX: 420, // Max. prędkość początkowa (7 px/klatkę * 60)
+  CONFETTI_INITIAL_UP_VELOCITY: -210, // Siła wystrzału w górę (-3.5 px/klatkę * 60)
+  CONFETTI_GRAVITY: 6, // Grawitacja (0.1 px/klatkę * 60)
   CONFETTI_FRICTION: 1.0, // Tarcie (1.0 = 100% zaniku na sekundę)
   CONFETTI_ROTATION_SPEED: 12, // Maks. prędkość obrotu (radiany/s)
   
@@ -186,4 +187,4 @@ export const ENEMY_STATS = {
 };
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.66] js/config/gameData.js: Dodano WORLD_CONFIG (SIZE: 2)');
+console.log('[DEBUG] js/config/gameData.js: Dodano WORLD_CONFIG (SIZE: 2)');

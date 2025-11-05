@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.65 - Pełna centralizacja danych)
+// DEV.JS (v0.67 - Auto-Start Dev Preset)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -33,8 +33,9 @@ const PICKUP_CLASS_MAP = {
     freeze: FreezePickup
 };
 
-// Wewnętrzna referencja do stanu gry, ustawiana przez initDevTools
+// Wewnętrzna referencja do stanu gry i funkcji startu, ustawiana przez initDevTools
 let gameState = {};
+let startRunCallback = () => {}; // DODANO: Callback do startu gry
 
 // Funkcja obliczająca XP potrzebne na dany poziom
 // POPRAWKA v0.65: Używa stałych z GAME_CONFIG
@@ -44,6 +45,18 @@ function calculateXpNeeded(level) {
         xp = Math.floor(xp * GAME_CONFIG.XP_GROWTH_FACTOR) + GAME_CONFIG.XP_GROWTH_ADD;
     }
     return xp;
+}
+
+/**
+ * POPRAWKA V0.67: Funkcja wywołująca start gry (przekazana z main.js)
+ */
+function callStartRun() {
+    // Sprawdzamy, czy gra jest nieaktywna (w menu)
+    if (gameState.game.inMenu || !gameState.game.running) {
+        startRunCallback();
+    } else {
+        console.warn("[DEV] Nie można uruchomić gry automatycznie (gra już działa).");
+    }
 }
 
 /**
@@ -57,6 +70,7 @@ function applyDevSettings() {
 
     const { game, settings, player } = gameState;
 
+    // Aplikacja ustawień gracza działa tylko w trakcie trwania gry
     if (!game.inMenu && game.running) {
         game.level = parseInt(document.getElementById('devLevel').value) || 1;
         game.health = parseInt(document.getElementById('devHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
@@ -94,7 +108,8 @@ function applyDevSettings() {
     const pickupSelect = document.getElementById('devPickupType');
     devSettings.allowedPickups = Array.from(pickupSelect.selectedOptions).map(o => o.value);
 
-    alert('✅ Ustawienia Dev zastosowane!');
+    // POPRAWKA V0.67: Zmieniono alert na konsolę (przy zwykłym apply)
+    console.log('✅ Ustawienia Dev zastosowane!');
 }
 
 /**
@@ -145,9 +160,11 @@ function applyDevPreset(level, perkLevelOffset = 0) {
         lastElite: settings.lastElite 
     });
     
-    player.reset(gameState.canvas.width, gameState.canvas.height); // Resetuje gracza i broń
-    
-    // POPRAWKA v0.64: Usunięto 'player.speed = 3', które psuło fizykę DT.
+    // Używamy oryginalnej funkcji resetAll, co wymagałoby przekazania uiData, 
+    // ale ponieważ jej nie mamy w dev.js, ręcznie resetujemy gracza.
+    const worldWidth = gameState.canvas.width * (gameState.camera.worldWidth / gameState.camera.viewWidth);
+    const worldHeight = gameState.canvas.height * (gameState.camera.worldHeight / gameState.camera.viewHeight);
+    player.reset(worldWidth, worldHeight); 
     
     // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG
     game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
@@ -202,7 +219,8 @@ function applyDevPreset(level, perkLevelOffset = 0) {
 
     devSettings.presetLoaded = true;
     
-    alert(`✅ Preset załadowany! Poziom: ${game.level}, Perki: ${perkLevelOffset === 0 ? 'Max' : 'Prawie Max'}\nPrzejdź do zakładki "Gra" i kliknij "Start Gry".`);
+    // POPRAWKA V0.67: Automatyczny start gry
+    callStartRun();
 }
 
 function devPresetAlmostMax() {
@@ -216,12 +234,16 @@ function devPresetMax() {
 
 /**
  * Inicjalizuje moduł dev, przekazując referencje do stanu gry.
+ * POPRAWKA V0.67: Akceptuje również funkcję startRun.
  */
-export function initDevTools(stateRef) {
+export function initDevTools(stateRef, startRunFn) {
     gameState = stateRef;
-    
+    startRunCallback = startRunFn; // PRZECHOWANIE CALLBACKA
+
     window.applyDevSettings = applyDevSettings;
     window.devSpawnPickup = devSpawnPickup;
     window.devPresetAlmostMax = devPresetAlmostMax;
     window.devPresetMax = devPresetMax;
+    
+    console.log('[DEBUG] js/services/dev.js: Dev Tools zainicjalizowane z callbackiem startRun.');
 }

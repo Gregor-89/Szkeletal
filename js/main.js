@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.66 - Wprowadzenie Scrollingu Tła CSS)
+// MAIN.JS (v0.67 - Integracja Niezależnych Efektów)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -28,9 +28,11 @@ import {
     gameOverOverlay
 } from './ui/ui.js';
 
-import { areaNuke, updateVisualEffects } from './managers/effects.js';
+// POPRAWKA V0.67: Zmieniony import, aby pobrać updateParticles
+import { areaNuke, updateVisualEffects, updateParticles } from './managers/effects.js';
 import { keys, jVec, initInput, setJoystickSide } from './ui/input.js';
 import { perkPool } from './config/perks.js';
+// POPRAWKA v0.67: Zmieniony import, aby pobrać initDevTools z nowym argumentem
 import { devSettings, initDevTools } from './services/dev.js';
 import { checkCollisions } from './managers/collisions.js';
 // POPRAWKA v0.66: W gameLogic.js updateGame będzie miało teraz logikę kamery.
@@ -313,7 +315,12 @@ function wrappedGameOver() {
     savedGameState = uiData.savedGameState;
 }
 
+/**
+ * POPRAWKA V0.67 (FIX CRASH): Uproszczona funkcja startu gry.
+ * Ta funkcja nie czyta już ustawień z DOM i jest bezpieczna do wywołania z dev.js.
+ */
 function wrappedStartRun() {
+    // Właściwy start
     uiData.animationFrameId = animationFrameId;
     uiData.startTime = startTime;
     uiData.lastTime = lastTime;
@@ -321,6 +328,34 @@ function wrappedStartRun() {
     animationFrameId = uiData.animationFrameId;
     startTime = uiData.startTime;
     lastTime = uiData.lastTime;
+    
+    // Dodatkowy reset dla czystości logiki startu z menu
+    lastFrameTime = uiData.lastTime; 
+    frameCount = 0;
+    fps = 0;
+}
+
+/**
+ * NOWA FUNKCJA QoL 1: Odczytuje konfigurację z DOM i uruchamia grę.
+ * Ta funkcja jest wywoływana tylko przez kliknięcie przycisku "Start Gry" i przez Dev Menu.
+ */
+function wrappedLoadConfigAndStart() {
+    const pos=(document.querySelector('input[name="joypos"]:checked')||{value:'right'}).value;
+    setJoystickSide(pos);
+    game.hyper=!!(document.getElementById('chkHyper')&&document.getElementById('chkHyper').checked);
+    game.screenShakeDisabled = !document.getElementById('chkShake').checked;
+    
+    showFPS = !!(document.getElementById('chkFPS') && document.getElementById('chkFPS').checked);
+    fpsPosition = (document.querySelector('input[name="fpspos"]:checked')||{value:'right'}).value;
+    
+    pickupShowLabels = !!(document.getElementById('chkPickupLabels') && document.getElementById('chkPickupLabels').checked);
+    pickupStyleEmoji = (document.querySelector('input[name="pickupstyle"]:checked')||{value:'emoji'}).value === 'emoji';
+    
+    uiData.game = game;
+    uiData.pickupShowLabels = pickupShowLabels;
+    uiData.pickupStyleEmoji = pickupStyleEmoji;
+
+    wrappedStartRun();
 }
 
 
@@ -353,71 +388,77 @@ function loop(currentTime){
       console.warn("Canvas nie został zainicjalizowany. Czekam...");
       animationFrameId = requestAnimationFrame(loop);
       return;
-  }
-  
-  try {
-    if (startTime === 0) {
-        startTime = currentTime;
+    }
+    
+    try {
+        if (startTime === 0) {
+            startTime = currentTime;
+            lastTime = currentTime;
+            lastFrameTime = currentTime;
+        }
+        const deltaMs = currentTime - lastTime;
         lastTime = currentTime;
-        lastFrameTime = currentTime;
+        const dt = Math.min(deltaMs / 1000, 0.1); 
+        
+        // Licznik FPS
+        frameCount++;
+        if (currentTime - lastFrameTime >= 1000) {
+            fps = frameCount;
+            frameCount = 0;
+            lastFrameTime = currentTime;
+        }
+        
+        // AKTUALIZACJA WSKAŹNIKÓW BOMBY
+        updateVisualEffects(dt, [], [], bombIndicators); 
+        
+        // AKTUALIZACJA CZĄSTECZEK (KONFETTI) NIEZALEŻNIE OD PAUZY
+        // KLUCZOWA ZMIANA V0.67: Cząsteczki są aktualizowane ZAWSZE, aby efekt się odgrywał.
+        updateParticles(dt, particles); 
+        
+        if(game.paused || !game.running){
+            // ... reszta kodu w stanie pauzy ...
+            // Rysowanie odbywa się w Draw, a Draw rysuje cząsteczki z tablicy particles.
+            uiData.drawCallback();
+            
+            if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
+                lastUiUpdateTime = currentTime;
+                if (game.inMenu || game.manualPause || (gameOverOverlay && gameOverOverlay.style.display === 'flex')) {
+                    updateUI(game, player, settings, null); 
+                }
+            }
+            animationFrameId = requestAnimationFrame(loop);
+            return;
+        }
+        
+        game.time = (currentTime - startTime) / 1000;
+        
+        update(dt); 
+        
+        // POPRAWKA v0.66: drawCallback używa teraz kamery
+        uiData.drawCallback();
+        
+        if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
+            lastUiUpdateTime = currentTime;
+            updateUI(game, player, settings, null);
+        } 
+        
+        if(game.health<=0 && !devSettings.godMode){
+            wrappedGameOver();
+        }
+        
+    } catch (e) {
+        console.error("BŁĄD KRYTYCZNY W PĘTLI GRY (loop):", e);
+        game.running = false;
+        game.paused = true;
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
     }
-    const deltaMs = currentTime - lastTime;
-    lastTime = currentTime;
-    const dt = Math.min(deltaMs / 1000, 0.1); 
-
-    // Licznik FPS
-    frameCount++;
-    if (currentTime - lastFrameTime >= 1000) {
-        fps = frameCount;
-        frameCount = 0;
-        lastFrameTime = currentTime;
-    }
-
-    updateVisualEffects(dt, [], [], bombIndicators); 
-
-    if(game.paused || !game.running){
-      // POPRAWKA v0.66: drawCallback używa teraz kamery
-      uiData.drawCallback();
-      
-      if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
-          lastUiUpdateTime = currentTime;
-          if (game.inMenu || game.manualPause || (gameOverOverlay && gameOverOverlay.style.display === 'flex')) {
-              updateUI(game, player, settings, null); 
-          }
-      }
-      animationFrameId = requestAnimationFrame(loop);
-      return;
-    }
-
-    game.time = (currentTime - startTime) / 1000;
-
-    update(dt); 
     
-    // POPRAWKA v0.66: drawCallback używa teraz kamery
-    uiData.drawCallback();
-    
-    if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
-        lastUiUpdateTime = currentTime;
-        updateUI(game, player, settings, null);
-    } 
-
-    if(game.health<=0 && !devSettings.godMode){
-      wrappedGameOver();
+    if (game.running || game.paused) {
+        animationFrameId = requestAnimationFrame(loop);
     }
-  
-  } catch (e) {
-    console.error("BŁĄD KRYTYCZNY W PĘTLI GRY (loop):", e);
-    game.running = false;
-    game.paused = true;
-    if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-    }
-  }
-  
-  if (game.running || game.paused) {
-      animationFrameId = requestAnimationFrame(loop);
-  }
 }
 
 
@@ -438,33 +479,11 @@ function initEvents() {
     });
 
     // === Przycisk Start/Continue ===
+    // POPRAWKA V0.67: Przycisk startu używa nowej funkcji ładującej konfigurację
     document.getElementById('btnStart').addEventListener('click', () => {
-        // Wczytanie ustawień
-        const pos=(document.querySelector('input[name="joypos"]:checked')||{value:'right'}).value;
-        setJoystickSide(pos);
-        game.hyper=!!(document.getElementById('chkHyper')&&document.getElementById('chkHyper').checked);
-        game.screenShakeDisabled = !document.getElementById('chkShake').checked;
-        
-        showFPS = !!(document.getElementById('chkFPS') && document.getElementById('chkFPS').checked);
-        fpsPosition = (document.querySelector('input[name="fpspos"]:checked')||{value:'right'}).value;
-        
-        pickupShowLabels = !!(document.getElementById('chkPickupLabels') && document.getElementById('chkPickupLabels').checked);
-        pickupStyleEmoji = (document.querySelector('input[name="pickupstyle"]:checked')||{value:'emoji'}).value === 'emoji';
-        
-        uiData.game = game;
-        uiData.pickupShowLabels = pickupShowLabels;
-        uiData.pickupStyleEmoji = pickupStyleEmoji;
-
-        wrappedStartRun();
-        
-        animationFrameId = uiData.animationFrameId;
-        startTime = uiData.startTime;
-        lastTime = uiData.lastTime;
-        lastFrameTime = uiData.lastTime; 
-        frameCount = 0;
-        fps = 0;
+        wrappedLoadConfigAndStart();
     });
-
+    // ... reszta eventów ...
     document.getElementById('chkShake').addEventListener('change', () => {
         game.screenShakeDisabled = !document.getElementById('chkShake').checked;
     });
@@ -584,7 +603,7 @@ function initEvents() {
 
     document.getElementById('btnRetry').addEventListener('click', () => {
         gameOverOverlay.style.display='none';
-        wrappedStartRun();
+        wrappedLoadConfigAndStart(); // Używamy wrappedLoadConfigAndStart
     });
 
     document.getElementById('btnMenu').addEventListener('click', () => {
@@ -650,9 +669,6 @@ function initEvents() {
 
 // === START GRY ===
 
-// POPRAWKA v0.66: Przeniesienie initStars do ładowania zasobów, ponieważ wymaga canvasa
-// initStars();
-
 // Inicjalizacja modułu Input (v0.44)
 const handleEscape = () => {
   if(!game.inMenu && game.running){
@@ -671,10 +687,6 @@ const handleJoyEnd = () => {
     wrappedPauseGame();
   }
 };
-// initInput(handleEscape, handleJoyStart, handleJoyEnd); // Przeniesione do sekcji ładowania
-
-// Inicjaljalizacja modułu Dev Tools (v0.45)
-// initDevTools(gameStateRef); // Przeniesione do initializeCanvas
 
 // === START GRY (v0.58) ===
 console.log('[Main] Ładowanie zasobów...');
@@ -688,7 +700,10 @@ Promise.all([
     initializeCanvas();
     updateUiDataReferences(); // Wypełnij referencje do uiData (player, camera, pools)
     initStars(); // Inicjalizacja gwiazd wymaga wymiarów świata (z initializeCanvas)
-    initDevTools(gameStateRef); // Dev Tools wymaga gameStateRef (z initializeCanvas)
+    
+    // POPRAWKA V0.67: PRZEKAZANIE NOWEJ FUNKCJI ŁADUJĄCEJ KONFIGURACJĘ
+    initDevTools(gameStateRef, wrappedLoadConfigAndStart); 
+    
     initEvents(); // Eventy wymagają elementow DOM i logiki gry
     initInput(handleEscape, handleJoyStart, handleJoyEnd); // Input wymaga initEvents
     
@@ -699,7 +714,8 @@ Promise.all([
     initializeCanvas();
     updateUiDataReferences();
     initStars();
-    initDevTools(gameStateRef);
+    // POPRAWKA V0.67: PRZEKAZANIE NOWEJ FUNKCJI ŁADUJĄCEJ KONFIGURACJĘ
+    initDevTools(gameStateRef, wrappedLoadConfigAndStart); 
     initEvents();
     initInput(handleEscape, handleJoyStart, handleJoyEnd);
     wrappedShowMenu(false);

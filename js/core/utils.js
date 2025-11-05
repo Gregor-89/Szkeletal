@@ -1,5 +1,5 @@
 // ==============
-// UTILS.JS (v0.65 - Centralizacja Danych - Poprawka stabilności)
+// UTILS.JS (v0.67 - Konfetti Fix)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
@@ -49,32 +49,21 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
     }
 }
 
-// POPRAWKA v0.65: Czas życia pobierany z EFFECTS_CONFIG
+// POPRAWKA v0.67: Logika Konfetti używa teraz poprawnych przeliczonych parametrów i starego, bardziej 'lekkiego' efektu.
 export function spawnConfetti(particlePool, cx, cy) {
     const cols = ['#ff5252', '#ffca28', '#66bb6a', '#42a5f5', '#ab47bc', '#e91e63', '#9c27b0', '#00bcd4'];
     
-    // POPRAWKA KRYTYCZNA: Defensywny dostęp do konfiguracji konfetti.
-    const defaultConfig = {
-        CONFETTI_COUNT: 80, 
-        CONFETTI_LIFE: 0.7, 
-        CONFETTI_SPEED_MIN: 180, 
-        CONFETTI_SPEED_MAX: 420, 
-        CONFETTI_INITIAL_UP_VELOCITY: -210, 
-        CONFETTI_GRAVITY: 360, 
-        CONFETTI_FRICTION: 1.0, 
-        CONFETTI_ROTATION_SPEED: 12
-    };
-    
     // Pobierz konfigurację konfetti, używając fallbacka
-    const c = EFFECTS_CONFIG.CONFETTI || defaultConfig;
+    const c = EFFECTS_CONFIG.CONFETTI || {};
     
-    const numParticles = c.CONFETTI_COUNT;
-    const maxLife = c.CONFETTI_LIFE;
-    const initialSpeedMin = c.CONFETTI_SPEED_MIN;
-    const initialSpeedMax = c.CONFETTI_SPEED_MAX;
-    const initialUpVelocity = c.CONFETTI_INITIAL_UP_VELOCITY;
-    const gravityPerSecond = c.CONFETTI_GRAVITY;
-    const frictionPerSecond = c.CONFETTI_FRICTION;
+    const numParticles = c.CONFETTI_COUNT || 80;
+    const maxLife = c.CONFETTI_LIFE || 1.67;
+    const initialSpeedMin = c.CONFETTI_SPEED_MIN || 180;
+    const initialSpeedMax = c.CONFETTI_SPEED_MAX || 420;
+    const initialUpVelocity = c.CONFETTI_INITIAL_UP_VELOCITY || -210;
+    const gravityPerSecond = c.CONFETTI_GRAVITY || 6;
+    const frictionPerSecond = c.CONFETTI_FRICTION || 1.0;
+    const rotationSpeed = c.CONFETTI_ROTATION_SPEED || 12;
 
     for (let i = 0; i < numParticles; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -87,14 +76,15 @@ export function spawnConfetti(particlePool, cx, cy) {
             // init(x, y, vx, vy, life, color, gravity, friction, size, rotSpeed)
             p.init(
                 cx, cy,
-                Math.cos(angle) * speed, // px/s
-                Math.sin(angle) * speed + initialUpVelocity, // px/s
+                Math.cos(angle) * speed, // vx (px/s)
+                Math.sin(angle) * speed + initialUpVelocity, // vy (px/s)
                 life, // s
                 cols[Math.floor(Math.random() * cols.length)],
-                gravityPerSecond, // px/s^2
+                gravityPerSecond, // px/s^2 (Bardzo mała grawitacja dla starszego, 'lekkiego' efektu)
                 frictionPerSecond, // % zaniku na sekundę
-                8 + Math.random() * 4, // size
-                (Math.random() - 0.5) * c.CONFETTI_ROTATION_SPEED // rad/s
+                // POPRAWKA V0.67: Rozmiar cząsteczek z oryginalnego kodu (2.5 - 5px)
+                2.5 + Math.random() * 2.5, // size 
+                (Math.random() - 0.5) * rotationSpeed // rad/s
             );
         }
     }

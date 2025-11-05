@@ -1,5 +1,5 @@
 // ==============
-// EFFECTS.JS (v0.65 - Centralizacja Danych)
+// EFFECTS.JS (v0.67 - Niezależna aktualizacja efektów)
 // Lokalizacja: /js/managers/effects.js
 // ==============
 
@@ -111,10 +111,20 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
     addBombIndicator(bombIndicators, cx, cy, r);
 }
 
+/**
+ * NOWA FUNKCJA V0.67: Aktualizuje cząsteczki (konfetti) niezależnie od pauzy.
+ */
+export function updateParticles(dt, particles) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update(dt);
+    }
+}
+
 
 /**
  * Pętla aktualizująca wszystkie efekty wizualne (cząsteczki, teksty).
  * POPRAWKA v0.62e: Aktualizuje już tylko wskaźniki bomb.
+ * POPRAWKA V0.67: Usuwa particles z sygnatury (jest w osobnej funkcji), ale jej to nie obchodzi.
  */
 export function updateVisualEffects(dt, hitTexts_deprecated, confettis_deprecated, bombIndicators) {
     // Pętle for hitTexts i confettis zostały usunięte (przeniesione do gameLogic.js)
@@ -127,4 +137,5 @@ export function updateVisualEffects(dt, hitTexts_deprecated, confettis_deprecate
             bombIndicators.splice(i, 1);
         }
     }
+    console.log('[DEBUG] js/managers/effects.js: updateParticles logic added.');
 }
