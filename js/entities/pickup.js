@@ -1,5 +1,5 @@
 // ==============
-// PICKUP.JS (v0.71 - Refaktoryzacja: Tylko Klasa Bazowa)
+// PICKUP.JS (v0.72 - Refaktoryzacja: Logika Pickupów)
 // Lokalizacja: /js/entities/pickup.js
 // ==============
 
@@ -30,6 +30,16 @@ export class Pickup {
    */
   isDecayed() {
     return this.inHazardDecayT >= 1.0;
+  }
+  
+  /**
+   * NOWA FUNKCJA (v0.72): Stosuje efekt pickupa na gracza/stan gry.
+   * Ta metoda będzie nadpisana przez podklasy.
+   * @param {object} state - Główny obiekt stanu gry (gameStateRef)
+   */
+  applyEffect(state) {
+    // Domyślnie nic nie rób (klasa bazowa)
+    console.warn(`[Pickup] Metoda applyEffect() nie została zaimplementowana dla typu: ${this.type}`);
   }
   
   /**

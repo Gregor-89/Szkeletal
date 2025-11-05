@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.68 - Zmiana interwału DoT na 0.4s)
+// COLLISIONS.JS (v0.72 - Refaktoryzacja Logiki Pickupów do Klas)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -7,11 +7,10 @@ import { addHitText, limitedShake, spawnConfetti } from '../core/utils.js';
 import { devSettings } from '../services/dev.js';
 
 import { killEnemy } from './enemyManager.js';
-import { areaNuke } from './effects.js';
 import { playSound } from '../services/audio.js';
-// POPRAWKA v0.65: Import nowej centralnej konfiguracji
+// POPRAWKA v0.72: USUNIĘTO PLAYER_CONFIG, PICKUP_CONFIG
 // POPRAWKA v0.68: Import HAZARD_CONFIG
-import { PLAYER_CONFIG, PICKUP_CONFIG, HAZARD_CONFIG } from '../config/gameData.js';
+import { HAZARD_CONFIG } from '../config/gameData.js'; 
 
 /**
  * Główna funkcja kolizji.
@@ -193,36 +192,9 @@ for (let i = pickups.length - 1; i >= 0; i--) {
     }
     const d = Math.hypot(player.x - p.x, player.y - p.y);
     if (d < hitRadiusPP) {
-        if (p.type === 'heal') {
-            // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG
-            const healAmount = PLAYER_CONFIG.HEAL_AMOUNT;
-            game.health = Math.min(game.maxHealth, game.health + healAmount);
-            // POPRAWKA v0.62: Użyj puli hitText
-            addHitText(hitTextPool, hitTexts, player.x, player.y - 16, -healAmount, '#4caf50', '+HP');
-            playSound('HealPickup');
-        } else if (p.type === 'magnet') {
-            game.magnet = true;
-            // POPRAWKA v0.65: Użyj wartości z PICKUP_CONFIG
-            game.magnetT = PICKUP_CONFIG.MAGNET_DURATION; 
-            playSound('MagnetPickup');
-        } else if (p.type === 'shield') {
-            game.shield = true;
-            // POPRAWKA v0.65: Użyj wartości z PICKUP_CONFIG
-            game.shieldT = PICKUP_CONFIG.SHIELD_DURATION;
-            playSound('ShieldPickup');
-        } else if (p.type === 'speed') {
-            // POPRAWKA v0.65: Użyj wartości z PICKUP_CONFIG
-            game.speedT = PICKUP_CONFIG.SPEED_DURATION;
-            playSound('SpeedPickup');
-        } else if (p.type === 'bomb') {
-            // POPRAWKA v0.65: Użyj wartości z PICKUP_CONFIG
-            areaNuke(player.x, player.y, PICKUP_CONFIG.BOMB_RADIUS, true, game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators);
-            playSound('BombPickup');
-        } else if (p.type === 'freeze') {
-            // POPRAWKA v0.65: Użyj wartości z PICKUP_CONFIG
-            game.freezeT = PICKUP_CONFIG.FREEZE_DURATION;
-            playSound('FreezePickup');
-        }
+        // NOWA LOGIKA v0.72: Zastąpienie instrukcji if/else wywołaniem metody
+        p.applyEffect(state); 
+        
         pickups.splice(i, 1);
     }
 }
@@ -386,7 +358,3 @@ for (let i = hazards.length - 1; i >= 0; i--) {
     }
 }
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG] js/managers/collisions.js: Zaktualizowano culling pocisków dla kamery.');
-console.log('[DEBUG-v0.68] js/managers/collisions.js: Użycie przeskalowanych obrażeń z obiektu Hazard.');
