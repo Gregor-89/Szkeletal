@@ -1,5 +1,5 @@
 // ==============
-// EFFECTS.JS (v0.68 FIX 3 - Usunięcie spamu logów z pętli)
+// EFFECTS.JS (v0.68 - Logika spawnu Mega Hazardu)
 // Lokalizacja: /js/managers/effects.js
 // ==============
 
@@ -64,10 +64,22 @@ export function spawnHazard(hazards, player, camera) {
     }
     
     const pos = findFreeSpotForHazard(player, camera);
-    const newHazard = new Hazard(pos.x, pos.y);
+    
+    // --- Logika Mega Hazardu ---
+    const isMega = Math.random() < HAZARD_CONFIG.MEGA_HAZARD_PROBABILITY;
+    let scale = 1;
+    
+    if (isMega) {
+        const minScale = HAZARD_CONFIG.MEGA_HAZARD_BASE_MULTIPLIER;
+        const maxScale = HAZARD_CONFIG.MEGA_HAZARD_MAX_MULTIPLIER;
+        // Losowa skala w zdefiniowanym zakresie
+        scale = minScale + Math.random() * (maxScale - minScale);
+    }
+    
+    const newHazard = new Hazard(pos.x, pos.y, isMega, scale);
     hazards.push(newHazard);
     
-    console.log('[DEBUG] js/managers/effects.js: Spawn Hazard w pozycji', pos);
+    console.log(`[DEBUG] js/managers/effects.js: Spawn Hazard (Mega: ${isMega ? 'Tak' : 'Nie'}, Scale: ${scale.toFixed(2)}) w pozycji`, pos);
 }
 
 

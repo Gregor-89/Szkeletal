@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.68 - Dodano kolizje z Hazardami)
+// COLLISIONS.JS (v0.68 - Zmiana interwału DoT na 0.4s)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -20,7 +20,7 @@ import { PLAYER_CONFIG, PICKUP_CONFIG, HAZARD_CONFIG } from '../config/gameData.
 export function checkCollisions(state) {
     const { 
         player, game, settings, canvas, 
-        bullets, eBullets, enemies, gems, pickups, chests, hazards, // POPRAWKA v0.68: Dodano hazards
+        bullets, eBullets, enemies, gems, pickups, chests, hazards, // DODANO: hazards
         bombIndicators, camera, // DODANO: obiekt camera
         // POPRAWKA v0.62: Pobranie pul obiektów
         gemsPool, particlePool, hitTextPool,
@@ -144,10 +144,6 @@ for (let j = enemies.length - 1; j >= 0; j--) {
             const angle = Math.atan2(player.y - e.y, player.x - e.x);
             player.x += Math.cos(angle) * 8;
             player.y += Math.sin(angle) * 8;
-            // Ograniczenie ruchu gracza (do granic świata) zostało przeniesione do gameLogic.js
-            // Usunięto:
-            // player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
-            // player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y));
 
             if (game.shield || devSettings.godMode) {
                 // POPRAWKA v0.62: Użyj puli hitText
@@ -170,6 +166,7 @@ for (let j = enemies.length - 1; j >= 0; j--) {
 // --- Gracz vs Gemy (XP) ---
 for (let i = gems.length - 1; i >= 0; i--) {
     const g = gems[i];
+    if (g.isDecayed()) { g.release(); continue; } // Znikaj, jeśli dotarł do końca zaniku
     
     const hitRadiusPG = player.size * 0.5 + g.r;
     if (Math.abs(player.x - g.x) > hitRadiusPG || Math.abs(player.y - g.y) > hitRadiusPG) {
@@ -188,12 +185,12 @@ for (let i = gems.length - 1; i >= 0; i--) {
 // --- Gracz vs Pickupy ---
 for (let i = pickups.length - 1; i >= 0; i--) {
     const p = pickups[i];
+    if (p.isDecayed()) { pickups.splice(i, 1); continue; } // Znikaj, jeśli dotarł do końca zaniku
 
     const hitRadiusPP = player.size * 0.5 + p.r;
     if (Math.abs(player.x - p.x) > hitRadiusPP || Math.abs(player.y - p.y) > hitRadiusPP) {
         continue;
     }
-
     const d = Math.hypot(player.x - p.x, player.y - p.y);
     if (d < hitRadiusPP) {
         if (p.type === 'heal') {
@@ -233,6 +230,7 @@ for (let i = pickups.length - 1; i >= 0; i--) {
 // --- Gracz vs Skrzynie ---
 for (let i = chests.length - 1; i >= 0; i--) {
     const c = chests[i];
+    if (c.isDecayed()) { chests.splice(i, 1); continue; } // Znikaj, jeśli dotarł do końca zaniku
     
     const hitRadiusPC = player.size * 0.5 + c.r;
     if (Math.abs(player.x - c.x) > hitRadiusPC || Math.abs(player.y - c.y) > hitRadiusPC) {
@@ -251,9 +249,71 @@ for (let i = chests.length - 1; i >= 0; i--) {
     }
 }
 
-// --- Gracz vs Pola Zagrożenia (Hazards) ---
+// --- Logika Bagna: Kolizja Dropów z Hazardami ---
 for (let i = hazards.length - 1; i >= 0; i--) {
     const h = hazards[i];
+
+    if (!h.isActive()) {
+        continue;
+    }
+
+    const hazardRadius = h.r;
+
+    // A. Gemy (gems)
+    for (let j = gems.length - 1; j >= 0; j--) {
+        const g = gems[j];
+        if (!g.active) continue;
+
+        const d = Math.hypot(g.x - h.x, g.y - h.y);
+        if (d < hazardRadius + g.r) {
+            // Drop znajduje się w aktywnym Hazardzie: AKTYWUJ ZANIK
+            g.inHazardDecayT = Math.min(1.0, g.inHazardDecayT + HAZARD_CONFIG.HAZARD_PICKUP_DECAY_RATE * state.dt);
+            if (g.isDecayed()) {
+                g.release(); 
+            }
+        }
+    }
+
+    // B. Pickupy (pickups)
+    for (let j = pickups.length - 1; j >= 0; j--) {
+        const p = pickups[j];
+
+        const d = Math.hypot(p.x - h.x, p.y - h.y);
+        if (d < hazardRadius + p.r) {
+            // Drop znajduje się w aktywnym Hazardzie: AKTYWUJ ZANIK
+            p.inHazardDecayT = Math.min(1.0, p.inHazardDecayT + HAZARD_CONFIG.HAZARD_PICKUP_DECAY_RATE * state.dt);
+            if (p.isDecayed()) {
+                pickups.splice(j, 1); 
+            }
+        }
+    }
+
+    // C. Skrzynie (chests)
+    for (let j = chests.length - 1; j >= 0; j--) {
+        const c = chests[j];
+
+        const d = Math.hypot(c.x - h.x, c.y - h.y);
+        if (d < hazardRadius + c.r) {
+            // Skrzynia znajduje się w aktywnym Hazardzie: AKTYWUJ WOLNY ZANIK
+            c.inHazardDecayT = Math.min(1.0, c.inHazardDecayT + HAZARD_CONFIG.HAZARD_CHEST_DECAY_RATE * state.dt);
+            if (c.isDecayed()) {
+                chests.splice(j, 1); 
+            }
+        }
+    }
+}
+// --- Koniec Logiki Bagna ---
+
+
+// --- Gracz vs Pola Zagrożenia (Hazards) ---
+const nowMs = performance.now(); 
+for (let i = hazards.length - 1; i >= 0; i--) {
+    const h = hazards[i];
+    
+    // POPRAWKA v0.68a: Sprawdź, czy Hazard jest AKTYWNY
+    if (!h.isActive()) {
+        continue;
+    }
     
     const hitRadiusPH = player.size * 0.5 + h.r;
     if (Math.abs(player.x - h.x) > hitRadiusPH || Math.abs(player.y - h.y) > hitRadiusPH) {
@@ -267,26 +327,66 @@ for (let i = hazards.length - 1; i >= 0; i--) {
         if (devSettings.godMode) {
             // Nadal pokazuj wizualny efekt
             addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#00FF00', 'Hazard');
+            // Ale nie zadawaj obrażeń i nie spowalniaj
             continue;
         }
-
-        const dmg = HAZARD_CONFIG.DAMAGE_PER_SECOND * state.dt;
         
-        if (!game.shield) {
-            game.health -= dmg;
-            // Pokazuj małe obrażenia co ~0.2s (żeby nie spamować co klatkę)
-            if (Math.floor(now / 200) !== Math.floor((now - state.dt * 1000) / 200)) {
-                addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 1, '#ff0000');
+        // POPRAWKA v0.68: Dyskretne obrażenia dla Gracza (co 400ms)
+        if (Math.floor(nowMs / 400) !== Math.floor((nowMs - state.dt * 1000) / 400)) {
+            const discreteDmg = h.playerDmgPerHit; // Użyj wartości z obiektu Hazard
+            
+            if (!game.shield) {
+                game.health -= discreteDmg;
+                // Pokazuj uderzenie
+                addHitText(hitTextPool, hitTexts, player.x, player.y - 16, discreteDmg, '#ff0000');
+            } else {
+                // Tarcza pochłania DoT, ale nadal pokazuje, że jesteś w Hazardzie
+                addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#90CAF9', 'Tarcza');
             }
-        } else {
-            // Tarcza pochłania DoT, ale nadal pokazuje, że jesteś w Hazardzie
-            addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#90CAF9', 'Tarcza');
         }
     }
 }
 
+// --- Wrogowie vs Pola Zagrożenia (Hazards) ---
+for (let i = hazards.length - 1; i >= 0; i--) {
+    const h = hazards[i];
+
+    // POPRAWKA v0.68a: Tylko aktywne Hazardy wpływają na wrogów
+    if (!h.isActive()) {
+        continue;
+    }
+    const hazardRadius = h.r;
+    const slowdownTime = 0.1; // Krótki czas timera, odświeżany co klatkę
+
+    for (let j = enemies.length - 1; j >= 0; j--) {
+        const e = enemies[j];
+        
+        const hitRadiusEH = e.size * 0.5 + hazardRadius;
+        const d = Math.hypot(e.x - h.x, e.y - h.y);
+
+        if (d < hitRadiusEH) {
+            // 1. Zastosuj spowolnienie (odśwież timer)
+            e.hazardSlowdownT = slowdownTime; 
+            
+            // POPRAWKA v0.68: Dyskretne obrażenia dla Wrogów (co 400ms)
+            if (Math.floor(nowMs / 400) !== Math.floor((nowMs - state.dt * 1000) / 400)) {
+                const discreteDmg = h.enemyDmgPerHit; // Użyj wartości z obiektu Hazard
+                e.hp -= discreteDmg;
+
+                // Pokazuj tekst obrażeń co ~0.4s
+                addHitText(hitTextPool, hitTexts, e.x, e.y, discreteDmg, '#00FF00'); // Zielony tekst obrażeń
+            }
+
+            // 3. Sprawdź, czy wróg został zabity
+            if (e.hp <= 0) {
+                // POPRAWKA v0.62: Przekaż pule do killEnemy
+                state.enemyIdCounter = killEnemy(j, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, false);
+            }
+        }
+    }
+}
 }
 
 // LOG DIAGNOSTYCZNY
 console.log('[DEBUG] js/managers/collisions.js: Zaktualizowano culling pocisków dla kamery.');
-console.log('[DEBUG-v0.68] js/managers/collisions.js: Dodano kolizję Gracz vs Hazard.');
+console.log('[DEBUG-v0.68] js/managers/collisions.js: Użycie przeskalowanych obrażeń z obiektu Hazard.');

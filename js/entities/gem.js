@@ -1,9 +1,9 @@
 // ==============
-// GEM.JS (v0.62 - Implementacja Puli Obiektów)
+// GEM.JS (v0.68 - FINAL FIX: Dodano mechanikę zaniku i import)
 // Lokalizacja: /js/entities/gem.js
 // ==============
 
-import { get as getAsset } from '../services/assets.js';
+import { getRandomColor } from '../core/utils.js'; // NAPRAWIONO: Dodano import
 
 export class Gem {
   constructor() {
@@ -17,6 +17,8 @@ export class Gem {
     // POPRAWKA v0.62: Właściwości Puli Obiektów
     this.active = false;
     this.pool = null;
+    
+    this.inHazardDecayT = 0; // NOWE: Licznik postępu zaniku w Hazardzie (0.0 do 1.0)
   }
   
   /**
@@ -25,10 +27,11 @@ export class Gem {
   init(x, y, r, val, color) {
     this.x = x;
     this.y = y;
-    this.r = r;
-    this.val = val;
-    this.color = color;
+    this.r = r || 4;
+    this.val = val || 1;
+    this.color = color || getRandomColor(); // Używa importowanej funkcji
     this.active = true;
+    this.inHazardDecayT = 0; // Reset zaniku
   }
   
   /**
@@ -39,6 +42,13 @@ export class Gem {
       this.pool.release(this);
     }
     this.active = false;
+  }
+  
+  /**
+   * Sprawdza, czy Gem powinien zostać usunięty z powodu zaniku w Hazardzie.
+   */
+  isDecayed() {
+    return this.inHazardDecayT >= 1.0;
   }
   
   /**
@@ -63,21 +73,19 @@ export class Gem {
    * Rysuje gema na canvasie (tylko jeśli aktywny).
    */
   draw(ctx) {
-    const sprite = getAsset('gem');
+    if (!this.active) return;
     
-    if (sprite) {
-      const drawSize = this.r * 2.5;
-      ctx.drawImage(sprite,
-        this.x - drawSize / 2,
-        this.y - drawSize / 2,
-        drawSize,
-        drawSize
-      );
-    } else {
-      ctx.fillStyle = this.color;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.save();
+    
+    // Wizualne zanikanie (opacity)
+    const alpha = 1.0 - this.inHazardDecayT;
+    ctx.globalAlpha = alpha;
+    
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
   }
 }

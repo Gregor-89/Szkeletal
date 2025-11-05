@@ -1,11 +1,12 @@
 // ==============
-// ENEMY.JS (v0.65 - Centralizacja Danych)
+// ENEMY.JS (v0.68a - Dodano timer spowolnienia Hazardu)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
 import { colorForEnemy } from '../core/utils.js';
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
-import { WEAPON_CONFIG } from '../config/gameData.js';
+// POPRAWKA v0.68a: Dodano HAZARD_CONFIG do obliczenia prędkości
+import { WEAPON_CONFIG, HAZARD_CONFIG } from '../config/gameData.js';
 import { get as getAsset } from '../services/assets.js';
 
 // === KLASA BAZOWA WRONIA ===
@@ -33,6 +34,7 @@ export class Enemy {
         this.separationCooldown = Math.random() * 0.15;
         this.separationX = 0;
         this.separationY = 0;
+        this.hazardSlowdownT = 0; // POPRAWKA v0.68a: Timer spowolnienia przez Hazard
         
         // Stan animacji
         this.spriteSheet = getAsset('enemy_' + this.type); 
@@ -130,8 +132,9 @@ export class Enemy {
     draw(ctx, game) {
         ctx.save();
 
-        if (game.freezeT > 0) {
-            ctx.strokeStyle = '#29b6f6';
+        if (game.freezeT > 0 || this.hazardSlowdownT > 0) { // Sprawdź, czy wróg jest spowolniony przez Freeze lub Hazard
+            // Rysowanie efektu spowolnienia (niebieski/zielony kontur)
+            ctx.strokeStyle = (this.hazardSlowdownT > 0 && game.freezeT <= 0) ? '#00FF00' : '#29b6f6';
             ctx.lineWidth = 2;
             ctx.strokeRect(this.x - this.size / 2 - 2, this.y - this.size / 2 - 2, this.size + 4, this.size + 4);
         }
@@ -175,8 +178,11 @@ export class Enemy {
     // --- Metody Pomocnicze (mogą być nadpisane) ---
 
     getSpeed(game, dist) {
+        // Oblicz redukcję prędkości wynikającą ze spowolnienia Hazardu
+        const hazardSlowdown = this.hazardSlowdownT > 0 ? HAZARD_CONFIG.HAZARD_ENEMY_SLOWDOWN_MULTIPLIER : 1;
+        
         // Zwraca prędkość w px/s
-        return this.speed * (game.freezeT > 0 ? 0.25 : 1) * (1 - (this.hitStun || 0));
+        return this.speed * (game.freezeT > 0 ? 0.25 : 1) * (1 - (this.hitStun || 0)) * hazardSlowdown;
     }
 
     getSeparationRadius() {
@@ -252,7 +258,8 @@ export class RangedEnemy extends Enemy {
             const dist = Math.hypot(dx, dy);
             
             let vx = 0, vy = 0;
-            let currentSpeed = this.getSpeed(game, dist); // Prędkość w px/s
+            // currentSpeed jest w px/s i uwzględnia hazardSlowdownT z getSpeed()
+            let currentSpeed = this.getSpeed(game, dist); 
 
             if (dist < 180) { vx = -(dx / dist) * currentSpeed; vy = -(dy / dist) * currentSpeed; isMoving = true; } // Uciekaj
             else if (dist > 220) { vx = (dx / dist) * currentSpeed; vy = (dy / dist) * currentSpeed; isMoving = true; } // Podchodź

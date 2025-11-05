@@ -1,12 +1,12 @@
 // ==============
-// UI.JS (v0.67 - Poprawka wyrównania strzałki Perków)
+// UI.JS (v0.68b - Dodano reset tablicy hazards)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
 import { spawnConfetti, addHitText } from '../core/utils.js';
 // POPRAWKA v0.65b: Dodano brakujące importy PLAYER_CONFIG, PERK_CONFIG i UI_CONFIG
 import { 
-    GAME_CONFIG, WEAPON_CONFIG, PLAYER_CONFIG, PERK_CONFIG, UI_CONFIG 
+    GAME_CONFIG, WEAPON_CONFIG, PLAYER_CONFIG, PERK_CONFIG, UI_CONFIG, WORLD_CONFIG 
 } from '../config/gameData.js';
 import { perkPool } from '../config/perks.js';
 import { initAudio, playSound } from '../services/audio.js';
@@ -102,7 +102,7 @@ export function updateUI(game, player, settings, weapons) {
 
 export function showMenu(game, resetAll, uiData, allowContinue = false) {
     if (!allowContinue) {
-        resetAll(uiData.canvas, uiData.settings, uiData.perkLevels);
+        resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); // POPRAWKA v0.68b: Przekazanie uiData i camera
         uiData.savedGameState = null;
     }
 
@@ -139,7 +139,7 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
 }
 
 export function startRun(game, resetAll, uiData) {
-    resetAll(uiData.canvas, uiData.settings, uiData.perkLevels);
+    resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); // POPRAWKA v0.68b: Przekazanie uiData i camera
     uiData.savedGameState = null;
     menuOverlay.style.display = 'none';
     game.inMenu = false;
@@ -159,6 +159,7 @@ export function startRun(game, resetAll, uiData) {
 }
 
 // POPRAWKA v0.65: Używa stałych z gameData.js
+// POPRAWKA v0.68b: Dodano uiData i camera do sygnatury (dla kompatybilności z wywołaniem w main.js)
 export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     if (uiData.animationFrameId !== null) {
         cancelAnimationFrame(uiData.animationFrameId);
@@ -179,14 +180,15 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         Object.assign(settings, { 
             spawn: GAME_CONFIG.INITIAL_SPAWN_RATE,
             maxEnemies: GAME_CONFIG.MAX_ENEMIES,
-            eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL
+            eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL,
+            lastHazardSpawn: 0 // POPRAWKA v0.68b: Reset timera Hazardów
         });
         settings.lastFire = 0;
         settings.lastElite = 0;
 
         // POPRAWKA V0.66: Użyj rozmiarów świata zamiast canvas.width/height
-        const worldWidth = canvas.width * (camera.worldWidth / camera.viewWidth);
-        const worldHeight = canvas.height * (camera.worldHeight / camera.viewHeight);
+        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; // POPRAWKA v0.68b: Użyto WORLD_CONFIG.SIZE
+        const worldHeight = canvas.height * WORLD_CONFIG.SIZE; // POPRAWKA v0.68b: Użyto WORLD_CONFIG.SIZE
         uiData.player.reset(worldWidth, worldHeight);
         
         for (let key in perkLevels) {
@@ -197,11 +199,12 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         game.time = 0;
         settings.lastFire = 0;
         settings.lastElite = 0;
+        settings.lastHazardSpawn = 0; // POPRAWKA v0.68b: Reset timera Hazardów
         devSettings.presetLoaded = false;
         
         // POPRAWKA V0.67: Upewnij się, że gracz jest na środku świata po resecie presetów
-        const worldWidth = canvas.width * (camera.worldWidth / camera.viewWidth);
-        const worldHeight = canvas.height * (camera.worldHeight / camera.viewHeight);
+        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; // POPRAWKA v0.68b: Użyto WORLD_CONFIG.SIZE
+        const worldHeight = canvas.height * WORLD_CONFIG.SIZE; // POPRAWKA v0.68b: Użyto WORLD_CONFIG.SIZE
         uiData.player.x = worldWidth / 2;
         uiData.player.y = worldHeight / 2;
         camera.offsetX = (worldWidth / 2) - (canvas.width / 2);
@@ -218,6 +221,7 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     uiData.chests.length = 0; 
     uiData.pickups.length = 0; 
     uiData.bombIndicators.length = 0;
+    uiData.hazards.length = 0; // POPRAWKA v0.68b: Reset Hazardów
 
     // POPRAWKA v0.62: Zwalnianie obiektów z puli
     if (uiData.bulletsPool) {

@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Szkeletal: Estrone Kiszok v0.50</title> 
+<title>Szkeletal: Estrone Kiszok v0.68</title> 
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="gameContainer">
-    <div id="title">Szkeletal: Estrone Kiszok v0.50</div>
+    <div id="title">Szkeletal: Estrone Kiszok v0.68</div>
     <div id="playerHPBarOuter">
       <div id="playerHPBarInner"></div>
       <div id="playerHPBarTxt"></div>
@@ -253,10 +253,21 @@
               <li><span class="icon ico-circle" style="background:#8BC34A;"></span> / <span style="font-size:16px;">🧲</span> <strong>Magnes</strong> – przyciąga wszystkie XP przez <strong>3 sekundy</strong></li>
               <li><span class="icon ico-circle" style="background:#90CAF9;"></span> / <span style="font-size:16px;">🛡️</span> <strong>Tarcza</strong> – absorbuje obrażenia przez <strong>8 sekund</strong></li>
               <li><span class="icon ico-circle" style="background:#FFD740;"></span> / <span style="font-size:16px;">⚡</span> <strong>Szybkość</strong> – <strong>+40%</strong> ruchu przez <strong>8 sekund</strong></li>
-              <li><span class="icon ico-circle" style="background:#FF7043;"></span> / <span style="font-size:16px;">💣</span> <strong>Bomba</strong> – niszczy wrogów w zasięgu <strong>200px</strong>, zostawia only kulki XP</li>
+              <li><span class="icon ico-circle" style="background:#FF7043;"></span> / <span style="font-size:16px;">💣</span> <strong>Bomba</strong> – niszczy wrogów w zasięgu <strong>200px</strong>, zostawia kulki XP</li>
               <li><span class="icon ico-circle" style="background:#81D4FA;"></span> / <span style="font-size:16px;">❄️</span> <strong>Zamrożenie</strong> – spowalnia wrogów i ich ataki o <strong>75%</strong> przez <strong>5 sekund</strong></li>
             </ul>
-
+            
+            <h4>☢️ Pola Zagrożenia (Hazards)</h4>
+            <p>Statyczne plamy na mapie, które zadają obrażenia i spowalniają. Pojawiają się co 6 sekund i zanikają po ~45 sekundach.</p>
+            <ul style="list-style-type: none; padding-left: 5px;">
+              <li><span class="icon ico-circle" style="background:rgba(0, 150, 0, 0.6); border:2px solid #0f0;"></span> <strong>Kwaśna Plama (Standard)</strong>:</li>
+              <ul>
+                <li>Zadaje obrażenia **~10 HP/s** graczowi i spowalnia Cię o **50%**.</li>
+                <li>Spowalnia (o 30%) i zadaje **małe obrażenia wrogom**.</li>
+                <li>Pojawia się z **1.5s ostrzeżeniem** (czerwony kontur).</li>
+              </ul>
+              <li><span class="icon ico-circle" style="background:rgba(150, 0, 150, 0.6); border:2px solid #f0f;"></span> <strong>Mega Plama</strong>: Rzadki wariant (12% szans). Ma znacznie **większy promień** i zadaje **większe obrażenia** (fioletowy kolor).</li>
+            </ul>
             <h4>👾 Wrogowie (zaktualizowany przewodnik)</h4>
             <p>Nowe, silniejsze typy wrogów pojawiają się wraz z upływem czasu.</p>
             <ul>

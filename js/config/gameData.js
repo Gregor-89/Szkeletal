@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.68 - Dodano HAZARD_CONFIG)
+// GAMEDATA.JS (v0.68 - Finalny balans Mega Hazardu)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -41,15 +41,37 @@ export const HAZARD_CONFIG = {
   // Czas (w sekundach) pomiędzy kolejnymi spawnami Pól Zagrożenia (Hazards).
   SPAWN_INTERVAL: 6.0,
   // Minimalna odległość (w pikselach) od gracza, w jakiej może pojawić się hazard.
-  MIN_DIST_FROM_PLAYER: 150,
+  MIN_DIST_FROM_PLAYER: 50, // Zmieniono ze 150 na 50 pikseli
   // Maksymalna liczba Pól Zagrożenia na mapie.
   MAX_HAZARDS: 20,
   // Rozmiar (promień) Pól Zagrożenia (Acid Pool).
   SIZE: 40,
+  // Czas życia Hazardu, zanim samoczynnie zniknie (Decay)
+  HAZARD_LIFE: 45.0,
+  // Czas (w sekundach) ostrzeżenia przed aktywacją Hazardu (Warning)
+  HAZARD_WARNING_TIME: 3.0, // Zmieniono z 1.5 na 3.0 sekundy
   // Obrażenia zadawane przez Hazard (Damage over Time) w sekundach.
-  DAMAGE_PER_SECOND: 6,
+  DAMAGE_PER_SECOND: 25, // (Gracz)
   // Mnożnik spowolnienia nałożonego na gracza (0.5 = -50% prędkości).
-  SLOWDOWN_MULTIPLIER: 0.5
+  SLOWDOWN_MULTIPLIER: 0.5,
+  // Mnożnik spowolnienia nałożonego na WROGÓW
+  HAZARD_ENEMY_SLOWDOWN_MULTIPLIER: 0.7, // -30% prędkości
+  // Obrażenia zadawane WROGOM przez Hazard (Damage over Time) w sekundach.
+  HAZARD_ENEMY_DAMAGE_PER_SECOND: 0.4, // (Osłabienie obrażeń dla wrogów)
+  
+  // --- Mega Hazard ---
+  MEGA_HAZARD_PROBABILITY: 0.20, // Rzadszy Mega Hazard
+  MEGA_HAZARD_BASE_MULTIPLIER: 2.5, // Min. mnożnik rozmiaru
+  MEGA_HAZARD_MAX_MULTIPLIER: 6.0, // Max. mnożnik rozmiaru
+  // NOWE MULTIPLERY DLA OSOBNEJ KONTROLI OBRAŻEŃ
+  MEGA_HAZARD_PLAYER_DAMAGE_MULTIPLIER: 0.6, // Zmniejszono obrażenia o połowę
+  MEGA_HAZARD_ENEMY_DAMAGE_MULTIPLIER: 1.0, // Obrażenia wroga x1 (czyli takie same jak Standard)
+  
+  // --- Zanikanie Bagna ---
+  // Małe dropy (XP, Pickupy): Zanik 100% w 15 sekund. Współczynnik: 1 / 15 = 0.067
+  HAZARD_PICKUP_DECAY_RATE: 0.067,
+  // Duże dropy (Skrzynie): Zanik 100% w 15 sekund. Ujednolicono z Pickupami.
+  HAZARD_CHEST_DECAY_RATE: 0.067,
 };
 
 // --- Konfiguracja Broni ---
@@ -182,7 +204,7 @@ export const EFFECTS_CONFIG = {
   CONFETTI_FRICTION: 1.0, // Tarcie (1.0 = 100% zaniku na sekundę)
   CONFETTI_ROTATION_SPEED: 12, // Maks. prędkość obrotu (radiany/s)
   
-  // Wybuch bomby (cząsteczki)
+  // Wybuchu bomby (cząsteczki)
   NUKE_PARTICLE_COUNT: 40,
   NUKE_PARTICLE_SPEED: 300, // (px/s)
   NUKE_PARTICLE_LIFE: 0.6 // (w sekundach)
@@ -203,4 +225,4 @@ export const ENEMY_STATS = {
 };
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG] js/config/gameData.js: Dodano HAZARD_CONFIG.');
+console.log('[DEBUG] js/config/gameData.js: Korekta tempa zanikania Bagna.');

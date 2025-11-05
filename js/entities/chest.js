@@ -1,11 +1,17 @@
 // ==============
-// CHEST.JS (v0.63 - Optymalizacja strokeText)
+// CHEST.JS (v0.68 - FINAL FIX: Dodano mechanikę zaniku)
+// Lokalizacja: /js/entities/chest.js
+// ==============
+
+// POPRAWKA v0.63: Optymalizacja strokeText
 // Lokalizacja: /js/entities/chest.js
 // ==============
 
 import { getPickupLabel } from '../core/utils.js';
 // POPRAWKA v0.56: Import menedżera zasobów
 import { get as getAsset } from '../services/assets.js';
+// POPRAWKA v0.68: Import PLAYER_CONFIG dla rozmiaru
+import { PLAYER_CONFIG } from '../config/gameData.js';
 
 export class Chest {
   constructor(x, y) {
@@ -13,6 +19,14 @@ export class Chest {
     this.y = y;
     this.r = 12; // Promień kolizji
     this.pulsePhase = Math.random() * Math.PI * 2;
+    this.inHazardDecayT = 0; // NOWE: Licznik postępu zaniku w Hazardzie (0.0 do 1.0)
+  }
+  
+  /**
+   * Zwraca true, jeśli Skrzynia powinna zostać usunięta z powodu zaniku w Hazardzie.
+   */
+  isDecayed() {
+    return this.inHazardDecayT >= 1.0;
   }
   
   /**
@@ -35,6 +49,10 @@ export class Chest {
     
     const pulseScale = 1 + 0.1 * Math.sin(performance.now() / 200 + this.pulsePhase);
     const size = 16 * pulseScale;
+    
+    // Wizualne zanikanie (opacity)
+    const alpha = 1.0 - this.inHazardDecayT;
+    ctx.globalAlpha = alpha;
     
     // POPRAWKA v0.56: Logika rysowania sprite'a lub starego stylu
     const sprite = getAsset('chest');
@@ -76,6 +94,7 @@ export class Chest {
     }
     
     if (pickupShowLabels) {
+      ctx.globalAlpha = 1; // Etykieta nie miga
       ctx.fillStyle = '#fff';
       ctx.font = '12px Arial';
       ctx.textAlign = 'center';
@@ -83,11 +102,8 @@ export class Chest {
       // POPRAWKA v0.63: Zastąp strokeText() cieniem dla wydajności
       ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
       ctx.shadowBlur = 4;
-      // ctx.strokeStyle = '#000'; // USUNIĘTE (Wolne)
-      // ctx.lineWidth = 3;       // USUNIĘTE (Wolne)
       
       const label = getPickupLabel('chest'); // Używamy 'chest' jako tymczasowego typu
-      // ctx.strokeText('Skrzynia', this.x, this.y + 20); // USUNIĘTE (Wolne)
       ctx.fillText('Skrzynia', this.x, this.y + 20);
     }
     

@@ -1,5 +1,5 @@
 // ==============
-// PICKUP.JS (v0.65 - Centralizacja Danych)
+// PICKUP.JS (v0.68 - FINAL FIX: Dodano mechanikę zaniku)
 // Lokalizacja: /js/entities/pickup.js
 // ==============
 
@@ -20,6 +20,16 @@ export class Pickup {
     // POPRAWKA v0.65: Użyj wartości z PICKUP_CONFIG
     this.life = PICKUP_CONFIG.BASE_LIFE; // Czas życia w sekundach
     this.pulsePhase = Math.random() * Math.PI * 2;
+    
+    // POPRAWKA v0.68: Dodano właściwość do mechaniki Bagna
+    this.inHazardDecayT = 0; // Licznik postępu zaniku w Hazardzie (0.0 do 1.0)
+  }
+  
+  /**
+   * Zwraca true, jeśli Pickup powinien zostać usunięty z powodu zaniku w Hazardzie.
+   */
+  isDecayed() {
+    return this.inHazardDecayT >= 1.0;
   }
   
   /**
@@ -28,6 +38,7 @@ export class Pickup {
    */
   update(dt) {
     this.life -= dt;
+    // UWAGA: Logika zaniku w Hazardzie (inHazardDecayT) jest aktualizowana w collisions.js
   }
   
   /**
@@ -52,6 +63,10 @@ export class Pickup {
     if (this.life < 4) {
       ctx.globalAlpha = (Math.floor(performance.now() / 150) % 2 === 0) ? 0.3 : 1;
     }
+    
+    // POPRAWKA v0.68: Wizualne zanikanie (opacity)
+    const decayAlpha = 1.0 - this.inHazardDecayT;
+    ctx.globalAlpha *= decayAlpha; // Zastosuj zanik
     
     const pulseScale = 1 + 0.1 * Math.sin(performance.now() / 200 + this.pulsePhase);
     const radius = this.r * pulseScale;
@@ -104,7 +119,8 @@ export class Pickup {
     }
     
     if (pickupShowLabels) {
-      ctx.globalAlpha = 1; // Upewnij się, że etykieta nie miga
+      // Etykieta też musi respektować zanikanie
+      ctx.globalAlpha = (this.life < 4 ? ctx.globalAlpha : 1.0) * decayAlpha;
       ctx.fillStyle = '#fff';
       ctx.font = '12px Arial';
       ctx.textAlign = 'center';
@@ -112,11 +128,8 @@ export class Pickup {
       // POPRAWKA v0.63: Zastąp strokeText() cieniem dla wydajności
       ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
       ctx.shadowBlur = 4;
-      // ctx.strokeStyle = '#000'; // USUNIĘTE (Wolne)
-      // ctx.lineWidth = 3;       // USUNIĘTE (Wolne)
       
       const label = getPickupLabel(this.type);
-      // ctx.strokeText(label, this.x, this.y + 20); // USUNIĘTE (Wolne)
       ctx.fillText(label, this.x, this.y + 20);
     }
     

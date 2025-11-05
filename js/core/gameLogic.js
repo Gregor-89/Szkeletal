@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.68 - Dodano logikę Hazardów)
+// GAMELOGIC.JS (v0.68a - Zarządzanie Decay i timerem spowolnienia wrogów)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -71,6 +71,13 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     if (game.shield) { game.shieldT -= dt; if (game.shieldT <= 0) game.shield = false; }
     if (game.speedT > 0) game.speedT -= dt;
     if (game.freezeT > 0) game.freezeT -= dt;
+
+    // --- Timery Wrogów ---
+    for (const e of enemies) {
+        if (e.hazardSlowdownT > 0) { // POPRAWKA v0.68a: Dekrementacja timera spowolnienia Hazardu
+            e.hazardSlowdownT -= dt;
+        }
+    }
     
     // --- Logika Spawnu Hazardów ---
     const timeSinceLastHazard = game.time - settings.lastHazardSpawn;
@@ -121,8 +128,12 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     }
 
     // POPRAWKA v0.68: Aktualizuj Hazardy (nadal zwykła tablica)
-    for (const h of hazards) {
+    for (let i = hazards.length - 1; i >= 0; i--) { // POPRAWKA v0.68a: Zmieniono na pętlę wsteczną
+        const h = hazards[i];
         h.update(dt);
+        if (h.isDead()) { // POPRAWKA v0.68a: Sprawdzenie Decay
+            hazards.splice(i, 1);
+        }
     }
 
     if (game.xp >= game.xpNeeded) {

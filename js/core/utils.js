@@ -1,5 +1,5 @@
 // ==============
-// UTILS.JS (v0.67 - Konfetti Fix)
+// UTILS.JS (v0.68 - FINAL FIX: Przywrócenie zaginionych fragmentów i Fix DoT)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
@@ -12,6 +12,15 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
     const now = performance.now() / 1000;
     let merged = false;
 
+    // Funkcja pomocnicza formatująca obrażenia (utrzymanie ułamkowych wartości)
+    function formatDamage(value) {
+        // Jeśli wartość nie jest całkowita lub jest bardzo mała (np. 0.4), formatuj z jednym miejscem po przecinku.
+        if (value !== Math.floor(value) || value < 1) {
+            return value.toFixed(1);
+        }
+        return value.toFixed(0);
+    }
+    
     if (damage > 0 && overrideText === null) {
         // Ta pętla nadal działa, ponieważ 'hitTexts' to 'activeItems'
         for (let i = hitTexts.length - 1; i >= 0; i--) {
@@ -22,7 +31,8 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
 
                 if (dist < 25 && timeDiff < 0.15) {
                     ht.damage += damage;
-                    ht.text = '-' + ht.damage.toFixed(0);
+                    // Użyj nowej funkcji formatującej
+                    ht.text = '-' + formatDamage(ht.damage); 
                     // POPRAWKA v0.62e: Zmiana czasu życia na sekundy
                     ht.life = 0.66; // Było 40 klatek
                     ht.vy = -0.8 * 60; // Prędkość na sekundę
@@ -38,7 +48,10 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
         // POPRAWKA v0.62: Użyj puli obiektów zamiast .push()
         const ht = hitTextPool.get();
         if (ht) {
-            const text = overrideText !== null ? overrideText : (damage >= 0 ? '-' + damage.toFixed(0) : '+' + Math.abs(damage).toFixed(0));
+            // Użyj nowej funkcji formatującej
+            const dmgText = (damage >= 0 ? '-' + formatDamage(damage) : '+' + formatDamage(Math.abs(damage)));
+            const text = overrideText !== null ? overrideText : dmgText;
+            
             // POPRAWKA v0.62e: Zmiana czasu życia na sekundy i prędkości
             ht.init(x, y - 10, text, color, 0.66, -0.6 * 60); // (life, vy)
             
@@ -108,7 +121,17 @@ export function limitedShake(game, settings, mag, ms) {
     if (game.shakeT < ms) game.shakeT = ms;
 }
 
-// --- POMOCNIKI RYSOWANIA I DANYCH ---
+// --- POMOCNIKI RYSOWANIA I DANYCH (PRZYWRÓCONE FRAGMENTY) ---
+
+// PRZYWRÓCONA FUNKCJA - NAPRAWIA BŁĄD 'getRandomColor'
+export function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
 
 export function colorForEnemy(e) {
     if (e.type === 'elite') return '#9C27B0';
