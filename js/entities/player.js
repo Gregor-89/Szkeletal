@@ -1,9 +1,10 @@
 // ==============
-// PLAYER.JS (v0.68 - Dodano stan inHazard)
+// PLAYER.JS (v0.71 - FIX: Poprawiony Import Broni)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
-import { AutoGun } from '../config/weapon.js';
+// POPRAWKA v0.71: Import 1 podklasy broni z nowego folderu
+import { AutoGun } from '../config/weapons/autoGun.js';
 import { get as getAsset } from '../services/assets.js';
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
 import { PLAYER_CONFIG } from '../config/gameData.js';
@@ -68,17 +69,13 @@ export class Player {
 
     /**
      * Aktualizuje ruch i animację gracza.
-     * POPRAWKA v0.64: Zastosowano fizykę opartą na dt.
-     * POPRAWKA v0.66: Zmieniono sygnaturę, usunięto argument 'canvas'.
      */
     update(dt, game, keys, jVec, camera) {
         let vx = 0, vy = 0;
         
-        // POPRAWKA v0.68: Dodano czynnik spowalniający w oparciu o inHazard (0.5 to domyślny multipler spowolnienia)
         const hazardSlowdown = this.inHazard ? 0.5 : 1;
         
         const speedMul = (game.speedT > 0 ? 1.4 : 1) * (1 - (game.collisionSlowdown || 0)) * hazardSlowdown;
-        // currentSpeed jest teraz w "px/sekundę"
         const currentSpeed = this.speed * speedMul;
         const maxSpeed = this.speed * 1.3 * speedMul;
 
@@ -94,32 +91,27 @@ export class Player {
         if (keys['a'] || keys['arrowleft']) vx -= currentSpeed;
         if (keys['d'] || keys['arrowright']) vx += currentSpeed;
 
-        // Normalizacja prędkości (wektor prędkości jest już w px/s)
+        // Normalizacja prędkości
         const sp = Math.hypot(vx, vy);
         if (sp > maxSpeed) {
             vx = (vx / sp) * maxSpeed;
             vy = (vy / sp) * maxSpeed;
         }
 
-        // POPRAWKA v0.64: Zastosuj dt do finalnego ruchu
         this.x += vx * dt;
         this.y += vy * dt;
         
         this.isMoving = (Math.abs(vx) > 0 || Math.abs(vy) > 0);
 
-        // Ograniczenie ruchu do granic świata jest w gameLogic.js
-        
-        // POPRAWKA v0.57b: Aktualizacja stanów animacji
+        // Aktualizacja stanów animacji
         const oldState = this.currentState;
         this.currentState = this.isMoving ? 'walk' : 'idle';
         
-        // Jeśli stan się zmienił, zresetuj animację
         if (oldState !== this.currentState) {
             this.animationTimer = 0;
             this.currentFrame = 0;
         }
         
-        // Konwertuj dt (sekundy) na milisekundy
         const dtMs = dt * 1000; 
         const currentAnim = this.animations[this.currentState];
         
@@ -155,32 +147,29 @@ export class Player {
      * Rysuje gracza i jego pasek HP na canvasie.
      */
     draw(ctx, game) {
-        // POPRAWKA v0.57b: Logika rysowania klatki z odpowiedniego stanu
         
         if (this.spriteSheet) {
-            // Jeśli sprite istnieje, narysuj klatkę animacji
             const currentAnim = this.animations[this.currentState];
             
-            // Oblicz pozycję X i Y klatki na arkuszu sprite'ów
             const sourceX = this.currentFrame * this.frameWidth;
-            const sourceY = currentAnim.row * this.frameHeight; // Wybiera wiersz animacji (idle/walk)
+            const sourceY = currentAnim.row * this.frameHeight; 
             
-            const drawSize = this.size * 2.5; // Zwiększamy rozmiar rysowania
+            const drawSize = this.size * 2.5; 
 
             ctx.drawImage(
-                this.spriteSheet, // Obraz (arkusz sprite'ów)
-                sourceX,           // sx: Źródłowe X (na arkuszu)
-                sourceY,           // sy: Źródłowe Y (na arkuszu)
-                this.frameWidth,   // sWidth: Źródłowa szerokość (rozmiar 1 klatki)
-                this.frameHeight,  // sHeight: Źródłowa wysokość (rozmiar 1 klatki)
-                this.x - drawSize / 2, // dx: Docelowe X (na canvasie)
-                this.y - drawSize / 2, // dy: Docelowe Y (na canvasie)
-                drawSize,          // dWidth: Docelowa szerokość
-                drawSize           // dHeight: Docelowa szerokość
+                this.spriteSheet, 
+                sourceX,           
+                sourceY,           
+                this.frameWidth,   
+                this.frameHeight,  
+                this.x - drawSize / 2, 
+                this.y - drawSize / 2, 
+                drawSize,          
+                drawSize           
             );
             
         } else {
-            // Jeśli nie, narysuj stary kwadrat (fallback)
+            // Fallback
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
             ctx.strokeStyle = '#fff';
@@ -188,7 +177,6 @@ export class Player {
             ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
         
-        // POPRAWKA v0.68: Efekt wizualny dla inHazard
         if (this.inHazard) {
             const hazardPulse = 22 + 3 * Math.sin(performance.now() / 80);
             ctx.strokeStyle = '#00FF00'; // Zielony kontur
@@ -219,7 +207,6 @@ export class Player {
         ctx.lineWidth = 1.5;
         ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
 
-        // Rysowanie tarczy gracza (pulsujące koło)
         if (game.shield) {
             const pulse = 22 + 3 * Math.sin(performance.now() / 100);
             ctx.strokeStyle = '#90CAF9';
@@ -229,12 +216,8 @@ export class Player {
             ctx.stroke();
         }
         
-        // Deleguj rysowanie do broni (np. Orbitali)
         for (const weapon of this.weapons) {
             weapon.draw(ctx);
         }
     }
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.68] js/entities/player.js: Dodano stan inHazard i logiczny spowalniający.');

@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v0.70 - FIX 4: Dodano obronną obsługę 'weapons is null')
+// LEVELMANAGER.JS (v0.71 - FIX: Poprawiony Import Broni)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -9,8 +9,11 @@ import {
 } from '../config/gameData.js';
 import { perkPool } from '../config/perks.js';
 import { playSound } from '../services/audio.js';
-// POPRAWKA v0.70: Import klas broni (wcześniej w main.js)
-import { AutoGun, OrbitalWeapon, NovaWeapon } from '../config/weapon.js';
+
+// POPRAWKA v0.71: Import 3 podklas broni z nowego folderu
+import { AutoGun } from '../config/weapons/autoGun.js';
+import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
+import { NovaWeapon } from '../config/weapons/novaWeapon.js';
 
 // Import referencji DOM potrzebnych temu modułowi
 import {
@@ -25,13 +28,11 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
     console.log(`--- LEVEL UP (Poziom ${game.level + 1}) ---`);
     console.log('[DEBUG-LVLUP-01] Rozpoczęcie levelUp. Sprawdzam PERK_CONFIG:', PERK_CONFIG);
     
-    // KLUCZOWY FIX: PAUZA NATYCHMIAST PO ZDOBYCIU POZIOMU
     game.paused = true;
     
     game.xp -= game.xpNeeded;
     game.level += 1;
     
-    // 'hitTexts' (przekazane jako hitTextPool.activeItems) jest potrzebne do logiki łączenia
     const hitTexts = hitTextPool.activeItems; 
 
     if (game.health < game.maxHealth) {
@@ -45,35 +46,28 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
     game.shieldT = 3;
     addHitText(hitTextPool, hitTexts, player.x, player.y - 35, 0, '#90CAF9', 'Tarcza +3s');
 
-    // POPRAWKA v0.65: Użyj wartości z GAME_CONFIG
     game.xpNeeded = Math.floor(game.xpNeeded * GAME_CONFIG.XP_GROWTH_FACTOR) + GAME_CONFIG.XP_GROWTH_ADD;
     
-    // POPRAWKA v0.62e: Najpierw stwórz konfetti
     spawnConfetti(particlePool, player.x, player.y);
 
     console.log('[levelUp] Uruchamiam setTimeout do pokazania perków...');
 
-    // POPRAWKA v0.65: Użyj wartości z UI_CONFIG
     setTimeout(() => {
         console.log('[levelUp] setTimeout wykonany. Pokazuję perki.');
-        
-        // PAUZA ZOSTAŁA PRZENIESIONA NA POCZĄTEK FUNKCJI
         
         if (game.running && !game.inMenu) {
             levelUpOverlay.style.display = 'flex';
             
             console.log('[DEBUG-LVLUP-02] Wywołuję updateStatsUI.');
-            // Wywołaj updateStatsUI z tego samego modułu
             updateStatsUI(game, player, settings, weapons, statsDisplay);
             
             console.log('[DEBUG-LVLUP-03] Wywołuję showPerks.');
-            // Wywołaj showPerks z tego samego modułu
             showPerks(perkLevels); 
 
         } else {
             console.warn('[levelUp] Warunki NIESPEŁNIONE (gra nierozpoczęta lub w menu). Nie pokazano perków.');
         }
-    }, UI_CONFIG.LEVEL_UP_PAUSE); // Czekaj na czas z konfiguracji
+    }, UI_CONFIG.LEVEL_UP_PAUSE); 
 }
 
 /**
@@ -82,20 +76,17 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
 export function updateStatsUI(game, player, settings, weapons, targetElement = statsDisplay) {
     targetElement.innerHTML = '';
     
-    // POPRAWKA v0.70 (FINAL FIX): Zabezpieczenie przed 'null' lub 'undefined'
     const weaponList = weapons || [];
     
     const autoGun = weaponList.find(w => w instanceof AutoGun);
     const orbital = weaponList.find(w => w instanceof OrbitalWeapon);
     const nova = weaponList.find(w => w instanceof NovaWeapon);
 
-    // POPRAWKA v0.65: Zabezpieczony dostęp za pomocą ?. oraz fallback ||
     const stats = [
         { icon: '⭐', label: 'Poziom', value: game.level },
         { icon: '❤️', label: 'Zdrowie', value: `${Math.floor(game.health)}/${game.maxHealth}` },
         { icon: '🏃', label: 'Prędkość gracza', value: player.speed.toFixed(2) },
         
-        // Zabezpieczony dostęp do max
         { icon: '💥', label: 'Obrażenia', value: `${autoGun ? autoGun.bulletDamage.toFixed(0) : WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE} / ${ (PERK_CONFIG.damage?.max || 6) + 1}` },
         { icon: '🔫', label: 'Szybkostrzelność', value: `${autoGun ? (1000 / autoGun.fireRate).toFixed(2) : (1000 / WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE).toFixed(2)}/s` },
         { icon: '🎯', label: 'Multishot', value: `${autoGun ? autoGun.multishot : '0'} / ${PERK_CONFIG.multishot?.max || 4}` },
@@ -124,7 +115,6 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
 export function showPerks(perkLevels) {
     console.log('[DEBUG-SHOWPERKS-01] Rozpoczynam showPerks.');
     
-    // POPRAWKA v0.65: Filtr używa teraz 'perk.max' (który jest pobierany z PERK_CONFIG w perks.js)
     const avail = perkPool.filter(p => (perkLevels[p.id] || 0) < p.max);
     const picks = [];
 
@@ -154,11 +144,9 @@ export function showPerks(perkLevels) {
             el.className = 'perk';
             const iconHTML = perk.emoji ? `<span class="picon-emoji">${perk.emoji}</span>` : `<span class="picon" style="background:${perk.color || '#999'}"></span>`;
             
-            // POPRAWKA V0.67: Użycie symbolu »
             el.innerHTML = `<span class="badge">Poziom ${lvl} » ${lvl + 1}</span><h4>${iconHTML}${perk.name}</h4><p>${perk.desc}</p>`;
             
             el.onclick = () => { 
-                // Wywołanie globalnej funkcji (definiowanej w main.js)
                 if(window.wrappedPickPerk) window.wrappedPickPerk(perk); 
             };
             perksDiv.appendChild(el);
@@ -168,7 +156,6 @@ export function showPerks(perkLevels) {
 
 /**
  * Logika wyboru perku (przeniesione z ui.js).
- * POPRAWKA v0.70: Przyjmuje 'resumeGameCallback' aby przerwać cykliczną zależność.
  */
 export function pickPerk(perk, game, perkLevels, settings, weapons, player, resumeGameCallback) {
     if (!perk) {
@@ -179,7 +166,6 @@ export function pickPerk(perk, game, perkLevels, settings, weapons, player, resu
     
     console.log(`[pickPerk] Wybrano perk: ${perk.id}`);
     
-    // Używa perk.max (pobranego z PERK_CONFIG)
     if ((perkLevels[perk.id] || 0) >= perk.max) {
         console.warn(`[pickPerk] Próba wybrania perka (${perk.id}), który jest już na max poziomie. To nie powinno się zdarzyć.`);
         return;
@@ -191,7 +177,6 @@ export function pickPerk(perk, game, perkLevels, settings, weapons, player, resu
     perkLevels[perk.id] = (perkLevels[perk.id] || 0) + 1;
     playSound('PerkPick');
     
-    // Używa domyślnego czasu wznowienia
     resumeGameCallback(game); 
 }
 
@@ -199,7 +184,6 @@ export function pickPerk(perk, game, perkLevels, settings, weapons, player, resu
  * Wybiera losową nagrodę ze skrzyni (przeniesione z ui.js).
  */
 export function pickChestReward(perkLevels) {
-    // Używa perk.max (pobranego z PERK_CONFIG)
     const pool = perkPool.filter(p => (perkLevels[p.id] || 0) < p.max);
     if (!pool.length) return null;
     return pool[Math.floor(Math.random() * pool.length)];
@@ -214,7 +198,6 @@ export function openChest(game, perkLevels, uiData) {
 
     if (reward) {
         const currentLevel = perkLevels[reward.id] || 0;
-        // Używa reward.max (pobranego z PERK_CONFIG)
         const progress = ((currentLevel + 1) / reward.max) * 100;
         const iconHTML = reward.emoji ? `<span style="font-size:48px;">${reward.emoji}</span>` : `🎁`;
 
@@ -243,6 +226,3 @@ export function openChest(game, perkLevels, uiData) {
     game.paused = true;
     playSound('ChestOpen');
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.70] js/managers/levelManager.js: Załadowano moduł Menedżera Poziomów.');

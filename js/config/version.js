@@ -1,10 +1,10 @@
 // ==============
-// VERSION.JS (v0.69 - Nowy wróg: Oblężnik)
+// VERSION.JS (v0.71 - Refaktoryzacja Bytów i Rysowania)
 // Lokalizacja: /js/config/version.js
 // ==============
 
 // Definiuje aktualną wersję gry
-export const VERSION = '0.70';
+export const VERSION = '0.71';
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG] js/config/version.js: Ustawiono wersję na 0.69 (Oblężnik)');
+console.log('[DEBUG-v0.71] js/config/version.js: Ustawiono wersję na 0.71 (Refaktoryzacja Bytów)');

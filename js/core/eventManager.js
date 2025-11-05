@@ -1,5 +1,5 @@
 // ==============
-// EVENTMANAGER.JS (v0.70 - FIX 3: Naprawa błędu 'camera is undefined' w resetAll)
+// EVENTMANAGER.JS (v0.71 - FIX: Usunięcie konfliktu pętli 'animationFrameId')
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
@@ -32,7 +32,6 @@ function wrappedShowMenu(allowContinue = false) {
 
 function wrappedResetAll() {
     // Przekazanie wszystkich referencji stanu do resetAll
-    // (uiData już je ma, ale gameStateRef musi być przekazany do uiData)
     uiDataRef.game = gameStateRef.game;
     uiDataRef.settings = gameStateRef.settings;
     uiDataRef.perkLevels = gameStateRef.perkLevels;
@@ -49,8 +48,6 @@ function wrappedResetAll() {
     uiDataRef.hitTextPool = gameStateRef.hitTextPool;
     uiDataRef.trails = gameStateRef.trails;
     uiDataRef.confettis = gameStateRef.confettis;
-    
-    // POPRAWKA (OKOŁO L45): Dodano brakującą referencję do kamery
     uiDataRef.camera = gameStateRef.camera; 
     
     resetAll(uiDataRef.canvas, uiDataRef.settings, uiDataRef.perkLevels, uiDataRef, uiDataRef.camera);
@@ -64,12 +61,10 @@ function wrappedResetAll() {
 }
 
 function wrappedPauseGame() {
-    // FINAL FIX (v0.70): Przekazano 'player.weapons' jako argument 'weapons'
     pauseGame(gameStateRef.game, gameStateRef.settings, gameStateRef.player.weapons, gameStateRef.player);
 }
 
 function wrappedResumeGame() {
-    // POPRAWKA v0.70: Dostęp do gameData przez uiDataRef
     const resumeTime = uiDataRef.gameData?.UI_CONFIG?.RESUME_TIMER || 0.75;
     resumeGame(gameStateRef.game, resumeTime);
 }
@@ -88,18 +83,21 @@ function wrappedGameOver() {
     uiDataRef.savedGameState = null; // Zaktualizuj zapisany stan (na null)
 }
 
+// POPRAWKA v0.71 (FPS FIX): Usunięto linie modyfikujące 'animationFrameId' i 'timers'.
+// Zarządza nimi teraz wyłącznie 'startRun' i 'resetAll' w 'ui.js'.
 function wrappedStartRun() {
-    uiDataRef.animationFrameId = null;
-    uiDataRef.startTime = 0;
-    uiDataRef.lastTime = 0;
-    startRun(gameStateRef.game, wrappedResetAll, uiDataRef); // 'startRun' jest teraz zaimportowane
-    // Aktualizuj globalne referencje czasu w uiData
-    uiDataRef.animationFrameId = 1; // Placeholder, pętla gry to ustawi
-    uiDataRef.startTime = performance.now();
-    uiDataRef.lastTime = uiDataRef.startTime;
-    uiDataRef.lastFrameTime = uiDataRef.lastTime;
-    uiDataRef.frameCount = 0;
-    uiDataRef.fps = 0;
+    // uiDataRef.animationFrameId = null; // USUNIĘTE - robi to resetAll
+    // uiDataRef.startTime = 0; // USUNIĘTE - robi to startRun
+    // uiDataRef.lastTime = 0; // USUNIĘTE - robi to startRun
+    
+    startRun(gameStateRef.game, wrappedResetAll, uiDataRef); 
+    
+    // uiDataRef.animationFrameId = 1; // USUNIĘTE - KRYTYCZNY BŁĄD
+    // uiDataRef.startTime = performance.now(); // USUNIĘTE
+    // uiDataRef.lastTime = uiDataRef.startTime; // USUNIĘTE
+    // uiDataRef.lastFrameTime = uiDataRef.lastTime; // USUNIĘTE
+    // uiDataRef.frameCount = 0; // USUNIĘTE
+    // uiDataRef.fps = 0; // USUNIĘTE
 }
 
 function wrappedLoadConfigAndStart() {
@@ -134,7 +132,7 @@ function initEvents() {
         wrappedLoadConfigAndStart();
     });
 
-    // Listenery dla dynamicznie ładowanych elementów (Konfiguracja)
+    // === Listenery dla dynamicznie ładowanych elementów (Konfiguracja) ===
     const chkShake = document.getElementById('chkShake');
     if (chkShake) {
         chkShake.addEventListener('change', () => {
@@ -146,6 +144,21 @@ function initEvents() {
     if (chkFPS) {
         chkFPS.addEventListener('change', () => {
             uiDataRef.showFPS = !!chkFPS.checked;
+        });
+    }
+    
+    document.querySelectorAll('input[name="fpspos"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                uiDataRef.fpsPosition = e.target.value;
+            }
+        });
+    });
+
+    const chkLabels = document.getElementById('chkPickupLabels');
+    if (chkLabels) {
+        chkLabels.addEventListener('change', () => {
+            uiDataRef.pickupShowLabels = !!chkLabels.checked;
         });
     }
 
@@ -163,6 +176,7 @@ function initEvents() {
         gameOverOverlay.style.display='none';
         wrappedShowMenu(false);
     });
+
 
     document.getElementById('btnResume').addEventListener('click', () => {
         wrappedResumeGame();
@@ -199,36 +213,31 @@ function initEvents() {
             playSound('ChestReward');
         }
         uiDataRef.currentChestReward=null;
-        resumeGame(game, 0.75);
+        resumeGame(gameStateRef.game, 0.75);
     });
 }
 
 /**
  * Główny punkt wejścia dla Menedżera Eventów.
- * @param {object} stateRef - Główny obiekt gameStateRef.
- * @param {object} uiRef - Główny obiekt uiData.
  */
 export function initializeMainEvents(stateRef, uiRef) {
     gameStateRef = stateRef;
     uiDataRef = uiRef;
     
-    // Zapewnij dostęp globalny do wrapperów, aby main.js (loop) i input.js (handleEscape) mogły ich używać
+    // Zapewnij dostęp globalny do wrapperów
     window.wrappedShowMenu = wrappedShowMenu;
     window.wrappedPauseGame = wrappedPauseGame;
     window.wrappedResumeGame = wrappedResumeGame;
     window.wrappedGameOver = wrappedGameOver;
     window.wrappedLevelUp = wrappedLevelUp;
     window.wrappedOpenChest = wrappedOpenChest;
-    window.wrappedLoadConfigAndStart = wrappedLoadConfigAndStart; // Dla DevTools
+    window.wrappedLoadConfigAndStart = wrappedLoadConfigAndStart; 
     
-    // Zwróć initEvents, aby main.js mógł go wywołać PO załadowaniu HTML
-    // POPRAWKA (OKOŁO L146): Dodano brakujący eksport 'wrappedLoadConfigAndStart'
     return {
         initEvents,
-        wrappedLoadConfigAndStart // FIX: Eksportuj wrapper dla DevTools
+        wrappedLoadConfigAndStart 
     };
 }
 
 // LOG DIAGNOSTYCZNY
-// [DEBUG] js/core/eventManager.js: Naprawiono błąd 'camera is undefined' (dla Dev Menu) poprzez dodanie 'uiDataRef.camera = gameStateRef.camera' w 'wrappedResetAll'.
-console.log('[DEBUG-v0.70-FIX3] js/core/eventManager.js: Dodano brakującą referencję kamery w wrappedResetAll.');
+console.log('[DEBUG-v0.71-FIX] js/core/eventManager.js: Usunięto nadpisywanie animationFrameId i timerów z wrappedStartRun.');

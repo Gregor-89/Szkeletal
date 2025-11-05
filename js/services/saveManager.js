@@ -1,18 +1,26 @@
 // ==============
-// SAVEMANAGER.JS (v0.70 - Refaktoryzacja: Naprawa brakujących importów)
+// SAVEMANAGER.JS (v0.71 - FIX: Ostateczna poprawka importów broni)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
 // Import klas bytów potrzebnych do rekonstrukcji stanu
 import { Hazard } from '../entities/hazard.js';
 import { Chest } from '../entities/chest.js';
-import { 
-    HealPickup, MagnetPickup, ShieldPickup, 
-    SpeedPickup, BombPickup, FreezePickup 
-} from '../entities/pickup.js';
-// POPRAWKA v0.70: Import klas broni (wcześniej w main.js)
-import { AutoGun, OrbitalWeapon, NovaWeapon } from '../config/weapon.js';
-// POPRAWKA v0.70: Import mapy wrogów (wcześniej w main.js)
+
+// POPRAWKA v0.71: Import 6 podklas pickupów z nowego folderu
+import { HealPickup } from '../entities/pickups/healPickup.js';
+import { MagnetPickup } from '../entities/pickups/magnetPickup.js';
+import { ShieldPickup } from '../entities/pickups/shieldPickup.js';
+import { SpeedPickup } from '../entities/pickups/speedPickup.js';
+import { BombPickup } from '../entities/pickups/bombPickup.js';
+import { FreezePickup } from '../entities/pickups/freezePickup.js';
+
+// POPRAWKA v0.71: Import 3 podklas broni z nowego folderu
+import { AutoGun } from '../config/weapons/autoGun.js';
+import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
+import { NovaWeapon } from '../config/weapons/novaWeapon.js';
+
+// Import mapy wrogów (zrefaktoryzowane w v0.71)
 import { ENEMY_CLASS_MAP } from '../managers/enemyManager.js';
 import { initAudio } from './audio.js';
 
@@ -26,7 +34,7 @@ const PICKUP_CLASS_MAP = {
     freeze: FreezePickup
 };
 
-// POPRAWKA v0.70: Mapa klas broni (przeniesiona z main.js)
+// Mapa klas broni (działa bez zmian)
 const WEAPON_CLASS_MAP = {
     AutoGun: AutoGun,
     OrbitalWeapon: OrbitalWeapon,
@@ -35,9 +43,6 @@ const WEAPON_CLASS_MAP = {
 
 /**
  * Zapisuje aktualny stan gry do obiektu.
- * (Logika przeniesiona z eventu btnPauseMenu w main.js)
- * @param {object} state - Główny obiekt gameStateRef.
- * @returns {object} Obiekt stanu gry gotowy do zapisania.
  */
 export function saveGame(state) {
     const { 
@@ -46,7 +51,6 @@ export function saveGame(state) {
         pickups, chests, hazards, enemyIdCounter 
     } = state;
     
-    // Zapisz tylko aktywne obiekty z pul
     const activeBullets = bulletsPool.activeItems.map(b => ({ ...b }));
     const activeEBullets = eBulletsPool.activeItems.map(eb => ({ ...eb }));
     const activeGems = gemsPool.activeItems.map(g => ({ ...g }));
@@ -57,11 +61,11 @@ export function saveGame(state) {
             x: player.x, 
             y: player.y, 
             speed: player.speed, 
-            weapons: player.weapons.map(w => w.toJSON ? w.toJSON() : { type: w.constructor.name }) // Użyj toJSON jeśli dostępne
+            weapons: player.weapons.map(w => w.toJSON ? w.toJSON() : { type: w.constructor.name }) 
         }, 
         settings: {...settings},
         perkLevels: {...perkLevels},
-        enemies: enemies.map(e => ({ ...e })), // Zakładamy, że wróg jest prostym obiektem
+        enemies: enemies.map(e => ({ ...e })), 
         bullets: activeBullets,
         eBullets: activeEBullets,
         gems: activeGems,
@@ -77,10 +81,6 @@ export function saveGame(state) {
 
 /**
  * Wczytuje zapisany stan gry do aktualnego stanu.
- * (Logika przeniesiona z eventu btnContinue w main.js)
- * @param {object} savedState - Obiekt zapisany przez saveGame().
- * @param {object} state - Główny obiekt gameStateRef, który ma być nadpisany.
- * @param {object} uiData - Obiekt uiData do zarządzania pętlą gry.
  */
 export function loadGame(savedState, state, uiData) {
     if (!savedState) {
@@ -112,7 +112,6 @@ export function loadGame(savedState, state, uiData) {
     // 2. Wczytaj proste obiekty
     Object.assign(game, savedState.game);
     Object.assign(settings, savedState.settings);
-    // Użyj 'replace' lub 'clear+assign' dla perkLevels, aby uniknąć problemów z referencją
     Object.keys(perkLevels).forEach(key => delete perkLevels[key]);
     Object.assign(perkLevels, savedState.perkLevels);
 
@@ -126,27 +125,22 @@ export function loadGame(savedState, state, uiData) {
         const WeaponClass = WEAPON_CLASS_MAP[savedWeapon.type];
         if (WeaponClass) {
             const newWeapon = new WeaponClass(player);
-            // Zastosuj zapisane właściwości (poziom, obrażenia bazowe itp.)
             Object.assign(newWeapon, savedWeapon); 
             player.weapons.push(newWeapon);
         }
     }
 
     // 4. Wczytaj Byty (Deserializacja)
-    
-    // Wrogowie
     const loadedEnemies = savedState.enemies || [];
     for (const savedEnemy of loadedEnemies) {
         const EnemyClass = ENEMY_CLASS_MAP[savedEnemy.type];
         if (EnemyClass && savedEnemy.stats) {
-            // Użyj hpScale = 1, ponieważ HP jest już zapisane
             const newEnemy = new EnemyClass(savedEnemy.x, savedEnemy.y, savedEnemy.stats, 1); 
             Object.assign(newEnemy, savedEnemy);
             enemies.push(newEnemy);
         }
     }
     
-    // Pociski Gracza (z puli)
     const loadedBullets = savedState.bullets || [];
     for (const b of loadedBullets) {
         const newBullet = bulletsPool.get(); 
@@ -156,7 +150,6 @@ export function loadGame(savedState, state, uiData) {
         }
     }
     
-    // Pociski Wrogów (z puli)
     const loadedEBullets = savedState.eBullets || [];
     for (const eb of loadedEBullets) {
         const newEBullet = eBulletsPool.get(); 
@@ -166,7 +159,6 @@ export function loadGame(savedState, state, uiData) {
         }
     }
 
-    // Gemy (z puli)
     const loadedGems = savedState.gems || [];
     for (const g of loadedGems) {
         const newGem = gemsPool.get();
@@ -176,7 +168,6 @@ export function loadGame(savedState, state, uiData) {
         }
     }
     
-    // Hazardy (tablica)
     const loadedHazards = savedState.hazards || [];
     for (const h of loadedHazards) {
         const newHazard = new Hazard(h.x, h.y, h.isMega, h.scale);
@@ -184,7 +175,6 @@ export function loadGame(savedState, state, uiData) {
         hazards.push(newHazard);
     }
 
-    // Pickupy (tablica)
     const loadedPickups = savedState.pickups || [];
     for (const p of loadedPickups) {
         const PickupClass = PICKUP_CLASS_MAP[p.type];
@@ -195,7 +185,6 @@ export function loadGame(savedState, state, uiData) {
         }
     }
     
-    // Skrzynie (tablica)
     const loadedChests = savedState.chests || [];
     for (const c of loadedChests) {
         const newChest = new Chest(c.x, c.y);
@@ -205,7 +194,7 @@ export function loadGame(savedState, state, uiData) {
     
     state.enemyIdCounter = savedState.enemyIdCounter || 0;
     
-    // 5. Uruchom grę (logika przeniesiona z main.js)
+    // 5. Uruchom grę
     document.getElementById('menuOverlay').style.display='none';
     game.inMenu = false; 
     game.paused = false; 
@@ -216,12 +205,6 @@ export function loadGame(savedState, state, uiData) {
     if (uiData.animationFrameId === null) {
       uiData.startTime = performance.now() - game.time * 1000; 
       uiData.lastTime = performance.now();
-      // Resetuj także te zmienne (z main.js)
-      // (Będą one musiały być dostępne w uiData lub przekazane inaczej)
-      // Na potrzeby refaktoryzacji zakładamy, że uiData przechowuje te referencje
-      uiData.lastFrameTime = performance.now();
-      uiData.frameCount = 0;
-      uiData.fps = 0;
       uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
     }
     
@@ -229,4 +212,4 @@ export function loadGame(savedState, state, uiData) {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.70] js/services/saveManager.js: Załadowano moduł Menedżera Zapisu.');
+console.log('[DEBUG-v0.71-FIX] js/services/saveManager.js: Zaktualizowano importy broni do 3 oddzielnych plików.');

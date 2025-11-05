@@ -1,17 +1,24 @@
 // ==============
-// DEV.JS (v0.67 - Auto-Start Dev Preset)
+// DEV.JS (v0.71 - FIX: Poprawiony Import Broni)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
 import { findFreeSpotForPickup } from '../core/utils.js';
 import { perkPool } from '../config/perks.js';
-// POPRAWKA v0.65: Usunięto INITIAL_SETTINGS, zaimportowano nowe konfiguracje
 import { PLAYER_CONFIG, GAME_CONFIG, WEAPON_CONFIG } from '../config/gameData.js';
-import { AutoGun, OrbitalWeapon, NovaWeapon } from '../config/weapon.js';
-import { 
-    HealPickup, MagnetPickup, ShieldPickup, 
-    SpeedPickup, BombPickup, FreezePickup 
-} from '../entities/pickup.js';
+
+// POPRAWKA v0.71: Import 3 podklas broni z nowego folderu
+import { AutoGun } from '../config/weapons/autoGun.js';
+import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
+import { NovaWeapon } from '../config/weapons/novaWeapon.js';
+
+// POPRAWKA v0.71: Import 6 podklas pickupów z nowego folderu
+import { HealPickup } from '../entities/pickups/healPickup.js';
+import { MagnetPickup } from '../entities/pickups/magnetPickup.js';
+import { ShieldPickup } from '../entities/pickups/shieldPickup.js';
+import { SpeedPickup } from '../entities/pickups/speedPickup.js';
+import { BombPickup } from '../entities/pickups/bombPickup.js';
+import { FreezePickup } from '../entities/pickups/freezePickup.js';
 
 /**
  * Eksportowane ustawienia deweloperskie.
@@ -20,7 +27,7 @@ export const devSettings = {
     godMode: false,
     allowedEnemies: ['all'],
     allowedPickups: ['all'],
-    presetLoaded: false 
+    presetLoaded: false
 };
 
 // Mapa dla klas pickupów
@@ -33,14 +40,13 @@ const PICKUP_CLASS_MAP = {
     freeze: FreezePickup
 };
 
-// Wewnętrzna referencja do stanu gry i funkcji startu, ustawiana przez initDevTools
+// Wewnętrzna referencja do stanu gry i funkcji startu
 let gameState = {};
-let startRunCallback = () => {}; // DODANO: Callback do startu gry
+let startRunCallback = () => {};
 
 // Funkcja obliczająca XP potrzebne na dany poziom
-// POPRAWKA v0.65: Używa stałych z GAME_CONFIG
 function calculateXpNeeded(level) {
-    let xp = GAME_CONFIG.INITIAL_XP_NEEDED || 5; 
+    let xp = GAME_CONFIG.INITIAL_XP_NEEDED || 5;
     for (let i = 1; i < level; i++) {
         xp = Math.floor(xp * GAME_CONFIG.XP_GROWTH_FACTOR) + GAME_CONFIG.XP_GROWTH_ADD;
     }
@@ -48,10 +54,9 @@ function calculateXpNeeded(level) {
 }
 
 /**
- * POPRAWKA V0.67: Funkcja wywołująca start gry (przekazana z main.js)
+ * Funkcja wywołująca start gry
  */
 function callStartRun() {
-    // Sprawdzamy, czy gra jest nieaktywna (w menu)
     if (gameState.game.inMenu || !gameState.game.running) {
         startRunCallback();
     } else {
@@ -67,10 +72,9 @@ function applyDevSettings() {
         console.error("DEV ERROR: Stan gry nie został zainicjowany w module DEV.");
         return;
     }
-
+    
     const { game, settings, player } = gameState;
-
-    // Aplikacja ustawień gracza działa tylko w trakcie trwania gry
+    
     if (!game.inMenu && game.running) {
         game.level = parseInt(document.getElementById('devLevel').value) || 1;
         game.health = parseInt(document.getElementById('devHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
@@ -78,11 +82,11 @@ function applyDevSettings() {
         game.xp = parseInt(document.getElementById('devXP').value) || 0;
         
         game.xpNeeded = calculateXpNeeded(game.level);
-
+        
         const autoGun = player.getWeapon(AutoGun);
         const orbital = player.getWeapon(OrbitalWeapon);
         const nova = player.getWeapon(NovaWeapon);
-
+        
         if (autoGun) {
             autoGun.bulletDamage = parseInt(document.getElementById('devDamage').value) || WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE;
             autoGun.fireRate = parseInt(document.getElementById('devFireRate').value) || WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE;
@@ -91,24 +95,23 @@ function applyDevSettings() {
         }
         if (orbital) {
             orbital.level = parseInt(document.getElementById('devOrbital').value) || 0;
-            orbital.updateStats(); // Wymuś aktualizację statystyk Orbitala
+            orbital.updateStats();
         }
         if (nova) {
             nova.level = parseInt(document.getElementById('devNova').value) || 0;
         }
     }
-
+    
     devSettings.godMode = document.getElementById('devGodMode').checked;
     settings.spawn = parseFloat(document.getElementById('devSpawnRate').value) || GAME_CONFIG.INITIAL_SPAWN_RATE;
     settings.maxEnemies = parseInt(document.getElementById('devMaxEnemies').value) || GAME_CONFIG.MAX_ENEMIES;
-
+    
     const enemySelect = document.getElementById('devEnemyType');
     devSettings.allowedEnemies = Array.from(enemySelect.selectedOptions).map(o => o.value);
-
+    
     const pickupSelect = document.getElementById('devPickupType');
     devSettings.allowedPickups = Array.from(pickupSelect.selectedOptions).map(o => o.value);
-
-    // POPRAWKA V0.67: Zmieniono alert na konsolę (przy zwykłym apply)
+    
     console.log('✅ Ustawienia Dev zastosowane!');
 }
 
@@ -122,7 +125,7 @@ function devSpawnPickup(type) {
     }
     
     const { game, pickups, player } = gameState;
-
+    
     if (!game.running || game.paused) {
         alert('❌ Rozpocznij grę przed używaniem tej funkcji!');
         return;
@@ -139,8 +142,6 @@ function devSpawnPickup(type) {
 
 /**
  * Funkcja pomocnicza do stosowania presetów
- * @param {number} level - Docelowy poziom gracza
- * @param {number} perkLevelOffset - 0 dla max, 1 dla "prawie max"
  */
 function applyDevPreset(level, perkLevelOffset = 0) {
     if (!gameState.game || !gameState.settings || !gameState.perkLevels || !gameState.player) {
@@ -149,41 +150,34 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     }
     
     const { game, settings, perkLevels, player } = gameState;
-
-    // Resetuj statystyki do stanu początkowego, aby uniknąć nakładania się
-    // POPRAWKA v0.65: Użyj wartości z GAME_CONFIG zamiast INITIAL_SETTINGS
-    Object.assign(settings, { 
+    
+    Object.assign(settings, {
         spawn: GAME_CONFIG.INITIAL_SPAWN_RATE,
         maxEnemies: GAME_CONFIG.MAX_ENEMIES,
         eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL,
-        lastFire: settings.lastFire, 
-        lastElite: settings.lastElite 
+        lastFire: settings.lastFire,
+        lastElite: settings.lastElite
     });
     
-    // Używamy oryginalnej funkcji resetAll, co wymagałoby przekazania uiData, 
-    // ale ponieważ jej nie mamy w dev.js, ręcznie resetujemy gracza.
     const worldWidth = gameState.canvas.width * (gameState.camera.worldWidth / gameState.camera.viewWidth);
     const worldHeight = gameState.canvas.height * (gameState.camera.worldHeight / gameState.camera.viewHeight);
-    player.reset(worldWidth, worldHeight); 
+    player.reset(worldWidth, worldHeight);
     
-    // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG
     game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
     game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH;
     game.health = PLAYER_CONFIG.INITIAL_HEALTH;
-
+    
     for (let key in perkLevels) {
         delete perkLevels[key];
     }
-
-    // Ustawienia gry
+    
     game.level = level;
-    game.time = 121; 
-    devSettings.allowedEnemies = ['all']; 
+    game.time = 121;
+    devSettings.allowedEnemies = ['all'];
     
     game.xp = 0;
     game.xpNeeded = calculateXpNeeded(game.level);
-
-    // Zastosuj perki
+    
     perkPool.forEach(perk => {
         const targetLevel = Math.max(0, perk.max - perkLevelOffset);
         if (targetLevel > 0) {
@@ -193,16 +187,15 @@ function applyDevPreset(level, perkLevelOffset = 0) {
             }
         }
     });
-
-    // Zaktualizuj UI w Dev Menu, aby odzwierciedlić zmiany
+    
     const autoGun = player.getWeapon(AutoGun);
     const orbital = player.getWeapon(OrbitalWeapon);
     const nova = player.getWeapon(NovaWeapon);
-
+    
     document.getElementById('devLevel').value = game.level;
     document.getElementById('devHealth').value = game.health;
     document.getElementById('devMaxHealth').value = game.maxHealth;
-    document.getElementById('devXP').value = game.xp; // Pokaż 0 XP
+    document.getElementById('devXP').value = game.xp;
     
     if (autoGun) {
         document.getElementById('devDamage').value = autoGun.bulletDamage;
@@ -216,30 +209,28 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     if (nova) {
         document.getElementById('devNova').value = nova.level;
     }
-
+    
     devSettings.presetLoaded = true;
     
-    // POPRAWKA V0.67: Automatyczny start gry
     callStartRun();
 }
 
 function devPresetAlmostMax() {
-    applyDevPreset(10, 1); // Poziom 10, 1 poziom do końca perka
+    applyDevPreset(10, 1);
 }
 
 function devPresetMax() {
-    applyDevPreset(10, 0); // Poziom 10, max perki
+    applyDevPreset(10, 0);
 }
 
 
 /**
  * Inicjalizuje moduł dev, przekazując referencje do stanu gry.
- * POPRAWKA V0.67: Akceptuje również funkcję startRun.
  */
 export function initDevTools(stateRef, startRunFn) {
     gameState = stateRef;
-    startRunCallback = startRunFn; // PRZECHOWANIE CALLBACKA
-
+    startRunCallback = startRunFn;
+    
     window.applyDevSettings = applyDevSettings;
     window.devSpawnPickup = devSpawnPickup;
     window.devPresetAlmostMax = devPresetAlmostMax;

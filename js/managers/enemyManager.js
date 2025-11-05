@@ -1,24 +1,38 @@
 // ==============
-// ENEMYMANAGER.JS (v0.69 - FIX: Poprawny import WallEnemy i implementacja Eventu Oblężenia)
+// ENEMYMANAGER.JS (v0.71 - Refaktoryzacja Importów Pickupów)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
 import { devSettings } from '../services/dev.js';
 import { findFreeSpotForPickup } from '../core/utils.js';
-import { 
-    Enemy, StandardEnemy, HordeEnemy, AggressiveEnemy, 
-    KamikazeEnemy, SplitterEnemy, TankEnemy, RangedEnemy, EliteEnemy, 
-    WallEnemy // POPRAWKA v0.69: Poprawny import WallEnemy
-} from '../entities/enemy.js';
-// POPRAWKA v0.65: Import ENEMY_STATS z centralnego pliku konfiguracyjnego
-import { ENEMY_STATS, SIEGE_EVENT_CONFIG } from '../config/gameData.js'; // POPRAWKA v0.69: Import SIEGE_EVENT_CONFIG
-import { 
-    HealPickup, MagnetPickup, ShieldPickup, 
-    SpeedPickup, BombPickup, FreezePickup 
-} from '../entities/pickup.js';
+
+// Import klasy bazowej
+import { Enemy } from '../entities/enemy.js';
+// Import 9 podklas wrogów (zrefaktoryzowane w v0.71)
+import { StandardEnemy } from '../entities/enemies/standardEnemy.js';
+import { HordeEnemy } from '../entities/enemies/hordeEnemy.js';
+import { AggressiveEnemy } from '../entities/enemies/aggressiveEnemy.js';
+import { KamikazeEnemy } from '../entities/enemies/kamikazeEnemy.js';
+import { SplitterEnemy } from '../entities/enemies/splitterEnemy.js';
+import { TankEnemy } from '../entities/enemies/tankEnemy.js';
+import { RangedEnemy } from '../entities/enemies/rangedEnemy.js';
+import { EliteEnemy } from '../entities/enemies/eliteEnemy.js';
+import { WallEnemy } from '../entities/enemies/wallEnemy.js';
+
+// Import konfiguracji
+import { ENEMY_STATS, SIEGE_EVENT_CONFIG } from '../config/gameData.js';
+
+// POPRAWKA v0.71: Import 6 podklas pickupów z nowego folderu
+import { HealPickup } from '../entities/pickups/healPickup.js';
+import { MagnetPickup } from '../entities/pickups/magnetPickup.js';
+import { ShieldPickup } from '../entities/pickups/shieldPickup.js';
+import { SpeedPickup } from '../entities/pickups/speedPickup.js';
+import { BombPickup } from '../entities/pickups/bombPickup.js';
+import { FreezePickup } from '../entities/pickups/freezePickup.js';
+
 import { Chest } from '../entities/chest.js';
 
-// POPRAWKA v0.69: Zaktualizowano mapę wrogów (usunięto 'sieger', dodano 'wall')
+// Mapa klas wrogów (działa bez zmian)
 export const ENEMY_CLASS_MAP = {
     standard: StandardEnemy,
     horde: HordeEnemy,
@@ -28,9 +42,10 @@ export const ENEMY_CLASS_MAP = {
     tank: TankEnemy,
     ranged: RangedEnemy,
     elite: EliteEnemy,
-    wall: WallEnemy // NOWY WRÓG (Oblężnik)
+    wall: WallEnemy
 };
 
+// Mapa klas pickupów (działa bez zmian, dzięki nowym importom)
 const PICKUP_CLASS_MAP = {
     heal: HealPickup,
     magnet: MagnetPickup,
@@ -52,7 +67,6 @@ function getAvailableEnemyTypes(game) {
     if (t > 70) types.push('splitter');
     if (t > 90) types.push('tank');
     if (t > 120) types.push('ranged');
-    // POPRAWKA v0.69: Usunięto 'sieger'. Wróg 'wall' jest spawnowany tylko przez Event.
     
     if (devSettings.allowedEnemies.includes('all')) return types;
     return types.filter(type => devSettings.allowedEnemies.includes(type));
@@ -93,13 +107,11 @@ function spawnHorde(enemies, x, y, hpScale, enemyIdCounter) {
 
 /**
  * Główna funkcja spawnująca wrogów (wywoływana z pętli)
- * POPRAWKA v0.66: Dodano argument 'camera' i zmieniono logikę spawnienia.
  */
 export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
     let x, y;
     const margin = 20;
     
-    // Obliczenie granic widoku kamery
     const viewLeft = camera.offsetX;
     const viewRight = camera.offsetX + camera.viewWidth;
     const viewTop = camera.offsetY;
@@ -122,7 +134,6 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
         y = viewTop + Math.random() * camera.viewHeight;
     }
 
-    // Ogranicz do granic świata, jeśli kamera jest na krawędzi
     x = Math.max(0, Math.min(worldWidth, x));
     y = Math.max(0, Math.min(worldHeight, y));
 
@@ -147,7 +158,6 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
 
 /**
  * Spawnuje Elitę
- * POPRAWKA v0.66: Dodano argument 'camera' i zmieniono logikę spawnienia.
  */
 export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     if (devSettings.allowedEnemies.length > 0 && !devSettings.allowedEnemies.includes('all') && !devSettings.allowedEnemies.includes('elite')) {
@@ -155,9 +165,8 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     }
 
     let x, y;
-    const margin = 30; // Większy margines dla Elity
+    const margin = 30; 
     
-    // Obliczenie granic widoku kamery
     const viewLeft = camera.offsetX;
     const viewRight = camera.offsetX + camera.viewWidth;
     const viewTop = camera.offsetY;
@@ -166,21 +175,20 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     const worldHeight = camera.worldHeight;
 
     const edge = Math.random();
-    if (edge < 0.25) { // Spawnowanie z Góry
+    if (edge < 0.25) { 
         x = viewLeft + Math.random() * camera.viewWidth; 
         y = viewTop - margin;
-    } else if (edge < 0.5) { // Spawnowanie z Dołu
+    } else if (edge < 0.5) { 
         x = viewLeft + Math.random() * camera.viewWidth; 
         y = viewBottom + margin;
-    } else if (edge < 0.75) { // Spawnowanie z Lewej
+    } else if (edge < 0.75) { 
         x = viewLeft - margin;
         y = viewTop + Math.random() * camera.viewHeight;
-    } else { // Spawnowanie z Prawej
+    } else { 
         x = viewRight + margin;
         y = viewTop + Math.random() * camera.viewHeight;
     }
 
-    // Ogranicz do granic świata, jeśli kamera jest na krawędzi
     x = Math.max(0, Math.min(worldWidth, x));
     y = Math.max(0, Math.min(worldHeight, y));
     
@@ -192,8 +200,7 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
 }
 
 /**
- * NOWA FUNKCJA (v0.69): Spawnuje Wydarzenie Oblężenia (Siege Event).
- * Tworzy pierścień wrogów typu 'wall' wokół gracza.
+ * Spawnuje Wydarzenie Oblężenia (Siege Event).
  */
 export function spawnSiegeRing(state) {
     const { enemies, player, game } = state;
@@ -243,12 +250,10 @@ export function findClosestEnemy(player, enemies) {
 
 /**
  * Logika zabicia wroga (wywoływana z kolizji)
- * POPRAWKA v0.62: Przyjmuje pule obiektów
  */
 export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital = false) {
     game.score += e.stats.score;
     
-    // POPRAWKA v0.62: Użyj puli gemów
     const gem = gemsPool.get();
     if (gem) {
         gem.init(
@@ -261,7 +266,6 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
     }
 
     if (e.type !== 'elite') {
-        // e.stats.drops jest teraz importowane z gameData.js
         for (const [type, prob] of Object.entries(e.stats.drops)) {
             if (devSettings.allowedEnemies.includes('all') || devSettings.allowedPickups.includes(type)) {
                 if (Math.random() < prob) {
@@ -276,18 +280,16 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         }
     }
 
-    // POPRAWKA v0.62: Użyj puli cząsteczek
     const particleCount = fromOrbital ? 3 : 8;
     for (let k = 0; k < particleCount; k++) {
         const p = particlePool.get();
         if (p) {
-            // POPRAWKA v0.62e: Zmiana czasu życia na sekundy i wartości fizyki
             const speed = (fromOrbital ? 2 : 4) * 60; // px/s
             p.init(
                 e.x, e.y,
                 (Math.random() - 0.5) * speed, // vx (px/s)
                 (Math.random() - 0.5) * speed, // vy (px/s)
-                fromOrbital ? 0.16 : 0.5, // life (było 10 / 30 klatek)
+                fromOrbital ? 0.16 : 0.5, // life
                 fromOrbital ? e.color : '#ff0000', // color
                 0, // gravity
                 (1.0 - 0.98) // friction
@@ -321,4 +323,4 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.69] js/managers/enemyManager.js: Zaimplementowano funkcję spawnSiegeRing.');
+console.log('[DEBUG-v0.71] js/managers/enemyManager.js: Zaktualizowano importy pickupów do 6 oddzielnych plików.');

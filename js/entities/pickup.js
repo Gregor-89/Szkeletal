@@ -1,5 +1,5 @@
 // ==============
-// PICKUP.JS (v0.68 - FINAL FIX: Dodano mechanikę zaniku)
+// PICKUP.JS (v0.71 - Refaktoryzacja: Tylko Klasa Bazowa)
 // Lokalizacja: /js/entities/pickup.js
 // ==============
 
@@ -137,40 +137,6 @@ export class Pickup {
   }
 }
 
-// === KLASY SPECJALISTYCZNE ===
-
-export class HealPickup extends Pickup {
-  constructor(x, y) {
-    super(x, y, 'heal');
-  }
-}
-
-export class MagnetPickup extends Pickup {
-  constructor(x, y) {
-    super(x, y, 'magnet');
-  }
-}
-
-export class ShieldPickup extends Pickup {
-  constructor(x, y) {
-    super(x, y, 'shield');
-  }
-}
-
-export class SpeedPickup extends Pickup {
-  constructor(x, y) {
-    super(x, y, 'speed');
-  }
-}
-
-export class BombPickup extends Pickup {
-  constructor(x, y) {
-    super(x, y, 'bomb');
-  }
-}
-
-export class FreezePickup extends Pickup {
-  constructor(x, y) {
-    super(x, y, 'freeze');
-  }
-}
+// === KLASY SPECJALISTYCZNE (PRZENIESIONE DO /js/entities/pickups/) ===
+// (HealPickup, MagnetPickup, ShieldPickup, SpeedPickup, BombPickup, FreezePickup)
+// Zostały usunięte z tego pliku.

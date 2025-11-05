@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.70 - FIX 4: Naprawa błędu resetowania czasu globalnego)
+// MAIN.JS (v0.71 - FIX: Połączone poprawki 'worldSize' i podwójnej pętli FPS)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -9,9 +9,7 @@ import { Player } from './entities/player.js';
 import { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG } from './config/gameData.js';
 import { draw } from './core/draw.js';
 
-// POPRAWKA v0.70: Importy UI są teraz podzielone
 import { updateUI, resumeGame, showMenu, startRun, resetAll, gameOver, pauseGame } from './ui/ui.js';
-// POPRAWKA v0.70: Import Menedżera Eventów
 import { initializeMainEvents } from './core/eventManager.js';
 
 import { updateVisualEffects, updateParticles } from './managers/effects.js';
@@ -44,10 +42,6 @@ let canvas = null;
 let ctx = null;
 
 // === Ustawienia i stan gry (Obiekty proste) ===
-let animationFrameId = null;
-// POPRAWKA v0.70 (FIX 4): Usunięto 'startTime' i 'lastTime'. Są teraz zarządzane w 'uiData'.
-// let startTime = 0;
-// let lastTime = 0;
 let savedGameState = null; // Przechowywany przez uiData
 
 let fps = 0;
@@ -113,7 +107,6 @@ function initializeCanvas() {
     // 1. Inicjalizacja DOM
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
-    // Usunięto referencje do menuOverlay i btnContinue (są w domElements.js)
 
     const worldSize = WORLD_CONFIG.SIZE;
     const worldWidth = canvas.width * worldSize;
@@ -135,9 +128,11 @@ function initializeCanvas() {
     particles = particlePool.activeItems;
     hitTexts = hitTextPool.activeItems;
 
-    // 4. Definicja gameStateRef (v0.70 - stan jest kompletny)
+    // 4. Definicja gameStateRef
     gameStateRef = {
-      game, player, settings, perkLevels, enemies, chests, pickups, canvas, bombIndicators, stars, hazards, 
+      game, player, settings, perkLevels, enemies, chests, pickups, 
+      canvas, ctx, 
+      bombIndicators, stars, hazards, 
       bulletsPool: playerBulletPool, eBulletsPool: enemyBulletPool, gemsPool: gemsPool, 
       particlePool: particlePool, hitTextPool: hitTextPool, camera: camera,
       bullets: bullets, eBullets: eBullets, gems: gems, particles: particles, hitTexts: hitTexts,
@@ -156,8 +151,7 @@ const uiData = {
     chests, pickups, stars, bombIndicators, hazards: null, 
     bullets: null, eBullets: null, gems: null, particles: null, hitTexts: null,
     trails: [], confettis: [], canvas: null, ctx: null,
-    animationFrameId, 
-    // POPRAWKA v0.70 (FIX 4): startTime i lastTime są teraz jedynym źródłem prawdy.
+    animationFrameId: null, 
     startTime: 0, 
     lastTime: 0, 
     savedGameState,
@@ -166,13 +160,11 @@ const uiData = {
     initStarsCallback: initStars,
     currentChestReward: null,
     
-    // POPRAWKA v0.70: Flagi UI przeniesione tutaj
     pickupShowLabels: true,
     pickupStyleEmoji: false,
     showFPS: true,
     fpsPosition: 'right',
-    // Referencja do danych konfiguracyjnych (potrzebna Menedżerom)
-    gameData: { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG } // POPRAWKA v0.70: Dodano SIEGE_EVENT_CONFIG
+    gameData: { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG }
 };
 
 
@@ -189,19 +181,20 @@ function updateUiDataReferences() {
     uiData.hitTexts = hitTexts;
     uiData.hazards = hazards; 
     
-    // Zaktualizuj referencje do loop/draw callback
     uiData.loopCallback = loop;
+    
     uiData.drawCallback = () => draw(
-        ctx, canvas, game, stars, [], player, enemies, bullets, eBullets, 
-        gems, pickups, chests, particles, hitTexts, bombIndicators, hazards, [], 
-        uiData.pickupStyleEmoji, uiData.pickupShowLabels, 
-        fps, uiData.showFPS, uiData.fpsPosition, 
-        camera
+        ctx, 
+        gameStateRef, 
+        uiData,       
+        fps           
     );
 }
 
+// POPRAWKA v0.71 (OKOŁO L205): Naprawiono błąd 'worldSize is not defined'
 function initStars(){
   stars.length = 0;
+  // Użyj 'WORLD_CONFIG.SIZE' zamiast 'worldSize', który jest poza zakresem
   const worldWidth = canvas.width * WORLD_CONFIG.SIZE;
   const worldHeight = canvas.height * WORLD_CONFIG.SIZE;
   
@@ -216,15 +209,12 @@ function initStars(){
   }
 }
 
-// POPRAWKA v0.70: Wszystkie funkcje 'wrapped...' zostały przeniesione do eventManager.js
-
 // === GŁÓWNA PĘTLA AKTUALIZACJI ===
 function update(dt){
-  // POPRAWKA v0.70: Wywołania callbacków są teraz obsługiwane przez Menedżera Eventów
   updateGame(
       gameStateRef, 
       dt, 
-      window.wrappedLevelUp, // Użyj globalnych wrapperów ustawionych przez eventManager
+      window.wrappedLevelUp, 
       window.wrappedOpenChest, 
       camera
   );
@@ -240,26 +230,21 @@ function update(dt){
 function loop(currentTime){
   if (canvas === null) {
       console.warn("Canvas nie został zainicjalizowany. Czekam...");
-      animationFrameId = requestAnimationFrame(loop);
+      uiData.animationFrameId = requestAnimationFrame(loop);
       return;
     }
     
     try {
-        // POPRAWKA v0.70 (FIX 4): Użyj 'uiData.startTime' i 'uiData.lastTime'
         if (uiData.startTime === 0) {
             uiData.startTime = currentTime;
             uiData.lastTime = currentTime;
             lastFrameTime = currentTime;
         }
         
-        // POPRAWKA v0.70: Aktualizacja globalnej referencji (nadal potrzebna)
-        uiData.animationFrameId = animationFrameId;
-        
         const deltaMs = currentTime - uiData.lastTime;
         uiData.lastTime = currentTime;
         const dt = Math.min(deltaMs / 1000, 0.1); 
         
-        // Licznik FPS
         frameCount++;
         if (currentTime - lastFrameTime >= 1000) {
             fps = frameCount;
@@ -270,7 +255,10 @@ function loop(currentTime){
         updateVisualEffects(dt, [], [], bombIndicators); 
         updateParticles(dt, particles); 
         
-        if(game.paused || !game.running){
+        // POPRAWKA v0.71 (FPS FIX): Zmieniono strukturę pętli
+        
+        if (game.paused || !game.running) {
+            // Logika pauzy/menu
             uiData.drawCallback();
             
             if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
@@ -279,45 +267,44 @@ function loop(currentTime){
                     updateUI(game, player, settings, null); 
                 }
             }
-            animationFrameId = requestAnimationFrame(loop);
-            return;
-        }
-        
-        // POPRAWKA v0.70 (FIX 4): Oblicz 'game.time' na podstawie 'uiData.startTime'
-        game.time = (currentTime - uiData.startTime) / 1000;
-        
-        update(dt); 
-        
-        uiData.drawCallback();
-        
-        if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
-            lastUiUpdateTime = currentTime;
-            updateUI(game, player, settings, null);
-        } 
-        
-        if(game.health<=0 && !devSettings.godMode){
-            window.wrappedGameOver(); // Użyj globalnego wrappera
+            // USUNIĘTO 'requestAnimationFrame' i 'return' STĄD
+        } else {
+            // Logika działającej gry
+            game.time = (currentTime - uiData.startTime) / 1000;
+            
+            update(dt); 
+            
+            uiData.drawCallback();
+            
+            if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
+                lastUiUpdateTime = currentTime;
+                updateUI(game, player, settings, null);
+            } 
+            
+            if(game.health<=0 && !devSettings.godMode){
+                window.wrappedGameOver(); 
+            }
         }
         
     } catch (e) {
         console.error("BŁĄD KRYTYCZNY W PĘTLI GRY (loop):", e);
         game.running = false;
         game.paused = true;
-        if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
+        if (uiData.animationFrameId) {
+            cancelAnimationFrame(uiData.animationFrameId);
+            uiData.animationFrameId = null;
         }
     }
     
+    // POPRAWKA v0.71 (FPS FIX): Tylko JEDNO wywołanie requestAnimationFrame na końcu
     if (game.running || game.paused) {
-        animationFrameId = requestAnimationFrame(loop);
+        uiData.animationFrameId = requestAnimationFrame(loop);
     }
 }
 
 
 // === PRZYPISANIE EVENTÓW ===
 
-// POPRAWKA v0.69: Nowa funkcja do przełączania zakładek (wywoływana PO załadowaniu HTML)
 function initTabSwitching() {
     document.querySelectorAll('.tabs .tab').forEach((tab, index) => {
         tab.addEventListener('click', (event) => {
@@ -325,14 +312,12 @@ function initTabSwitching() {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
             
-            // Wybieramy odpowiednią zakładkę (Gra, Konfiguracja, Dev, Przewodnik)
             const tabNames = ['game', 'config', 'dev', 'guide'];
             document.getElementById('tab-' + tabNames[index]).classList.add('active');
         });
     });
 }
 
-// POPRAWKA v0.69: Nowa funkcja do ładowania zawartości zakładek
 async function loadMenuTabs() {
     console.log('[Refactor v0.69] Ładowanie zawartości zakładek HTML...');
     try {
@@ -342,7 +327,6 @@ async function loadMenuTabs() {
             fetch('menu_guide.html').then(res => res.text())
         ]);
         
-        // NAPRAWIONO BŁĄD (v0.70): Poprawne przypisanie wszystkich zakładek
         document.getElementById('tab-config').innerHTML = configHTML;
         document.getElementById('tab-dev').innerHTML = devHTML; 
         document.getElementById('tab-guide').innerHTML = guideHTML; 
@@ -350,35 +334,26 @@ async function loadMenuTabs() {
         console.log('[Refactor v0.69] Zakładki załadowane. Inicjalizacja przełączania.');
         initTabSwitching();
         
-        // POPRAWKA v0.70 (Refactor): Inicjalizuj Menedżera Eventów PO załadowaniu HTML
-        // To automatycznie wywoła initEvents() i ustawi globalne wrappery
         const { initEvents, wrappedLoadConfigAndStart } = initializeMainEvents(gameStateRef, uiData);
         initEvents();
         
-        // Zwróć wrappedLoadConfigAndStart, aby DevTools mogły z niego korzystać
         return wrappedLoadConfigAndStart;
         
     } catch (err) {
         console.error("BŁĄD KRYTYCZNY: Nie można załadować zawartości menu (menu_*.html).", err);
         alert("BŁĄD: Nie można załadować plików menu. Sprawdź, czy pliki menu_config.html, menu_dev.html i menu_guide.html znajdują się w tym samym folderze co index.html.");
-        // POPRAWKA v0.70 (FIX): Nawet jeśli ładowanie HTML zawiedzie,
-        // musimy zainicjować Menedżera Eventów, aby .catch() mógł wywołać wrappedShowMenu
+        
         const { initEvents, wrappedLoadConfigAndStart } = initializeMainEvents(gameStateRef, uiData);
         initEvents();
         return wrappedLoadConfigAndStart;
     }
 }
 
-// POPRAWKA v0.70: initEvents() zostało przeniesione do eventManager.js i jest wywoływane przez loadMenuTabs()
-
-
 // === START GRY ===
 
-// Inicjalizacja modułu Input (v0.44)
 const handleEscape = () => {
   if(!game.inMenu && game.running){
     if(game.manualPause){
-      // POPRAWKA v0.70: Użyj globalnego wrappera
       window.wrappedResumeGame ? window.wrappedResumeGame() : resumeGame(game);
     } else {
       window.wrappedPauseGame ? window.wrappedPauseGame() : pauseGame(game, settings, player.weapons, player);
@@ -396,60 +371,44 @@ const handleJoyEnd = () => {
   }
 };
 
-// === START GRY (v0.58) ===
 console.log('[Main] Ładowanie zasobów...');
 Promise.all([
     loadAssets(),
     loadAudio()
-]).then(async (results) => { // POPRAWKA v0.69: Dodano 'async'
+]).then(async (results) => { 
     console.log('[Main] Wszystkie zasoby (grafika i audio) załadowane. Inicjalizacja Canvas i Obiektów Gry.');
     
-    // POPRAWKA v0.70: Przekaż dane konfiguracyjne do uiData
     uiData.gameData = { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG };
     
-    // NOWA KRYTYCZNA KOLEJNOŚĆ INICJALIZACJI
     initializeCanvas();
-    updateUiDataReferences(); // Wypełnij referencje do uiData (player, camera, pools)
-    initStars(); // Inicjalizacja gwiazd wymaga wymiarów świata (z initializeCanvas)
+    updateUiDataReferences(); 
+    initStars(); 
     
-    // POPRAWKA v0.69: Ładowanie zawartości zakładek HTML PRZED resztą eventów
     const wrappedLoadConfigAndStart = await loadMenuTabs();
     
-    // POPRAWKA V0.67: PRZEKAZANIE NOWEJ FUNKCJI ŁADUJĄCEJ KONFIGURACJĘ
-    // POPRAWKA v0.70: Przekazanie gameStateRef (zawiera teraz pule)
     initDevTools(gameStateRef, wrappedLoadConfigAndStart); 
     
-    // POPRAWKA v0.69: initEvents() jest teraz wywoływane WEWNĄTRZ loadMenuTabs()
+    initInput(handleEscape, handleJoyStart, handleJoyEnd); 
     
-    initInput(handleEscape, handleJoyStart, handleJoyEnd); // Input wymaga initEvents
-    
-    // POPRAWKA v0.70: Użyj globalnego wrappera
     window.wrappedShowMenu(false);
 
-}).catch(async (err) => { // POPRAWKA v0.69: Dodano 'async'
+}).catch(async (err) => { 
     console.error("[Main] Krytyczny błąd podczas ładowania zasobów:", err);
     
-    // POPRAWKA v0.70 (FIX): Musimy zainicjować wrappery nawet w przypadku błędu,
-    // aby .catch() mógł wywołać window.wrappedShowMenu()
-    
-    // Ustaw dane konfiguracyjne (fallback)
     uiData.gameData = { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG };
     
     initializeCanvas();
     updateUiDataReferences();
-    initStars();
+    initStars(); 
     
-    // Załaduj zakładki, co zainicjuje także eventManager i ustawi globalne wrappery
     const wrappedLoadConfigAndStart = await loadMenuTabs(); 
     
     initDevTools(gameStateRef, wrappedLoadConfigAndStart); 
     initInput(handleEscape, handleJoyStart, handleJoyEnd);
     
-    // Teraz ta funkcja powinna istnieć
     if (window.wrappedShowMenu) {
         window.wrappedShowMenu(false);
     } else {
-        // Ostateczny fallback, jeśli eventManager też zawiedzie
         document.getElementById('menuOverlay').style.display = 'flex';
         console.error("FATAL: Nie można było nawet zainicjować Menedżera Eventów.");
     }

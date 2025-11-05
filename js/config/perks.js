@@ -1,19 +1,18 @@
 // ==============
-// PERKS.JS (v0.65 - Centralizacja Danych - Poprawka stabilności)
+// PERKS.JS (v0.71 - FIX: Poprawiony Import Broni)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
-import { AutoGun, OrbitalWeapon, NovaWeapon } from './weapon.js';
+// POPRAWKA v0.71: Import 3 podklas broni z nowego folderu
+import { AutoGun } from './weapons/autoGun.js';
+import { OrbitalWeapon } from './weapons/orbitalWeapon.js';
+import { NovaWeapon } from './weapons/novaWeapon.js';
+
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
 import { PERK_CONFIG } from './gameData.js';
 
 /**
  * Definicja puli perków.
- * Funkcje 'apply' przyjmują teraz obiekt 'state' oraz 'perk',
- * aby mogły wchodzić w interakcję z nowym systemem broni gracza.
- * * POPRAWKA v0.65: Wszystkie wartości 'max' i 'value' są
- * pobierane dynamicznie z pliku gameData.js (z PERK_CONFIG).
- * POPRAWKA STABILNOŚCI: Dodano fallback dla 'max' w przypadku problemów z inicjalizacją modułów.
  */
 export const perkPool = [
     {
@@ -23,9 +22,8 @@ export const perkPool = [
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
-                // Zamiast *= 0.85, używamy wartości z konfiguracji
                 gun.fireRate *= PERK_CONFIG.firerate.value;
-                gun.upgrade(perk); // Przekazujemy, aby broń mogła zaktualizować swoje staty
+                gun.upgrade(perk); 
             }
         }
     },
@@ -36,7 +34,6 @@ export const perkPool = [
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
-                // Używamy wartości z konfiguracji
                 gun.bulletDamage += PERK_CONFIG.damage.value;
                 gun.upgrade(perk);
             }
@@ -49,7 +46,6 @@ export const perkPool = [
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
-                // Używamy wartości z konfiguracji
                 gun.multishot += PERK_CONFIG.multishot.value;
                 gun.upgrade(perk);
             }
@@ -62,7 +58,6 @@ export const perkPool = [
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
-                // Używamy wartości z konfiguracji
                 gun.pierce += PERK_CONFIG.pierce.value;
                 gun.upgrade(perk);
             }
@@ -89,7 +84,6 @@ export const perkPool = [
         max: PERK_CONFIG.speed?.max || 4, 
         color:'#66bb6a', emoji:'🏃',
         apply: (state, perk) => { 
-            // Używamy wartości z konfiguracji
             state.player.speed *= PERK_CONFIG.speed.value; 
         }
     },
@@ -98,7 +92,6 @@ export const perkPool = [
         max: PERK_CONFIG.pickup?.max || 3, 
         color:'#b39ddb', emoji:'🧲',
         apply: (state, perk) => { 
-            // Używamy wartości z konfiguracji
             state.game.pickupRange *= PERK_CONFIG.pickup.value; 
         }
     },
@@ -107,7 +100,6 @@ export const perkPool = [
         max: PERK_CONFIG.health?.max || 3, 
         color:'#e57373', emoji:'❤️',
         apply: (state, perk) => {
-            // Używamy wartości z konfiguracji
             const bonusHealth = PERK_CONFIG.health.value;
             state.game.maxHealth += bonusHealth;
             state.game.health = Math.min(state.game.maxHealth, state.game.health + bonusHealth);
