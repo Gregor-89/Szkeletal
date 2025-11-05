@@ -1,5 +1,5 @@
 // ==============
-// BULLET.JS (v0.64 - Fizyka oparta na Delta Time)
+// BULLET.JS (v0.66 - Culling fix)
 // Lokalizacja: /js/entities/bullet.js
 // ==============
 
@@ -72,18 +72,23 @@ class Bullet {
   
   /**
    * Sprawdza, czy pocisk jest poza ekranem.
-   * @param {HTMLCanvasElement} canvas 
+   * POPRAWKA v0.66: Zmieniono argument na 'camera' i użyto granic świata/widoku.
+   * @param {object} camera 
    * @returns {boolean}
    */
-  isOffScreen(canvas) {
-    // Zwiększamy margines, aby pociski (które są teraz szybsze)
-    // nie "przeskoczyły" granicy w klatkach z niskim FPS
+  isOffScreen(camera) {
+    // Używamy granic widoku Kamery, a nie Canvasa.
     const margin = 50;
+    const viewLeft = camera.offsetX;
+    const viewRight = camera.offsetX + camera.viewWidth;
+    const viewTop = camera.offsetY;
+    const viewBottom = camera.offsetY + camera.viewHeight;
+    
     return (
-      this.x < -margin ||
-      this.x > canvas.width + margin ||
-      this.y < -margin ||
-      this.y > canvas.height + margin
+      this.x < viewLeft - margin ||
+      this.x > viewRight + margin ||
+      this.y < viewTop - margin ||
+      this.y > viewBottom + margin
     );
   }
 }
@@ -124,3 +129,6 @@ export class EnemyBullet extends Bullet {
     super.init(x, y, vx, vy, size, damage, color);
   }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG] js/entities/bullet.js: isOffScreen zaktualizowano dla Kamery.');

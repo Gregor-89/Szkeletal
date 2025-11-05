@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.62 - Pula Obiektów dla Gemów i Efektów)
+// GAMELOGIC.JS (v0.66 - Centralne Zaokrąglanie Kamery)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -9,16 +9,49 @@ import { applyPickupSeparation, spawnConfetti } from './utils.js';
 import { checkCollisions } from '../managers/collisions.js';
 
 /**
- * Główna funkcja aktualizująca stan gry, wywoływana z pętli w main.js.
+ * Aktualizuje pozycję kamery, śledząc gracza i ograniczając ją do granic świata.
  */
-export function updateGame(state, dt, levelUpFn, openChestFn) {
+export function updateCamera(player, camera, canvas) {
+    // 1. Ograniczenie ruchu gracza do granic świata
+    player.x = Math.max(player.size / 2, Math.min(camera.worldWidth - player.size / 2, player.x));
+    player.y = Math.max(player.size / 2, Math.min(camera.worldHeight - player.size / 2, player.y));
+    
+    // 2. Wypośrodkowanie kamery na graczu (bez ograniczeń)
+    let targetX = player.x - camera.viewWidth / 2;
+    let targetY = player.y - camera.viewHeight / 2;
+    
+    // 3. Ograniczenie kamery do granic świata
+    // Oś X
+    targetX = Math.max(0, targetX); // Nie wyjeżdżaj na lewo
+    targetX = Math.min(targetX, camera.worldWidth - camera.viewWidth); // Nie wyjeżdżaj na prawo
+    // Oś Y
+    targetY = Math.max(0, targetY); // Nie wyjeżdżaj na górę
+    targetY = Math.min(targetY, camera.worldHeight - camera.viewHeight); // Nie wyjeżdżaj na dół
+
+    // 4. Zastosowanie pozycji (Z KLUCZOWYM ZAOKRĄGLENIEM)
+    camera.offsetX = Math.round(targetX);
+    camera.offsetY = Math.round(targetY);
+    
+    // LOG DIAGNOSTYCZNY
+    console.log('[DEBUG] js/core/gameLogic.js: camera offset is now rounded');
+}
+
+/**
+ * Główna funkcja aktualizująca stan gry, wywoływana z pętli w main.js.
+ * POPRAWKA v0.66: Dodano argument 'camera'.
+ */
+export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     const { 
         game, player, settings, canvas,
         enemies, eBullets, bullets, gems, pickups, stars, // 'bullets', 'eBullets', 'gems' to teraz 'activeItems'
         particles, hitTexts, chests, particlePool // 'particles' i 'hitTexts' to 'activeItems'
     } = state;
 
-    const playerMoved = player.update(dt, game, keys, jVec(), canvas);
+    // POPRAWKA v0.66: Przekazanie 'camera' do Player.update
+    const playerMoved = player.update(dt, game, keys, jVec(), camera); 
+    
+    // POPRAWKA v0.66: Aktualizacja kamery
+    updateCamera(player, camera, canvas);
 
     // POPRAWKA v0.62: Użyj puli cząsteczek do tworzenia śladów
     if (playerMoved && Math.random() < 0.15) {
@@ -36,14 +69,15 @@ export function updateGame(state, dt, levelUpFn, openChestFn) {
     if (game.speedT > 0) game.speedT -= dt;
     if (game.freezeT > 0) game.freezeT -= dt;
 
+    // POPRAWKA v0.66: Przekazanie 'camera' do funkcji spawnowania
     const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
     if (Math.random() < spawnRate && enemies.length < settings.maxEnemies) {
-        state.enemyIdCounter = spawnEnemy(enemies, game, canvas, state.enemyIdCounter);
+        state.enemyIdCounter = spawnEnemy(enemies, game, canvas, state.enemyIdCounter, camera);
     }
 
     const timeSinceLastElite = game.time - settings.lastElite;
     if (timeSinceLastElite > (settings.eliteInterval / 1000) / (game.hyper ? 1.15 : 1)) {
-        state.enemyIdCounter = spawnElite(enemies, game, canvas, state.enemyIdCounter);
+        state.enemyIdCounter = spawnElite(enemies, game, canvas, state.enemyIdCounter, camera);
         settings.lastElite = game.time;
     }
 

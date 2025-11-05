@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.65 - Pełna centralizacja danych)
+// GAMEDATA.JS (v0.66 - Wprowadzenie Kamery i Świata Gry)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -144,6 +144,12 @@ export const UI_CONFIG = {
   LEVEL_UP_PAUSE: 700
 };
 
+// --- Konfiguracja Świata Gry ---
+export const WORLD_CONFIG = {
+  // Rozmiar świata (np. 2 oznacza świat 2x2 ekrany)
+  SIZE: 2
+};
+
 // --- Konfiguracja Efektów Wizualnych (VFX) ---
 export const EFFECTS_CONFIG = {
   // Wskaźnik wybuchu bomby
@@ -178,3 +184,6 @@ export const ENEMY_STATS = {
   ranged: { type: 'ranged', hp: 4, speed: 144, size: 10, damage: 5, color: '#00BCD4', score: 10, xp: 1, drops: BASE_DROP_RATES },
   elite: { type: 'elite', hp: 24, speed: 130, size: 18, damage: 5, color: '#9C27B0', score: 80, xp: 7, drops: {} } // Elita nie dropi bonusów, tylko skrzynię
 };
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.66] js/config/gameData.js: Dodano WORLD_CONFIG (SIZE: 2)');

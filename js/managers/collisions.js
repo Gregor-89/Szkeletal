@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.65 - Centralizacja Danych)
+// COLLISIONS.JS (v0.66 - Culling fix)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -20,7 +20,7 @@ export function checkCollisions(state) {
     const { 
         player, game, settings, canvas, 
         bullets, eBullets, enemies, gems, pickups, chests, // 'bullets', 'eBullets', 'gems' to teraz 'activeItems'
-        bombIndicators, 
+        bombIndicators, camera, // DODANO: obiekt camera
         // POPRAWKA v0.62: Pobranie pul obiektów
         gemsPool, particlePool, hitTextPool,
         // 'hitTexts' i 'gems' to teraz 'activeItems'
@@ -54,7 +54,8 @@ for (let i = eBullets.length - 1; i >= 0; i--) {
         }
     }
 
-    if (eb.isOffScreen(canvas)) {
+    // POPRAWKA v0.66: Użyj metody isOffScreen z argumentem 'camera'
+    if (eb.isOffScreen(camera)) {
         // POPRAWKA v0.61: Użyj 'release()' zamiast 'splice()'
         eb.release();
     }
@@ -114,7 +115,8 @@ for (let i = bullets.length - 1; i >= 0; i--) {
     }
     if (hitSomething) continue; 
     
-    if (b.isOffScreen(canvas)) {
+    // POPRAWKA v0.66: Użyj metody isOffScreen z argumentem 'camera'
+    if (b.isOffScreen(camera)) {
         // POPRAWKA v0.61: Użyj 'release()' zamiast 'splice()'
         b.release();
     }
@@ -138,8 +140,10 @@ for (let j = enemies.length - 1; j >= 0; j--) {
             const angle = Math.atan2(player.y - e.y, player.x - e.x);
             player.x += Math.cos(angle) * 8;
             player.y += Math.sin(angle) * 8;
-            player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
-            player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y));
+            // Ograniczenie ruchu gracza (do granic świata) zostało przeniesione do gameLogic.js
+            // Usunięto:
+            // player.x = Math.max(player.size / 2, Math.min(canvas.width - player.size / 2, player.x));
+            // player.y = Math.max(player.size / 2, Math.min(canvas.height - player.size / 2, player.y));
 
             if (game.shield || devSettings.godMode) {
                 // POPRAWKA v0.62: Użyj puli hitText
@@ -243,3 +247,6 @@ for (let i = chests.length - 1; i >= 0; i--) {
     }
 }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG] js/managers/collisions.js: Zaktualizowano culling pocisków dla kamery.');

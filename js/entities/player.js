@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v0.65 - Centralizacja Danych)
+// PLAYER.JS (v0.66 - Usunięcie ograniczenia Canvasa)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -63,8 +63,9 @@ export class Player {
     /**
      * Aktualizuje ruch i animację gracza.
      * POPRAWKA v0.64: Zastosowano fizykę opartą na dt.
+     * POPRAWKA v0.66: Zmieniono sygnaturę, usunięto argument 'canvas'.
      */
-    update(dt, game, keys, jVec, canvas) {
+    update(dt, game, keys, jVec, camera) {
         let vx = 0, vy = 0;
         
         const speedMul = (game.speedT > 0 ? 1.4 : 1) * (1 - (game.collisionSlowdown || 0));
@@ -98,8 +99,11 @@ export class Player {
         this.isMoving = (Math.abs(vx) > 0 || Math.abs(vy) > 0);
 
         // Ograniczenie ruchu do granic canvasa
-        this.x = Math.max(this.size / 2, Math.min(canvas.width - this.size / 2, this.x));
-        this.y = Math.max(this.size / 2, Math.min(canvas.height - this.size / 2, this.y));
+        // POPRAWKA v0.66: USUNIĘTO OGRANICZENIE RUCHU DO GRANIC CANVAS
+        // Logika ograniczenia (do granic świata) zostanie przeniesiona do gameLogic.js (updateCamera)
+        
+        // this.x = Math.max(this.size / 2, Math.min(canvas.width - this.size / 2, this.x));
+        // this.y = Math.max(this.size / 2, Math.min(canvas.height - this.size / 2, this.y));
 
         // POPRAWKA v0.57b: Aktualizacja stanów animacji
         const oldState = this.currentState;
@@ -168,7 +172,7 @@ export class Player {
                 this.x - drawSize / 2, // dx: Docelowe X (na canvasie)
                 this.y - drawSize / 2, // dy: Docelowe Y (na canvasie)
                 drawSize,          // dWidth: Docelowa szerokość
-                drawSize           // dHeight: Docelowa wysokość
+                drawSize           // dHeight: Docelowa szerokość
             );
             
         } else {
@@ -217,3 +221,6 @@ export class Player {
         }
     }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.66] js/entities/player.js: Usunięto ograniczenie ruchu do granic canvasa.');

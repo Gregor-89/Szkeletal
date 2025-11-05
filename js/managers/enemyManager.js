@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.65 - Centralizacja Danych)
+// ENEMYMANAGER.JS (v0.66 - Spawnowanie Kamery-Centrum)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -91,19 +91,38 @@ function spawnHorde(enemies, x, y, hpScale, enemyIdCounter) {
 
 /**
  * Główna funkcja spawnująca wrogów (wywoływana z pętli)
+ * POPRAWKA v0.66: Dodano argument 'camera' i zmieniono logikę spawnienia.
  */
-export function spawnEnemy(enemies, game, canvas, enemyIdCounter) {
+export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
     let x, y;
+    const margin = 20;
+    
+    // Obliczenie granic widoku kamery
+    const viewLeft = camera.offsetX;
+    const viewRight = camera.offsetX + camera.viewWidth;
+    const viewTop = camera.offsetY;
+    const viewBottom = camera.offsetY + camera.viewHeight;
+    const worldWidth = camera.worldWidth;
+    const worldHeight = camera.worldHeight;
+
     const edge = Math.random();
-    if (edge < 0.25) { // Top
-        x = Math.random() * canvas.width; y = -20;
-    } else if (edge < 0.5) { // Bottom
-        x = Math.random() * canvas.width; y = canvas.height + 20;
-    } else if (edge < 0.75) { // Left
-        x = -20; y = Math.random() * canvas.height;
-    } else { // Right
-        x = canvas.width + 20; y = Math.random() * canvas.height;
+    if (edge < 0.25) { // Spawnowanie z Góry
+        x = viewLeft + Math.random() * camera.viewWidth;
+        y = viewTop - margin;
+    } else if (edge < 0.5) { // Spawnowanie z Dołu
+        x = viewLeft + Math.random() * camera.viewWidth;
+        y = viewBottom + margin;
+    } else if (edge < 0.75) { // Spawnowanie z Lewej
+        x = viewLeft - margin;
+        y = viewTop + Math.random() * camera.viewHeight;
+    } else { // Spawnowanie z Prawej
+        x = viewRight + margin;
+        y = viewTop + Math.random() * camera.viewHeight;
     }
+
+    // Ogranicz do granic świata, jeśli kamera jest na krawędzi
+    x = Math.max(0, Math.min(worldWidth, x));
+    y = Math.max(0, Math.min(worldHeight, y));
 
     const availableTypes = getAvailableEnemyTypes(game);
     
@@ -126,23 +145,42 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter) {
 
 /**
  * Spawnuje Elitę
+ * POPRAWKA v0.66: Dodano argument 'camera' i zmieniono logikę spawnienia.
  */
-export function spawnElite(enemies, game, canvas, enemyIdCounter) {
+export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     if (devSettings.allowedEnemies.length > 0 && !devSettings.allowedEnemies.includes('all') && !devSettings.allowedEnemies.includes('elite')) {
         return enemyIdCounter; // Dev wyłączył elity
     }
 
     let x, y;
+    const margin = 30; // Większy margines dla Elity
+    
+    // Obliczenie granic widoku kamery
+    const viewLeft = camera.offsetX;
+    const viewRight = camera.offsetX + camera.viewWidth;
+    const viewTop = camera.offsetY;
+    const viewBottom = camera.offsetY + camera.viewHeight;
+    const worldWidth = camera.worldWidth;
+    const worldHeight = camera.worldHeight;
+
     const edge = Math.random();
-    if (edge < 0.25) { // Top
-        x = Math.random() * canvas.width; y = -30;
-    } else if (edge < 0.5) { // Bottom
-        x = Math.random() * canvas.width; y = canvas.height + 30;
-    } else if (edge < 0.75) { // Left
-        x = -30; y = Math.random() * canvas.height;
-    } else { // Right
-        x = canvas.width + 30; y = Math.random() * canvas.height;
+    if (edge < 0.25) { // Spawnowanie z Góry
+        x = viewLeft + Math.random() * camera.viewWidth; 
+        y = viewTop - margin;
+    } else if (edge < 0.5) { // Spawnowanie z Dołu
+        x = viewLeft + Math.random() * camera.viewWidth; 
+        y = viewBottom + margin;
+    } else if (edge < 0.75) { // Spawnowanie z Lewej
+        x = viewLeft - margin;
+        y = viewTop + Math.random() * camera.viewHeight;
+    } else { // Spawnowanie z Prawej
+        x = viewRight + margin;
+        y = viewTop + Math.random() * camera.viewHeight;
     }
+
+    // Ogranicz do granic świata, jeśli kamera jest na krawędzi
+    x = Math.max(0, Math.min(worldWidth, x));
+    y = Math.max(0, Math.min(worldHeight, y));
     
     const hpScale = (1 + 0.12 * (game.level - 1) + game.time / 90) * 1.5; // Elity mają +50% HP
     const newEnemy = createEnemyInstance('elite', x, y, hpScale, enemyIdCounter++);
@@ -250,3 +288,6 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
     enemies.splice(idx, 1);
     return enemyIdCounter;
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.66] js/managers/enemyManager.js: Spawnowanie wrogów używa teraz kamery.');
