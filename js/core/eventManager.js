@@ -1,5 +1,5 @@
 // ==============
-// EVENTMANAGER.JS (v0.70 - FINAL FIX: Naprawa błędu 'weapons is null' w wrappedPauseGame)
+// EVENTMANAGER.JS (v0.70 - FIX 3: Naprawa błędu 'camera is undefined' w resetAll)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
@@ -49,6 +49,9 @@ function wrappedResetAll() {
     uiDataRef.hitTextPool = gameStateRef.hitTextPool;
     uiDataRef.trails = gameStateRef.trails;
     uiDataRef.confettis = gameStateRef.confettis;
+    
+    // POPRAWKA (OKOŁO L45): Dodano brakującą referencję do kamery
+    uiDataRef.camera = gameStateRef.camera; 
     
     resetAll(uiDataRef.canvas, uiDataRef.settings, uiDataRef.perkLevels, uiDataRef, uiDataRef.camera);
     
@@ -196,7 +199,7 @@ function initEvents() {
             playSound('ChestReward');
         }
         uiDataRef.currentChestReward=null;
-        resumeGame(gameStateRef.game, 0.75);
+        resumeGame(game, 0.75);
     });
 }
 
@@ -219,10 +222,13 @@ export function initializeMainEvents(stateRef, uiRef) {
     window.wrappedLoadConfigAndStart = wrappedLoadConfigAndStart; // Dla DevTools
     
     // Zwróć initEvents, aby main.js mógł go wywołać PO załadowaniu HTML
+    // POPRAWKA (OKOŁO L146): Dodano brakujący eksport 'wrappedLoadConfigAndStart'
     return {
-        initEvents
+        initEvents,
+        wrappedLoadConfigAndStart // FIX: Eksportuj wrapper dla DevTools
     };
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.70] js/core/eventManager.js: Załadowano moduł Menedżera Eventów.');
+// [DEBUG] js/core/eventManager.js: Naprawiono błąd 'camera is undefined' (dla Dev Menu) poprzez dodanie 'uiDataRef.camera = gameStateRef.camera' w 'wrappedResetAll'.
+console.log('[DEBUG-v0.70-FIX3] js/core/eventManager.js: Dodano brakującą referencję kamery w wrappedResetAll.');

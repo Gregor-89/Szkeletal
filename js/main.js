@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.70 - FIX 3: Naprawa bloku .catch() i inicjalizacji wrapperów)
+// MAIN.JS (v0.70 - FIX 4: Naprawa błędu resetowania czasu globalnego)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -45,8 +45,9 @@ let ctx = null;
 
 // === Ustawienia i stan gry (Obiekty proste) ===
 let animationFrameId = null;
-let startTime = 0;
-let lastTime = 0;
+// POPRAWKA v0.70 (FIX 4): Usunięto 'startTime' i 'lastTime'. Są teraz zarządzane w 'uiData'.
+// let startTime = 0;
+// let lastTime = 0;
 let savedGameState = null; // Przechowywany przez uiData
 
 let fps = 0;
@@ -155,7 +156,11 @@ const uiData = {
     chests, pickups, stars, bombIndicators, hazards: null, 
     bullets: null, eBullets: null, gems: null, particles: null, hitTexts: null,
     trails: [], confettis: [], canvas: null, ctx: null,
-    animationFrameId, startTime, lastTime, savedGameState,
+    animationFrameId, 
+    // POPRAWKA v0.70 (FIX 4): startTime i lastTime są teraz jedynym źródłem prawdy.
+    startTime: 0, 
+    lastTime: 0, 
+    savedGameState,
     loopCallback: null, 
     drawCallback: null, 
     initStarsCallback: initStars,
@@ -240,18 +245,18 @@ function loop(currentTime){
     }
     
     try {
-        if (startTime === 0) {
-            startTime = currentTime;
-            lastTime = currentTime;
+        // POPRAWKA v0.70 (FIX 4): Użyj 'uiData.startTime' i 'uiData.lastTime'
+        if (uiData.startTime === 0) {
+            uiData.startTime = currentTime;
+            uiData.lastTime = currentTime;
             lastFrameTime = currentTime;
         }
-        // POPRAWKA v0.70: Aktualizacja globalnych referencji czasu w uiData
-        uiData.startTime = startTime;
-        uiData.lastTime = lastTime;
+        
+        // POPRAWKA v0.70: Aktualizacja globalnej referencji (nadal potrzebna)
         uiData.animationFrameId = animationFrameId;
         
-        const deltaMs = currentTime - lastTime;
-        lastTime = currentTime;
+        const deltaMs = currentTime - uiData.lastTime;
+        uiData.lastTime = currentTime;
         const dt = Math.min(deltaMs / 1000, 0.1); 
         
         // Licznik FPS
@@ -278,7 +283,8 @@ function loop(currentTime){
             return;
         }
         
-        game.time = (currentTime - startTime) / 1000;
+        // POPRAWKA v0.70 (FIX 4): Oblicz 'game.time' na podstawie 'uiData.startTime'
+        game.time = (currentTime - uiData.startTime) / 1000;
         
         update(dt); 
         
