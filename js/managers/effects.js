@@ -1,12 +1,13 @@
 // ==============
-// EFFECTS.JS (v0.67 - Niezależna aktualizacja efektów)
+// EFFECTS.JS (v0.68 FIX 3 - Usunięcie spamu logów z pętli)
 // Lokalizacja: /js/managers/effects.js
 // ==============
 
 import { limitedShake, addBombIndicator, findFreeSpotForPickup } from '../core/utils.js';
 import { devSettings } from '../services/dev.js';
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
-import { EFFECTS_CONFIG } from '../config/gameData.js';
+import { EFFECTS_CONFIG, HAZARD_CONFIG } from '../config/gameData.js'; // POPRAWKA v0.68: Import HAZARD_CONFIG
+import { Hazard } from '../entities/hazard.js'; // POPRAWKA v0.68: Import nowej klasy Hazard
 import { 
     HealPickup, MagnetPickup, ShieldPickup, 
     SpeedPickup, BombPickup, FreezePickup 
@@ -21,6 +22,54 @@ const PICKUP_CLASS_MAP = {
     bomb: BombPickup,
     freeze: FreezePickup
 };
+
+/**
+ * POPRAWKA v0.68: Pomocnicza funkcja do znajdowania miejsca na spawn Hazardu.
+ */
+function findFreeSpotForHazard(player, camera) {
+    const worldWidth = camera.worldWidth;
+    const worldHeight = camera.worldHeight;
+    
+    // Konfiguracja minimalnej odległości i promienia
+    const minD = HAZARD_CONFIG.MIN_DIST_FROM_PLAYER;
+    const maxAttempts = 10;
+    
+    for(let i = 0; i < maxAttempts; i++) {
+        // Losuj pozycję w świecie
+        const x = Math.random() * worldWidth;
+        const y = Math.random() * worldHeight;
+        
+        const dist = Math.hypot(player.x - x, player.y - y);
+        
+        if (dist > minD) {
+            return { x, y };
+        }
+    }
+    
+    // Jeśli nie znaleziono miejsca, spróbuj w losowym miejscu na granicy minimalnej odległości
+    const angle = Math.random() * Math.PI * 2;
+    return {
+        x: player.x + Math.cos(angle) * (minD + HAZARD_CONFIG.SIZE),
+        y: player.y + Math.sin(angle) * (minD + HAZARD_CONFIG.SIZE)
+    };
+}
+
+
+/**
+ * POPRAWKA v0.68: Spawnuje jedno Pole Zagrożenia.
+ */
+export function spawnHazard(hazards, player, camera) {
+    if (hazards.length >= HAZARD_CONFIG.MAX_HAZARDS) {
+        return; // Osiągnięto limit
+    }
+    
+    const pos = findFreeSpotForHazard(player, camera);
+    const newHazard = new Hazard(pos.x, pos.y);
+    hazards.push(newHazard);
+    
+    console.log('[DEBUG] js/managers/effects.js: Spawn Hazard w pozycji', pos);
+}
+
 
 /**
  * Logika bomby: niszczy wrogów i tworzy efekty w danym promieniu.
@@ -137,5 +186,5 @@ export function updateVisualEffects(dt, hitTexts_deprecated, confettis_deprecate
             bombIndicators.splice(i, 1);
         }
     }
-    console.log('[DEBUG] js/managers/effects.js: updateParticles logic added.');
+    // Log diagnostyczny usunięty, aby zapobiec spamowi.
 }

@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.66 - Culling fix)
+// COLLISIONS.JS (v0.68 - Dodano kolizje z Hazardami)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -10,7 +10,8 @@ import { killEnemy } from './enemyManager.js';
 import { areaNuke } from './effects.js';
 import { playSound } from '../services/audio.js';
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
-import { PLAYER_CONFIG, PICKUP_CONFIG } from '../config/gameData.js';
+// POPRAWKA v0.68: Import HAZARD_CONFIG
+import { PLAYER_CONFIG, PICKUP_CONFIG, HAZARD_CONFIG } from '../config/gameData.js';
 
 /**
  * Główna funkcja kolizji.
@@ -19,13 +20,16 @@ import { PLAYER_CONFIG, PICKUP_CONFIG } from '../config/gameData.js';
 export function checkCollisions(state) {
     const { 
         player, game, settings, canvas, 
-        bullets, eBullets, enemies, gems, pickups, chests, // 'bullets', 'eBullets', 'gems' to teraz 'activeItems'
+        bullets, eBullets, enemies, gems, pickups, chests, hazards, // POPRAWKA v0.68: Dodano hazards
         bombIndicators, camera, // DODANO: obiekt camera
         // POPRAWKA v0.62: Pobranie pul obiektów
         gemsPool, particlePool, hitTextPool,
         // 'hitTexts' i 'gems' to teraz 'activeItems'
         hitTexts 
     } = state;
+
+// POPRAWKA v0.68: Zresetuj stan gracza w Hazardzie na początku każdej klatki.
+player.inHazard = false;
 
 // --- Pociski Wrogów vs Gracz ---
 // Iterujemy wstecz, aby 'release()' (które modyfikuje tablicę) nie psuło pętli
@@ -246,7 +250,43 @@ for (let i = chests.length - 1; i >= 0; i--) {
         game.triggerChestOpen = true; // Ustawiamy flagę dla main.js
     }
 }
+
+// --- Gracz vs Pola Zagrożenia (Hazards) ---
+for (let i = hazards.length - 1; i >= 0; i--) {
+    const h = hazards[i];
+    
+    const hitRadiusPH = player.size * 0.5 + h.r;
+    if (Math.abs(player.x - h.x) > hitRadiusPH || Math.abs(player.y - h.y) > hitRadiusPH) {
+        continue;
+    }
+    
+    const d = Math.hypot(player.x - h.x, player.y - h.y);
+    if (d < hitRadiusPH) {
+        player.inHazard = true;
+        
+        if (devSettings.godMode) {
+            // Nadal pokazuj wizualny efekt
+            addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#00FF00', 'Hazard');
+            continue;
+        }
+
+        const dmg = HAZARD_CONFIG.DAMAGE_PER_SECOND * state.dt;
+        
+        if (!game.shield) {
+            game.health -= dmg;
+            // Pokazuj małe obrażenia co ~0.2s (żeby nie spamować co klatkę)
+            if (Math.floor(now / 200) !== Math.floor((now - state.dt * 1000) / 200)) {
+                addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 1, '#ff0000');
+            }
+        } else {
+            // Tarcza pochłania DoT, ale nadal pokazuje, że jesteś w Hazardzie
+            addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#90CAF9', 'Tarcza');
+        }
+    }
+}
+
 }
 
 // LOG DIAGNOSTYCZNY
 console.log('[DEBUG] js/managers/collisions.js: Zaktualizowano culling pocisków dla kamery.');
+console.log('[DEBUG-v0.68] js/managers/collisions.js: Dodano kolizję Gracz vs Hazard.');

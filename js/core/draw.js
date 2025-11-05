@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.67 - Ostateczne Usunięcie Logu)
+// DRAW.JS (v0.68 FIX 2 - Naprawa sygnatury draw)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -7,7 +7,8 @@ import { getPickupEmoji, getPickupColor, getPickupLabel } from './utils.js';
 
 // POPRAWKA v0.63c: Dodano 'fpsPosition' jako ostatni argument
 // POPRAWKA v0.66: Dodano argument 'camera'
-export function draw(ctx, canvas, game, stars, trails_deprecated, player, enemies, bullets, eBullets, gems, pickups, chests, particles, hitTexts, bombIndicators, confettis_deprecated, pickupStyleEmoji, pickupShowLabels, fps, showFPS, fpsPosition, camera) {
+// POPRAWKA v0.68 FIX: Poprawiona sygnatura (dodano hazards i poprawiono pozycję confettis_deprecated)
+export function draw(ctx, canvas, game, stars, trails_deprecated, player, enemies, bullets, eBullets, gems, pickups, chests, particles, hitTexts, bombIndicators, hazards, confettis_deprecated, pickupStyleEmoji, pickupShowLabels, fps, showFPS, fpsPosition, camera) {
     
     // KLUCZOWA ZMIANA: Czyścimy, aby usunąć poprzednie klatki
     ctx.clearRect(0, 0, canvas.width, canvas.height); 
@@ -100,6 +101,26 @@ export function draw(ctx, canvas, game, stars, trails_deprecated, player, enemie
         // Rysujemy na rozmiar widoku kamery
         ctx.fillRect(camera.offsetX, camera.offsetY, camera.viewWidth, camera.viewHeight);
     }
+    
+    // POPRAWKA v0.68: Rysowanie Hazardów
+    for (const h of hazards) {
+        if (h.x + h.r < cullLeft || h.x - h.r > cullRight || h.y + h.r < cullTop || h.y - h.r > cullBottom) {
+            continue;
+        }
+        
+        // KLUCZOWY FIX: Zaokrąglenie pozycji rysowania dla Hazardów
+        const originalX = h.x;
+        const originalY = h.y;
+        
+        h.x = Math.round(h.x);
+        h.y = Math.round(h.y);
+        
+        h.draw(ctx);
+        
+        h.x = originalX;
+        h.y = originalY;
+    }
+
 
     // POPRAWKA v0.62: Usunięto pętlę 'trails'. Jest teraz w 'particles'.
 

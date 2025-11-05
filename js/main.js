@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.67 - Integracja Niezależnych Efektów)
+// MAIN.JS (v0.68 FIX 1 - Naprawa sygnatury drawCallback)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -43,6 +43,7 @@ import { PlayerBullet, EnemyBullet } from './entities/bullet.js';
 import { Gem } from './entities/gem.js';
 import { Particle } from './entities/particle.js';
 import { HitText } from './entities/hitText.js';
+import { Hazard } from './entities/hazard.js'; // POPRAWKA v0.68: Import nowej klasy Hazard
 import { 
     Pickup, HealPickup, MagnetPickup, ShieldPickup, 
     SpeedPickup, BombPickup, FreezePickup 
@@ -121,7 +122,8 @@ const settings={
     maxEnemies: GAME_CONFIG.MAX_ENEMIES,
     eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL,
     lastFire:0, 
-    lastElite:0 
+    lastElite:0,
+    lastHazardSpawn: 0 // POPRAWKA v0.68: Dodano timer spawnu Hazardów
 };
 
 let perkLevels={};
@@ -139,6 +141,7 @@ let hitTextPool = null;
 const enemies=[]; 
 const chests=[];
 const pickups=[];
+const hazards=[]; // POPRAWKA v0.68: Nowa tablica dla pól zagrożenia
 const stars=[];
 const bombIndicators = [];
 
@@ -184,7 +187,7 @@ function initializeCanvas() {
 
     // 4. Definicja gameStateRef
     gameStateRef = {
-      game, player, settings, perkLevels, enemies, chests, pickups, canvas, bombIndicators, stars,
+      game, player, settings, perkLevels, enemies, chests, pickups, canvas, bombIndicators, stars, hazards, // POPRAWKA v0.68: Dodano hazards
       bulletsPool: playerBulletPool, eBulletsPool: enemyBulletPool, gemsPool: gemsPool, 
       particlePool: particlePool, hitTextPool: hitTextPool, camera: camera,
       bullets: bullets, eBullets: eBullets, gems: gems, particles: particles, hitTexts: hitTexts,
@@ -203,7 +206,7 @@ const uiData = {
     VERSION, 
     game, player: null, settings, weapons: null, perkLevels, 
     enemies, 
-    chests, pickups, stars, bombIndicators,
+    chests, pickups, stars, bombIndicators, hazards: null, // POPRAWKA v0.68: Dodano hazards
     bullets: null, eBullets: null, gems: null, particles: null, hitTexts: null,
     trails: [], confettis: [], canvas: null, ctx: null,
     animationFrameId, startTime, lastTime, savedGameState,
@@ -226,11 +229,13 @@ function updateUiDataReferences() {
     uiData.gems = gems;
     uiData.particles = particles;
     uiData.hitTexts = hitTexts;
+    uiData.hazards = hazards; // POPRAWKA v0.68: Dodano hazards
     
     // Zaktualizuj referencje do loop/draw callback, które używają teraz nowych zmiennych globalnych
     uiData.loopCallback = loop;
     // POPRAWKA v0.66: drawCallback musi teraz używać obiektu camera
-    uiData.drawCallback = () => draw(ctx, canvas, game, stars, [], player, enemies, bullets, eBullets, gems, pickups, chests, particles, hitTexts, bombIndicators, [], pickupStyleEmoji, pickupShowLabels, fps, showFPS, fpsPosition, camera);
+    // POPRAWKA v0.68 FIX: Zaktualizowano sygnaturę, aby poprawnie przekazywać wszystkie argumenty (w tym nowo dodane hazards i stare puste tablice/flagi)
+    uiData.drawCallback = () => draw(ctx, canvas, game, stars, [], player, enemies, bullets, eBullets, gems, pickups, chests, particles, hitTexts, bombIndicators, hazards, [], pickupStyleEmoji, pickupShowLabels, fps, showFPS, fpsPosition, camera);
 }
 
 
@@ -273,6 +278,7 @@ function wrappedResetAll() {
     uiData.pickups = pickups; 
     uiData.bombIndicators = bombIndicators;
     uiData.stars = stars; 
+    uiData.hazards = hazards; // POPRAWKA v0.68: Dodano hazards
     
     // POPRAWKA v0.62: Przekazanie Puli do resetAll
     uiData.bulletsPool = playerBulletPool;
@@ -557,6 +563,15 @@ function initEvents() {
                     Object.assign(newGem, g);
                 }
             }
+            
+            // Wczytywanie Hazardów (nowa tablica)
+            hazards.length = 0; // POPRAWKA v0.68: Ładowanie Hazardów
+            const loadedHazards = uiData.savedGameState.hazards || [];
+            for (const h of loadedHazards) {
+                const newHazard = new Hazard(h.x, h.y);
+                Object.assign(newHazard, h);
+                hazards.push(newHazard);
+            }
 
             // Pickupy (nadal tablica)
             pickups.length = 0;
@@ -635,6 +650,7 @@ function initEvents() {
               gems: gemsPool.activeItems.map(g => ({ ...g })),
               pickups: pickups.map(p => ({ ...p })),
               chests: chests.map(c => ({ ...c })),
+              hazards: hazards.map(h => ({ ...h })), // POPRAWKA v0.68: Zapisywanie Hazardów
               enemyIdCounter: gameStateRef.enemyIdCounter 
             };
             wrappedShowMenu(true);

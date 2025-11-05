@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.67 - Konfetti Fix)
+// GAMEDATA.JS (v0.68 - Dodano HAZARD_CONFIG)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -34,6 +34,22 @@ export const GAME_CONFIG = {
   XP_GROWTH_FACTOR: 1.4,
   // Stała wartość dodawana do wymaganego XP na kolejny poziom.
   XP_GROWTH_ADD: 2,
+};
+
+// --- Konfiguracja Zagrożeń (Hazards) ---
+export const HAZARD_CONFIG = {
+  // Czas (w sekundach) pomiędzy kolejnymi spawnami Pól Zagrożenia (Hazards).
+  SPAWN_INTERVAL: 6.0,
+  // Minimalna odległość (w pikselach) od gracza, w jakiej może pojawić się hazard.
+  MIN_DIST_FROM_PLAYER: 150,
+  // Maksymalna liczba Pól Zagrożenia na mapie.
+  MAX_HAZARDS: 20,
+  // Rozmiar (promień) Pól Zagrożenia (Acid Pool).
+  SIZE: 40,
+  // Obrażenia zadawane przez Hazard (Damage over Time) w sekundach.
+  DAMAGE_PER_SECOND: 6,
+  // Mnożnik spowolnienia nałożonego na gracza (0.5 = -50% prędkości).
+  SLOWDOWN_MULTIPLIER: 0.5
 };
 
 // --- Konfiguracja Broni ---
@@ -187,4 +203,4 @@ export const ENEMY_STATS = {
 };
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG] js/config/gameData.js: Dodano WORLD_CONFIG (SIZE: 2)');
+console.log('[DEBUG] js/config/gameData.js: Dodano HAZARD_CONFIG.');

@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v0.66 - Usunięcie ograniczenia Canvasa)
+// PLAYER.JS (v0.68 - Dodano stan inHazard)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -23,6 +23,9 @@ export class Player {
         
         this.weapons = [];
         this.weapons.push(new AutoGun(this));
+        
+        // POPRAWKA v0.68: Dodanie stanu dla Pól Zagrożenia
+        this.inHazard = false; // Nowy stan
         
         // POPRAWKA v0.57b: Stan animacji
         this.spriteSheet = getAsset('player'); // Pobierz arkusz sprite'ów
@@ -53,6 +56,9 @@ export class Player {
         this.weapons = [];
         this.weapons.push(new AutoGun(this));
         
+        // POPRAWKA v0.68: Resetowanie stanu dla Pól Zagrożenia
+        this.inHazard = false;
+        
         // Reset animacji
         this.animationTimer = 0;
         this.currentFrame = 0;
@@ -68,7 +74,10 @@ export class Player {
     update(dt, game, keys, jVec, camera) {
         let vx = 0, vy = 0;
         
-        const speedMul = (game.speedT > 0 ? 1.4 : 1) * (1 - (game.collisionSlowdown || 0));
+        // POPRAWKA v0.68: Dodano czynnik spowalniający w oparciu o inHazard (0.5 to domyślny multipler spowolnienia)
+        const hazardSlowdown = this.inHazard ? 0.5 : 1;
+        
+        const speedMul = (game.speedT > 0 ? 1.4 : 1) * (1 - (game.collisionSlowdown || 0)) * hazardSlowdown;
         // currentSpeed jest teraz w "px/sekundę"
         const currentSpeed = this.speed * speedMul;
         const maxSpeed = this.speed * 1.3 * speedMul;
@@ -98,13 +107,8 @@ export class Player {
         
         this.isMoving = (Math.abs(vx) > 0 || Math.abs(vy) > 0);
 
-        // Ograniczenie ruchu do granic canvasa
-        // POPRAWKA v0.66: USUNIĘTO OGRANICZENIE RUCHU DO GRANIC CANVAS
-        // Logika ograniczenia (do granic świata) zostanie przeniesiona do gameLogic.js (updateCamera)
+        // Ograniczenie ruchu do granic świata jest w gameLogic.js
         
-        // this.x = Math.max(this.size / 2, Math.min(canvas.width - this.size / 2, this.x));
-        // this.y = Math.max(this.size / 2, Math.min(canvas.height - this.size / 2, this.y));
-
         // POPRAWKA v0.57b: Aktualizacja stanów animacji
         const oldState = this.currentState;
         this.currentState = this.isMoving ? 'walk' : 'idle';
@@ -183,6 +187,16 @@ export class Player {
             ctx.lineWidth = 2;
             ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
+        
+        // POPRAWKA v0.68: Efekt wizualny dla inHazard
+        if (this.inHazard) {
+            const hazardPulse = 22 + 3 * Math.sin(performance.now() / 80);
+            ctx.strokeStyle = '#00FF00'; // Zielony kontur
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, hazardPulse, 0, Math.PI * 2);
+            ctx.stroke();
+        }
 
         // Rysowanie małego paska HP nad graczem
         const hpBarW = 64;
@@ -223,4 +237,4 @@ export class Player {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.66] js/entities/player.js: Usunięto ograniczenie ruchu do granic canvasa.');
+console.log('[DEBUG-v0.68] js/entities/player.js: Dodano stan inHazard i logiczny spowalniający.');

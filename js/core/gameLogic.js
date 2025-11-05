@@ -1,12 +1,15 @@
 // ==============
-// GAMELOGIC.JS (v0.66 - Centralne Zaokrąglanie Kamery)
+// GAMELOGIC.JS (v0.68 - Dodano logikę Hazardów)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
 import { keys, jVec } from '../ui/input.js';
 import { spawnEnemy, spawnElite } from '../managers/enemyManager.js';
+import { spawnHazard } from '../managers/effects.js'; // POPRAWKA v0.68: Import spawnHazard
 import { applyPickupSeparation, spawnConfetti } from './utils.js';
 import { checkCollisions } from '../managers/collisions.js';
+// POPRAWKA v0.68: Import HAZARD_CONFIG
+import { HAZARD_CONFIG } from '../config/gameData.js';
 
 /**
  * Aktualizuje pozycję kamery, śledząc gracza i ograniczając ją do granic świata.
@@ -44,7 +47,7 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     const { 
         game, player, settings, canvas,
         enemies, eBullets, bullets, gems, pickups, stars, // 'bullets', 'eBullets', 'gems' to teraz 'activeItems'
-        particles, hitTexts, chests, particlePool // 'particles' i 'hitTexts' to 'activeItems'
+        particles, hitTexts, chests, particlePool, hazards // POPRAWKA v0.68: Dodano hazards
     } = state;
 
     // POPRAWKA v0.66: Przekazanie 'camera' do Player.update
@@ -68,6 +71,13 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     if (game.shield) { game.shieldT -= dt; if (game.shieldT <= 0) game.shield = false; }
     if (game.speedT > 0) game.speedT -= dt;
     if (game.freezeT > 0) game.freezeT -= dt;
+    
+    // --- Logika Spawnu Hazardów ---
+    const timeSinceLastHazard = game.time - settings.lastHazardSpawn;
+    if (timeSinceLastHazard > HAZARD_CONFIG.SPAWN_INTERVAL) {
+        spawnHazard(hazards, player, camera);
+        settings.lastHazardSpawn = game.time;
+    }
 
     // POPRAWKA v0.66: Przekazanie 'camera' do funkcji spawnowania
     const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
@@ -108,6 +118,11 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     // POPRAWKA v0.62: Aktualizuj teksty obrażeń (z puli)
     for (let i = hitTexts.length - 1; i >= 0; i--) {
         hitTexts[i].update(dt);
+    }
+
+    // POPRAWKA v0.68: Aktualizuj Hazardy (nadal zwykła tablica)
+    for (const h of hazards) {
+        h.update(dt);
     }
 
     if (game.xp >= game.xpNeeded) {
