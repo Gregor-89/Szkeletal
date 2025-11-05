@@ -1,15 +1,15 @@
 // ==============
-// GAMELOGIC.JS (v0.68a - Zarządzanie Decay i timerem spowolnienia wrogów)
+// GAMELOGIC.JS (v0.69 - FIX: Przywrócenie eksportu updateGame + Logika Eventu Oblężenia)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
 import { keys, jVec } from '../ui/input.js';
-import { spawnEnemy, spawnElite } from '../managers/enemyManager.js';
-import { spawnHazard } from '../managers/effects.js'; // POPRAWKA v0.68: Import spawnHazard
+import { spawnEnemy, spawnElite, spawnSiegeRing } from '../managers/enemyManager.js'; // POPRAWKA v0.69: Import spawnSiegeRing
+import { spawnHazard } from '../managers/effects.js';
 import { applyPickupSeparation, spawnConfetti } from './utils.js';
 import { checkCollisions } from '../managers/collisions.js';
 // POPRAWKA v0.68: Import HAZARD_CONFIG
-import { HAZARD_CONFIG } from '../config/gameData.js';
+import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG } from '../config/gameData.js'; // POPRAWKA v0.69: Import SIEGE_EVENT_CONFIG
 
 /**
  * Aktualizuje pozycję kamery, śledząc gracza i ograniczając ją do granic świata.
@@ -34,9 +34,6 @@ export function updateCamera(player, camera, canvas) {
     // 4. Zastosowanie pozycji (Z KLUCZOWYM ZAOKRĄGLENIEM)
     camera.offsetX = Math.round(targetX);
     camera.offsetY = Math.round(targetY);
-    
-    // LOG DIAGNOSTYCZNY
-    console.log('[DEBUG] js/core/gameLogic.js: camera offset is now rounded');
 }
 
 /**
@@ -47,7 +44,7 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     const { 
         game, player, settings, canvas,
         enemies, eBullets, bullets, gems, pickups, stars, // 'bullets', 'eBullets', 'gems' to teraz 'activeItems'
-        particles, hitTexts, chests, particlePool, hazards // POPRAWKA v0.68: Dodano hazards
+        particles, hitTexts, chests, particlePool, hazards 
     } = state;
 
     // POPRAWKA v0.66: Przekazanie 'camera' do Player.update
@@ -86,17 +83,28 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         settings.lastHazardSpawn = game.time;
     }
 
-    // POPRAWKA v0.66: Przekazanie 'camera' do funkcji spawnowania
+    // --- Logika Spawnu (Standard) ---
     const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
     if (Math.random() < spawnRate && enemies.length < settings.maxEnemies) {
         state.enemyIdCounter = spawnEnemy(enemies, game, canvas, state.enemyIdCounter, camera);
     }
 
+    // --- Logika Spawnu (Elita) ---
     const timeSinceLastElite = game.time - settings.lastElite;
     if (timeSinceLastElite > (settings.eliteInterval / 1000) / (game.hyper ? 1.15 : 1)) {
         state.enemyIdCounter = spawnElite(enemies, game, canvas, state.enemyIdCounter, camera);
         settings.lastElite = game.time;
     }
+    
+    // --- POPRAWKA v0.69: Logika Spawnu (Wydarzenie Oblężenia) ---
+    const timeSinceLastSiege = game.time - settings.lastSiegeEvent;
+    if (game.time > SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME && 
+        timeSinceLastSiege > SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL) {
+        
+        state.enemyIdCounter = spawnSiegeRing(state);
+        settings.lastSiegeEvent = game.time;
+    }
+
 
     // --- Pętle Aktualizacji (Update Loops) ---
 

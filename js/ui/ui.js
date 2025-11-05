@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.68b - Dodano reset tablicy hazards)
+// UI.JS (v0.69 - Resetowanie timera Wydarzenia Oblężenia)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -102,7 +102,7 @@ export function updateUI(game, player, settings, weapons) {
 
 export function showMenu(game, resetAll, uiData, allowContinue = false) {
     if (!allowContinue) {
-        resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); // POPRAWKA v0.68b: Przekazanie uiData i camera
+        resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); 
         uiData.savedGameState = null;
     }
 
@@ -139,7 +139,7 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
 }
 
 export function startRun(game, resetAll, uiData) {
-    resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); // POPRAWKA v0.68b: Przekazanie uiData i camera
+    resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); 
     uiData.savedGameState = null;
     menuOverlay.style.display = 'none';
     game.inMenu = false;
@@ -181,14 +181,15 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
             spawn: GAME_CONFIG.INITIAL_SPAWN_RATE,
             maxEnemies: GAME_CONFIG.MAX_ENEMIES,
             eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL,
-            lastHazardSpawn: 0 // POPRAWKA v0.68b: Reset timera Hazardów
+            lastHazardSpawn: 0, 
+            lastSiegeEvent: 0 // POPRAWKA v0.69: Resetowanie timera Wydarzenia Oblężenia
         });
         settings.lastFire = 0;
         settings.lastElite = 0;
 
         // POPRAWKA V0.66: Użyj rozmiarów świata zamiast canvas.width/height
-        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; // POPRAWKA v0.68b: Użyto WORLD_CONFIG.SIZE
-        const worldHeight = canvas.height * WORLD_CONFIG.SIZE; // POPRAWKA v0.68b: Użyto WORLD_CONFIG.SIZE
+        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; 
+        const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
         uiData.player.reset(worldWidth, worldHeight);
         
         for (let key in perkLevels) {
@@ -199,12 +200,13 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         game.time = 0;
         settings.lastFire = 0;
         settings.lastElite = 0;
-        settings.lastHazardSpawn = 0; // POPRAWKA v0.68b: Reset timera Hazardów
+        settings.lastHazardSpawn = 0; 
+        settings.lastSiegeEvent = 0; // POPRAWKA v0.69: Resetowanie timera Wydarzenia Oblężenia
         devSettings.presetLoaded = false;
         
         // POPRAWKA V0.67: Upewnij się, że gracz jest na środku świata po resecie presetów
-        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; // POPRAWKA v0.68b: Użyto WORLD_CONFIG.SIZE
-        const worldHeight = canvas.height * WORLD_CONFIG.SIZE; // POPRAWKA v0.68b: Użyto WORLD_CONFIG.SIZE
+        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; 
+        const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
         uiData.player.x = worldWidth / 2;
         uiData.player.y = worldHeight / 2;
         camera.offsetX = (worldWidth / 2) - (canvas.width / 2);

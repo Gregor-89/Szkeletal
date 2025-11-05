@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.68 FIX 2 - Naprawa sygnatury draw)
+// DRAW.JS (v0.69 - Bez zmian, przywrócono logikę v0.68)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -134,6 +134,7 @@ export function draw(ctx, canvas, game, stars, trails_deprecated, player, enemie
         if (e.x < cullLeft || e.x > cullRight || e.y < cullTop || e.y > cullBottom) {
             continue;
         }
+        // POPRAWKA v0.69: Przywrócono sygnaturę (nie trzeba przekazywać 'player')
         e.draw(ctx, game);
     }
 

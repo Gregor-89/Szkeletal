@@ -1,0 +1,111 @@
+<p style="color:#f44336; margin-bottom:15px;"><strong>⚠️ Uwaga:</strong> To menu jest przeznaczone do testowania. Ustawienia mogą zepsuć balans gry.</p>
+<div class="dev-section">
+  <h4>🎮 Stan Gracza</h4>
+  <div class="dev-control">
+    <label>Poziom gracza:</label>
+    <input type="number" id="devLevel" min="1" max="100" value="1">
+  </div>
+  <div class="dev-control">
+    <label>Życie (HP):</label>
+    <input type="number" id="devHealth" min="1" max="9999" value="100">
+  </div>
+  <div class="dev-control">
+    <label>Max HP:</label>
+    <input type="number" id="devMaxHealth" min="1" max="9999" value="100">
+  </div>
+  <div class="dev-control">
+    <label>XP:</label>
+    <input type="number" id="devXP" min="0" max="9999" value="0">
+  </div>
+  <div class="dev-control">
+    <label>Nieśmiertelność:</label>
+    <input type="checkbox" id="devGodMode">
+  </div>
+</div>
+
+<div class="dev-section">
+  <h4>⚔️ Broń i Perki</h4>
+  <div class="dev-control">
+    <label>Obrażenia:</label>
+    <input type="number" id="devDamage" min="1" max="999" value="1">
+  </div>
+  <div class="dev-control">
+    <label>Szybkostrzelność (ms):</label>
+    <input type="number" id="devFireRate" min="50" max="5000" value="500">
+  </div>
+  <div class="dev-control">
+    <label>Multishot:</label>
+    <input type="number" id="devMultishot" min="0" max="10" value="0">
+  </div>
+  <div class="dev-control">
+    <label>Pierce:</label>
+    <input type="number" id="devPierce" min="0" max="10" value="0">
+  </div>
+  <div class="dev-control">
+    <label>Orbital poziom:</label>
+    <input type="number" id="devOrbital" min="0" max="5" value="0">
+  </div>
+  <div class="dev-control">
+    <label>Nova poziom:</label>
+    <input type="number" id="devNova" min="0" max="5" value="0">
+  </div>
+</div>
+
+<div class="dev-section">
+  <h4>👾 Spawning Przeciwników</h4>
+  <div class="dev-control">
+    <label>Dozwoleni wrogowie:</label>
+    <select id="devEnemyType" multiple style="height:120px;">
+      <option value="all" selected>Wszyscy</option>
+      <option value="standard">Standard</option>
+      <option value="horde">Horda</option>
+      <option value="aggressive">Agresywni</option>
+      <option value="kamikaze">Kamikaze</option>
+      <option value="splitter">Splitter</option>
+      <option value="tank">Tank</option>
+      <option value="ranged">Ranged</option>
+      <option value="wall">Oblężnik (Wall)</option>
+      <option value="elite">Elite</option>
+    </select>
+  </div>
+  <div class="dev-control">
+    <label>Spawn rate:</label>
+    <input type="number" id="devSpawnRate" min="0" max="1" step="0.01" value="0.02">
+  </div>
+  <div class="dev-control">
+    <label>Max wrogów:</label>
+    <input type="number" id="devMaxEnemies" min="0" max="500" value="110">
+  </div>
+</div>
+
+<div class="dev-section">
+  <h4>💎 Pickupy</h4>
+  <div class="dev-control">
+    <label>Dropowane pickupy:</label>
+    <select id="devPickupType" multiple style="height:100px;">
+      <option value="all" selected>Wszystkie</option>
+      <option value="heal">Leczenie</option>
+      <option value="magnet">Magnes</option>
+      <option value="shield">Tarcza</option>
+      <option value="speed">Szybkość</option>
+      <option value="bomb">Bomba</option>
+      <option value="freeze">Zamrożenie</option>
+    </select>
+  </div>
+  <div class="dev-control">
+    <label>Spawn natychmiast:</label>
+    <button class="btn" onclick="devSpawnPickup('heal')">❤️ HP</button>
+    <button class="btn" onclick="devSpawnPickup('bomb')">💣 Bomba</button>
+    <button class="btn" onclick="devSpawnPickup('magnet')">🧲 Magnes</button>
+  </div>
+</div>
+
+<div class="dev-section">
+  <h4>🚀 Scenariusze Testowe</h4>
+  <div class="dev-control" style="justify-content: space-around;">
+    <button class="btn btn-warning" onclick="devPresetAlmostMax()">Test: Prawie Max</button>
+    <button class="btn btn-danger" onclick="devPresetMax()">Test: Max Staty</button>
+  </div>
+</div>
+
+<button class="btn" onclick="applyDevSettings()" style="width:100%; margin-top:10px;">✅ Zastosuj Ustawienia Dev</button>

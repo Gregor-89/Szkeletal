@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.68 - Finalny balans Mega Hazardu)
+// GAMEDATA.JS (v0.69 - Dodano Konfigurację Wydarzenia Oblężenia i wroga 'wall')
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -36,12 +36,24 @@ export const GAME_CONFIG = {
   XP_GROWTH_ADD: 2,
 };
 
+// --- Konfiguracja Wydarzenia Oblężenia (Siege Event) ---
+export const SIEGE_EVENT_CONFIG = {
+  // Czas (w sekundach), co jaki ma miejsce Wydarzenie Oblężenia.
+  SIEGE_EVENT_INTERVAL: 45.0,
+  // Czas gry (w sekundach), po którym Event może się zacząć.
+  SIEGE_EVENT_START_TIME: 150, // 2:30 min
+  // Promień (w pikselach) od gracza, na jakim spawnuje się pierścień.
+  SIEGE_EVENT_RADIUS: 400,
+  // Liczba wrogów 'wall' w pierścieniu.
+  SIEGE_EVENT_COUNT: 20,
+};
+
 // --- Konfiguracja Zagrożeń (Hazards) ---
 export const HAZARD_CONFIG = {
   // Czas (w sekundach) pomiędzy kolejnymi spawnami Pól Zagrożenia (Hazards).
   SPAWN_INTERVAL: 6.0,
   // Minimalna odległość (w pikselach) od gracza, w jakiej może pojawić się hazard.
-  MIN_DIST_FROM_PLAYER: 50, // Zmieniono ze 150 na 50 pikseli
+  MIN_DIST_FROM_PLAYER: 50,
   // Maksymalna liczba Pól Zagrożenia na mapie.
   MAX_HAZARDS: 20,
   // Rozmiar (promień) Pól Zagrożenia (Acid Pool).
@@ -49,7 +61,7 @@ export const HAZARD_CONFIG = {
   // Czas życia Hazardu, zanim samoczynnie zniknie (Decay)
   HAZARD_LIFE: 45.0,
   // Czas (w sekundach) ostrzeżenia przed aktywacją Hazardu (Warning)
-  HAZARD_WARNING_TIME: 3.0, // Zmieniono z 1.5 na 3.0 sekundy
+  HAZARD_WARNING_TIME: 3.0,
   // Obrażenia zadawane przez Hazard (Damage over Time) w sekundach.
   DAMAGE_PER_SECOND: 25, // (Gracz)
   // Mnożnik spowolnienia nałożonego na gracza (0.5 = -50% prędkości).
@@ -64,7 +76,7 @@ export const HAZARD_CONFIG = {
   MEGA_HAZARD_BASE_MULTIPLIER: 2.5, // Min. mnożnik rozmiaru
   MEGA_HAZARD_MAX_MULTIPLIER: 6.0, // Max. mnożnik rozmiaru
   // NOWE MULTIPLERY DLA OSOBNEJ KONTROLI OBRAŻEŃ
-  MEGA_HAZARD_PLAYER_DAMAGE_MULTIPLIER: 0.6, // Zmniejszono obrażenia o połowę
+  MEGA_HAZARD_PLAYER_DAMAGE_MULTIPLIER: 0.6, // Niewiele większe od zwykłego
   MEGA_HAZARD_ENEMY_DAMAGE_MULTIPLIER: 1.0, // Obrażenia wroga x1 (czyli takie same jak Standard)
   
   // --- Zanikanie Bagna ---
@@ -221,8 +233,10 @@ export const ENEMY_STATS = {
   splitter: { type: 'splitter', hp: 4, speed: 158, size: 12, damage: 5, color: '#EC407A', score: 10, xp: 1, drops: BASE_DROP_RATES },
   tank: { type: 'tank', hp: 9, speed: 101, size: 14, damage: 5, color: '#795548', score: 20, xp: 1, drops: BASE_DROP_RATES },
   ranged: { type: 'ranged', hp: 4, speed: 144, size: 10, damage: 5, color: '#00BCD4', score: 10, xp: 1, drops: BASE_DROP_RATES },
-  elite: { type: 'elite', hp: 24, speed: 130, size: 18, damage: 5, color: '#9C27B0', score: 80, xp: 7, drops: {} } // Elita nie dropi bonusów, tylko skrzynię
+  elite: { type: 'elite', hp: 24, speed: 130, size: 18, damage: 5, color: '#9C27B0', score: 80, xp: 7, drops: {} }, // Elita nie dropi bonusów, tylko skrzynię
+  // POPRAWKA v0.69: Nowy wróg - Oblężnik (jako 'wall')
+  wall: { type: 'wall', hp: 30, speed: 80, size: 16, damage: 8, color: '#607D8B', score: 25, xp: 2, drops: BASE_DROP_RATES }
 };
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG] js/config/gameData.js: Korekta tempa zanikania Bagna.');
+console.log('[DEBUG] js/config/gameData.js: Dodano SIEGE_EVENT_CONFIG i wroga "wall".');

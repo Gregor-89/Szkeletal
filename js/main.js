@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.68 FIX 1 - Naprawa sygnatury drawCallback)
+// MAIN.JS (v0.69 - FINAL FIX 4: Poprawka ładowania zakładek Dev/Guide)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -16,7 +16,7 @@ import {
     AutoGun, OrbitalWeapon, NovaWeapon
 } from './config/weapon.js';
 // POPRAWKA v0.66: Import nowej stałej WORLD_CONFIG
-import { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG } from './config/gameData.js';
+import { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG } from './config/gameData.js'; // POPRAWKA v0.69: Import SIEGE_EVENT_CONFIG
 
 import { draw } from './core/draw.js';
 
@@ -35,7 +35,7 @@ import { perkPool } from './config/perks.js';
 // POPRAWKA v0.67: Zmieniony import, aby pobrać initDevTools z nowym argumentem
 import { devSettings, initDevTools } from './services/dev.js';
 import { checkCollisions } from './managers/collisions.js';
-// POPRAWKA v0.66: W gameLogic.js updateGame będzie miało teraz logikę kamery.
+// POPRAWKA v0.69: Poprawny import updateGame
 import { updateGame } from './core/gameLogic.js';
 import { initAudio, playSound, loadAudio } from './services/audio.js';
 import { ENEMY_CLASS_MAP } from './managers/enemyManager.js';
@@ -43,7 +43,7 @@ import { PlayerBullet, EnemyBullet } from './entities/bullet.js';
 import { Gem } from './entities/gem.js';
 import { Particle } from './entities/particle.js';
 import { HitText } from './entities/hitText.js';
-import { Hazard } from './entities/hazard.js'; // POPRAWKA v0.68: Import nowej klasy Hazard
+import { Hazard } from './entities/hazard.js'; 
 import { 
     Pickup, HealPickup, MagnetPickup, ShieldPickup, 
     SpeedPickup, BombPickup, FreezePickup 
@@ -123,7 +123,8 @@ const settings={
     eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL,
     lastFire:0, 
     lastElite:0,
-    lastHazardSpawn: 0 // POPRAWKA v0.68: Dodano timer spawnu Hazardów
+    lastHazardSpawn: 0, 
+    lastSiegeEvent: 0 // POPRAWKA v0.69: Dodano timer Wydarzenia Oblężenia
 };
 
 let perkLevels={};
@@ -141,7 +142,7 @@ let hitTextPool = null;
 const enemies=[]; 
 const chests=[];
 const pickups=[];
-const hazards=[]; // POPRAWKA v0.68: Nowa tablica dla pól zagrożenia
+const hazards=[]; 
 const stars=[];
 const bombIndicators = [];
 
@@ -187,7 +188,7 @@ function initializeCanvas() {
 
     // 4. Definicja gameStateRef
     gameStateRef = {
-      game, player, settings, perkLevels, enemies, chests, pickups, canvas, bombIndicators, stars, hazards, // POPRAWKA v0.68: Dodano hazards
+      game, player, settings, perkLevels, enemies, chests, pickups, canvas, bombIndicators, stars, hazards, 
       bulletsPool: playerBulletPool, eBulletsPool: enemyBulletPool, gemsPool: gemsPool, 
       particlePool: particlePool, hitTextPool: hitTextPool, camera: camera,
       bullets: bullets, eBullets: eBullets, gems: gems, particles: particles, hitTexts: hitTexts,
@@ -206,7 +207,7 @@ const uiData = {
     VERSION, 
     game, player: null, settings, weapons: null, perkLevels, 
     enemies, 
-    chests, pickups, stars, bombIndicators, hazards: null, // POPRAWKA v0.68: Dodano hazards
+    chests, pickups, stars, bombIndicators, hazards: null, 
     bullets: null, eBullets: null, gems: null, particles: null, hitTexts: null,
     trails: [], confettis: [], canvas: null, ctx: null,
     animationFrameId, startTime, lastTime, savedGameState,
@@ -229,12 +230,11 @@ function updateUiDataReferences() {
     uiData.gems = gems;
     uiData.particles = particles;
     uiData.hitTexts = hitTexts;
-    uiData.hazards = hazards; // POPRAWKA v0.68: Dodano hazards
+    uiData.hazards = hazards; 
     
     // Zaktualizuj referencje do loop/draw callback, które używają teraz nowych zmiennych globalnych
     uiData.loopCallback = loop;
-    // POPRAWKA v0.66: drawCallback musi teraz używać obiektu camera
-    // POPRAWKA v0.68 FIX: Zaktualizowano sygnaturę, aby poprawnie przekazywać wszystkie argumenty (w tym nowo dodane hazards i stare puste tablice/flagi)
+    // POPRAWKA v0.68 FIX: Zaktualizowano sygnaturę, aby poprawnie przekazywać wszystkie argumenty
     uiData.drawCallback = () => draw(ctx, canvas, game, stars, [], player, enemies, bullets, eBullets, gems, pickups, chests, particles, hitTexts, bombIndicators, hazards, [], pickupStyleEmoji, pickupShowLabels, fps, showFPS, fpsPosition, camera);
 }
 
@@ -278,7 +278,7 @@ function wrappedResetAll() {
     uiData.pickups = pickups; 
     uiData.bombIndicators = bombIndicators;
     uiData.stars = stars; 
-    uiData.hazards = hazards; // POPRAWKA v0.68: Dodano hazards
+    uiData.hazards = hazards; 
     
     // POPRAWKA v0.62: Przekazanie Puli do resetAll
     uiData.bulletsPool = playerBulletPool;
@@ -346,16 +346,25 @@ function wrappedStartRun() {
  * Ta funkcja jest wywoływana tylko przez kliknięcie przycisku "Start Gry" i przez Dev Menu.
  */
 function wrappedLoadConfigAndStart() {
-    const pos=(document.querySelector('input[name="joypos"]:checked')||{value:'right'}).value;
+    // POPRAWKA v0.69: Sprawdzanie, czy elementy istnieją (ponieważ są ładowane dynamicznie)
+    const joyPosEl = document.querySelector('input[name="joypos"]:checked');
+    const hyperEl = document.getElementById('chkHyper');
+    const shakeEl = document.getElementById('chkShake');
+    const fpsEl = document.getElementById('chkFPS');
+    const fpsPosEl = document.querySelector('input[name="fpspos"]:checked');
+    const labelsEl = document.getElementById('chkPickupLabels');
+    const styleEl = document.querySelector('input[name="pickupstyle"]:checked');
+
+    const pos = (joyPosEl || {value:'right'}).value;
     setJoystickSide(pos);
-    game.hyper=!!(document.getElementById('chkHyper')&&document.getElementById('chkHyper').checked);
-    game.screenShakeDisabled = !document.getElementById('chkShake').checked;
+    game.hyper = !!(hyperEl && hyperEl.checked);
+    game.screenShakeDisabled = !!(shakeEl && !shakeEl.checked);
     
-    showFPS = !!(document.getElementById('chkFPS') && document.getElementById('chkFPS').checked);
-    fpsPosition = (document.querySelector('input[name="fpspos"]:checked')||{value:'right'}).value;
+    showFPS = !!(fpsEl && fpsEl.checked);
+    fpsPosition = (fpsPosEl || {value:'right'}).value;
     
-    pickupShowLabels = !!(document.getElementById('chkPickupLabels') && document.getElementById('chkPickupLabels').checked);
-    pickupStyleEmoji = (document.querySelector('input[name="pickupstyle"]:checked')||{value:'emoji'}).value === 'emoji';
+    pickupShowLabels = !!(labelsEl && labelsEl.checked);
+    pickupStyleEmoji = (styleEl || {value:'emoji'}).value === 'emoji';
     
     uiData.game = game;
     uiData.pickupShowLabels = pickupShowLabels;
@@ -469,9 +478,9 @@ function loop(currentTime){
 
 
 // === PRZYPISANIE EVENTÓW ===
-// POPRAWKA v0.66: Przeniesienie konfiguracji eventów do osobnej funkcji, wywoływanej po ładowaniu zasobów
-function initEvents() {
-    // === Obsługa zakładek (usunięte z index.html) ===
+
+// POPRAWKA v0.69: Nowa funkcja do przełączania zakładek (wywoływana PO załadowaniu HTML)
+function initTabSwitching() {
     document.querySelectorAll('.tabs .tab').forEach((tab, index) => {
         tab.addEventListener('click', (event) => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -483,20 +492,70 @@ function initEvents() {
             document.getElementById('tab-' + tabNames[index]).classList.add('active');
         });
     });
+}
+
+// POPRAWKA v0.69: Nowa funkcja do ładowania zawartości zakładek
+// POPRAWKA v0.69: Nowa funkcja do ładowania zawartości zakładek
+async function loadMenuTabs() {
+    console.log('[Refactor v0.69] Ładowanie zawartości zakładek HTML...');
+    try {
+        const [configHTML, devHTML, guideHTML] = await Promise.all([
+            fetch('menu_config.html').then(res => res.text()),
+            fetch('menu_dev.html').then(res => res.text()),
+            fetch('menu_guide.html').then(res => res.text())
+        ]);
+        
+        // NAPRAWIONO BŁĄD (v0.69 FINAL FIX): Poprawne przypisanie wszystkich zakładek
+        // POPRAWNY KOD:
+document.getElementById('tab-config').innerHTML = configHTML;
+document.getElementById('tab-dev').innerHTML = devHTML;
+document.getElementById('tab-guide').innerHTML = guideHTML;
+        
+        console.log('[Refactor v0.69] Zakładki załadowane. Inicjalizacja przełączania.');
+        initTabSwitching();
+        
+        // POPRAWKA v0.69 (Refactor): Przeniesiono initEvents() tutaj,
+        // aby eventy były dodawane PO załadowaniu HTML-a zakładek.
+        initEvents();
+        
+    } catch (err) {
+        console.error("BŁĄD KRYTYCZNY: Nie można załadować zawartości menu (menu_*.html).", err);
+        alert("BŁĄD: Nie można załadować plików menu. Sprawdź, czy pliki menu_config.html, menu_dev.html i menu_guide.html znajdują się w tym samym folderze co index.html.");
+    }
+}
+
+
+// POPRAWKA v0.66: Przeniesienie konfiguracji eventów do osobnej funkcji, wywoływanej po ładowaniu zasobów
+function initEvents() {
+    // POPRAWKA v0.69: Logika przełączania zakładek została przeniesiona do loadMenuTabs()
 
     // === Przycisk Start/Continue ===
     // POPRAWKA V0.67: Przycisk startu używa nowej funkcji ładującej konfigurację
     document.getElementById('btnStart').addEventListener('click', () => {
         wrappedLoadConfigAndStart();
     });
-    // ... reszta eventów ...
-    document.getElementById('chkShake').addEventListener('change', () => {
-        game.screenShakeDisabled = !document.getElementById('chkShake').checked;
-    });
 
-    document.getElementById('chkFPS').addEventListener('change', () => {
-        showFPS = !!document.getElementById('chkFPS').checked;
-    });
+    // POPRAWKA v0.69: Eventy dla dynamicznie ładowanych elementów (Konfiguracja)
+    // Musimy użyć delegacji zdarzeń na kontenerze, który istnieje od początku (np. #menuOverlay)
+    // lub poczekać, aż loadMenuTabs() się zakończy.
+    // Prostsze rozwiązanie (ponieważ initEvents() jest wywoływane PO loadMenuTabs()):
+    // Możemy bezpiecznie dodać listenery, zakładając, że elementy już istnieją.
+    
+    // Listenery, które były w index.html, ale teraz są w menu_*.html
+    const chkShake = document.getElementById('chkShake');
+    if (chkShake) {
+        chkShake.addEventListener('change', () => {
+            game.screenShakeDisabled = !chkShake.checked;
+        });
+    }
+
+    const chkFPS = document.getElementById('chkFPS');
+    if (chkFPS) {
+        chkFPS.addEventListener('change', () => {
+            showFPS = !!chkFPS.checked;
+        });
+    }
+
 
     document.getElementById('btnContinue').addEventListener('click', () => {
         if(uiData.savedGameState){ 
@@ -565,10 +624,10 @@ function initEvents() {
             }
             
             // Wczytywanie Hazardów (nowa tablica)
-            hazards.length = 0; // POPRAWKA v0.68: Ładowanie Hazardów
+            hazards.length = 0; 
             const loadedHazards = uiData.savedGameState.hazards || [];
             for (const h of loadedHazards) {
-                const newHazard = new Hazard(h.x, h.y);
+                const newHazard = new Hazard(h.x, h.y, h.isMega, h.scale); // POPRAWKA v0.69: Wczytanie skali
                 Object.assign(newHazard, h);
                 hazards.push(newHazard);
             }
@@ -650,7 +709,7 @@ function initEvents() {
               gems: gemsPool.activeItems.map(g => ({ ...g })),
               pickups: pickups.map(p => ({ ...p })),
               chests: chests.map(c => ({ ...c })),
-              hazards: hazards.map(h => ({ ...h })), // POPRAWKA v0.68: Zapisywanie Hazardów
+              hazards: hazards.map(h => ({ ...h, isMega: h.isMega, scale: h.scale })), // POPRAWKA v0.69: Zapisywanie skali
               enemyIdCounter: gameStateRef.enemyIdCounter 
             };
             wrappedShowMenu(true);
@@ -709,7 +768,7 @@ console.log('[Main] Ładowanie zasobów...');
 Promise.all([
     loadAssets(),
     loadAudio()
-]).then(() => {
+]).then(async () => { // POPRAWKA v0.69: Dodano 'async'
     console.log('[Main] Wszystkie zasoby (grafika i audio) załadowane. Inicjalizacja Canvas i Obiektów Gry.');
     
     // NOWA KRYTYCZNA KOLEJNOŚĆ INICJALIZACJI
@@ -717,22 +776,32 @@ Promise.all([
     updateUiDataReferences(); // Wypełnij referencje do uiData (player, camera, pools)
     initStars(); // Inicjalizacja gwiazd wymaga wymiarów świata (z initializeCanvas)
     
+    // POPRAWKA v0.69: Ładowanie zawartości zakładek HTML PRZED resztą eventów
+    await loadMenuTabs();
+    
     // POPRAWKA V0.67: PRZEKAZANIE NOWEJ FUNKCJI ŁADUJĄCEJ KONFIGURACJĘ
     initDevTools(gameStateRef, wrappedLoadConfigAndStart); 
     
-    initEvents(); // Eventy wymagają elementow DOM i logiki gry
+    // POPRAWKA v0.69: initEvents() jest teraz wywoływane WEWNĄTRZ loadMenuTabs()
+    
     initInput(handleEscape, handleJoyStart, handleJoyEnd); // Input wymaga initEvents
     
     wrappedShowMenu(false);
-}).catch(err => {
+}).catch(async (err) => { // POPRAWKA v0.69: Dodano 'async'
     console.error("[Main] Krytyczny błąd podczas ładowania zasobów:", err);
     // Nadal pokaż menu, nawet jeśli ładowanie się nie powiodło (z fallbackami na kwadraty)
     initializeCanvas();
     updateUiDataReferences();
     initStars();
+    
+    // POPRAWKA v0.69: Spróbuj załadować zakładki nawet po błędzie, aby menu działało
+    await loadMenuTabs(); 
+    
     // POPRAWKA V0.67: PRZEKAZANIE NOWEJ FUNKCJI ŁADUJĄCEJ KONFIGURACJĘ
     initDevTools(gameStateRef, wrappedLoadConfigAndStart); 
-    initEvents();
+    
+    // POPRAWKA v0.69: initEvents() jest teraz wywoływane WEWNĄTRZ loadMenuTabs()
+    
     initInput(handleEscape, handleJoyStart, handleJoyEnd);
     wrappedShowMenu(false);
 });

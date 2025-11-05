@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.66 - Spawnowanie Kamery-Centrum)
+// ENEMYMANAGER.JS (v0.69 - FIX: Poprawny import WallEnemy i implementacja Eventu Oblężenia)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -7,18 +7,18 @@ import { devSettings } from '../services/dev.js';
 import { findFreeSpotForPickup } from '../core/utils.js';
 import { 
     Enemy, StandardEnemy, HordeEnemy, AggressiveEnemy, 
-    KamikazeEnemy, SplitterEnemy, TankEnemy, RangedEnemy, EliteEnemy 
+    KamikazeEnemy, SplitterEnemy, TankEnemy, RangedEnemy, EliteEnemy, 
+    WallEnemy // POPRAWKA v0.69: Poprawny import WallEnemy
 } from '../entities/enemy.js';
 // POPRAWKA v0.65: Import ENEMY_STATS z centralnego pliku konfiguracyjnego
-import { ENEMY_STATS } from '../config/gameData.js';
+import { ENEMY_STATS, SIEGE_EVENT_CONFIG } from '../config/gameData.js'; // POPRAWKA v0.69: Import SIEGE_EVENT_CONFIG
 import { 
     HealPickup, MagnetPickup, ShieldPickup, 
     SpeedPickup, BombPickup, FreezePickup 
 } from '../entities/pickup.js';
 import { Chest } from '../entities/chest.js';
 
-// POPRAWKA v0.65: Usunięto całą stałą ENEMY_STATS (przeniesiona do gameData.js)
-
+// POPRAWKA v0.69: Zaktualizowano mapę wrogów (usunięto 'sieger', dodano 'wall')
 export const ENEMY_CLASS_MAP = {
     standard: StandardEnemy,
     horde: HordeEnemy,
@@ -27,7 +27,8 @@ export const ENEMY_CLASS_MAP = {
     splitter: SplitterEnemy,
     tank: TankEnemy,
     ranged: RangedEnemy,
-    elite: EliteEnemy
+    elite: EliteEnemy,
+    wall: WallEnemy // NOWY WRÓG (Oblężnik)
 };
 
 const PICKUP_CLASS_MAP = {
@@ -51,6 +52,7 @@ function getAvailableEnemyTypes(game) {
     if (t > 70) types.push('splitter');
     if (t > 90) types.push('tank');
     if (t > 120) types.push('ranged');
+    // POPRAWKA v0.69: Usunięto 'sieger'. Wróg 'wall' jest spawnowany tylko przez Event.
     
     if (devSettings.allowedEnemies.includes('all')) return types;
     return types.filter(type => devSettings.allowedEnemies.includes(type));
@@ -190,6 +192,35 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
 }
 
 /**
+ * NOWA FUNKCJA (v0.69): Spawnuje Wydarzenie Oblężenia (Siege Event).
+ * Tworzy pierścień wrogów typu 'wall' wokół gracza.
+ */
+export function spawnSiegeRing(state) {
+    const { enemies, player, game } = state;
+    
+    const count = SIEGE_EVENT_CONFIG.SIEGE_EVENT_COUNT;
+    const radius = SIEGE_EVENT_CONFIG.SIEGE_EVENT_RADIUS;
+    
+    console.log(`[EVENT] Uruchamiam Wydarzenie Oblężenia! Spawnuję ${count} wrogów 'wall' w promieniu ${radius}px.`);
+
+    for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2;
+        const x = player.x + Math.cos(angle) * radius;
+        const y = player.y + Math.sin(angle) * radius;
+        
+        const hpScale = 1 + 0.12 * (game.level - 1) + game.time / 90;
+        
+        const newEnemy = createEnemyInstance('wall', x, y, hpScale, state.enemyIdCounter++);
+        if (newEnemy) {
+            enemies.push(newEnemy);
+        }
+    }
+    
+    return state.enemyIdCounter;
+}
+
+
+/**
  * Znajduje najbliższego wroga (używane przez broń)
  */
 export function findClosestEnemy(player, enemies) {
@@ -290,4 +321,4 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.66] js/managers/enemyManager.js: Spawnowanie wrogów używa teraz kamery.');
+console.log('[DEBUG-v0.69] js/managers/enemyManager.js: Zaimplementowano funkcję spawnSiegeRing.');

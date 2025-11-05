@@ -1,11 +1,10 @@
 // ==============
-// ENEMY.JS (v0.68a - Dodano timer spowolnienia Hazardu)
+// ENEMY.JS (v0.69 - Usunięto SiegerEnemy, Dodano WallEnemy)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
 import { colorForEnemy } from '../core/utils.js';
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
-// POPRAWKA v0.68a: Dodano HAZARD_CONFIG do obliczenia prędkości
 import { WEAPON_CONFIG, HAZARD_CONFIG } from '../config/gameData.js';
 import { get as getAsset } from '../services/assets.js';
 
@@ -128,6 +127,7 @@ export class Enemy {
 
     /**
      * Główna metoda rysowania.
+     * POPRAWKA v0.69: Sygnatura draw NIE POTRZEBUJE 'player' (powrót do v0.68)
      */
     draw(ctx, game) {
         ctx.save();
@@ -198,7 +198,7 @@ export class Enemy {
     }
 }
 
-// === KLASY SPECJALISTYCZNE ===
+// === KLASY SPECJALISTYCZNE (PRZYWRÓCONE) ===
 
 export class StandardEnemy extends Enemy {
     getOutlineColor() { return '#ffa726'; }
@@ -325,4 +325,16 @@ export class EliteEnemy extends Enemy {
         ctx.strokeStyle = '#111';
         ctx.strokeRect(bx, by, w, h);
     }
+}
+
+// POPRAWKA v0.69: Nowa klasa - Oblężnik (jako 'wall')
+export class WallEnemy extends Enemy {
+    getOutlineColor() { return '#90A4AE'; } // Szaro-niebieski
+    
+    // Używa domyślnej metody update() (podążanie za graczem)
+    // Używa domyślnej metody getSpeed() (ale bazowa prędkość jest bardzo niska (80) z gameData.js)
+    
+    getSeparationRadius() { 
+        return 30; // Większa separacja, aby utrzymać "ścianę"
+    } 
 }
