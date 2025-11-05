@@ -1,88 +1,117 @@
 // ==============
-// ASSETS.JS (v0.56 - Nowy plik)
+// ASSETS.JS (v0.70 - FIX: Naprawa błędu TypeError w main.js)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
-// Przechowuje załadowane zasoby (np. obrazy)
-const loadedAssets = new Map();
+const assets = new Map();
+let sounds = {}; // POPRAWKA v0.58: Przeniesiono z audio.js
+let audioContext = null; // POPRAWKA v0.58: Przeniesiono z audio.js
+
+const basePath = 'img/'; // POPRAWKA v0.56: Ścieżka bazowa
 
 /**
- * Lista wszystkich zasobów do załadowania.
- * Na razie używamy fałszywych ścieżek.
- * Gdy dodasz grafiki, zaktualizuj te ścieżki.
+ * Rejestruje zasób (obraz) w menedżerze.
+ * @param {string} key - Klucz identyfikujący zasób (np. 'player')
+ * @param {Image} asset - Załadowany obiekt obrazu
  */
-const ASSET_LIST = [
-  // --- Gracz ---
-  { id: 'player', src: 'img/player.png' },
-  
-  // --- Wrogowie ---
-  { id: 'enemy_standard', src: 'img/enemies/standard.png' },
-  { id: 'enemy_horde', src: 'img/enemies/horde.png' },
-  { id: 'enemy_aggressive', src: 'img/enemies/aggressive.png' },
-  { id: 'enemy_kamikaze', src: 'img/enemies/kamikaze.png' },
-  { id: 'enemy_splitter', src: 'img/enemies/splitter.png' },
-  { id: 'enemy_tank', src: 'img/enemies/tank.png' },
-  { id: 'enemy_ranged', src: 'img/enemies/ranged.png' },
-  { id: 'enemy_elite', src: 'img/enemies/elite.png' },
-  
-  // --- Pickupy ---
-  { id: 'pickup_heal', src: 'img/pickups/heal.png' },
-  { id: 'pickup_magnet', src: 'img/pickups/magnet.png' },
-  { id: 'pickup_shield', src: 'img/pickups/shield.png' },
-  { id: 'pickup_speed', src: 'img/pickups/speed.png' },
-  { id: 'pickup_bomb', src: 'img/pickups/bomb.png' },
-  { id: 'pickup_freeze', src: 'img/pickups/freeze.png' },
-  
-  // --- Inne ---
-  { id: 'gem', src: 'img/gem.png' },
-  { id: 'chest', src: 'img/chest.png' },
-];
+function register(key, asset) {
+  console.log(`[Assets] Zarejestrowano zasób: ${key}`);
+  assets.set(key, asset);
+}
 
 /**
- * Ładuje pojedynczy zasób (obraz).
- * @param {object} assetInfo - Obiekt z { id, src }
- * @returns {Promise<void>}
+ * Pobiera zasób (obraz) z menedżera.
+ * @param {string} key - Klucz identyfikujący zasób
+ * @returns {Image|null}
  */
-function loadAsset(assetInfo) {
+export function get(key) {
+  return assets.get(key) || null;
+}
+
+/**
+ * Ładuje pojedynczy obraz.
+ * @param {string} src - Ścieżka do pliku obrazu
+ * @returns {Promise<Image>}
+ */
+function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.src = assetInfo.src;
-    
-    img.onload = () => {
-      console.log(`[Assets] Załadowano: ${assetInfo.src}`);
-      loadedAssets.set(assetInfo.id, img);
-      resolve();
-    };
-    
+    img.onload = () => resolve(img);
     img.onerror = () => {
-      // Nie traktujemy tego jako błędu krytycznego,
-      // gra będzie działać z kwadratami
-      console.warn(`[Assets] Nie można załadować: ${assetInfo.src}. Plik nie istnieje lub jest uszkodzony.`);
-      loadedAssets.set(assetInfo.id, null); // Ustawiamy na null, aby wiedzieć, że próbowaliśmy
-      resolve(); // Rozwiązujemy obietnicę, aby gra mogła kontynuować
+      console.warn(`[Assets] Nie można załadować: ${src}. Plik nie istnieje lub jest uszkodzony.`);
+      // Zamiast odrzucać (reject), rozwiązujemy (resolve) z nullem,
+      // aby Promise.all() nie zatrzymało się przy pierwszym błędzie.
+      resolve(null);
     };
+    img.src = src;
   });
 }
 
 /**
- * Ładuje wszystkie zasoby z listy ASSET_LIST.
- * @returns {Promise<void>} - Zwraca obietnicę, która kończy się, gdy wszystkie zasoby są przetworzone.
+ * Ładuje obraz i rejestruje go pod kluczem.
+ * @param {string} key - Klucz
+ * @param {string} src - Ścieżka
+ * @returns {Promise<void>}
+ */
+async function loadAndRegister(key, src) {
+  const img = await loadImage(src);
+  if (img) {
+    register(key, img);
+  }
+}
+
+/**
+ * Definicje zasobów (Assets Definitions)
+ * Klucze muszą pasować do typów wrogów, pickupów itp.
+ */
+const assetDefinitions = {
+  // Gracz
+  'player': 'player.png',
+  
+  // Wrogowie
+  'enemy_standard': 'enemies/standard.png',
+  'enemy_horde': 'enemies/horde.png',
+  'enemy_aggressive': 'enemies/aggressive.png',
+  'enemy_kamikaze': 'enemies/kamikaze.png',
+  'enemy_splitter': 'enemies/splitter.png',
+  'enemy_tank': 'enemies/tank.png',
+  'enemy_ranged': 'enemies/ranged.png',
+  'enemy_elite': 'enemies/elite.png',
+  'enemy_wall': 'enemies/wall.png', // POPRAWKA v0.69: Dodano sprite Oblężnika
+  
+  // Pickupy
+  'pickup_heal': 'pickups/heal.png',
+  'pickup_magnet': 'pickups/magnet.png',
+  'pickup_shield': 'pickups/shield.png',
+  'pickup_speed': 'pickups/speed.png',
+  'pickup_bomb': 'pickups/bomb.png',
+  'pickup_freeze': 'pickups/freeze.png',
+  
+  // Inne
+  'gem': 'gem.png',
+  'chest': 'chest.png',
+};
+
+/**
+ * Główna funkcja ładująca wszystkie zasoby (Obrazy).
+ * @returns {Promise<void>}
  */
 export function loadAssets() {
   console.log('[Assets] Rozpoczynam ładowanie zasobów...');
-  const promises = ASSET_LIST.map(assetInfo => loadAsset(assetInfo));
+  const promises = [];
   
-  // Czekamy, aż wszystkie próby ładowania się zakończą
+  for (const [key, fileName] of Object.entries(assetDefinitions)) {
+    // Zakładamy, że basePath jest już zawarty w src, jeśli jest potrzebny
+    // W naszym przypadku (v0.56) ścieżka jest już w definicji
+    // const src = basePath + fileName; 
+    // Poprawka (v0.56b): basePath jest globalny, ale loadAndRegister go nie używa. Użyjmy go.
+    const src = basePath + fileName;
+    promises.push(loadAndRegister(key, src));
+  }
+  
+  // POPRAWKA v0.70 (FIX): Zwracamy rozwiązaną obietnicę (zamiast void), aby uniknąć błędu TypeError w .then() w main.js
   return Promise.all(promises).then(() => {
-    console.log(`[Assets] Zakończono ładowanie. Załadowano ${loadedAssets.size} zasobów.`);
+    console.log(`[Assets] Zakończono ładowanie. Załadowano ${assets.size} zasobów.`);
+    return true; // Zwróć cokolwiek, aby results[0] nie był undefined
   });
-}
-
-/**
- * Pobiera załadowany zasób.
- * @param {string} id - ID zasobu (np. 'player')
- * @returns {Image|null} - Zwraca obiekt obrazu lub null, jeśli nie został załadowany.
- */
-export function get(id) {
-  return loadedAssets.get(id) || null;
 }

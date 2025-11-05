@@ -4,7 +4,7 @@
 // ==============
 
 // Definiuje aktualną wersję gry
-export const VERSION = '0.69';
+export const VERSION = '0.70';
 
 // LOG DIAGNOSTYCZNY
 console.log('[DEBUG] js/config/version.js: Ustawiono wersję na 0.69 (Oblężnik)');
