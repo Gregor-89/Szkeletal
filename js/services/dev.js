@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.71 - FIX: Poprawiony Import Broni)
+// DEV.JS (v0.74 - Konsolidacja PICKUP_CLASS_MAP)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -12,13 +12,12 @@ import { AutoGun } from '../config/weapons/autoGun.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
 
-// POPRAWKA v0.71: Import 6 podklas pickupów z nowego folderu
-import { HealPickup } from '../entities/pickups/healPickup.js';
-import { MagnetPickup } from '../entities/pickups/magnetPickup.js';
-import { ShieldPickup } from '../entities/pickups/shieldPickup.js';
-import { SpeedPickup } from '../entities/pickups/speedPickup.js';
-import { BombPickup } from '../entities/pickups/bombPickup.js';
-import { FreezePickup } from '../entities/pickups/freezePickup.js';
+// POPRAWKA v0.74: USUNIĘTO 6 INDYWIDUALNYCH IMPORTÓW PICKUPÓW
+// import { HealPickup } from '../entities/pickups/healPickup.js';
+// ...
+
+// POPRAWKA v0.74: Import mapy z managera efektów
+import { PICKUP_CLASS_MAP } from '../managers/effects.js';
 
 /**
  * Eksportowane ustawienia deweloperskie.
@@ -30,15 +29,15 @@ export const devSettings = {
     presetLoaded: false
 };
 
-// Mapa dla klas pickupów
-const PICKUP_CLASS_MAP = {
-    heal: HealPickup,
-    magnet: MagnetPickup,
-    shield: ShieldPickup,
-    speed: SpeedPickup,
-    bomb: BombPickup,
-    freeze: FreezePickup
-};
+// POPRAWKA v0.74: USUNIĘTO LOKALNĄ MAPĘ DLA KLAS PICKUPÓW
+// const PICKUP_CLASS_MAP = {
+//     heal: HealPickup,
+//     magnet: MagnetPickup,
+//     shield: ShieldPickup,
+//     speed: SpeedPickup,
+//     bomb: BombPickup,
+//     freeze: FreezePickup
+// };
 
 // Wewnętrzna referencja do stanu gry i funkcji startu
 let gameState = {};
@@ -132,7 +131,7 @@ function devSpawnPickup(type) {
     }
     const pos = findFreeSpotForPickup(pickups, player.x, player.y);
     
-    const PickupClass = PICKUP_CLASS_MAP[type];
+    const PickupClass = PICKUP_CLASS_MAP[type]; // Używa zaimportowanej mapy
     if (PickupClass) {
         pickups.push(new PickupClass(pos.x, pos.y));
     } else {

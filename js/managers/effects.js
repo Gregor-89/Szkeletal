@@ -1,5 +1,5 @@
 // ==============
-// EFFECTS.JS (v0.72 - FIX: Usunięto areaNuke z powodu cyklicznej zależności)
+// EFFECTS.JS (v0.74 - Eksport PICKUP_CLASS_MAP)
 // Lokalizacja: /js/managers/effects.js
 // ==============
 
