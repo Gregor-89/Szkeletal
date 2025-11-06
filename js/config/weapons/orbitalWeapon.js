@@ -1,12 +1,17 @@
 // ==============
-// ORBITALWEAPON.JS (v0.71 - Refaktoryzacja Broni)
+// ORBITALWEAPON.JS (v0.73 - Ostateczna korekta logiki po refaktoryzacji)
 // Lokalizacja: /js/config/weapons/orbitalWeapon.js
 // ==============
 
 import { Weapon } from '../weapon.js';
-import { killEnemy } from '../../managers/enemyManager.js';
-import { addHitText } from '../../core/utils.js';
-import { PERK_CONFIG } from '../gameData.js';
+import { killEnemy } from '../../managers/enemyManager.js'; // Dodane do logiki kolizji (zaktualizuję update)
+import { addHitText } from '../../core/utils.js'; // Dodane do logiki kolizji (zaktualizuję update)
+// POPRAWKA v0.65: Zmieniono import na centralną konfigurację
+import { PERK_CONFIG } from '../gameData.js'; // <--- ZMIENIONE: Poprawna ścieżka: '../gameData.js'
+
+// STAŁE DLA TYPU ORBITALA
+const ORBITAL_SIZE = 5; // Promień orbitala
+const ORBITAL_COLOR = '#80DEEA'; // Kolor (Cyjan)
 
 /**
  * OrbitalWeapon: Broń pasywna.
@@ -14,22 +19,22 @@ import { PERK_CONFIG } from '../gameData.js';
 export class OrbitalWeapon extends Weapon {
   constructor(player) {
     super(player);
-    this.items = [];
-    this.angle = 0;
+    this.items = []; // Tablica prostych obiektów {angle, ox, oy}
+    this.angle = 0; // Kąt obrotu całej formacji
     this.radius = 0;
     this.damage = 0;
     this.speed = 0;
-    this.collisionTimer = 0;
-    this.updateStats();
+    this.collisionTimer = 0; // Timer do opóźniania kolizji (logika v0.71)
+    
+    this.orbitalConfig = PERK_CONFIG.orbital; // Cache dla configu
+    this.updateStats(); // Uruchomienie, aby zainicjować this.items
   }
   
-  // POPRAWKA v0.65: Skalowanie pobierane z PERK_CONFIG
+  // POPRAWKA v0.73: Skalowanie pobierane z PERK_CONFIG
   updateStats() {
-    const c = PERK_CONFIG.orbital || {}; // POPRAWKA STABILNOŚCI: Dodanie defensywnego fallbacka
-    
-    this.damage = (c.DAMAGE_BASE || 1) + Math.floor(this.level / (c.DAMAGE_LEVEL_DIVISOR || 2));
-    this.radius = ((c.RADIUS_BASE || 28) + (c.RADIUS_PER_LEVEL || 6) * this.level) * (c.RADIUS_MULTIPLIER || 1.5);
-    this.speed = (c.SPEED_BASE || 1.2) + (c.SPEED_PER_LEVEL || 0.2) * this.level;
+    this.damage = this.orbitalConfig.calculateDamage(this.level);
+    this.radius = this.orbitalConfig.calculateRadius(this.level);
+    this.speed = this.orbitalConfig.calculateSpeed(this.level);
     
     // Ta logika jest poprawna - dodaje nowy orbital, jeśli poziom jest wyższy niż liczba itemów
     while (this.items.length < this.level) {
@@ -41,10 +46,10 @@ export class OrbitalWeapon extends Weapon {
   }
   
   update(state) {
-    // POPRAWKA v0.62: Pobranie pul obiektów
+    // PRZYWRÓCONA LOGIKA Z PLIKU V0.71
     const { dt, enemies, particlePool, hitTextPool, hitTexts, game, settings, gemsPool, pickups, chests } = state;
     
-    // Ta prędkość (radiany/s) jest już poprawnie mnożona przez dt.
+    // 1. Aktualizacja Kąta i Pozycji
     this.angle += this.speed * dt;
     
     for (let i = 0; i < this.items.length; i++) {
@@ -54,6 +59,7 @@ export class OrbitalWeapon extends Weapon {
       it.oy = this.player.y + Math.sin(ang) * this.radius;
     }
     
+    // 2. Obsługa Kolizji (tylko co 0.05s)
     this.collisionTimer -= dt;
     if (this.collisionTimer > 0) return;
     
@@ -63,36 +69,32 @@ export class OrbitalWeapon extends Weapon {
       const it = this.items[i];
       for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
-        if (Math.abs(it.ox - e.x) > this.radius || Math.abs(it.oy - e.y) > this.radius) {
+        // Używamy promienia orbitala do wstępnego culling
+        if (Math.abs(it.ox - e.x) > e.size + ORBITAL_SIZE || Math.abs(it.oy - e.y) > e.size + ORBITAL_SIZE) {
           continue;
         }
         
         const d = Math.hypot(it.ox - e.x, it.oy - e.y);
-        if (d < 5 + e.size * 0.5) {
-          // POPRAWKA V0.67: Zmieniono obliczenie obrażeń na standardowe,
-          // aby nie zadawało 0.05 (zaokrąglane do 0).
-          const dmg = this.damage;
+        if (d < ORBITAL_SIZE + e.size * 0.5) { // Precyzyjna kolizja
           
+          const dmg = this.damage;
           e.hp -= dmg;
           
-          // POPRAWKA v0.62e: Użyj puli cząsteczek i fizyki opartej na DT
+          // Efekty wizualne
           const p = particlePool.get();
           if (p) {
             p.init(
               e.x, e.y,
               (Math.random() - 0.5) * 1 * 60, // vx (px/s)
               (Math.random() - 0.5) * 1 * 60, // vy (px/s)
-              0.16, // life (było 10 klatek)
+              0.16, // life (s)
               '#ff0000'
             );
           }
           
-          // POPRAWKA v0.62: Użyj puli hitText
-          // Używamy dmg (które jest liczbą całkowitą z definicji Orbitala)
-          addHitText(hitTextPool, hitTexts, e.x, e.y, dmg, '#80deea');
+          addHitText(hitTextPool, hitTexts, e.x, e.y, dmg, ORBITAL_COLOR);
           
           if (e.hp <= 0) {
-            // POPRAWKA v0.62: Przekaż pule do killEnemy
             state.enemyIdCounter = killEnemy(j, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, true);
           }
         }
@@ -101,14 +103,15 @@ export class OrbitalWeapon extends Weapon {
   }
   
   draw(ctx) {
+    // Rysowanie orbitali (bez zmian)
     for (let i = 0; i < this.items.length; i++) {
       const it = this.items[i];
       ctx.save();
       ctx.shadowBlur = 10;
-      ctx.shadowColor = '#80DEEA';
-      ctx.fillStyle = '#80DEEA';
+      ctx.shadowColor = ORBITAL_COLOR;
+      ctx.fillStyle = ORBITAL_COLOR;
       ctx.beginPath();
-      ctx.arc(it.ox, it.oy, 5, 0, Math.PI * 2);
+      ctx.arc(it.ox, it.oy, ORBITAL_SIZE, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }

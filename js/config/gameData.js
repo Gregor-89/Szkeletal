@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.69 - Dodano Konfigurację Wydarzenia Oblężenia i wroga 'wall')
+// GAMEDATA.JS (v0.73 - Konsolidacja Logiki Broni Specjalnych)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -148,29 +148,21 @@ export const PERK_CONFIG = {
   },
   orbital: {
     max: 5,
-    // Skalowanie Orbitala (logika w OrbitalWeapon.js):
-    // Obrażenia = 1 + floor(poziom / 2)
-    DAMAGE_BASE: 1,
-    DAMAGE_LEVEL_DIVISOR: 2,
-    // Promień = (28 + 6 * poziom) * 1.5
-    RADIUS_BASE: 28,
-    RADIUS_PER_LEVEL: 6,
-    RADIUS_MULTIPLIER: 1.5,
-    // Prędkość = 1.2 + 0.2 * poziom
-    SPEED_BASE: 1.2,
-    SPEED_PER_LEVEL: 0.2
+    // POPRAWKA v0.73: Logika przeniesiona z OrbitalWeapon.js
+    /** Damage = 1 + floor(level / 2) */
+    calculateDamage: (level) => (1 + Math.floor(level / 2)),
+    /** Radius = (28 + 6 * level) * 1.5 */
+    calculateRadius: (level) => ((28 + 6 * level) * 1.5),
+    /** Speed (rad/s) = 1.2 + 0.2 * level */
+    calculateSpeed: (level) => (1.2 + 0.2 * level)
   },
   nova: {
     max: 5,
-    // Skalowanie Novy (logika w NovaWeapon.js):
-    // Cooldown = max(0.6, 2.2 - 0.3 * poziom)
-    COOLDOWN_BASE: 2.2,
-    COOLDOWN_REDUCTION_PER_LEVEL: 0.3,
-    COOLDOWN_MIN: 0.6,
-    // Liczba = min(24, 8 + 2 * poziom)
-    COUNT_BASE: 8,
-    COUNT_PER_LEVEL: 2,
-    COUNT_MAX: 24
+    // POPRAWKA v0.73: Logika przeniesiona z NovaWeapon.js
+    /** Cooldown = max(0.6, 2.2 - 0.3 * level) */
+    calculateCooldown: (level) => (Math.max(0.6, 2.2 - 0.3 * level)),
+    /** Count = min(24, 8 + 2 * level) */
+    calculateCount: (level) => (Math.min(24, 8 + 2 * level))
   },
   speed: {
     value: 1.10, // Mnożnik prędkości (+10%)

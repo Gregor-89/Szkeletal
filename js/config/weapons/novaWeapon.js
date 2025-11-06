@@ -1,13 +1,14 @@
 // ==============
-// NOVAWEAPON.JS (v0.71 - FIX: Dodano brakujący import AutoGun)
+// NOVAWEAPON.JS (v0.73 - Uproszczenie Użycia PERK_CONFIG)
 // Lokalizacja: /js/config/weapons/novaWeapon.js
 // ==============
 
 import { Weapon } from '../weapon.js';
 import { limitedShake } from '../../core/utils.js';
 import { playSound } from '../../services/audio.js';
+// POPRAWKA v0.65: Zmieniono import na centralną konfigurację
 import { WEAPON_CONFIG, PERK_CONFIG } from '../gameData.js';
-// POPRAWKA v0.71: Dodano brakujący import AutoGun (potrzebny do fallbacku obrażeń)
+// POPRAWKA v0.71: Import 3 podklas broni z nowego folderu
 import { AutoGun } from './autoGun.js';
 
 /**
@@ -19,15 +20,18 @@ export class NovaWeapon extends Weapon {
     this.timer = 0;
     this.cooldown = 0;
     this.bulletCount = 0;
+    
+    this.novaConfig = PERK_CONFIG.nova; // Cache dla configu
     this.updateStats();
   }
   
   // POPRAWKA v0.65: Skalowanie pobierane z PERK_CONFIG
+  // POPRAWKA v0.73: Używa teraz funkcji z PERK_CONFIG.
   updateStats() {
-    const c = PERK_CONFIG.nova || {}; // POPRAWKA STABILNOŚCI: Dodanie defensywnego fallbacka
     
-    this.cooldown = Math.max((c.COOLDOWN_MIN || 0.6), ((c.COOLDOWN_BASE || 2.2) - (c.COOLDOWN_REDUCTION_PER_LEVEL || 0.3) * this.level));
-    this.bulletCount = Math.min((c.COUNT_MAX || 24), (c.COUNT_BASE || 8) + (c.COUNT_PER_LEVEL || 2) * this.level);
+    // Logika przeniesiona do gameData.js
+    this.cooldown = this.novaConfig.calculateCooldown(this.level);
+    this.bulletCount = this.novaConfig.calculateCount(this.level);
     
     if (this.timer === 0) {
       this.timer = this.cooldown;
