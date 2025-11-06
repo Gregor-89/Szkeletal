@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.71 - Refaktoryzacja Głównej Pętli Rysowania)
+// DRAW.JS (v0.75 - Siege Enhancements: Rysowanie Sygnału Oblężenia)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -213,7 +213,7 @@ export function draw(ctx, state, ui, fps) {
     }
     ctx.globalAlpha = 1;
 
-    // Rysowanie wskaźnika bomby
+    // Rysowanie wskaźnika bomby i Oblężenia
     for (const b of bombIndicators) {
         if (b.x - b.maxRadius > cullRight || b.x + b.maxRadius < cullLeft || 
             b.y - b.maxRadius > cullBottom || b.y + b.maxRadius < cullTop) {
@@ -224,17 +224,47 @@ export function draw(ctx, state, ui, fps) {
         const currentRadius = b.maxRadius * progress;
         const opacity = 0.9 * (1 - progress); // Zanikanie
 
-        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
-        ctx.lineWidth = 3;
-        ctx.setLineDash([10, 5]);
-        ctx.beginPath();
-        const roundedBX = Math.round(b.x);
-        const roundedBY = Math.round(b.y);
-        ctx.arc(roundedBX, roundedBY, currentRadius, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
+        // POPRAWKA v0.75: Logika dla wskaźnika Oblężenia
+        if (b.isSiege) {
+            // Wskaźnik Oblężenia (czerwony/fioletowy pulsujący)
+            const pulse = 1 + 0.2 * Math.sin(b.life * 8);
+            const r = b.maxRadius * pulse;
+            const dash = [5, 3];
+            
+            ctx.strokeStyle = `rgba(255, 0, 255, ${opacity * 0.9})`; // Fioletowy
+            ctx.shadowColor = `rgba(255, 0, 255, ${opacity * 0.9})`;
+            ctx.setLineDash(dash);
 
-        ctx.shadowColor = `rgba(255, 152, 0, ${opacity * 0.7})`;
+            const roundedBX = Math.round(b.x);
+            const roundedBY = Math.round(b.y);
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            // Promień nie rośnie, tylko pulsuje
+            ctx.arc(roundedBX, roundedBY, r, 0, Math.PI * 2); 
+            ctx.stroke();
+            
+            // Rysowanie czasu
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+            ctx.fillText(Math.ceil(b.maxLife - b.life), roundedBX, roundedBY + 5);
+            
+        } else {
+            // Standardowy wskaźnik Bomby
+            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+            ctx.shadowColor = `rgba(255, 152, 0, ${opacity * 0.7})`;
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+
+            const roundedBX = Math.round(b.x);
+            const roundedBY = Math.round(b.y);
+
+            ctx.beginPath();
+            ctx.arc(roundedBX, roundedBY, currentRadius, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
         ctx.shadowBlur = 24;
         ctx.stroke();
         ctx.shadowBlur = 0;

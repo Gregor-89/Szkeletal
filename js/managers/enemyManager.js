@@ -1,10 +1,11 @@
 // ==============
-// ENEMYMANAGER.JS (v0.71 - Refaktoryzacja Importów Pickupów)
+// ENEMYMANAGER.JS (v0.75 - FIX: Poprawiono dryf spawnu Oblężnika)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
 import { devSettings } from '../services/dev.js';
-import { findFreeSpotForPickup } from '../core/utils.js';
+// POPRAWKA v0.75: Import addBombIndicator dla sygnału Oblężenia
+import { findFreeSpotForPickup, addBombIndicator } from '../core/utils.js';
 
 // Import klasy bazowej
 import { Enemy } from '../entities/enemy.js';
@@ -17,7 +18,7 @@ import { SplitterEnemy } from '../entities/enemies/splitterEnemy.js';
 import { TankEnemy } from '../entities/enemies/tankEnemy.js';
 import { RangedEnemy } from '../entities/enemies/rangedEnemy.js';
 import { EliteEnemy } from '../entities/enemies/eliteEnemy.js';
-import { WallEnemy } from '../entities/enemies/wallEnemy.js';
+import { WallEnemy } from '../entities/enemies/wallEnemy.js'; // NOWY IMPORT
 
 // Import konfiguracji
 import { ENEMY_STATS, SIEGE_EVENT_CONFIG } from '../config/gameData.js';
@@ -42,7 +43,7 @@ export const ENEMY_CLASS_MAP = {
     tank: TankEnemy,
     ranged: RangedEnemy,
     elite: EliteEnemy,
-    wall: WallEnemy
+    wall: WallEnemy // DODANO
 };
 
 // Mapa klas pickupów (działa bez zmian, dzięki nowym importom)
@@ -67,6 +68,8 @@ function getAvailableEnemyTypes(game) {
     if (t > 70) types.push('splitter');
     if (t > 90) types.push('tank');
     if (t > 120) types.push('ranged');
+    
+    // POPRAWKA v0.75: 'wall' nie jest spawnowany losowo
     
     if (devSettings.allowedEnemies.includes('all')) return types;
     return types.filter(type => devSettings.allowedEnemies.includes(type));
@@ -200,20 +203,51 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
 }
 
 /**
- * Spawnuje Wydarzenie Oblężenia (Siege Event).
+ * NOWA FUNKCJA (v0.75): Dodaje wskaźniki ostrzegawcze Oblężenia.
  */
-export function spawnSiegeRing(state) {
-    const { enemies, player, game } = state;
+export function addSiegeIndicators(state) {
+    const { bombIndicators, player } = state;
     
     const count = SIEGE_EVENT_CONFIG.SIEGE_EVENT_COUNT;
     const radius = SIEGE_EVENT_CONFIG.SIEGE_EVENT_RADIUS;
-    
-    console.log(`[EVENT] Uruchamiam Wydarzenie Oblężenia! Spawnuję ${count} wrogów 'wall' w promieniu ${radius}px.`);
+    const maxLife = SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME;
+
+    // KRYTYCZNY FIX v0.75: Zapisz tablicę absolutnych współrzędnych do spawnu
+    state.siegeSpawnQueue = []; // Inicjalizacja kolejki
 
     for (let i = 0; i < count; i++) {
         const angle = (i / count) * Math.PI * 2;
         const x = player.x + Math.cos(angle) * radius;
         const y = player.y + Math.sin(angle) * radius;
+        
+        // Zapisz współrzędne do użycia w fazie spawnu
+        state.siegeSpawnQueue.push({ x, y });
+
+        // Dodaj wskaźnik (używa absolutnych współrzędnych)
+        bombIndicators.push({
+            x: x,
+            y: y,
+            maxRadius: ENEMY_STATS.wall.size * 1.5, // Wskaż rozmiar zbliżony do wroga
+            life: 0,
+            maxLife: maxLife,
+            isSiege: true 
+        });
+    }
+}
+
+/**
+ * Pomocnicza funkcja do spawnowania Oblężników po ostrzeżeniu.
+ */
+export function spawnWallEnemies(state) {
+    const { enemies, game } = state;
+    
+    // KRYTYCZNY FIX v0.75: Użyj wcześniej zapisanych współrzędnych z kolejki
+    const spawnQueue = state.siegeSpawnQueue || []; 
+    
+    console.log(`[EVENT] Uruchamiam Wydarzenie Oblężenia! Spawnuję ${spawnQueue.length} wrogów 'wall' w pozycjach ostrzeżenia.`);
+
+    for (let i = 0; i < spawnQueue.length; i++) {
+        const { x, y } = spawnQueue[i];
         
         const hpScale = 1 + 0.12 * (game.level - 1) + game.time / 90;
         
@@ -223,6 +257,25 @@ export function spawnSiegeRing(state) {
         }
     }
     
+    // Opróżnij kolejkę po użyciu
+    state.siegeSpawnQueue = []; 
+    
+    return state.enemyIdCounter;
+}
+
+
+/**
+ * Główna funkcja spawnująca Wydarzenie Oblężenia.
+ * POPRAWKA v0.75: Zmieniona, aby używać wskaźników.
+ */
+export function spawnSiegeRing(state) {
+    // 1. Dodaj wskaźniki (ostrzeżenie)
+    addSiegeIndicators(state);
+    
+    // 2. Wróć, a reszta logiczna zostanie wykonana w gameLogic.js
+    console.log('[EVENT] Wysłano ostrzeżenie o Oblężeniu. Spawnowanie za ' + SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME + 's.');
+    
+    // Zwróć niezmieniony licznik - wrogowie zostaną dodani później
     return state.enemyIdCounter;
 }
 

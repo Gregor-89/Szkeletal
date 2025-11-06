@@ -4,7 +4,7 @@
 // ==============
 
 // Definiuje aktualną wersję gry
-export const VERSION = '0.74';
+export const VERSION = '0.75';
 
 // LOG DIAGNOSTYCZNY
 console.log('[DEBUG-v0.71] js/config/version.js: Ustawiono wersję na 0.71 (Refaktoryzacja Bytów)');

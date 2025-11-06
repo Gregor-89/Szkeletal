@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.71 - Refaktoryzacja: Tylko Klasa Bazowa)
+// ENEMY.JS (v0.75 - Siege Enhancements: Dodano takeDamage)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -43,6 +43,17 @@ export class Enemy {
         this.animationSpeed = 150;  
         this.animationTimer = 0;
         this.currentFrame = 0;
+    }
+    
+    /**
+     * NOWA METODA (v0.75): Obsługa otrzymania obrażeń.
+     * Oddzielenie logiki obrażeń od logiki kolizji, aby umożliwić nadpisanie (np. przez WallEnemy).
+     * @param {number} damage - Ilość otrzymanych obrażeń
+     */
+    takeDamage(damage) {
+        this.hp -= damage;
+        this.hitStun = 0.15;
+        // UWAGA: Logika odrzutu (knockback) jest teraz zarządzana w collisions.js
     }
 
     /**

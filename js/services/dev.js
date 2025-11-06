@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.74 - Konsolidacja PICKUP_CLASS_MAP)
+// DEV.JS (v0.75 - FIX: Unconditional Level/XP Setting + UI Feedback)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -12,12 +12,16 @@ import { AutoGun } from '../config/weapons/autoGun.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
 
-// POPRAWKA v0.74: USUNIĘTO 6 INDYWIDUALNYCH IMPORTÓW PICKUPÓW
-// import { HealPickup } from '../entities/pickups/healPickup.js';
-// ...
-
 // POPRAWKA v0.74: Import mapy z managera efektów
 import { PICKUP_CLASS_MAP } from '../managers/effects.js';
+import { confirmOverlay, confirmText, btnConfirmYes, btnConfirmNo } from '../ui/domElements.js'; // NOWY IMPORT
+
+/**
+ * Eksportowana zmienna przechowująca docelowy czas startu.
+ * Zostanie użyta w ui.js do skorygowania timera.
+ */
+export let devStartTime = 0;
+
 
 /**
  * Eksportowane ustawienia deweloperskie.
@@ -28,16 +32,6 @@ export const devSettings = {
     allowedPickups: ['all'],
     presetLoaded: false
 };
-
-// POPRAWKA v0.74: USUNIĘTO LOKALNĄ MAPĘ DLA KLAS PICKUPÓW
-// const PICKUP_CLASS_MAP = {
-//     heal: HealPickup,
-//     magnet: MagnetPickup,
-//     shield: ShieldPickup,
-//     speed: SpeedPickup,
-//     bomb: BombPickup,
-//     freeze: FreezePickup
-// };
 
 // Wewnętrzna referencja do stanu gry i funkcji startu
 let gameState = {};
@@ -51,6 +45,30 @@ function calculateXpNeeded(level) {
     }
     return xp;
 }
+
+// NOWA FUNKCJA v0.75: Pokazuje prosty modal z wiadomością
+function showDevConfirmModal(text) {
+    if (!confirmOverlay || !confirmText || !btnConfirmYes || !btnConfirmNo) return;
+    
+    // Tymczasowe ustawienie modala na wiadomość potwierdzającą
+    confirmText.textContent = text;
+    confirmOverlay.style.display = 'flex';
+    
+    btnConfirmYes.style.display = 'none';
+    btnConfirmNo.textContent = 'OK';
+    
+    // Ustawienie timera na automatyczne zniknięcie po 1.5s
+    const timerId = setTimeout(() => {
+        confirmOverlay.style.display = 'none';
+    }, 1500);
+    
+    // Zabezpieczenie przed kliknięciem, które czyści timer
+    btnConfirmNo.onclick = () => {
+        clearTimeout(timerId);
+        confirmOverlay.style.display = 'none';
+    };
+}
+
 
 /**
  * Funkcja wywołująca start gry
@@ -74,12 +92,29 @@ function applyDevSettings() {
     
     const { game, settings, player } = gameState;
     
-    if (!game.inMenu && game.running) {
-        game.level = parseInt(document.getElementById('devLevel').value) || 1;
-        game.health = parseInt(document.getElementById('devHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
-        game.maxHealth = parseInt(document.getElementById('devMaxHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
-        game.xp = parseInt(document.getElementById('devXP').value) || 0;
-        
+    // --- LOGIKA CZASU (Zawsze Ustawiana) ---
+    const devTimeInput = document.getElementById('devTime');
+    if (devTimeInput) {
+        devStartTime = parseInt(devTimeInput.value) || 0;
+        // Jeśli gra już działa/jest w pauzie, ustawiamy czas natychmiast (i timery)
+        if (!game.inMenu || game.manualPause) {
+            game.time = devStartTime;
+            settings.lastElite = game.time;
+            settings.lastSiegeEvent = game.time;
+        }
+    }
+    
+    // POPRAWKA v0.75: Ustawienie HP/Max HP/Level/XP jest UNCONDITIONAL
+    game.health = parseInt(document.getElementById('devHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
+    game.maxHealth = parseInt(document.getElementById('devMaxHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
+    game.level = parseInt(document.getElementById('devLevel').value) || 1;
+    game.xp = parseInt(document.getElementById('devXP').value) || 0;
+    
+    // POPRAWKA v0.75: Ustawienie flagi, by zablokować pełny reset w resetAll()
+    devSettings.presetLoaded = true;
+    
+    if (!game.inMenu || game.manualPause) {
+        // Obliczenia zależne od poziomu
         game.xpNeeded = calculateXpNeeded(game.level);
         
         const autoGun = player.getWeapon(AutoGun);
@@ -111,6 +146,7 @@ function applyDevSettings() {
     const pickupSelect = document.getElementById('devPickupType');
     devSettings.allowedPickups = Array.from(pickupSelect.selectedOptions).map(o => o.value);
     
+    showDevConfirmModal('✅ Ustawienia Dev zastosowane!');
     console.log('✅ Ustawienia Dev zastosowane!');
 }
 
@@ -131,7 +167,7 @@ function devSpawnPickup(type) {
     }
     const pos = findFreeSpotForPickup(pickups, player.x, player.y);
     
-    const PickupClass = PICKUP_CLASS_MAP[type]; // Używa zaimportowanej mapy
+    const PickupClass = PICKUP_CLASS_MAP[type];
     if (PickupClass) {
         pickups.push(new PickupClass(pos.x, pos.y));
     } else {
@@ -171,9 +207,10 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     }
     
     game.level = level;
-    game.time = 121;
+    game.time = 121; // Ustawienie czasu na potrzeby presetu (może zostać nadpisane przez devTime)
     devSettings.allowedEnemies = ['all'];
     
+    // POPRAWKA v0.75: Używamy teraz game.level ustawionego powyżej
     game.xp = 0;
     game.xpNeeded = calculateXpNeeded(game.level);
     
@@ -195,6 +232,12 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     document.getElementById('devHealth').value = game.health;
     document.getElementById('devMaxHealth').value = game.maxHealth;
     document.getElementById('devXP').value = game.xp;
+    
+    const devTimeInput = document.getElementById('devTime');
+    if (devTimeInput) devTimeInput.value = game.time; // Ustawienie wartości w UI
+    
+    // ZAPISUJEMY CZAS Z PRESETU
+    devStartTime = game.time;
     
     if (autoGun) {
         document.getElementById('devDamage').value = autoGun.bulletDamage;

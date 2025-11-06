@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.70 - FIX: Naprawa błędu "Unexpected reserved word" w resetAll)
+// UI.JS (v0.75 - FIX: Poprawny Reset Statystyk)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -10,6 +10,9 @@ import { initAudio, playSound } from '../services/audio.js';
 import { 
     GAME_CONFIG, WEAPON_CONFIG, PLAYER_CONFIG, PERK_CONFIG, UI_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG 
 } from '../config/gameData.js';
+
+// NOWY IMPORT v0.76: Importujemy zmienną z ustawionym czasem startowym
+import { devStartTime } from '../services/dev.js';
 
 // Krok 3: Import referencji DOM
 import {
@@ -110,6 +113,9 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
 }
 
 export function startRun(game, resetAll, uiData) {
+    // KRYTYCZNE v0.76: Zapisujemy czas startu z dev.js przed resetem
+    const startOffset = devStartTime;
+
     resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); 
     uiData.savedGameState = null;
     menuOverlay.style.display = 'none';
@@ -117,11 +123,19 @@ export function startRun(game, resetAll, uiData) {
     game.paused = false;
     game.running = true;
 
-    uiData.startTime = performance.now();
-    uiData.lastTime = uiData.startTime;
+    // NOWA LOGIKA v0.76: Ustawienie poprawnego czasu startowego
+    const currentTime = performance.now();
+    
+    // Ustawienie game.time PO resetAll (które ustawia je na 0, jeśli nie załadowano presetu)
+    game.time = startOffset; 
 
-    uiData.settings.lastElite = 0;
-    uiData.settings.lastSiegeEvent = 0; // POPRAWKA v0.69: Reset timera startowego
+    // Obliczenie startTime, aby game.time pokazywało startOffset
+    // startTime = currentTime - startOffset * 1000
+    uiData.startTime = currentTime - startOffset * 1000;
+    uiData.lastTime = currentTime;
+
+    uiData.settings.lastElite = game.time;
+    uiData.settings.lastSiegeEvent = game.time; // Użycie nowego game.time jako punktu odniesienia
 
     initAudio();
 
@@ -149,7 +163,8 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     if (devSettings.presetLoaded === false) {
         console.log("ResetAll: Wykonuję pełny reset statystyk.");
         // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG i GAME_CONFIG
-        game.score = 0; game.level = 1; game.health = PLAYER_CONFIG.INITIAL_HEALTH; game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH; game.time = 0;
+        // KRYTYCZNA UWAGA: game.time jest resetowane do 0.
+        game.score = 0; game.level = 1; game.health = PLAYER_CONFIG.INITIAL_HEALTH; game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH; game.time = 0; 
         game.xp = 0; game.xpNeeded = GAME_CONFIG.INITIAL_XP_NEEDED; game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
         
         Object.assign(settings, { 
@@ -172,7 +187,12 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         }
     } else {
         console.log("ResetAll: Pomijam reset statystyk (załadowano preset).");
+        // POPRAWKA v0.75: Tylko statystyki, które MUSZĄ być zresetowane
+        game.score = 0; 
         game.time = 0;
+        
+        // Level, XP, MaxHP/HP są zachowywane, ponieważ zostały ustawione przez Dev Menu.
+        
         settings.lastFire = 0;
         settings.lastElite = 0;
         settings.lastHazardSpawn = 0; 
@@ -199,6 +219,11 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     uiData.pickups.length = 0; 
     uiData.bombIndicators.length = 0;
     uiData.hazards.length = 0; // POPRAWKA v0.68b: Reset Hazardów
+    
+    // NOWE v0.75: Resetowanie kolejki spawnów oblężnika
+    if (uiData.siegeSpawnQueue) {
+        uiData.siegeSpawnQueue.length = 0;
+    }
 
     // POPRAWKA v0.62: Zwalnianie obiektów z puli
     if (uiData.bulletsPool) {
@@ -279,9 +304,3 @@ export function gameOver(game, uiData) {
     
     gameOverOverlay.style.display = 'flex';
 }
-
-// --- OBSŁUGA PERKÓW I NAGRÓD (PRZENIESIONE DO levelManager.js) ---
-// (levelUp, updateStatsUI, showPerks, pickPerk, pickChestReward, openChest)
-
-// --- TABLICA WYNIKÓW (PRZENIESIONE DO scoreManager.js) ---
-// (saveScore, displayScores, showConfirmModal, attachClearScoresListeners)

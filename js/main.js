@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.71 - FIX: Połączone poprawki 'worldSize' i podwójnej pętli FPS)
+// MAIN.JS (v0.75 - Ostateczna korekta składni)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -136,7 +136,8 @@ function initializeCanvas() {
       bulletsPool: playerBulletPool, eBulletsPool: enemyBulletPool, gemsPool: gemsPool, 
       particlePool: particlePool, hitTextPool: hitTextPool, camera: camera,
       bullets: bullets, eBullets: eBullets, gems: gems, particles: particles, hitTexts: hitTexts,
-      trails: [], confettis: [], enemyIdCounter: 0 
+      trails: [], confettis: [], enemyIdCounter: 0,
+      siegeSpawnQueue: [] // NOWE v0.75: Kolejka pozycji spawnów Oblężnika
     };
 
     console.log('[DEBUG] js/main.js: initializeCanvas() setup complete');

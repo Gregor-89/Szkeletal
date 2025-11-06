@@ -1,12 +1,12 @@
 // ==============
-// UTILS.JS (v0.72 - Dodano areaNuke, aby złamać cykl zależności)
+// UTILS.JS (v0.75 - FIX: Awaria przy Bomb Pickup)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
-import { EFFECTS_CONFIG } from '../config/gameData.js';
-import { devSettings } from '../services/dev.js'; // NOWY IMPORT dla areaNuke
-import { PICKUP_CLASS_MAP } from '../managers/effects.js'; // NOWY IMPORT dla areaNuke
+import { EFFECTS_CONFIG, WALL_DETONATION_CONFIG } from '../config/gameData.js';
+import { devSettings } from '../services/dev.js'; 
+import { PICKUP_CLASS_MAP } from '../managers/effects.js'; // Mapa klas pickupów
 
 // --- EFEKTY WIZUALNE ---
 
@@ -106,13 +106,16 @@ export function spawnConfetti(particlePool, cx, cy) {
 }
 
 // POPRAWKA v0.65: Czas życia pobierany z EFFECTS_CONFIG
-export function addBombIndicator(bombIndicators, cx, cy, radius) {
+// POPRAWKA v0.75: Zmieniono aby być bardziej elastycznym na typy wskaźników
+export function addBombIndicator(bombIndicators, cx, cy, radius, maxLife = EFFECTS_CONFIG.BOMB_INDICATOR_LIFE, color = 'rgba(255, 255, 255, 0.9)', shadow = 'rgba(255, 152, 0, 0.7)') {
     bombIndicators.push({
         x: cx,
         y: cy,
         maxRadius: radius,
         life: 0,
-        maxLife: EFFECTS_CONFIG.BOMB_INDICATOR_LIFE 
+        maxLife: maxLife, 
+        color: color,
+        shadow: shadow
     });
 }
 
@@ -132,8 +135,15 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
     // Pobierz konfigurację efektów bomby
     const c = EFFECTS_CONFIG;
     
-    for (let i = 0; i < c.NUKE_PARTICLE_COUNT; i++) {
-        const angle = (i / c.NUKE_PARTICLE_COUNT) * Math.PI * 2;
+    // Sprawdzenie, czy ten wybuch pochodzi z detonacji Oblężnika
+    const isWallDetonation = r === WALL_DETONATION_CONFIG.WALL_DETONATION_RADIUS;
+    
+    // Logika cząsteczek (Area Nuke)
+    const particleColor = isWallDetonation ? '#607D8B' : ['#ff6b00', '#ff9500', '#ffbb00', '#fff59d'][Math.floor(Math.random() * 4)];
+    const particleCount = isWallDetonation ? 20 : c.NUKE_PARTICLE_COUNT;
+
+    for (let i = 0; i < particleCount; i++) {
+        const angle = (i / particleCount) * Math.PI * 2;
         const dist = Math.random() * r;
         
         // POPRAWKA v0.62: Użyj puli cząsteczek
@@ -143,21 +153,48 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
             p.init(
                 cx + Math.cos(angle) * dist,
                 cy + Math.sin(angle) * dist,
-                (Math.random() * 2 - 1) * c.NUKE_PARTICLE_SPEED, // vx (px/s)
-                (Math.random() * 2 - 1) * c.NUKE_PARTICLE_SPEED, // vy (px/s)
-                c.NUKE_PARTICLE_LIFE, // life (s)
-                ['#ff6b00', '#ff9500', '#ffbb00', '#fff59d'][Math.floor(Math.random() * 4)], // color
+                (Math.random() * 2 - 1) * c.NUKE_PARTICLE_SPEED * (isWallDetonation ? 0.5 : 1), // vx (px/s)
+                (Math.random() * 2 - 1) * c.NUKE_PARTICLE_SPEED * (isWallDetonation ? 0.5 : 1), // vy (px/s)
+                c.NUKE_PARTICLE_LIFE * (isWallDetonation ? 0.3 : 1), // life (s)
+                particleColor, // color
                 0, // gravity
                 (1.0 - 0.98) // friction (0.02)
             );
         }
     }
     
+    // Logika kolizji z dropami (gemy i pickupy)
+    
+    // 1. Gemy (tylko w zasięgu)
+    // Zwalniamy gemy ręcznie, zamiast niszczyć je przy kolizji z wrogiem
+    for (let i = gemsPool.activeItems.length - 1; i >= 0; i--) {
+        const g = gemsPool.activeItems[i];
+        const d = Math.hypot(cx - g.x, cy - g.y);
+        if (d <= r) {
+            g.release();
+        }
+    }
+
+    // 2. Pickupy
+    for (let j = pickups.length - 1; j >= 0; j--) {
+        const p = pickups[j];
+        const d = Math.hypot(cx - p.x, cy - p.y);
+        if (d <= r) {
+            pickups.splice(j, 1);
+        }
+    }
+    
+    // 3. Wrogowie
     for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
         const d = Math.hypot(cx - e.x, cy - e.y);
+        
         if (d <= r) {
-            // POPRAWKA v0.62: Użyj puli gemów
+            
+            // POPRAWKA v0.76: Detonacja Oblężnika ignoruje wrogów (nie zadaje obrażeń)
+            if (isWallDetonation) continue; 
+            
+            // Logika Dropu XP (tylko dla standardowej Bomby)
             const gem = gemsPool.get();
             if (gem) {
                 gem.init(
@@ -168,14 +205,22 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
                     '#4FC3F7'
                 );
             }
-            game.score += (e.type === 'elite') ? 80 : (e.type === 'tank' ? 20 : 10);
             
+            // Logika usuwania wrogów i liczenia punktów (tylko dla standardowej Bomby)
+            game.score += (e.type === 'elite') ? 80 : (e.type === 'tank' ? 20 : 10);
+
             if (!onlyXP) {
                 function maybe(type, prob) {
                     if (!devSettings.allowedPickups.includes('all') && !devSettings.allowedPickups.includes(type)) return;
+                    
+                    // KRYTYCZNY FIX v0.75: Zapewnienie, że PICKUP_CLASS_MAP jest zdefiniowany
+                    if (!PICKUP_CLASS_MAP) {
+                         console.error("[areaNuke] PICKUP_CLASS_MAP is undefined, cannot spawn drops.");
+                         return;
+                    }
+                    
                     if (Math.random() < prob) {
                         const pos = findFreeSpotForPickup(pickups, e.x, e.y);
-                        // POPRAWKA v0.72: Użycie zaimportowanej Mapy
                         const PickupClass = PICKUP_CLASS_MAP[type];
                         if (PickupClass) {
                             pickups.push(new PickupClass(pos.x, pos.y));
@@ -190,27 +235,16 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
                 maybe('freeze', 0.01);
             }
             
-            // POPRAWKA v0.62: Użyj puli cząsteczek
-            for (let k = 0; k < 4; k++) {
-                const p = particlePool.get();
-                if (p) {
-                    // init(x, y, vx, vy, life, color)
-                    p.init(
-                        e.x, e.y,
-                        (Math.random() - 0.5) * 4 * 60, // vx (px/s)
-                        (Math.random() - 0.5) * 4 * 60, // vy (px/s)
-                        0.5, // life (było 30 klatek)
-                        '#ff0000' // color
-                    );
-                }
-            }
-            
+            // Usuwanie wroga (tylko jeśli to standardowa bomba)
             enemies.splice(j, 1);
         }
     }
     
     limitedShake(game, settings, 10, 180);
-    addBombIndicator(bombIndicators, cx, cy, r);
+    // Używamy domyślnych wartości (dla Bomby)
+    if (!isWallDetonation) {
+        addBombIndicator(bombIndicators, cx, cy, r);
+    }
 }
 
 

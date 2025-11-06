@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.73 - Konsolidacja Logiki Broni Specjalnych)
+// GAMEDATA.JS (v0.75 - Final Balance: Wall Lifetime)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -20,13 +20,21 @@ export const PLAYER_CONFIG = {
   HEAL_AMOUNT: 30
 };
 
+// NOWA WŁAŚCIWOŚĆ v0.75: Konfiguracja Kolizji
+export const COLLISION_CONFIG = {
+  // Procentowe spowolnienie nałożone na gracza podczas kolizji z Oblężnikiem (0.75 = -75% prędkości)
+  WALL_COLLISION_SLOWDOWN: 0.75,
+  // Czas trwania spowolnienia Oblężnika (żeby utrzymać się w smoleniu)
+  WALL_SLOWDOWN_DURATION: 0.35
+};
+
 // --- Konfiguracja Gry i Spawnowania ---
 export const GAME_CONFIG = {
   // Bazowa szansa na spawn wroga w każdej klatce.
   INITIAL_SPAWN_RATE: 0.02,
   // Maksymalna liczba wrogów dozwolona jednocześnie na mapie.
   MAX_ENEMIES: 110,
-  // Czas (w milisekundach), co jaki pojawia się Elita.
+  // Czas (w milisekundach) co jaki pojawia się Elita.
   ELITE_SPAWN_INTERVAL: 24000,
   // Ilość XP potrzebna do zdobycia pierwszego poziomu.
   INITIAL_XP_NEEDED: 5,
@@ -42,11 +50,30 @@ export const SIEGE_EVENT_CONFIG = {
   SIEGE_EVENT_INTERVAL: 45.0,
   // Czas gry (w sekundach), po którym Event może się zacząć.
   SIEGE_EVENT_START_TIME: 150, // 2:30 min
+  
+  // NOWA WŁAŚCIWOŚĆ: Czas (w sekundach) ostrzeżenia przed spawnem wrogów.
+  SIEGE_WARNING_TIME: 3.0,
+  
+  // ZBALANSOWANIE v0.76: Zwiększenie liczby wrogów (45 -> 68)
   // Promień (w pikselach) od gracza, na jakim spawnuje się pierścień.
-  SIEGE_EVENT_RADIUS: 400,
+  SIEGE_EVENT_RADIUS: 500,
   // Liczba wrogów 'wall' w pierścieniu.
-  SIEGE_EVENT_COUNT: 20,
+  SIEGE_EVENT_COUNT: 68, // Zmieniono z 45 (45 * 1.5 = 67.5 -> 68)
 };
+
+// --- Konfiguracja Autodestrukcji Oblężnika (Wall) ---
+export const WALL_DETONATION_CONFIG = {
+  // Czas (w sekundach), po jakim Oblężnik zacznie przygotowywać się do detonacji
+  WALL_DECAY_TIME: 22.5, // Zmieniono z 15.0 na 22.5 (+50%)
+  // Czas (w sekundach), przez jaki Oblężnik miga przed detonacją
+  WALL_DETONATION_WARNING_TIME: 3.0,
+  // ZBALANSOWANIE v0.75: Zwiększenie wariancji czasu detonacji (4.0s -> 6.0s)
+  // Maksymalna losowa różnica czasu detonacji między jednostkami (np. od 0 do 6s)
+  WALL_DETONATION_TIME_VARIANCE: 6.0, // Zmieniono z 4.0
+  // Promień (w pikselach) efektu AreaNuke po detonacji
+  WALL_DETONATION_RADIUS: 100
+};
+
 
 // --- Konfiguracja Zagrożeń (Hazards) ---
 export const HAZARD_CONFIG = {
@@ -226,8 +253,8 @@ export const ENEMY_STATS = {
   tank: { type: 'tank', hp: 9, speed: 101, size: 14, damage: 5, color: '#795548', score: 20, xp: 1, drops: BASE_DROP_RATES },
   ranged: { type: 'ranged', hp: 4, speed: 144, size: 10, damage: 5, color: '#00BCD4', score: 10, xp: 1, drops: BASE_DROP_RATES },
   elite: { type: 'elite', hp: 24, speed: 130, size: 18, damage: 5, color: '#9C27B0', score: 80, xp: 7, drops: {} }, // Elita nie dropi bonusów, tylko skrzynię
-  // POPRAWKA v0.69: Nowy wróg - Oblężnik (jako 'wall')
-  wall: { type: 'wall', hp: 30, speed: 80, size: 16, damage: 8, color: '#607D8B', score: 25, xp: 2, drops: BASE_DROP_RATES }
+  // POPRAWKA v0.75: Zmiana prędkości i HP Oblężnika
+  wall: { type: 'wall', hp: 24, speed: 26, size: 16, damage: 8, color: '#607D8B', score: 25, xp: 0, drops: {} } // Zmieniono speed: 32 -> 26, hp: 30 -> 24
 };
 
 // LOG DIAGNOSTYCZNY

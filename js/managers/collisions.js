@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.72 - Refaktoryzacja Logiki Pickupów do Klas)
+// COLLISIONS.JS (v0.75 - Final Enhancements: Wall Knockback & Slowdown)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -10,7 +10,7 @@ import { killEnemy } from './enemyManager.js';
 import { playSound } from '../services/audio.js';
 // POPRAWKA v0.72: USUNIĘTO PLAYER_CONFIG, PICKUP_CONFIG
 // POPRAWKA v0.68: Import HAZARD_CONFIG
-import { HAZARD_CONFIG } from '../config/gameData.js'; 
+import { HAZARD_CONFIG, COLLISION_CONFIG } from '../config/gameData.js'; // NOWY IMPORT COLLISION_CONFIG
 
 /**
  * Główna funkcja kolizji.
@@ -84,11 +84,16 @@ for (let i = bullets.length - 1; i >= 0; i--) {
 
         const d = Math.hypot(b.x - e.x, b.y - e.y);
         if (d < hitRadiusB) {
-            e.hp -= b.damage;
-            e.hitStun = 0.15;
-            const angle = Math.atan2(e.y - player.y, e.x - player.x);
-            e.x += Math.cos(angle) * 3;
-            e.y += Math.sin(angle) * 3;
+            
+            // NOWA LOGIKA v0.75: Użycie takeDamage()
+            e.takeDamage(b.damage); 
+            
+            // POPRAWKA v0.75: Odrzut tylko, jeśli to NIE jest Oblężnik
+            if (e.type !== 'wall') {
+                const angle = Math.atan2(e.y - player.y, e.x - player.x);
+                e.x += Math.cos(angle) * 3;
+                e.y += Math.sin(angle) * 3;
+            }
 
             // POPRAWKA v0.62e: Użyj puli cząsteczek i fizyki opartej na DT
             if (Math.random() < 0.5) {
@@ -139,10 +144,31 @@ for (let j = enemies.length - 1; j >= 0; j--) {
     if (d < hitRadiusPE) {
         if (!e.lastPlayerCollision || now - e.lastPlayerCollision > 500) {
             e.lastPlayerCollision = now;
-            game.collisionSlowdown = 0.20;
-            const angle = Math.atan2(player.y - e.y, player.x - e.x);
-            player.x += Math.cos(angle) * 8;
-            player.y += Math.sin(angle) * 8;
+            
+            // NOWA LOGIKA v0.75: Spowolnienie Kolizji Oblężnika
+            if (e.type === 'wall') {
+                // Nakładamy duże spowolnienie (-75%)
+                game.collisionSlowdown = COLLISION_CONFIG.WALL_COLLISION_SLOWDOWN; 
+                
+                // MOCNY ODRZUT (60 zamiast 40)
+                const knockbackForce = 60;
+                const angle = Math.atan2(player.y - e.y, player.x - e.x);
+                
+                player.x += Math.cos(angle) * knockbackForce; 
+                player.y += Math.sin(angle) * knockbackForce;
+            } else {
+                // Standardowe spowolnienie kolizji wroga (20%)
+                game.collisionSlowdown = 0.20;
+                const angle = Math.atan2(player.y - e.y, player.x - e.x);
+                
+                // Standardowy odrzut wroga i gracza
+                player.x += Math.cos(angle) * 8;
+                player.y += Math.sin(angle) * 8;
+                const enemyAngle = Math.atan2(e.y - player.y, e.x - player.x);
+                e.x += Math.cos(enemyAngle) * 15;
+                e.y += Math.sin(enemyAngle) * 15;
+            }
+
 
             if (game.shield || devSettings.godMode) {
                 // POPRAWKA v0.62: Użyj puli hitText
@@ -152,9 +178,6 @@ for (let j = enemies.length - 1; j >= 0; j--) {
                 game.health -= dmg;
                 // POPRAWKA v0.62: Użyj puli hitText
                 addHitText(hitTextPool, hitTexts, player.x, player.y - 16, dmg, '#f44336');
-                const angle = Math.atan2(e.y - player.y, e.x - player.x);
-                e.x += Math.cos(angle) * 15;
-                e.y += Math.sin(angle) * 15;
                 playSound('PlayerHurt'); 
                 limitedShake(game, settings, 7, 120);
             }
@@ -203,7 +226,7 @@ for (let i = pickups.length - 1; i >= 0; i--) {
 for (let i = chests.length - 1; i >= 0; i--) {
     const c = chests[i];
     if (c.isDecayed()) { chests.splice(i, 1); continue; } // Znikaj, jeśli dotarł do końca zaniku
-    
+
     const hitRadiusPC = player.size * 0.5 + c.r;
     if (Math.abs(player.x - c.x) > hitRadiusPC || Math.abs(player.y - c.y) > hitRadiusPC) {
         continue;
@@ -281,7 +304,7 @@ for (let i = hazards.length - 1; i >= 0; i--) {
 const nowMs = performance.now(); 
 for (let i = hazards.length - 1; i >= 0; i--) {
     const h = hazards[i];
-    
+
     // POPRAWKA v0.68a: Sprawdź, czy Hazard jest AKTYWNY
     if (!h.isActive()) {
         continue;

@@ -1,15 +1,16 @@
 // ==============
-// GAMELOGIC.JS (v0.69 - FIX: Przywrócenie eksportu updateGame + Logika Eventu Oblężenia)
+// GAMELOGIC.JS (v0.76 - FIX: Naprawa blokowania spawnu na starcie gry)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
 import { keys, jVec } from '../ui/input.js';
-import { spawnEnemy, spawnElite, spawnSiegeRing } from '../managers/enemyManager.js'; // POPRAWKA v0.69: Import spawnSiegeRing
+// POPRAWKA v0.75: Importujemy funkcję spawnWallEnemies i spawnSiegeRing
+import { spawnEnemy, spawnElite, spawnSiegeRing, spawnWallEnemies } from '../managers/enemyManager.js'; 
 import { spawnHazard } from '../managers/effects.js';
-import { applyPickupSeparation, spawnConfetti } from './utils.js';
+import { applyPickupSeparation, spawnConfetti } from './utils.js'; 
 import { checkCollisions } from '../managers/collisions.js';
 // POPRAWKA v0.68: Import HAZARD_CONFIG
-import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG } from '../config/gameData.js'; // POPRAWKA v0.69: Import SIEGE_EVENT_CONFIG
+import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG } from '../config/gameData.js'; 
 
 /**
  * Aktualizuje pozycję kamery, śledząc gracza i ograniczając ją do granic świata.
@@ -70,9 +71,16 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     if (game.freezeT > 0) game.freezeT -= dt;
 
     // --- Timery Wrogów ---
-    for (const e of enemies) {
+    for (let i = enemies.length - 1; i >= 0; i--) { // Pętla wsteczna dla usuwania wrogów
+        const e = enemies[i];
         if (e.hazardSlowdownT > 0) { // POPRAWKA v0.68a: Dekrementacja timera spowolnienia Hazardu
             e.hazardSlowdownT -= dt;
+        }
+
+        // NOWA LOGIKA v0.75: Usuwanie Oblężników po autodestrukcji
+        if (e.type === 'wall' && e.isAutoDead) {
+            enemies.splice(i, 1);
+            continue;
         }
     }
     
@@ -85,24 +93,42 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
 
     // --- Logika Spawnu (Standard) ---
     const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
-    if (Math.random() < spawnRate && enemies.length < settings.maxEnemies) {
+    if (Math.random() < spawnRate && enemies.length < settings.maxEnemies && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
         state.enemyIdCounter = spawnEnemy(enemies, game, canvas, state.enemyIdCounter, camera);
     }
 
     // --- Logika Spawnu (Elita) ---
     const timeSinceLastElite = game.time - settings.lastElite;
-    if (timeSinceLastElite > (settings.eliteInterval / 1000) / (game.hyper ? 1.15 : 1)) {
+    if (timeSinceLastElite > (settings.eliteInterval / 1000) / (game.hyper ? 1.15 : 1) && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
         state.enemyIdCounter = spawnElite(enemies, game, canvas, state.enemyIdCounter, camera);
         settings.lastElite = game.time;
     }
     
-    // --- POPRAWKA v0.69: Logika Spawnu (Wydarzenie Oblężenia) ---
+    // --- POPRAWKA v0.75: Logika Spawnu (Wydarzenie Oblężenia) ---
     const timeSinceLastSiege = game.time - settings.lastSiegeEvent;
+    
+    // 1. Sprawdź, czy należy rozpocząć OSTRZEŻENIE
     if (game.time > SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME && 
-        timeSinceLastSiege > SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL) {
-        
-        state.enemyIdCounter = spawnSiegeRing(state);
+        timeSinceLastSiege > SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL &&
+        (settings.siegeWarningT === undefined || settings.siegeWarningT <= 0) // Upewnij się, że nie jest już aktywne
+    ) {
+        // Ustaw timer ostrzeżenia
+        settings.siegeWarningT = SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME;
+        // Spawnowanie wskaźników
+        state.enemyIdCounter = spawnSiegeRing(state); 
         settings.lastSiegeEvent = game.time;
+    }
+
+    // 2. Obsłuż timer OSTRZEŻENIA i SPRAWN
+    if (settings.siegeWarningT > 0) {
+        settings.siegeWarningT -= dt;
+        
+        if (settings.siegeWarningT <= 0) {
+            // Timer minął, spawnuj wrogów 'wall'
+            state.enemyIdCounter = spawnWallEnemies(state); 
+            // Reset timera po użyciu
+            settings.siegeWarningT = 0;
+        }
     }
 
 
