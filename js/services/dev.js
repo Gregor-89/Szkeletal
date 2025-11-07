@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.75 - FIX: Unconditional Level/XP Setting + UI Feedback)
+// DEV.JS (v0.76e - FIX: Refaktoryzacja logiki startu presetu)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -22,6 +22,14 @@ import { confirmOverlay, confirmText, btnConfirmYes, btnConfirmNo } from '../ui/
  */
 export let devStartTime = 0;
 
+/**
+ * NOWA FUNKCJA (v0.76d): Resetuje czas startowy dewelopera.
+ * Musi być wywoływana przez eventManager przy starcie nowej gry.
+ */
+export function resetDevTime() {
+    devStartTime = 0;
+}
+
 
 /**
  * Eksportowane ustawienia deweloperskie.
@@ -35,6 +43,8 @@ export const devSettings = {
 
 // Wewnętrzna referencja do stanu gry i funkcji startu
 let gameState = {};
+// POPRAWKA v0.76e: Rozdzielenie callbacków
+let loadConfigCallback = () => {};
 let startRunCallback = () => {};
 
 // Funkcja obliczająca XP potrzebne na dany poziom
@@ -55,26 +65,39 @@ function showDevConfirmModal(text) {
     confirmOverlay.style.display = 'flex';
     
     btnConfirmYes.style.display = 'none';
-    btnConfirmNo.textContent = 'OK';
+    
+    // Klonowanie przycisku "No", aby usunąć stare listenery
+    let newBtnNo = btnConfirmNo.cloneNode(true);
+    newBtnNo.textContent = 'OK';
+    btnConfirmNo.parentNode.replaceChild(newBtnNo, btnConfirmNo);
+    btnConfirmNo = newBtnNo; // Aktualizacja referencji
     
     // Ustawienie timera na automatyczne zniknięcie po 1.5s
     const timerId = setTimeout(() => {
         confirmOverlay.style.display = 'none';
+        btnConfirmYes.style.display = 'inline-block';
+        btnConfirmNo.textContent = 'Anuluj';
     }, 1500);
     
     // Zabezpieczenie przed kliknięciem, które czyści timer
     btnConfirmNo.onclick = () => {
         clearTimeout(timerId);
         confirmOverlay.style.display = 'none';
+        btnConfirmYes.style.display = 'inline-block';
+        btnConfirmNo.textContent = 'Anuluj';
     };
 }
 
 
 /**
  * Funkcja wywołująca start gry
+ * POPRAWKA v0.76e: Musi teraz wywołać oba callbacki
  */
 function callStartRun() {
     if (gameState.game.inMenu || !gameState.game.running) {
+        // 1. Wczytaj konfigurację UI (np. etykiety pickupów)
+        loadConfigCallback();
+        // 2. Uruchom grę (co wywoła resetAll)
         startRunCallback();
     } else {
         console.warn("[DEV] Nie można uruchomić gry automatycznie (gra już działa).");
@@ -268,9 +291,11 @@ function devPresetMax() {
 
 /**
  * Inicjalizuje moduł dev, przekazując referencje do stanu gry.
+ * POPRAWKA v0.76e: Przyjmuje dwa callbacki
  */
-export function initDevTools(stateRef, startRunFn) {
+export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     gameState = stateRef;
+    loadConfigCallback = loadConfigFn;
     startRunCallback = startRunFn;
     
     window.applyDevSettings = applyDevSettings;
@@ -278,5 +303,5 @@ export function initDevTools(stateRef, startRunFn) {
     window.devPresetAlmostMax = devPresetAlmostMax;
     window.devPresetMax = devPresetMax;
     
-    console.log('[DEBUG] js/services/dev.js: Dev Tools zainicjalizowane z callbackiem startRun.');
+    console.log('[DEBUG-v0.76e] js/services/dev.js: Dev Tools zainicjalizowane z dwoma callbackami (loadConfig/startRun).');
 }

@@ -1,5 +1,5 @@
 // ==============
-// TANKENEMY.JS (v0.71 - Refaktoryzacja Wrogów)
+// TANKENEMY.JS (v0.76f - FIX: Zwiększenie separacji 2x)
 // Lokalizacja: /js/entities/enemies/tankEnemy.js
 // ==============
 
@@ -15,10 +15,14 @@ export class TankEnemy extends Enemy {
   }
   
   getSeparationRadius() {
-    return 28;
+    // POPRAWKA v0.76f: Zwiększono 2x (z 28 na 56)
+    return 56;
   }
   
   getOutlineColor() {
     return '#8d6e63';
   }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.76f] js/entities/enemies/tankEnemy.js: Zwiększono separację (do 56).');

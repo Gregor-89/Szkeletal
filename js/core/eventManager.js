@@ -1,5 +1,5 @@
 // ==============
-// EVENTMANAGER.JS (v0.71 - FIX: Usunięcie konfliktu pętli 'animationFrameId')
+// EVENTMANAGER.JS (v0.76e - FIX: Refaktoryzacja logiki startu gry i ładowania UI config)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
@@ -9,6 +9,8 @@ import { levelUp, pickPerk, openChest } from '../managers/levelManager.js';
 import { saveGame, loadGame } from '../services/saveManager.js';
 import { playSound } from '../services/audio.js';
 import { setJoystickSide } from '../ui/input.js';
+// POPRAWKA v0.76d: Import devSettings ORAZ resetDevTime
+import { devSettings, resetDevTime } from '../services/dev.js';
 
 // Import referencji DOM (potrzebne do eventów)
 import {
@@ -27,7 +29,6 @@ function wrappedShowMenu(allowContinue = false) {
     uiDataRef.animationFrameId = uiDataRef.animationFrameId; // Użyj referencji
     uiDataRef.savedGameState = uiDataRef.savedGameState;
     showMenu(uiDataRef.game, wrappedResetAll, uiDataRef, allowContinue);
-    // (animationFrameId jest zarządzany przez uiData teraz)
 }
 
 function wrappedResetAll() {
@@ -83,24 +84,16 @@ function wrappedGameOver() {
     uiDataRef.savedGameState = null; // Zaktualizuj zapisany stan (na null)
 }
 
-// POPRAWKA v0.71 (FPS FIX): Usunięto linie modyfikujące 'animationFrameId' i 'timers'.
-// Zarządza nimi teraz wyłącznie 'startRun' i 'resetAll' w 'ui.js'.
 function wrappedStartRun() {
-    // uiDataRef.animationFrameId = null; // USUNIĘTE - robi to resetAll
-    // uiDataRef.startTime = 0; // USUNIĘTE - robi to startRun
-    // uiDataRef.lastTime = 0; // USUNIĘTE - robi to startRun
-    
+    // Ta funkcja *tylko* uruchamia logikę startu (która wywoła resetAll)
     startRun(gameStateRef.game, wrappedResetAll, uiDataRef); 
-    
-    // uiDataRef.animationFrameId = 1; // USUNIĘTE - KRYTYCZNY BŁĄD
-    // uiDataRef.startTime = performance.now(); // USUNIĘTE
-    // uiDataRef.lastTime = uiDataRef.startTime; // USUNIĘTE
-    // uiDataRef.lastFrameTime = uiDataRef.lastTime; // USUNIĘTE
-    // uiDataRef.frameCount = 0; // USUNIĘTE
-    // uiDataRef.fps = 0; // USUNIĘTE
 }
 
-function wrappedLoadConfigAndStart() {
+/**
+ * NOWA FUNKCJA (v0.76e): Odczytuje konfigurację UI.
+ * Ta funkcja musi być wywołana PRZED wrappedStartRun() lub loadGame().
+ */
+function wrappedLoadConfig() {
     const joyPosEl = document.querySelector('input[name="joypos"]:checked');
     const hyperEl = document.getElementById('chkHyper');
     const shakeEl = document.getElementById('chkShake');
@@ -119,9 +112,10 @@ function wrappedLoadConfigAndStart() {
     
     uiDataRef.pickupShowLabels = !!(labelsEl && labelsEl.checked);
     uiDataRef.pickupStyleEmoji = (styleEl || {value:'emoji'}).value === 'emoji';
-
-    wrappedStartRun();
+    
+    console.log(`[DEBUG-v0.76e] js/core/eventManager.js: Konfiguracja UI odczytana (Labels: ${uiDataRef.pickupShowLabels})`);
 }
+
 
 /**
  * Inicjalizuje wszystkie eventy (przeniesione z main.js)
@@ -129,7 +123,13 @@ function wrappedLoadConfigAndStart() {
 function initEvents() {
     // === Przycisk Start/Continue ===
     document.getElementById('btnStart').addEventListener('click', () => {
-        wrappedLoadConfigAndStart();
+        // 1. Zresetuj flagi deweloperskie (pełny reset)
+        devSettings.presetLoaded = false;
+        resetDevTime(); 
+        // 2. Wczytaj konfigurację UI
+        wrappedLoadConfig();
+        // 3. Uruchom grę (co wywoła resetAll)
+        wrappedStartRun();
     });
 
     // === Listenery dla dynamicznie ładowanych elementów (Konfiguracja) ===
@@ -161,15 +161,33 @@ function initEvents() {
             uiDataRef.pickupShowLabels = !!chkLabels.checked;
         });
     }
+    
+    document.querySelectorAll('input[name="pickupstyle"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                uiDataRef.pickupStyleEmoji = e.target.value === 'emoji';
+            }
+        });
+    });
+
 
     // Logika Menedżera Zapisu
     document.getElementById('btnContinue').addEventListener('click', () => {
+        // 1. Wczytaj konfigurację UI (na wypadek zmian)
+        wrappedLoadConfig();
+        // 2. Wczytaj stan gry (to NIE wywołuje resetAll)
         loadGame(uiDataRef.savedGameState, gameStateRef, uiDataRef);
     });
 
     document.getElementById('btnRetry').addEventListener('click', () => {
         gameOverOverlay.style.display='none';
-        wrappedLoadConfigAndStart(); 
+        // 1. Zresetuj flagi deweloperskie (pełny reset)
+        devSettings.presetLoaded = false;
+        resetDevTime();
+        // 2. Wczytaj konfigurację UI
+        wrappedLoadConfig();
+        // 3. Uruchom grę (co wywoła resetAll)
+        wrappedStartRun(); 
     });
 
     document.getElementById('btnMenu').addEventListener('click', () => {
@@ -231,13 +249,15 @@ export function initializeMainEvents(stateRef, uiRef) {
     window.wrappedGameOver = wrappedGameOver;
     window.wrappedLevelUp = wrappedLevelUp;
     window.wrappedOpenChest = wrappedOpenChest;
-    window.wrappedLoadConfigAndStart = wrappedLoadConfigAndStart; 
+    
+    // POPRAWKA v0.76e: Eksportuj nowe, rozdzielone funkcje
+    window.wrappedLoadConfig = wrappedLoadConfig;
+    window.wrappedStartRun = wrappedStartRun; 
     
     return {
         initEvents,
-        wrappedLoadConfigAndStart 
+        // Zwróć obie funkcje, aby main.js mógł je przekazać do dev.js
+        wrappedLoadConfig: wrappedLoadConfig,
+        wrappedStartRun: wrappedStartRun 
     };
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.71-FIX] js/core/eventManager.js: Usunięto nadpisywanie animationFrameId i timerów z wrappedStartRun.');

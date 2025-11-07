@@ -1,10 +1,11 @@
 // ==============
-// UTILS.JS (v0.75 - FIX: Awaria przy Bomb Pickup)
+// UTILS.JS (v0.76a - FIX: Naprawa błędu kolizji promienia Bomby i Oblężnika)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
-import { EFFECTS_CONFIG, WALL_DETONATION_CONFIG } from '../config/gameData.js';
+// POPRAWKA v0.76: Import GEM_CONFIG
+import { EFFECTS_CONFIG, WALL_DETONATION_CONFIG, GEM_CONFIG } from '../config/gameData.js';
 import { devSettings } from '../services/dev.js'; 
 import { PICKUP_CLASS_MAP } from '../managers/effects.js'; // Mapa klas pickupów
 
@@ -129,14 +130,15 @@ export function limitedShake(game, settings, mag, ms) {
 /**
  * NOWA FUNKCJA (v0.72): Logika bomby: niszczy wrogów i tworzy efekty w danym promieniu.
  * PRZENIESIONA Z effects.js
+ * POPRAWKA v0.76a: Dodano argument 'isWallNuke'
  */
-export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators) {
+export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators, isWallNuke = false) {
     
     // Pobierz konfigurację efektów bomby
     const c = EFFECTS_CONFIG;
     
-    // Sprawdzenie, czy ten wybuch pochodzi z detonacji Oblężnika
-    const isWallDetonation = r === WALL_DETONATION_CONFIG.WALL_DETONATION_RADIUS;
+    // POPRAWKA v0.76a: Użyj jawnego argumentu zamiast porównywania promienia
+    const isWallDetonation = isWallNuke;
     
     // Logika cząsteczek (Area Nuke)
     const particleColor = isWallDetonation ? '#607D8B' : ['#ff6b00', '#ff9500', '#ffbb00', '#fff59d'][Math.floor(Math.random() * 4)];
@@ -192,6 +194,7 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
         if (d <= r) {
             
             // POPRAWKA v0.76: Detonacja Oblężnika ignoruje wrogów (nie zadaje obrażeń)
+            // Ta logika jest teraz poprawna, ponieważ 'isWallDetonation' jest przekazywane jawnie.
             if (isWallDetonation) continue; 
             
             // Logika Dropu XP (tylko dla standardowej Bomby)
@@ -371,3 +374,6 @@ export function applyPickupSeparation(pickups, canvas) {
         }
     }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.76a] js/core/utils.js: Dodano argument isWallNuke do areaNuke(), aby naprawić błąd bomby.');

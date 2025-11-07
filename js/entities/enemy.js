@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.75 - Siege Enhancements: Dodano takeDamage)
+// ENEMY.JS (v0.76f - FIX: Zwiększenie separacji + Ochrona formacji Oblężnika)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -104,7 +104,7 @@ export class Enemy {
 
     /**
      * Oblicza separację od innych wrogów (wywoływane rzadziej z gameLogic)
-     * POPRAWKA v0.64b: Przeskalowanie siły separacji, aby pasowała do jednostek px/s
+     * POPRAWKA v0.76f: Dodano logikę ignorowania dla Oblężnika
      */
     applySeparation(dt, enemies) {
         this.separationCooldown -= dt;
@@ -119,6 +119,13 @@ export class Enemy {
             
             for (const other of enemies) {
                 if (this.id === other.id) continue;
+                
+                // POPRAWKA v0.76f: OCHRONA FORMACJI OBLĘŻNIKA
+                // Jeśli 'ten' wróg (this) jest Oblężnikiem, ignoruj siłę separacji
+                // od wszystkich wrogów, którzy NIE SĄ Oblężnikami.
+                if (this.type === 'wall' && other.type !== 'wall') {
+                    continue;
+                }
                 
                 const odx = this.x - other.x;
                 const ody = this.y - other.y;
@@ -197,7 +204,8 @@ export class Enemy {
     }
 
     getSeparationRadius() {
-        return 20; 
+        // POPRAWKA v0.76f: Zwiększono bazową separację 2x (z 20 na 40)
+        return 40; 
     }
 
     getOutlineColor() {
@@ -212,3 +220,6 @@ export class Enemy {
 // === KLASY SPECJALISTYCZNE (PRZENIESIONE DO /js/entities/enemies/ ) ===
 // (StandardEnemy, HordeEnemy, AggressiveEnemy, KamikazeEnemy, SplitterEnemy, TankEnemy, RangedEnemy, EliteEnemy, WallEnemy)
 // Zostały usunięte z tego pliku.
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.76f] js/entities/enemy.js: Zwiększono bazową separację (do 40) i dodano logikę ignorowania dla Oblężnika.');

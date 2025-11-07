@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.75 - Final Enhancements: Wall Knockback & Slowdown)
+// COLLISIONS.JS (v0.76 - Milestone Balance: Aktualizacja logiki Gem)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -188,7 +188,9 @@ for (let j = enemies.length - 1; j >= 0; j--) {
 // --- Gracz vs Gemy (XP) ---
 for (let i = gems.length - 1; i >= 0; i--) {
     const g = gems[i];
-    if (g.isDecayed()) { g.release(); continue; } // Znikaj, jeśli dotarł do końca zaniku
+    // POPRAWKA v0.76: Użyj isDecayedByHazard() zamiast isDecayed()
+    if (g.isDecayedByHazard()) { g.release(); continue; } // Znikaj, jeśli dotarł do końca zaniku (z bagna)
+    // UWAGA: Standardowy czas życia (isDead) jest obsługiwany w gem.update()
     
     const hitRadiusPG = player.size * 0.5 + g.r;
     if (Math.abs(player.x - g.x) > hitRadiusPG || Math.abs(player.y - g.y) > hitRadiusPG) {
@@ -262,8 +264,10 @@ for (let i = hazards.length - 1; i >= 0; i--) {
         const d = Math.hypot(g.x - h.x, g.y - h.y);
         if (d < hazardRadius + g.r) {
             // Drop znajduje się w aktywnym Hazardzie: AKTYWUJ ZANIK
-            g.inHazardDecayT = Math.min(1.0, g.inHazardDecayT + HAZARD_CONFIG.HAZARD_PICKUP_DECAY_RATE * state.dt);
-            if (g.isDecayed()) {
+            // POPRAWKA v0.76: Zmiana nazwy właściwości
+            g.hazardDecayT = Math.min(1.0, g.hazardDecayT + HAZARD_CONFIG.HAZARD_PICKUP_DECAY_RATE * state.dt);
+            // POPRAWKA v0.76: Użyj isDecayedByHazard()
+            if (g.isDecayedByHazard()) {
                 g.release(); 
             }
         }

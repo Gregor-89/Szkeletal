@@ -1,5 +1,5 @@
 // ==============
-// BOMBPICKUP.JS (v0.72 - Refaktoryzacja Logiki Pickupów)
+// BOMBPICKUP.JS (v0.76a - FIX: Przekazanie flagi 'isWallNuke' do areaNuke)
 // Lokalizacja: /js/entities/pickups/bombPickup.js
 // ==============
 
@@ -24,13 +24,18 @@ export class BombPickup extends Pickup {
     const { game, player, settings, enemies, gemsPool, pickups, particlePool, bombIndicators } = state;
     
     // Logika przeniesiona z collisions.js
+    // POPRAWKA v0.76a: Dodano 'false' jako ostatni argument (isWallNuke)
     areaNuke(
       player.x,
       player.y,
       PICKUP_CONFIG.BOMB_RADIUS,
       true, // onlyXP = true
-      game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators
+      game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators,
+      false // <-- NOWA FLAGA: isWallNuke (to jest bomba, nie Oblężnik)
     );
     playSound('BombPickup');
   }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.76a] js/entities/pickups/bombPickup.js: Przekazano flagę isWallNuke=false do areaNuke().');

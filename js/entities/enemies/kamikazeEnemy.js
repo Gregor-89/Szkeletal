@@ -1,5 +1,5 @@
 // ==============
-// KAMIKAZEENEMY.JS (v0.71 - Refaktoryzacja Wrogów)
+// KAMIKAZEENEMY.JS (v0.76f - FIX: Zwiększenie separacji 2x)
 // Lokalizacja: /js/entities/enemies/kamikazeEnemy.js
 // ==============
 
@@ -17,10 +17,14 @@ export class KamikazeEnemy extends Enemy {
   }
   
   getSeparationRadius() {
-    return 12;
+    // POPRAWKA v0.76f: Zwiększono 2x (z 12 na 24)
+    return 24;
   }
   
   getOutlineColor() {
     return '#ffee58';
   }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.76f] js/entities/enemies/kamikazeEnemy.js: Zwiększono separację (do 24).');

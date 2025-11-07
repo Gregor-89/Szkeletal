@@ -1,5 +1,5 @@
 // ==============
-// HORDEENEMY.JS (v0.71 - Refaktoryzacja Wrogów)
+// HORDEENEMY.JS (v0.76f - FIX: Zwiększenie separacji 2x)
 // Lokalizacja: /js/entities/enemies/hordeEnemy.js
 // ==============
 
@@ -15,10 +15,14 @@ export class HordeEnemy extends Enemy {
   }
   
   getSeparationRadius() {
-    return 16;
+    // POPRAWKA v0.76f: Zwiększono 2x (z 16 na 32)
+    return 32;
   }
   
   getOutlineColor() {
     return '#aed581';
   }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.76f] js/entities/enemies/hordeEnemy.js: Zwiększono separację (do 32).');

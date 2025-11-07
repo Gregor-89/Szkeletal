@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.75 - Final Balance: Wall Lifetime)
+// GAMEDATA.JS (v0.76 - Milestone Balance: World Size, Wall Nerf, Gem Life)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -32,8 +32,9 @@ export const COLLISION_CONFIG = {
 export const GAME_CONFIG = {
   // Bazowa szansa na spawn wroga w każdej klatce.
   INITIAL_SPAWN_RATE: 0.02,
+  // ZBALANSOWANIE v0.76: Zwiększenie limitu wrogów (110 -> 300)
   // Maksymalna liczba wrogów dozwolona jednocześnie na mapie.
-  MAX_ENEMIES: 110,
+  MAX_ENEMIES: 300,
   // Czas (w milisekundach) co jaki pojawia się Elita.
   ELITE_SPAWN_INTERVAL: 24000,
   // Ilość XP potrzebna do zdobycia pierwszego poziomu.
@@ -54,24 +55,25 @@ export const SIEGE_EVENT_CONFIG = {
   // NOWA WŁAŚCIWOŚĆ: Czas (w sekundach) ostrzeżenia przed spawnem wrogów.
   SIEGE_WARNING_TIME: 3.0,
   
-  // ZBALANSOWANIE v0.76: Zwiększenie liczby wrogów (45 -> 68)
   // Promień (w pikselach) od gracza, na jakim spawnuje się pierścień.
   SIEGE_EVENT_RADIUS: 500,
+  // ZBALANSOWANIE v0.76: Zwiększenie liczby wrogów (68 -> 85)
   // Liczba wrogów 'wall' w pierścieniu.
-  SIEGE_EVENT_COUNT: 68, // Zmieniono z 45 (45 * 1.5 = 67.5 -> 68)
+  SIEGE_EVENT_COUNT: 85,
 };
 
 // --- Konfiguracja Autodestrukcji Oblężnika (Wall) ---
 export const WALL_DETONATION_CONFIG = {
+  // ZBALANSOWANIE v0.76: Wydłużenie czasu życia (15.0 -> 22.5 -> 33.75)
   // Czas (w sekundach), po jakim Oblężnik zacznie przygotowywać się do detonacji
-  WALL_DECAY_TIME: 22.5, // Zmieniono z 15.0 na 22.5 (+50%)
+  WALL_DECAY_TIME: 33.75, // Zmieniono z 22.5 na 33.75 (+50%)
   // Czas (w sekundach), przez jaki Oblężnik miga przed detonacją
   WALL_DETONATION_WARNING_TIME: 3.0,
-  // ZBALANSOWANIE v0.75: Zwiększenie wariancji czasu detonacji (4.0s -> 6.0s)
   // Maksymalna losowa różnica czasu detonacji między jednostkami (np. od 0 do 6s)
-  WALL_DETONATION_TIME_VARIANCE: 6.0, // Zmieniono z 4.0
+  WALL_DETONATION_TIME_VARIANCE: 6.0, // (Bez zmian z v0.75)
+  // ZBALANSOWANIE v0.76: Zwiększenie promienia wybuchu (100 -> 200)
   // Promień (w pikselach) efektu AreaNuke po detonacji
-  WALL_DETONATION_RADIUS: 100
+  WALL_DETONATION_RADIUS: 200
 };
 
 
@@ -146,12 +148,21 @@ export const PICKUP_CONFIG = {
   // Czas życia bonusu na ziemi (w sekundach), zanim zniknie.
   BASE_LIFE: 14,
   // --- Czas trwania efektów (w sekundach) ---
-  MAGNET_DURATION: 1.5, // Zmienione z 1.0 na 1.5
+  // ZBALANSOWANIE v0.76: Wydłużenie czasu Magnesu (1.5s -> 2.0s)
+  MAGNET_DURATION: 2.0, // Zmienione z 1.5 na 2.0
   SHIELD_DURATION: 8.0,
   SPEED_DURATION: 8.0,
   FREEZE_DURATION: 5.0,
   // --- Konfiguracja Bomby ---
   BOMB_RADIUS: 200 // Promień (w pikselach) wybuchu bomby
+};
+
+// --- NOWA KONFIGURACJA (v0.76): Czas Życia Gemów ---
+export const GEM_CONFIG = {
+  // Czas (w sekundach), po jakim Gem XP zniknie
+  BASE_LIFE: 35.0,
+  // Czas (w sekundach) migotania przed zniknięciem
+  FADE_TIME: 5.0
 };
 
 // --- Konfiguracja Ulepszeń (Perków) ---
@@ -215,8 +226,9 @@ export const UI_CONFIG = {
 
 // --- Konfiguracja Świata Gry ---
 export const WORLD_CONFIG = {
-  // Rozmiar świata (np. 2 oznacza świat 2x2 ekrany)
-  SIZE: 2
+  // ZBALANSOWANIE v0.76: Zwiększenie rozmiaru świata (2 -> 8)
+  // Rozmiar świata (np. 8 oznacza świat 8x8 ekranów)
+  SIZE: 8
 };
 
 // --- Konfiguracja Efektów Wizualnych (VFX) ---
@@ -253,9 +265,9 @@ export const ENEMY_STATS = {
   tank: { type: 'tank', hp: 9, speed: 101, size: 14, damage: 5, color: '#795548', score: 20, xp: 1, drops: BASE_DROP_RATES },
   ranged: { type: 'ranged', hp: 4, speed: 144, size: 10, damage: 5, color: '#00BCD4', score: 10, xp: 1, drops: BASE_DROP_RATES },
   elite: { type: 'elite', hp: 24, speed: 130, size: 18, damage: 5, color: '#9C27B0', score: 80, xp: 7, drops: {} }, // Elita nie dropi bonusów, tylko skrzynię
-  // POPRAWKA v0.75: Zmiana prędkości i HP Oblężnika
-  wall: { type: 'wall', hp: 24, speed: 26, size: 16, damage: 8, color: '#607D8B', score: 25, xp: 0, drops: {} } // Zmieniono speed: 32 -> 26, hp: 30 -> 24
+  // ZBALANSOWANIE v0.76: Dalsze zmniejszenie prędkości Oblężnika (26 -> 20)
+  wall: { type: 'wall', hp: 24, speed: 20, size: 16, damage: 8, color: '#607D8B', score: 25, xp: 0, drops: {} } // Zmieniono speed: 26 -> 20, HP (pozostaje 24)
 };
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG] js/config/gameData.js: Dodano SIEGE_EVENT_CONFIG i wroga "wall".');
+console.log('[DEBUG-v0.76] js/config/gameData.js: Zastosowano balans v0.76 (World Size, Max Enemies, Wall Nerf, Gem Life).');

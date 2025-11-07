@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.75 - Ostateczna korekta składni)
+// MAIN.JS (v0.76e - FIX: Użycie rozdzielonych funkcji config/start)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -117,7 +117,8 @@ function initializeCanvas() {
     camera = new Camera(worldWidth, worldHeight, canvas.width, canvas.height);
     playerBulletPool = new ObjectPool(PlayerBullet, 500);
     enemyBulletPool = new ObjectPool(EnemyBullet, 500);
-    gemsPool = new ObjectPool(Gem, 1000); 
+    // ZBALANSOWANIE v0.76: Zwiększenie puli gemów (1000 -> 3000)
+    gemsPool = new ObjectPool(Gem, 3000); 
     particlePool = new ObjectPool(Particle, 2000); 
     hitTextPool = new ObjectPool(HitText, 100); 
 
@@ -140,7 +141,7 @@ function initializeCanvas() {
       siegeSpawnQueue: [] // NOWE v0.75: Kolejka pozycji spawnów Oblężnika
     };
 
-    console.log('[DEBUG] js/main.js: initializeCanvas() setup complete');
+    console.log('[DEBUG-v0.76] js/main.js: Pula gemów zwiększona do 3000.');
 }
 
 
@@ -256,8 +257,6 @@ function loop(currentTime){
         updateVisualEffects(dt, [], [], bombIndicators); 
         updateParticles(dt, particles); 
         
-        // POPRAWKA v0.71 (FPS FIX): Zmieniono strukturę pętli
-        
         if (game.paused || !game.running) {
             // Logika pauzy/menu
             uiData.drawCallback();
@@ -268,7 +267,6 @@ function loop(currentTime){
                     updateUI(game, player, settings, null); 
                 }
             }
-            // USUNIĘTO 'requestAnimationFrame' i 'return' STĄD
         } else {
             // Logika działającej gry
             game.time = (currentTime - uiData.startTime) / 1000;
@@ -288,7 +286,10 @@ function loop(currentTime){
         }
         
     } catch (e) {
-        console.error("BŁĄD KRYTYCZNY W PĘTLI GRY (loop):", e);
+        // POPRAWKA v0.76c: Zmieniono logowanie, aby uniknąć błędu TypeError w konsoli
+        console.error("BŁĄD KRYTYCZNY W PĘTLI GRY (loop). Wiadomość: ", e.message);
+        console.error("Stos błędu: ", e.stack);
+        
         game.running = false;
         game.paused = true;
         if (uiData.animationFrameId) {
@@ -297,7 +298,6 @@ function loop(currentTime){
         }
     }
     
-    // POPRAWKA v0.71 (FPS FIX): Tylko JEDNO wywołanie requestAnimationFrame na końcu
     if (game.running || game.paused) {
         uiData.animationFrameId = requestAnimationFrame(loop);
     }
@@ -335,18 +335,22 @@ async function loadMenuTabs() {
         console.log('[Refactor v0.69] Zakładki załadowane. Inicjalizacja przełączania.');
         initTabSwitching();
         
-        const { initEvents, wrappedLoadConfigAndStart } = initializeMainEvents(gameStateRef, uiData);
+        // POPRAWKA v0.76e: Odbierz obiekt z rozdzielonymi funkcjami
+        const { initEvents, wrappedLoadConfig, wrappedStartRun } = initializeMainEvents(gameStateRef, uiData);
         initEvents();
         
-        return wrappedLoadConfigAndStart;
+        // Zwróć obiekt z obiema funkcjami
+        return { wrappedLoadConfig, wrappedStartRun };
         
     } catch (err) {
         console.error("BŁĄD KRYTYCZNY: Nie można załadować zawartości menu (menu_*.html).", err);
         alert("BŁĄD: Nie można załadować plików menu. Sprawdź, czy pliki menu_config.html, menu_dev.html i menu_guide.html znajdują się w tym samym folderze co index.html.");
         
-        const { initEvents, wrappedLoadConfigAndStart } = initializeMainEvents(gameStateRef, uiData);
+        // POPRAWKA v0.76e: Odbierz obiekt z rozdzielonymi funkcjami
+        const { initEvents, wrappedLoadConfig, wrappedStartRun } = initializeMainEvents(gameStateRef, uiData);
         initEvents();
-        return wrappedLoadConfigAndStart;
+        // Zwróć obiekt z obiema funkcjami
+        return { wrappedLoadConfig, wrappedStartRun };
     }
 }
 
@@ -385,9 +389,11 @@ Promise.all([
     updateUiDataReferences(); 
     initStars(); 
     
-    const wrappedLoadConfigAndStart = await loadMenuTabs();
+    // POPRAWKA v0.76e: Odbierz obiekt z rozdzielonymi funkcjami
+    const { wrappedLoadConfig, wrappedStartRun } = await loadMenuTabs();
     
-    initDevTools(gameStateRef, wrappedLoadConfigAndStart); 
+    // Przekaż obie funkcje do devTools
+    initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
     
     initInput(handleEscape, handleJoyStart, handleJoyEnd); 
     
@@ -402,9 +408,11 @@ Promise.all([
     updateUiDataReferences();
     initStars(); 
     
-    const wrappedLoadConfigAndStart = await loadMenuTabs(); 
+    // POPRAWKA v0.76e: Odbierz obiekt z rozdzielonymi funkcjami
+    const { wrappedLoadConfig, wrappedStartRun } = await loadMenuTabs(); 
     
-    initDevTools(gameStateRef, wrappedLoadConfigAndStart); 
+    // Przekaż obie funkcje do devTools
+    initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
     initInput(handleEscape, handleJoyStart, handleJoyEnd);
     
     if (window.wrappedShowMenu) {
