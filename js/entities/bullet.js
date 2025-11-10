@@ -1,5 +1,5 @@
 // ==============
-// BULLET.JS (v0.66 - Culling fix)
+// BULLET.JS (v0.79 - Dodanie Czasu Życia i Rykoszetów)
 // Lokalizacja: /js/entities/bullet.js
 // ==============
 
@@ -21,13 +21,18 @@ class Bullet {
     // POPRAWKA v0.61: Właściwości Puli Obiektów
     this.active = false; // Czy obiekt jest aktualnie używany?
     this.pool = null; // Referencja do puli, do której należy
+    
+    // NOWE v0.79: Czas życia pocisku (dla Bicza)
+    this.life = Infinity;
+    this.maxLife = Infinity;
   }
   
   /**
    * POPRAWKA v0.61: Inicjalizuje pocisk danymi.
    * Ta metoda zastępuje stary konstruktor.
+   * POPRAWKA v0.79: Dodano 'life'
    */
-  init(x, y, vx, vy, size, damage, color) {
+  init(x, y, vx, vy, size, damage, color, life = Infinity) {
     this.x = x;
     this.y = y;
     this.vx = vx; // Oczekuje teraz prędkości w px/sekundę
@@ -36,6 +41,10 @@ class Bullet {
     this.damage = damage;
     this.color = color;
     this.active = true;
+    
+    // NOWE v0.79
+    this.life = life;
+    this.maxLife = life;
   }
   
   /**
@@ -46,16 +55,26 @@ class Bullet {
       this.pool.release(this);
     }
     this.active = false; // Na wszelki wypadek
+    this.life = Infinity; // Reset czasu życia
   }
   
   /**
    * Aktualizuje pozycję pocisku.
    * POPRAWKA v0.64: Zastosowano fizykę opartą na dt.
+   * POPRAWKA v0.79: Dodano logikę czasu życia.
    */
   update(dt) {
     // Ta metoda jest teraz wywoływana tylko dla aktywnych pocisków
     this.x += this.vx * dt; // Zastosuj dt
     this.y += this.vy * dt; // Zastosuj dt
+    
+    // NOWE v0.79: Logika czasu życia
+    if (this.life !== Infinity) {
+      this.life -= dt;
+      if (this.life <= 0) {
+        this.release();
+      }
+    }
   }
   
   /**
@@ -64,10 +83,21 @@ class Bullet {
    */
   draw(ctx) {
     // Ta metoda jest teraz wywoływana tylko dla aktywnych pocisków
+    
+    // NOWE v0.79: Efekt zanikania dla pocisków z czasem życia (np. Bicz)
+    if (this.maxLife !== Infinity && this.life < 0.25) {
+      ctx.globalAlpha = Math.max(0, this.life / 0.25);
+    }
+    
     ctx.fillStyle = this.color;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
     ctx.fill();
+    
+    // Reset alpha, jeśli była zmieniona
+    if (this.maxLife !== Infinity) {
+      ctx.globalAlpha = 1;
+    }
   }
   
   /**
@@ -100,16 +130,23 @@ export class PlayerBullet extends Bullet {
   constructor() {
     super(); // Konstruktor jest pusty
     this.pierce = 0;
+    // NOWE v0.79: Licznik rykoszetów
+    this.bouncesLeft = 0;
+    // Zapobiega wielokrotnemu trafieniu tego samego wroga przez ten sam rykoszet
+    this.lastEnemyHitId = -1;
   }
   
   /**
    * POPRAWKA v0.61: Dedykowana metoda init
+   * POPRAWKA v0.79: Dodano 'life' i 'bounces'
    */
-  init(x, y, vx, vy, size, damage, color, pierce) {
-    // Wywołaj metodę init() klasy bazowej
-    super.init(x, y, vx, vy, size, damage, color);
+  init(x, y, vx, vy, size, damage, color, pierce, life = Infinity, bouncesLeft = 0) {
+    // Wywołaj metodę init() klasy bazowej (przekazując 'life')
+    super.init(x, y, vx, vy, size, damage, color, life);
     // Ustaw specyficzne właściwości
     this.pierce = pierce;
+    this.bouncesLeft = bouncesLeft;
+    this.lastEnemyHitId = -1;
   }
 }
 
@@ -131,4 +168,4 @@ export class EnemyBullet extends Bullet {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG] js/entities/bullet.js: isOffScreen zaktualizowano dla Kamery.');
+console.log('[DEBUG-v0.79] js/entities/bullet.js: Zaimplementowano Czas Życia (life) i Rykoszety (bouncesLeft).');

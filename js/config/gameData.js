@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.77w - Balans XP Elity)
+// GAMEDATA.JS (v0.78 - Dynamiczny Pacing v1)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -30,13 +30,18 @@ export const COLLISION_CONFIG = {
 
 // --- Konfiguracja Gry i Spawnowania ---
 export const GAME_CONFIG = {
-  // Bazowa szansa na spawn wroga w każdej klatce.
-  INITIAL_SPAWN_RATE: 0.02,
+  // ZBALANSOWANIE v0.78: Zmniejszono spawn początkowy (z 0.02 na 0.015)
+  INITIAL_SPAWN_RATE: 0.015,
   // ZBALANSOWANIE v0.76: Zwiększenie limitu wrogów (110 -> 300)
-  // Maksymalna liczba wrogów dozwolona jednocześnie na mapie.
+  // Maksymalna liczba wrogów dozwolona jednocześnie na mapie (TWARDY LIMIT).
   MAX_ENEMIES: 300,
   // Czas (w milisekundach) co jaki pojawia się Elita.
   ELITE_SPAWN_INTERVAL: 24000,
+  
+  // NOWE v0.78: Dynamiczny limit wrogów
+  INITIAL_MAX_ENEMIES: 30, // Limit wrogów na starcie (t=0)
+  ENEMY_LIMIT_GROWTH_PER_MINUTE: 50, // O ile limit rośnie co minutę
+  
   // Ilość XP potrzebna do zdobycia pierwszego poziomu.
   INITIAL_XP_NEEDED: 5,
   // Mnożnik, o jaki rośnie wymagane XP na kolejny poziom (np. 1.4 = +40%).
@@ -277,4 +282,4 @@ export const ENEMY_STATS = {
 };
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77u] js/config/gameData.js: Dodano WALL_DETONATION_DAMAGE: 5.');
+console.log('[DEBUG-v0.78] js/config/gameData.js: Wdrożono dynamiczny pacing (v1).');

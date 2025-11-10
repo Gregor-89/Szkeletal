@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.77c - FIX: Uproszczenie logiki sprawdzania czasu Oblężenia)
+// GAMELOGIC.JS (v0.78 - Dynamiczny Pacing v2)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -9,8 +9,8 @@ import { spawnEnemy, spawnElite, spawnSiegeRing, spawnWallEnemies } from '../man
 import { spawnHazard } from '../managers/effects.js';
 import { applyPickupSeparation, spawnConfetti } from './utils.js'; 
 import { checkCollisions } from '../managers/collisions.js';
-// POPRAWKA v0.68: Import HAZARD_CONFIG
-import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG } from '../config/gameData.js'; 
+// POPRAWKA v0.78: Import GAME_CONFIG
+import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG, GAME_CONFIG } from '../config/gameData.js'; 
 
 /**
  * Aktualizuje pozycję kamery, śledząc gracza i ograniczając ją do granic świata.
@@ -92,8 +92,16 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     }
 
     // --- Logika Spawnu (Standard) ---
+    // POPRAWKA v0.78: Obliczanie dynamicznego limitu wrogów
+    const minutesElapsed = game.time / 60;
+    const dynamicLimit = Math.min(
+        settings.maxEnemies, // Twardy limit (np. 300)
+        GAME_CONFIG.INITIAL_MAX_ENEMIES + (minutesElapsed * GAME_CONFIG.ENEMY_LIMIT_GROWTH_PER_MINUTE)
+    );
+    
     const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
-    if (Math.random() < spawnRate && enemies.length < settings.maxEnemies && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
+    // POPRAWKA v0.78: Użyj 'dynamicLimit' zamiast 'settings.maxEnemies'
+    if (Math.random() < spawnRate && enemies.length < dynamicLimit && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
         state.enemyIdCounter = spawnEnemy(enemies, game, canvas, state.enemyIdCounter, camera);
     }
 
