@@ -1,12 +1,12 @@
 // ==============
-// UI.JS (v0.75 - FIX: Poprawny Reset Statystyk)
+// UI.JS (v0.77k - FIX: Usunięcie błędnego importu 'playerHPBarOuter')
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
 // Importy systemowe (pozostają)
 import { devSettings } from '../services/dev.js';
 import { initAudio, playSound } from '../services/audio.js';
-// POPRAWKA v0.70: Przywrócono brakujące importy konfiguracji
+// POPRAWKA v0.77: UI_CONFIG jest teraz używane
 import { 
     GAME_CONFIG, WEAPON_CONFIG, PLAYER_CONFIG, PERK_CONFIG, UI_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG 
 } from '../config/gameData.js';
@@ -21,6 +21,7 @@ import {
     levelUpOverlay, pauseOverlay, resumeOverlay, resumeText, 
     chestOverlay, gameOverOverlay, finalScore, finalLevel,
     finalTime, titleDiv, docTitle
+    // POPRAWKA v0.77k: Fizycznie usunięto 'playerHPBarOuter' z tej listy
 } from './domElements.js';
 
 // Krok 5: Import Menedżera Wyników
@@ -33,6 +34,9 @@ import { updateStatsUI } from '../managers/levelManager.js';
 
 
 // --- GŁÓWNA FUNKCJA AKTUALIZACJI UI (POZOSTAJE) ---
+
+// POPRAWKA v0.77j: Przechowuje referencję do paska HP (ładowaną leniwie)
+let hpBarOuterRef = null;
 
 export function updateUI(game, player, settings, weapons) {
     // Statystyki na górze
@@ -56,6 +60,23 @@ export function updateUI(game, player, settings, weapons) {
     const healthPct = Math.max(0, Math.min(1, game.health / game.maxHealth));
     playerHPBarInner.style.width = (healthPct * 100).toFixed(1) + '%';
     playerHPBarTxt.innerHTML = `❤️ ${Math.max(0, Math.floor(game.health))} / ${game.maxHealth}`;
+
+    // POPRAWKA v0.77j: Bezpieczne pobieranie paska HP (lazy loading)
+    if (!hpBarOuterRef) {
+        hpBarOuterRef = document.getElementById('playerHPBarOuter');
+        if (hpBarOuterRef) {
+             console.log('[DEBUG-v0.77k] Pomyślnie znaleziono playerHPBarOuter.');
+        }
+    }
+
+    // NOWA LOGIKA v0.77: Pulsowanie paska HP przy niskim zdrowiu
+    if (hpBarOuterRef) { // Sprawdź, czy na pewno znaleziono
+        if (healthPct <= UI_CONFIG.LOW_HEALTH_THRESHOLD && game.health > 0) {
+            hpBarOuterRef.classList.add('low-health-pulse');
+        } else {
+            hpBarOuterRef.classList.remove('low-health-pulse');
+        }
+    }
 
     if (xpBarTxt) {
         xpBarTxt.innerHTML = `📈 ${game.xp} / ${game.xpNeeded}`;
@@ -136,6 +157,17 @@ export function startRun(game, resetAll, uiData) {
 
     uiData.settings.lastElite = game.time;
     uiData.settings.lastSiegeEvent = game.time; // Użycie nowego game.time jako punktu odniesienia
+    
+    // POPRAWKA v0.77c: Poprawna obsługa czasu startowego dla Oblężenia
+    // 'resetAll()' ustawiło 'currentSiegeInterval' na stałą wartość 150s.
+    
+    // Upewnij się, że czas startowy (jeśli użyto presetu) nie jest późniejszy niż pierwszy spawn
+    if (uiData.settings.currentSiegeInterval < startOffset) {
+        // Jeśli startujemy PO 150s, ustaw interwał na (startOffset + 10s), aby dać graczowi czas
+        uiData.settings.currentSiegeInterval = startOffset + 10.0; 
+    }
+    console.log(`[EVENT] Pierwsze oblężenie o ${uiData.settings.currentSiegeInterval.toFixed(1)}s`);
+
 
     initAudio();
 
@@ -172,7 +204,9 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
             maxEnemies: GAME_CONFIG.MAX_ENEMIES,
             eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL,
             lastHazardSpawn: 0, 
-            lastSiegeEvent: 0 // POPRAWKA v0.69: Resetowanie timera Wydarzenia Oblężenia
+            lastSiegeEvent: 0, 
+            // POPRAWKA v0.77: Resetowanie interwału oblężenia (do stałej wartości startowej 150s)
+            currentSiegeInterval: SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME 
         });
         settings.lastFire = 0;
         settings.lastElite = 0;
@@ -189,14 +223,17 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         console.log("ResetAll: Pomijam reset statystyk (załadowano preset).");
         // POPRAWKA v0.75: Tylko statystyki, które MUSZĄ być zresetowane
         game.score = 0; 
-        game.time = 0;
+        // game.time = 0; // NIE RESETUJ CZASU, jeśli preset jest załadowany
         
         // Level, XP, MaxHP/HP są zachowywane, ponieważ zostały ustawione przez Dev Menu.
         
         settings.lastFire = 0;
         settings.lastElite = 0;
         settings.lastHazardSpawn = 0; 
-        settings.lastSiegeEvent = 0; // POPRAWKA v0.69: Resetowanie timera Wydarzenia Oblężenia
+        settings.lastSiegeEvent = 0; 
+        // POPRAWKA v0.77: Resetowanie interwału oblężenia (do stałej wartości startowej 150s)
+        settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
+        
         devSettings.presetLoaded = false;
         
         // POPRAWKA V0.67: Upewnij się, że gracz jest na środku świata po resecie presetów
@@ -244,6 +281,14 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
 
     xpBarFill.style.width = '0%';
     uiData.initStarsCallback();
+    
+    // POPRAWKA v0.77j: Użyj bezpiecznego pobierania referencji
+    if (!hpBarOuterRef) {
+        hpBarOuterRef = document.getElementById('playerHPBarOuter');
+    }
+    if (hpBarOuterRef) {
+        hpBarOuterRef.classList.remove('low-health-pulse');
+    }
 }
 
 export function pauseGame(game, settings, weapons, player) {
@@ -303,4 +348,15 @@ export function gameOver(game, uiData) {
     attachClearScoresListeners();
     
     gameOverOverlay.style.display = 'flex';
+    
+    // POPRAWKA v0.77j: Użyj bezpiecznego pobierania referencji
+    if (!hpBarOuterRef) {
+        hpBarOuterRef = document.getElementById('playerHPBarOuter');
+    }
+    if (hpBarOuterRef) {
+        hpBarOuterRef.classList.remove('low-health-pulse');
+    }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.77k] js/ui/ui.js: Usunięto błędny import paska HP.');

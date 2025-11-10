@@ -1,5 +1,5 @@
 // ==============
-// DOMELEMENTS.JS (v0.70 - Refaktoryzacja: Wydzielenie referencji DOM z ui.js)
+// DOMELEMENTS.JS (v0.77j - FIX: Usunięcie zawodnego eksportu paska HP)
 // Lokalizacja: /js/ui/domElements.js
 // ==============
 
@@ -10,6 +10,8 @@
 export const xpBarFill = document.getElementById('xpBarFill');
 export const playerHPBarInner = document.getElementById('playerHPBarInner');
 export const playerHPBarTxt = document.getElementById('playerHPBarTxt');
+// POPRAWKA v0.77j: Usunięto eksport 'playerHPBarOuter', ponieważ ładował się jako null
+// export const playerHPBarOuter = document.getElementById('playerHPBarOuter');
 export const xpBarTxt = document.getElementById('xpBarTxt');
 export const bonusPanel = document.getElementById('bonusPanel');
 export const statsDisplay = document.getElementById('statsDisplay');
@@ -38,4 +40,4 @@ export const btnConfirmYes = document.getElementById('btnConfirmYes');
 export const btnConfirmNo = document.getElementById('btnConfirmNo');
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.70] js/ui/domElements.js: Załadowano i wyeksportowano referencje DOM.');
+console.log('[DEBUG-v0.77j] js/ui/domElements.js: Usunięto eksport playerHPBarOuter.');

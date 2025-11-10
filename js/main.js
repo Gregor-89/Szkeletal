@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.76e - FIX: Użycie rozdzielonych funkcji config/start)
+// MAIN.JS (v0.77i - FIX: Usunięcie throttle z updateUI, aby naprawić animację HP)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -47,8 +47,9 @@ let savedGameState = null; // Przechowywany przez uiData
 let fps = 0;
 let lastFrameTime = 0;
 let frameCount = 0;
-let lastUiUpdateTime = 0;
-const UI_UPDATE_INTERVAL = 100;
+// POPRAWKA v0.77i: Usunięto 'lastUiUpdateTime' i 'UI_UPDATE_INTERVAL', ponieważ UI jest teraz renderowane co klatkę.
+// let lastUiUpdateTime = 0;
+// const UI_UPDATE_INTERVAL = 100;
 
 const game={
   score:0, level:1, health: PLAYER_CONFIG.INITIAL_HEALTH, maxHealth: PLAYER_CONFIG.INITIAL_HEALTH, 
@@ -68,7 +69,9 @@ const settings={
     lastFire:0, 
     lastElite:0,
     lastHazardSpawn: 0, 
-    lastSiegeEvent: 0 
+    lastSiegeEvent: 0,
+    // NOWA WŁAŚCIWOŚĆ v0.77: Przechowuje czas do następnego oblężenia
+    currentSiegeInterval: SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME
 };
 
 let perkLevels={};
@@ -261,12 +264,11 @@ function loop(currentTime){
             // Logika pauzy/menu
             uiData.drawCallback();
             
-            if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
-                lastUiUpdateTime = currentTime;
-                if (game.inMenu || game.manualPause || (document.getElementById('gameOverOverlay') && document.getElementById('gameOverOverlay').style.display === 'flex')) {
-                    updateUI(game, player, settings, null); 
-                }
+            // POPRAWKA v0.77L: Odkomentowano wywołanie updateUI dla stanu pauzy/menu/gameover
+            if (game.inMenu || game.manualPause || (document.getElementById('gameOverOverlay') && document.getElementById('gameOverOverlay').style.display === 'flex')) {
+                updateUI(game, player, settings, null); 
             }
+            
         } else {
             // Logika działającej gry
             game.time = (currentTime - uiData.startTime) / 1000;
@@ -275,10 +277,8 @@ function loop(currentTime){
             
             uiData.drawCallback();
             
-            if (currentTime - lastUiUpdateTime > UI_UPDATE_INTERVAL) {
-                lastUiUpdateTime = currentTime;
-                updateUI(game, player, settings, null);
-            } 
+            // POPRAWKA v0.77i: Usunięto throttle (ogranicznik)
+            updateUI(game, player, settings, null);
             
             if(game.health<=0 && !devSettings.godMode){
                 window.wrappedGameOver(); 
@@ -329,10 +329,11 @@ async function loadMenuTabs() {
         ]);
         
         document.getElementById('tab-config').innerHTML = configHTML;
+        // POPRAWKA v0.77b: Użyj 'devHTML' zamiast 'guideHTML'
         document.getElementById('tab-dev').innerHTML = devHTML; 
         document.getElementById('tab-guide').innerHTML = guideHTML; 
         
-        console.log('[Refactor v0.69] Zakładki załadowane. Inicjalizacja przełączania.');
+        console.log('[DEBUG-v0.77b] js/main.js: Naprawiono ładowanie zakładki Dev Menu.');
         initTabSwitching();
         
         // POPRAWKA v0.76e: Odbierz obiekt z rozdzielonymi funkcjami

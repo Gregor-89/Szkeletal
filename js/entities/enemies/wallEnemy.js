@@ -1,11 +1,13 @@
 // ==============
-// WALLENEMY.JS (v0.76g - FIX: Przywrócenie oryginalnej separacji dla Oblężnika)
+// WALLENEMY.JS (v0.77 - Implementacja obrażeń AOE, blokady dropów i subtelnego wskaźnika)
 // Lokalizacja /js/entities/enemies/wallEnemy.js
 // ==============
 
 import { Enemy } from '../enemy.js';
 import { WALL_DETONATION_CONFIG } from '../../config/gameData.js';
-import { areaNuke } from '../../core/utils.js';
+import { areaNuke, addHitText } from '../../core/utils.js';
+// NOWY IMPORT v0.77: Potrzebujemy dostępu do killEnemy
+import { killEnemy } from '../../managers/enemyManager.js';
 
 /**
  * Wróg Oblężnik (Wall).
@@ -19,19 +21,15 @@ export class WallEnemy extends Enemy {
     this.showHealthBar = false; // Czy pasek HP ma być widoczny
     
     // LOGIKA AUTODESTRUKCJI (v0.75)
-    // Czas bazowy + losowa wariancja (pobierane z gameData.js)
     this.initialLife = WALL_DETONATION_CONFIG.WALL_DECAY_TIME;
     this.detonationT = this.initialLife + (Math.random() * WALL_DETONATION_CONFIG.WALL_DETONATION_TIME_VARIANCE);
     this.isDetonating = false;
-    this.isAutoDead = false; // Nowa flaga do usunięcia przez gameLogic
+    this.isAutoDead = false; 
   }
   
-  // NADPISANA METODA: Dezaktywuje odrzut w kolizji pocisk-wróg
   takeDamage(damage) {
       super.takeDamage(damage);
-      // POPRAWKA v0.75: Pasek HP jest widoczny po pierwszym trafieniu
       this.showHealthBar = true;
-      // USUNIĘTO logikę odrzutu, ponieważ jest obsługiwana w collisions.js
   }
 
   getOutlineColor() {
@@ -45,17 +43,40 @@ export class WallEnemy extends Enemy {
 
   // NOWA METODA: Główna logika samodestrukcji
   selfDestruct(state) {
-    const { game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators } = state;
+    const { game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators, hitTextPool, hitTexts } = state;
     
-    // 1. Efekt Area Nuke
-    // POPRAWKA v0.76a: Dodano 'true' jako ostatni argument (isWallNuke)
+    const radius = WALL_DETONATION_CONFIG.WALL_DETONATION_RADIUS; // 400
+    const damage = WALL_DETONATION_CONFIG.WALL_DETONATION_DAMAGE; // 5
+    
+    // NOWA LOGIKA v0.77: Zadawanie obrażeń wrogom i blokowanie dropów
+    // Iterujemy wstecz, ponieważ killEnemy modyfikuje tablicę
+    for (let j = enemies.length - 1; j >= 0; j--) {
+        const e = enemies[j];
+        // Nie rań samego siebie (chociaż i tak zaraz zniknie)
+        if (e.id === this.id) continue; 
+        
+        const d = Math.hypot(this.x - e.x, this.y - e.y);
+        
+        if (d <= radius) {
+            e.takeDamage(damage);
+            addHitText(hitTextPool, hitTexts, e.x, e.y, damage, '#ff9800'); // Pomarańczowy tekst
+            
+            if (e.hp <= 0) {
+                // Zabij wroga, ale BLOKUJ dropy (ostatni argument = true)
+                state.enemyIdCounter = killEnemy(j, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, false, true); 
+            }
+        }
+    }
+
+    // 1. Efekt Area Nuke (niszczy dropy i gemy w zasięgu)
+    // POPRAWKA v0.77: Użycie nowego, większego promienia (400)
     areaNuke(
         this.x,
         this.y,
-        WALL_DETONATION_CONFIG.WALL_DETONATION_RADIUS,
+        radius, // Użyj nowego promienia 400
         false, // onlyXP = false
         game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators,
-        true // <-- NOWA FLAGA: isWallNuke
+        true // isWallNuke = true
     );
 
     // 2. Ustawienie flagi do usunięcia przez gameLogic 
@@ -73,7 +94,6 @@ export class WallEnemy extends Enemy {
 
         if (this.detonationT <= WALL_DETONATION_CONFIG.WALL_DETONATION_WARNING_TIME && !this.isDetonating) {
             this.isDetonating = true;
-            // Opcjonalnie: playSound('WallWarning');
         }
 
         if (this.detonationT <= 0) {
@@ -86,17 +106,14 @@ export class WallEnemy extends Enemy {
   draw(ctx, game) {
     ctx.save();
     
-    // ZBALANSOWANIE v0.76: Złagodzenie wskaźnika detonacji (z migania na pulsowanie)
+    // ZBALANSOWANIE v0.77: Złagodzenie wskaźnika detonacji (subtelniejszy)
     if (this.isDetonating) {
-        // Oblicz progres pulsowania (0 do 1)
         const timeElapsed = WALL_DETONATION_CONFIG.WALL_DETONATION_WARNING_TIME - this.detonationT;
-        // Użyj funkcji sinus do stworzenia płynnego pulsowania
-        // Mnożenie przez 8 sprawi, że będzie pulsować (ok. 1.27 Hz)
         const pulseFactor = (Math.sin(timeElapsed * 8) + 1) / 2; // (Zakres 0.0 - 1.0)
         
-        // Użyj pulsowania do zmiany alphy i rozmiaru
-        const pulseAlpha = 0.3 + (pulseFactor * 0.4); // Zakres 0.3 - 0.7
-        const pulseSize = this.size * 1.2 + (pulseFactor * this.size * 0.5); // Zakres 1.2x - 1.7x
+        // Zmniejszona alpha (0.1 - 0.5) i rozmiar (1.1x - 1.4x)
+        const pulseAlpha = 0.1 + (pulseFactor * 0.4); 
+        const pulseSize = this.size * 1.1 + (pulseFactor * this.size * 0.3); 
         
         ctx.globalAlpha = pulseAlpha;
         ctx.fillStyle = '#ff9800'; // Pomarańczowy ostrzegawczy
@@ -135,4 +152,4 @@ export class WallEnemy extends Enemy {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.76g] js/entities/enemies/wallEnemy.js: Przywrócono separację (do 30).');
+console.log('[DEBUG-v0.77] js/entities/enemies/wallEnemy.js: Wdrożono obrażenia AOE, blokadę dropów i subtelniejszy wskaźnik.');

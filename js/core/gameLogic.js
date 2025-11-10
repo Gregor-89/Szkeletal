@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.76 - FIX: Naprawa blokowania spawnu na starcie gry)
+// GAMELOGIC.JS (v0.77c - FIX: Uproszczenie logiki sprawdzania czasu Oblężenia)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -104,12 +104,11 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         settings.lastElite = game.time;
     }
     
-    // --- POPRAWKA v0.75: Logika Spawnu (Wydarzenie Oblężenia) ---
-    const timeSinceLastSiege = game.time - settings.lastSiegeEvent;
+    // --- POPRAWKA v0.77c: Uproszczona logika spawnu Oblężenia ---
     
     // 1. Sprawdź, czy należy rozpocząć OSTRZEŻENIE
-    if (game.time > SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME && 
-        timeSinceLastSiege > SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL &&
+    // 'currentSiegeInterval' to teraz absolutny czas gry, o którym ma się zacząć następne oblężenie.
+    if (game.time >= settings.currentSiegeInterval && 
         (settings.siegeWarningT === undefined || settings.siegeWarningT <= 0) // Upewnij się, że nie jest już aktywne
     ) {
         // Ustaw timer ostrzeżenia
@@ -117,6 +116,14 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         // Spawnowanie wskaźników
         state.enemyIdCounter = spawnSiegeRing(state); 
         settings.lastSiegeEvent = game.time;
+        
+        // Ustaw NOWY losowy interwał (względny do obecnego czasu)
+        const min = SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL_MIN;
+        const max = SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL_MAX;
+        const nextInterval = min + Math.random() * (max - min);
+        settings.currentSiegeInterval = game.time + nextInterval; // Ustaw absolutny czas następnego spawnu
+        
+        console.log(`[EVENT] Oblężenie aktywowane! Następne oblężenie za ${nextInterval.toFixed(1)}s (o ${settings.currentSiegeInterval.toFixed(1)}s)`);
     }
 
     // 2. Obsłuż timer OSTRZEŻENIA i SPRAWN
@@ -206,3 +213,6 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         spawnConfetti(state.particlePool, player.x, player.y);
     }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.77c] js/core/gameLogic.js: Uproszczono logikę spawnu Oblężenia (tylko 1 warunek czasowy).');

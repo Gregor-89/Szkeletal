@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.76 - Milestone Balance: Aktualizacja logiki Gem)
+// COLLISIONS.JS (v0.77d - FIX: Resetowanie spowolnienia kolizji)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -29,6 +29,8 @@ export function checkCollisions(state) {
 
 // POPRAWKA v0.68: Zresetuj stan gracza w Hazardzie na początku każdej klatki.
 player.inHazard = false;
+// POPRAWKA v0.77d: Zresetuj spowolnienie kolizji na początku każdej klatki.
+game.collisionSlowdown = 0;
 
 // --- Pociski Wrogów vs Gracz ---
 // Iterujemy wstecz, aby 'release()' (które modyfikuje tablicę) nie psuło pętli
@@ -384,4 +386,7 @@ for (let i = hazards.length - 1; i >= 0; i--) {
         }
     }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.77d] js/managers/collisions.js: Zresetowano collisionSlowdown.');
 }

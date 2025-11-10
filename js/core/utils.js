@@ -1,5 +1,5 @@
 // ==============
-// UTILS.JS (v0.76a - FIX: Naprawa błędu kolizji promienia Bomby i Oblężnika)
+// UTILS.JS (v0.77 - Pełna wersja pliku)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
@@ -84,7 +84,7 @@ export function spawnConfetti(particlePool, cx, cy) {
     for (let i = 0; i < numParticles; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = initialSpeedMin + Math.random() * (initialSpeedMax - initialSpeedMin);
-        const life = maxLife * (0.7 + Math.random() * 0.3); // Czas życia w sekundach
+        const life = maxLife * (0.7 + Math.random() * 0.3); // Czas życia w SEKUNDACH
 
         // POPRAWKA v0.62: Użyj puli obiektów zamiast .push()
         const p = particlePool.get();
@@ -193,8 +193,8 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
         
         if (d <= r) {
             
-            // POPRAWKA v0.76: Detonacja Oblężnika ignoruje wrogów (nie zadaje obrażeń)
-            // Ta logika jest teraz poprawna, ponieważ 'isWallDetonation' jest przekazywane jawnie.
+            // POPRAWKA v0.76a: Detonacja Oblężnika ignoruje wrogów (nie zadaje obrażeń)
+            // Ta logika jest poprawna (zostanie zaktualizowana w v0.77 w wallEnemy.js)
             if (isWallDetonation) continue; 
             
             // Logika Dropu XP (tylko dla standardowej Bomby)
@@ -374,6 +374,3 @@ export function applyPickupSeparation(pickups, canvas) {
         }
     }
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.76a] js/core/utils.js: Dodano argument isWallNuke do areaNuke(), aby naprawić błąd bomby.');

@@ -1,5 +1,5 @@
 // ==============
-// AUDIO.JS (v0.58 - Implementacja zasobów audio)
+// AUDIO.JS (v0.77e - FIX: Zwiększenie głośności głównej)
 // Lokalizacja: /js/services/audio.js
 // ==============
 
@@ -8,6 +8,9 @@ const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx;
 let master;
 let isAudioInitialized = false;
+
+// POPRAWKA v0.77d: Flaga zapobiegająca wielokrotnemu ładowaniu
+let isLoadTriggered = false;
 
 // POPRAWKA v0.58: Lista zasobów audio i mapa na załadowane dźwięki
 const loadedSounds = new Map();
@@ -34,6 +37,7 @@ const AUDIO_ASSET_LIST = [
 /**
  * Inicjalizuje kontekst Web Audio.
  * Musi być wywołane przez zdarzenie użytkownika (np. kliknięcie).
+ * POPRAWKA v0.77d: Ta funkcja ponowi próbę załadowania dźwięków.
  */
 export function initAudio() {
     if (isAudioInitialized || !AudioCtx) return;
@@ -41,10 +45,19 @@ export function initAudio() {
     try {
         audioCtx = new AudioCtx();
         master = audioCtx.createGain();
-        master.gain.value = 0.09; // Domyślna głośność
+        // POPRAWKA v0.77e: Zwiększenie głośności głównej (z 0.09 na 0.3)
+        master.gain.value = 0.3; 
         master.connect(audioCtx.destination);
         isAudioInitialized = true;
-        console.log("Audio zinicjalizowane.");
+        console.log("[DEBUG-v0.77e] Audio zinicjalizowane, głośność główna: 0.3");
+        
+        // POPRAWKA v0.77d: Jeśli pierwsza próba ładowania (w main.js) nie powiodła się,
+        // ponieważ audioCtx nie istniał, ponów próbę teraz, gdy już istnieje.
+        if (!isLoadTriggered) {
+            console.log("[Audio] Kontekst audio utworzony przez użytkownika, ponawiam próbę ładowania zasobów...");
+            loadAudio();
+        }
+        
     } catch (e) { 
         console.error("BŁĄD KRYTYCZNY: Nie można zainicjować Web Audio API.", e); 
     }
@@ -56,7 +69,8 @@ export function initAudio() {
 function loadSound(assetInfo) {
     return new Promise(async (resolve) => {
         if (!audioCtx) {
-            console.warn(`[Audio] Kontekst audio niegotowy, pomijam ładowanie: ${assetInfo.id}`);
+            // To jest normalne przy pierwszym ładowaniu strony
+            // console.warn(`[Audio] Kontekst audio niegotowy, pomijam ładowanie: ${assetInfo.id}`);
             loadedSounds.set(assetInfo.id, null);
             return resolve();
         }
@@ -83,13 +97,21 @@ function loadSound(assetInfo) {
 
 /**
  * NOWA FUNKCJA (v0.58): Ładuje wszystkie zasoby audio.
+ * POPRAWKA v0.77d: Ustawia flagę 'isLoadTriggered'.
  */
 export function loadAudio() {
     if (!isAudioInitialized) {
-        console.warn("[Audio] Inicjalizacja audio pominięta przez użytkownika. Dźwięki nie zostaną załadowane.");
+        // console.warn("[Audio] Inicjalizacja audio pominięta (kontekst niegotowy). Zostanie ponowiona po interakcji użytkownika.");
         return Promise.resolve(); // Zakończ natychmiast, jeśli audio nie jest włączone
     }
     
+    // Zapobiegaj wielokrotnemu ładowaniu, jeśli initAudio() wywoła to ponownie
+    if (isLoadTriggered) {
+        // console.log("[Audio] Zasoby audio już załadowane lub są w trakcie ładowania.");
+        return Promise.resolve();
+    }
+    
+    isLoadTriggered = true;
     console.log('[Audio] Rozpoczynam ładowanie zasobów audio...');
     const promises = AUDIO_ASSET_LIST.map(assetInfo => loadSound(assetInfo));
     
@@ -124,8 +146,9 @@ function tone(f = 440, type = 'sine', dur = 0.08, g = 0.12) {
  */
 export function playSound(eventName) {
     if (!isAudioInitialized || !audioCtx) {
-        initAudio();
-        if (!isAudioInitialized) return; 
+        // Nie wywołuj initAudio() tutaj, ponieważ nie jest to interakcja użytkownika
+        // console.warn(`[Audio] Próba odtworzenia ${eventName} przed inicjalizacją.`);
+        return; 
     }
     
     if (audioCtx.state === 'suspended') {
@@ -206,8 +229,8 @@ export function playSound(eventName) {
             break;
             
         default:
-            console.warn(`AUDIO: Nieznane zdarzenie dźwiękowe (ani plik, ani tone): ${eventName}`);
-            tone(200, 'square', 0.05, 0.05);
+            // console.warn(`AUDIO: Nieznane zdarzenie dźwiękowe (ani plik, ani tone): ${eventName}`);
+            // tone(200, 'square', 0.05, 0.05); // Usunięto spam
             break;
     }
 }

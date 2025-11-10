@@ -1,5 +1,5 @@
 // ==============
-// EVENTMANAGER.JS (v0.76e - FIX: Refaktoryzacja logiki startu gry i ładowania UI config)
+// EVENTMANAGER.JS (v0.77 - Implementacja pauzy przy utracie fokusu)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
@@ -50,6 +50,9 @@ function wrappedResetAll() {
     uiDataRef.trails = gameStateRef.trails;
     uiDataRef.confettis = gameStateRef.confettis;
     uiDataRef.camera = gameStateRef.camera; 
+    
+    // POPRAWKA v0.77: Zresetuj pierwszy interwał oblężenia
+    uiDataRef.settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
     
     resetAll(uiDataRef.canvas, uiDataRef.settings, uiDataRef.perkLevels, uiDataRef, uiDataRef.camera);
     
@@ -233,6 +236,14 @@ function initEvents() {
         uiDataRef.currentChestReward=null;
         resumeGame(gameStateRef.game, 0.75);
     });
+    
+    // NOWA LOGIKA v0.77: Pauza przy utracie fokusu
+    window.addEventListener('blur', () => {
+        if (gameStateRef.game.running && !gameStateRef.game.paused && !gameStateRef.game.inMenu) {
+            console.log("[EVENT] Wykryto utratę fokusu, pauzuję grę.");
+            wrappedPauseGame();
+        }
+    });
 }
 
 /**
@@ -254,6 +265,11 @@ export function initializeMainEvents(stateRef, uiRef) {
     window.wrappedLoadConfig = wrappedLoadConfig;
     window.wrappedStartRun = wrappedStartRun; 
     
+    // Import SIEGE_EVENT_CONFIG (potrzebny do wrappedResetAll)
+    if (uiRef.gameData && uiRef.gameData.SIEGE_EVENT_CONFIG) {
+        window.SIEGE_EVENT_CONFIG = uiRef.gameData.SIEGE_EVENT_CONFIG;
+    }
+    
     return {
         initEvents,
         // Zwróć obie funkcje, aby main.js mógł je przekazać do dev.js
@@ -261,3 +277,6 @@ export function initializeMainEvents(stateRef, uiRef) {
         wrappedStartRun: wrappedStartRun 
     };
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.77] js/core/eventManager.js: Dodano listener zdarzenia "blur" (pauza przy utracie fokusu).');

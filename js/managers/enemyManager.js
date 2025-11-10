@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.75 - FIX: Poprawiono dryf spawnu Oblężnika)
+// ENEMYMANAGER.JS (v0.77 - Dodano flagę preventDrops do killEnemy)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -21,7 +21,8 @@ import { EliteEnemy } from '../entities/enemies/eliteEnemy.js';
 import { WallEnemy } from '../entities/enemies/wallEnemy.js'; // NOWY IMPORT
 
 // Import konfiguracji
-import { ENEMY_STATS, SIEGE_EVENT_CONFIG } from '../config/gameData.js';
+// POPRAWKA v0.77: Import również WALL_DETONATION_CONFIG (dla obrażeń)
+import { ENEMY_STATS, SIEGE_EVENT_CONFIG, WALL_DETONATION_CONFIG } from '../config/gameData.js';
 
 // POPRAWKA v0.71: Import 6 podklas pickupów z nowego folderu
 import { HealPickup } from '../entities/pickups/healPickup.js';
@@ -303,36 +304,47 @@ export function findClosestEnemy(player, enemies) {
 
 /**
  * Logika zabicia wroga (wywoływana z kolizji)
+ * POPRAWKA v0.77: Dodano flagę 'preventDrops'
  */
-export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital = false) {
-    game.score += e.stats.score;
+export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital = false, preventDrops = false) {
     
-    const gem = gemsPool.get();
-    if (gem) {
-        gem.init(
-            e.x + (Math.random() - 0.5) * 5,
-            e.y + (Math.random() - 0.5) * 5,
-            4,
-            e.stats.xp,
-            '#4FC3F7'
-        );
-    }
+    // POPRAWKA v0.77: Logika dropu i wyniku jest teraz warunkowa
+    if (!preventDrops) {
+        game.score += e.stats.score;
+        
+        const gem = gemsPool.get();
+        if (gem) {
+            gem.init(
+                e.x + (Math.random() - 0.5) * 5,
+                e.y + (Math.random() - 0.5) * 5,
+                4,
+                e.stats.xp,
+                '#4FC3F7'
+            );
+        }
 
-    if (e.type !== 'elite') {
-        for (const [type, prob] of Object.entries(e.stats.drops)) {
-            if (devSettings.allowedEnemies.includes('all') || devSettings.allowedPickups.includes(type)) {
-                if (Math.random() < prob) {
-                    const pos = findFreeSpotForPickup(pickups, e.x, e.y);
-                    const PickupClass = PICKUP_CLASS_MAP[type];
-                    if (PickupClass) {
-                        pickups.push(new PickupClass(pos.x, pos.y));
+        if (e.type !== 'elite') {
+            for (const [type, prob] of Object.entries(e.stats.drops)) {
+                if (devSettings.allowedEnemies.includes('all') || devSettings.allowedPickups.includes(type)) {
+                    if (Math.random() < prob) {
+                        const pos = findFreeSpotForPickup(pickups, e.x, e.y);
+                        const PickupClass = PICKUP_CLASS_MAP[type];
+                        if (PickupClass) {
+                            pickups.push(new PickupClass(pos.x, pos.y));
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
+        
+        if (e.type === 'elite') {
+            chests.push(new Chest(e.x, e.y));
+        }
     }
+    // Koniec bloku if(!preventDrops)
 
+    // Efekty cząsteczkowe (zawsze występują)
     const particleCount = fromOrbital ? 3 : 8;
     for (let k = 0; k < particleCount; k++) {
         const p = particlePool.get();
@@ -350,11 +362,7 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         }
     }
 
-    // Specjalna logika
-    if (e.type === 'elite') {
-        chests.push(new Chest(e.x, e.y));
-    }
-    
+    // Specjalna logika (zawsze występuje)
     if (e.type === 'splitter') {
         const hpScale = (1 + 0.12 * (game.level - 1) + game.time / 90) * 0.8; 
         
@@ -376,4 +384,4 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.71] js/managers/enemyManager.js: Zaktualizowano importy pickupów do 6 oddzielnych plików.');
+console.log('[DEBUG-v0.77] js/managers/enemyManager.js: Dodano flagę preventDrops do killEnemy().');
