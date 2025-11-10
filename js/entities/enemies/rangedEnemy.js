@@ -1,5 +1,5 @@
 // ==============
-// RANGEDENEMY.JS (v0.76f - FIX: Zwiększenie separacji 2x)
+// RANGEDENEMY.JS (v0.77s - TEST: Zwiększenie separacji 2x)
 // Lokalizacja: /js/entities/enemies/rangedEnemy.js
 // ==============
 
@@ -13,8 +13,8 @@ import { WEAPON_CONFIG } from '../../config/gameData.js';
  */
 export class RangedEnemy extends Enemy {
     getSeparationRadius() { 
-        // POPRAWKA v0.76f: Zwiększono 2x (z 16 na 32)
-        return 32; 
+        // POPRAWKA v0.77s: Zwiększono 2x (z 32 na 64)
+        return 64; 
     }
     
     getOutlineColor() { 
@@ -78,4 +78,4 @@ export class RangedEnemy extends Enemy {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.76f] js/entities/enemies/rangedEnemy.js: Zwiększono separację (do 32).');
+console.log('[DEBUG-v0.77s] js/entities/enemies/rangedEnemy.js: Zwiększono separację (do 64).');

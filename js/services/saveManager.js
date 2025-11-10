@@ -1,5 +1,5 @@
 // ==============
-// SAVEMANAGER.JS (v0.71 - FIX: Ostateczna poprawka importów broni)
+// SAVEMANAGER.JS (v0.77p - FIX: Poprawa aktualizacji tytułu strony przy wczytaniu)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
@@ -23,6 +23,8 @@ import { NovaWeapon } from '../config/weapons/novaWeapon.js';
 // Import mapy wrogów (zrefaktoryzowane w v0.71)
 import { ENEMY_CLASS_MAP } from '../managers/enemyManager.js';
 import { initAudio } from './audio.js';
+// POPRAWKA v0.77p: Import referencji DOM do tytułu
+import { docTitle, titleDiv } from '../ui/domElements.js';
 
 // Mapy klas (przeniesione z main.js)
 const PICKUP_CLASS_MAP = {
@@ -199,6 +201,10 @@ export function loadGame(savedState, state, uiData) {
     game.inMenu = false; 
     game.paused = false; 
     game.running = true; 
+    
+    // POPRAWKA v0.77p: Ustawienie wersji w HTML (brakowało tego tutaj)
+    docTitle.textContent = `Szkeletal: Estrone Kiszok v${uiData.VERSION}`;
+    titleDiv.textContent = `Szkeletal: Estrone Kiszok v${uiData.VERSION}`;
     
     initAudio();
     

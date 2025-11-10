@@ -1,5 +1,5 @@
 // ==============
-// EFFECTS.JS (v0.74 - Eksport PICKUP_CLASS_MAP)
+// EFFECTS.JS (v0.77t - Balans Hazardów v2: Zmiana logiki spawnu)
 // Lokalizacja: /js/managers/effects.js
 // ==============
 
@@ -29,34 +29,42 @@ export const PICKUP_CLASS_MAP = {
 };
 
 /**
- * POPRAWKA v0.68: Pomocnicza funkcja do znajdowania miejsca na spawn Hazardu.
+ * POPRAWKA v0.77t: Zmiana logiki spawnu.
+ * Znajduje miejsce tuż poza krawędzią ekranu (kamery).
  */
 function findFreeSpotForHazard(player, camera) {
+    let x, y;
+    const margin = 50; // Jak daleko poza ekranem (w pikselach)
+    
+    // Pobranie granic widoku kamery
+    const viewLeft = camera.offsetX;
+    const viewRight = camera.offsetX + camera.viewWidth;
+    const viewTop = camera.offsetY;
+    const viewBottom = camera.offsetY + camera.viewHeight;
     const worldWidth = camera.worldWidth;
     const worldHeight = camera.worldHeight;
     
-    // Konfiguracja minimalnej odległości i promienia
-    const minD = HAZARD_CONFIG.MIN_DIST_FROM_PLAYER;
-    const maxAttempts = 10;
-    
-    for (let i = 0; i < maxAttempts; i++) {
-        // Losuj pozycję w świecie
-        const x = Math.random() * worldWidth;
-        const y = Math.random() * worldHeight;
-        
-        const dist = Math.hypot(player.x - x, player.y - y);
-        
-        if (dist > minD) {
-            return { x, y };
-        }
+    // Wybór losowej krawędzi (Góra, Dół, Lewo, Prawo)
+    const edge = Math.random();
+    if (edge < 0.25) { // Spawnowanie z Góry
+        x = viewLeft + Math.random() * camera.viewWidth;
+        y = viewTop - margin;
+    } else if (edge < 0.5) { // Spawnowanie z Dołu
+        x = viewLeft + Math.random() * camera.viewWidth;
+        y = viewBottom + margin;
+    } else if (edge < 0.75) { // Spawnowanie z Lewej
+        x = viewLeft - margin;
+        y = viewTop + Math.random() * camera.viewHeight;
+    } else { // Spawnowanie z Prawej
+        x = viewRight + margin;
+        y = viewTop + Math.random() * camera.viewHeight;
     }
     
-    // Jeśli nie znaleziono miejsca, spróbuj w losowym miejscu na granicy minimalnej odległości
-    const angle = Math.random() * Math.PI * 2;
-    return {
-        x: player.x + Math.cos(angle) * (minD + HAZARD_CONFIG.SIZE),
-        y: player.y + Math.sin(angle) * (minD + HAZARD_CONFIG.SIZE)
-    };
+    // Ograniczenie pozycji do granic świata (aby nie spawnować w próżni)
+    x = Math.max(0, Math.min(worldWidth, x));
+    y = Math.max(0, Math.min(worldHeight, y));
+    
+    return { x, y };
 }
 
 
@@ -68,6 +76,7 @@ export function spawnHazard(hazards, player, camera) {
         return; // Osiągnięto limit
     }
     
+    // POPRAWKA v0.77t: Ta funkcja używa teraz nowej logiki (spawn poza ekranem)
     const pos = findFreeSpotForHazard(player, camera);
     
     // --- Logika Mega Hazardu ---
@@ -84,7 +93,8 @@ export function spawnHazard(hazards, player, camera) {
     const newHazard = new Hazard(pos.x, pos.y, isMega, scale);
     hazards.push(newHazard);
     
-    console.log(`[DEBUG] js/managers/effects.js: Spawn Hazard (Mega: ${isMega ? 'Tak' : 'Nie'}, Scale: ${scale.toFixed(2)}) w pozycji`, pos);
+    // Usunięto log, aby nie spamować konsoli przy każdym spawnie
+    // console.log(`[DEBUG] js/managers/effects.js: Spawn Hazard (Mega: ${isMega ? 'Tak' : 'Nie'}, Scale: ${scale.toFixed(2)}) w pozycji`, pos);
 }
 
 

@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.77i - FIX: Usunięcie throttle z updateUI, aby naprawić animację HP)
+// MAIN.JS (v0.77r - FIX: Usunięcie fetch() dla menu)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -319,39 +319,30 @@ function initTabSwitching() {
     });
 }
 
-async function loadMenuTabs() {
-    console.log('[Refactor v0.69] Ładowanie zawartości zakładek HTML...');
+// POPRAWKA v0.77r: Uproszczono funkcję, usuwając całą logikę fetch()
+function initMenuAndEvents() {
+    console.log('[DEBUG-v0.77r] js/main.js: Uruchamiam synchroniczną inicjalizację menu i eventów.');
     try {
-        const [configHTML, devHTML, guideHTML] = await Promise.all([
-            fetch('menu_config.html').then(res => res.text()),
-            fetch('menu_dev.html').then(res => res.text()),
-            fetch('menu_guide.html').then(res => res.text())
-        ]);
-        
-        document.getElementById('tab-config').innerHTML = configHTML;
-        // POPRAWKA v0.77b: Użyj 'devHTML' zamiast 'guideHTML'
-        document.getElementById('tab-dev').innerHTML = devHTML; 
-        document.getElementById('tab-guide').innerHTML = guideHTML; 
-        
-        console.log('[DEBUG-v0.77b] js/main.js: Naprawiono ładowanie zakładki Dev Menu.');
+        // 1. Aktywuj zakładki (HTML już tam jest)
         initTabSwitching();
         
-        // POPRAWKA v0.76e: Odbierz obiekt z rozdzielonymi funkcjami
+        // 2. Podepnij listenery (elementy DOM już tam są)
         const { initEvents, wrappedLoadConfig, wrappedStartRun } = initializeMainEvents(gameStateRef, uiData);
         initEvents();
         
-        // Zwróć obiekt z obiema funkcjami
+        // 3. Zwróć funkcje dla dev.js
         return { wrappedLoadConfig, wrappedStartRun };
         
     } catch (err) {
-        console.error("BŁĄD KRYTYCZNY: Nie można załadować zawartości menu (menu_*.html).", err);
-        alert("BŁĄD: Nie można załadować plików menu. Sprawdź, czy pliki menu_config.html, menu_dev.html i menu_guide.html znajdują się w tym samym folderze co index.html.");
+        // Ten błąd nie powinien się już zdarzyć, ale zostawiam zabezpieczenie
+        console.error("BŁĄD KRYTYCZNY: Nie można było zainicjować eventów (mimo osadzonego HTML).", err);
+        alert("BŁĄD KRYTYCZNY: Wystąpił błąd podczas inicjalizacji. Odśwież stronę (F5).");
         
-        // POPRAWKA v0.76e: Odbierz obiekt z rozdzielonymi funkcjami
-        const { initEvents, wrappedLoadConfig, wrappedStartRun } = initializeMainEvents(gameStateRef, uiData);
-        initEvents();
-        // Zwróć obiekt z obiema funkcjami
-        return { wrappedLoadConfig, wrappedStartRun };
+        const gameTab = document.getElementById('tab-game');
+        if (gameTab) {
+            gameTab.innerHTML = `<h4 style="color: #f44336;">Błąd Inicjalizacji</h4><p>Proszę, odśwież stronę (F5).</p>`;
+        }
+        return { wrappedLoadConfig: () => {}, wrappedStartRun: () => {} };
     }
 }
 
@@ -381,7 +372,7 @@ console.log('[Main] Ładowanie zasobów...');
 Promise.all([
     loadAssets(),
     loadAudio()
-]).then(async (results) => { 
+]).then((results) => { // POPRAWKA v0.77r: Usunięto async
     console.log('[Main] Wszystkie zasoby (grafika i audio) załadowane. Inicjalizacja Canvas i Obiektów Gry.');
     
     uiData.gameData = { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG };
@@ -390,8 +381,8 @@ Promise.all([
     updateUiDataReferences(); 
     initStars(); 
     
-    // POPRAWKA v0.76e: Odbierz obiekt z rozdzielonymi funkcjami
-    const { wrappedLoadConfig, wrappedStartRun } = await loadMenuTabs();
+    // POPRAWKA v0.77r: Wywołanie synchroniczne
+    const { wrappedLoadConfig, wrappedStartRun } = initMenuAndEvents();
     
     // Przekaż obie funkcje do devTools
     initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
@@ -400,7 +391,7 @@ Promise.all([
     
     window.wrappedShowMenu(false);
 
-}).catch(async (err) => { 
+}).catch((err) => { // POPRAWKA v0.77r: Usunięto async
     console.error("[Main] Krytyczny błąd podczas ładowania zasobów:", err);
     
     uiData.gameData = { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG };
@@ -409,8 +400,8 @@ Promise.all([
     updateUiDataReferences();
     initStars(); 
     
-    // POPRAWKA v0.76e: Odbierz obiekt z rozdzielonymi funkcjami
-    const { wrappedLoadConfig, wrappedStartRun } = await loadMenuTabs(); 
+    // POPRAWKA v0.77r: Wywołanie synchroniczne
+    const { wrappedLoadConfig, wrappedStartRun } = initMenuAndEvents();
     
     // Przekaż obie funkcje do devTools
     initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 

@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.76 - Milestone Balance: World Size, Wall Nerf, Gem Life)
+// GAMEDATA.JS (v0.77w - Balans XP Elity)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -73,7 +73,9 @@ export const WALL_DETONATION_CONFIG = {
   WALL_DETONATION_TIME_VARIANCE: 6.0, // (Bez zmian z v0.75)
   // ZBALANSOWANIE v0.76: Zwiększenie promienia wybuchu (100 -> 200)
   // Promień (w pikselach) efektu AreaNuke po detonacji
-  WALL_DETONATION_RADIUS: 200
+  WALL_DETONATION_RADIUS: 200,
+  // POPRAWKA v0.77u: Dodano brakującą wartość obrażeń
+  WALL_DETONATION_DAMAGE: 5
 };
 
 
@@ -81,12 +83,12 @@ export const WALL_DETONATION_CONFIG = {
 export const HAZARD_CONFIG = {
   // Czas (w sekundach) pomiędzy kolejnymi spawnami Pól Zagrożenia (Hazards).
   SPAWN_INTERVAL: 6.0,
-  // Minimalna odległość (w pikselach) od gracza, w jakiej może pojawić się hazard.
-  MIN_DIST_FROM_PLAYER: 50,
-  // Maksymalna liczba Pól Zagrożenia na mapie.
-  MAX_HAZARDS: 20,
-  // Rozmiar (promień) Pól Zagrożenia (Acid Pool).
-  SIZE: 40,
+  // ZBALANSOWANIE v0.77t: Zwiększenie dystansu (z 50 na 150)
+  MIN_DIST_FROM_PLAYER: 150,
+  // ZBALANSOWANIE v0.77t: Zwiększenie limitu (z 20 na 200)
+  MAX_HAZARDS: 200,
+  // ZBALANSOWANIE v0.77t: Zwiększenie rozmiaru (z 40 na 60)
+  SIZE: 60,
   // Czas życia Hazardu, zanim samoczynnie zniknie (Decay)
   HAZARD_LIFE: 45.0,
   // Czas (w sekundach) ostrzeżenia przed aktywacją Hazardu (Warning)
@@ -102,8 +104,9 @@ export const HAZARD_CONFIG = {
   
   // --- Mega Hazard ---
   MEGA_HAZARD_PROBABILITY: 0.20, // Rzadszy Mega Hazard
-  MEGA_HAZARD_BASE_MULTIPLIER: 2.5, // Min. mnożnik rozmiaru
-  MEGA_HAZARD_MAX_MULTIPLIER: 6.0, // Max. mnożnik rozmiaru
+  // ZBALANSOWANIE v0.77t: Zwiększenie mnożników (z 2.5/6.0 na 4.0/8.0)
+  MEGA_HAZARD_BASE_MULTIPLIER: 4.0, // Min. mnożnik rozmiaru
+  MEGA_HAZARD_MAX_MULTIPLIER: 8.0, // Max. mnożnik rozmiaru
   // NOWE MULTIPLERY DLA OSOBNEJ KONTROLI OBRAŻEŃ
   MEGA_HAZARD_PLAYER_DAMAGE_MULTIPLIER: 0.6, // Niewiele większe od zwykłego
   MEGA_HAZARD_ENEMY_DAMAGE_MULTIPLIER: 1.0, // Obrażenia wroga x1 (czyli takie same jak Standard)
@@ -221,7 +224,10 @@ export const UI_CONFIG = {
   // Czas (w sekundach) odliczania przy wznawianiu gry.
   RESUME_TIMER: 0.75,
   // Czas (w milisekundach) pauzy na ekran level-up (przed pokazaniem perków).
-  LEVEL_UP_PAUSE: 700
+  LEVEL_UP_PAUSE: 700,
+  // POPRAWKA v0.77m: Dodano brakującą stałą.
+  // Procent (0.0 - 1.0), poniżej którego HP aktywuje pulsowanie.
+  LOW_HEALTH_THRESHOLD: 0.25
 };
 
 // --- Konfiguracja Świata Gry ---
@@ -264,10 +270,11 @@ export const ENEMY_STATS = {
   splitter: { type: 'splitter', hp: 4, speed: 158, size: 12, damage: 5, color: '#EC407A', score: 10, xp: 1, drops: BASE_DROP_RATES },
   tank: { type: 'tank', hp: 9, speed: 101, size: 14, damage: 5, color: '#795548', score: 20, xp: 1, drops: BASE_DROP_RATES },
   ranged: { type: 'ranged', hp: 4, speed: 144, size: 10, damage: 5, color: '#00BCD4', score: 10, xp: 1, drops: BASE_DROP_RATES },
-  elite: { type: 'elite', hp: 24, speed: 130, size: 18, damage: 5, color: '#9C27B0', score: 80, xp: 7, drops: {} }, // Elita nie dropi bonusów, tylko skrzynię
+  // POPRAWKA v0.77w: Zmieniono XP Elity z 7 na 1
+  elite: { type: 'elite', hp: 24, speed: 130, size: 18, damage: 5, color: '#9C27B0', score: 80, xp: 1, drops: {} }, // Elita nie dropi bonusów, tylko skrzynię
   // ZBALANSOWANIE v0.76: Dalsze zmniejszenie prędkości Oblężnika (26 -> 20)
   wall: { type: 'wall', hp: 24, speed: 20, size: 16, damage: 8, color: '#607D8B', score: 25, xp: 0, drops: {} } // Zmieniono speed: 26 -> 20, HP (pozostaje 24)
 };
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.76] js/config/gameData.js: Zastosowano balans v0.76 (World Size, Max Enemies, Wall Nerf, Gem Life).');
+console.log('[DEBUG-v0.77u] js/config/gameData.js: Dodano WALL_DETONATION_DAMAGE: 5.');

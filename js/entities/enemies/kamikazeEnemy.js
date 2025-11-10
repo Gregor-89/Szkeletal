@@ -1,5 +1,5 @@
 // ==============
-// KAMIKAZEENEMY.JS (v0.76f - FIX: Zwiększenie separacji 2x)
+// KAMIKAZEENEMY.JS (v0.77s - TEST: Zwiększenie separacji 2x)
 // Lokalizacja: /js/entities/enemies/kamikazeEnemy.js
 // ==============
 
@@ -17,8 +17,8 @@ export class KamikazeEnemy extends Enemy {
   }
   
   getSeparationRadius() {
-    // POPRAWKA v0.76f: Zwiększono 2x (z 12 na 24)
-    return 24;
+    // POPRAWKA v0.77s: Zwiększono 2x (z 24 na 48)
+    return 48;
   }
   
   getOutlineColor() {
@@ -27,4 +27,4 @@ export class KamikazeEnemy extends Enemy {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.76f] js/entities/enemies/kamikazeEnemy.js: Zwiększono separację (do 24).');
+console.log('[DEBUG-v0.77s] js/entities/enemies/kamikazeEnemy.js: Zwiększono separację (do 48).');

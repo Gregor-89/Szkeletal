@@ -1,11 +1,13 @@
 // ==============
-// ENEMYMANAGER.JS (v0.77 - Dodano flagę preventDrops do killEnemy)
+// ENEMYMANAGER.JS (v0.77w - FIX: Blokowanie gemów 0 XP)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
 import { devSettings } from '../services/dev.js';
 // POPRAWKA v0.75: Import addBombIndicator dla sygnału Oblężenia
 import { findFreeSpotForPickup, addBombIndicator } from '../core/utils.js';
+// POPRAWKA v0.77n: Import playSound
+import { playSound } from '../services/audio.js';
 
 // Import klasy bazowej
 import { Enemy } from '../entities/enemy.js';
@@ -198,7 +200,11 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     
     const hpScale = (1 + 0.12 * (game.level - 1) + game.time / 90) * 1.5; // Elity mają +50% HP
     const newEnemy = createEnemyInstance('elite', x, y, hpScale, enemyIdCounter++);
-    if (newEnemy) enemies.push(newEnemy);
+    if (newEnemy) {
+        enemies.push(newEnemy);
+        // POPRAWKA v0.77n: Dodano dźwięk spawnu Elity
+        playSound('EliteSpawn');
+    }
     
     return enemyIdCounter;
 }
@@ -312,15 +318,18 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
     if (!preventDrops) {
         game.score += e.stats.score;
         
-        const gem = gemsPool.get();
-        if (gem) {
-            gem.init(
-                e.x + (Math.random() - 0.5) * 5,
-                e.y + (Math.random() - 0.5) * 5,
-                4,
-                e.stats.xp,
-                '#4FC3F7'
-            );
+        // POPRAWKA v0.77w: Sprawdź, czy XP > 0, zanim stworzysz gema
+        if (e.stats.xp > 0) {
+            const gem = gemsPool.get();
+            if (gem) {
+                gem.init(
+                    e.x + (Math.random() - 0.5) * 5,
+                    e.y + (Math.random() - 0.5) * 5,
+                    4,
+                    e.stats.xp,
+                    '#4FC3F7'
+                );
+            }
         }
 
         if (e.type !== 'elite') {
@@ -384,4 +393,4 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77] js/managers/enemyManager.js: Dodano flagę preventDrops do killEnemy().');
+console.log('[DEBUG-v0.77n] js/managers/enemyManager.js: Dodano import playSound() i wywołanie w spawnElite().');

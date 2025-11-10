@@ -1,5 +1,5 @@
 // ==============
-// WALLENEMY.JS (v0.77 - Implementacja obrażeń AOE, blokady dropów i subtelnego wskaźnika)
+// WALLENEMY.JS (v0.77v - FIX: Naprawa błędu 'chests is not defined')
 // Lokalizacja /js/entities/enemies/wallEnemy.js
 // ==============
 
@@ -43,7 +43,8 @@ export class WallEnemy extends Enemy {
 
   // NOWA METODA: Główna logika samodestrukcji
   selfDestruct(state) {
-    const { game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators, hitTextPool, hitTexts } = state;
+    // POPRAWKA v0.77v: Dodano 'chests' do listy
+    const { game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators, hitTextPool, hitTexts, chests } = state;
     
     const radius = WALL_DETONATION_CONFIG.WALL_DETONATION_RADIUS; // 400
     const damage = WALL_DETONATION_CONFIG.WALL_DETONATION_DAMAGE; // 5

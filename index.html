@@ -86,13 +86,234 @@
         </div>
 
         <div id="tab-config" class="tab-content">
+          <h4 style="margin-top:0;">Ustawienia Rozgrywki</h4>
+          <div class="row" style="margin-bottom:12px;">
+            <div style="width:100%;">Pozycja joysticka:</div>
+            <label class="option"><input type="radio" name="joypos" value="left"> Lewa</label>
+            <label class="option"><input type="radio" name="joypos" value="right" checked> Prawa</label>
+            <label class="option"><input type="radio" name="joypos" value="off"> Wyłączony</label>
           </div>
+          <div class="row" style="margin-bottom:12px;">
+            <label class="option"><input type="checkbox" id="chkHyper"> ⚡ Hyper Mode (+20% tempo gry)</label>
+          </div>
+          <div class="row" style="margin-bottom:12px;">
+            <label class="option"><input type="checkbox" id="chkShake" checked> 📳 Drżenie ekranu</label>
+          </div>
+          
+          <h4 style="margin-top:16px;">Ustawienia Wizualne i Debugowanie</h4>
+          <div class="row" style="margin-bottom:12px;">
+            <label class="option"><input type="checkbox" id="chkFPS" checked> 📊 Pokaż licznik FPS</label>
+          </div>
+          
+          <div class="row" style="margin-bottom:12px;">
+            <div style="width:100%;">Pozycja licznika FPS:</div>
+            <label class="option"><input type="radio" name="fpspos" value="left"> Lewa</label>
+            <label class="option"><input type="radio" name="fpspos" value="right" checked> Prawa</label>
+          </div>
+          
+          <div class="row" style="margin-bottom:12px;">
+            <label class="option"><input type="checkbox" id="chkPickupLabels" checked> 🏷️ Pokazuj podpisy pickupów</label>
+          </div>
+          <div class="row" style="margin-bottom:12px;">
+            <div style="width:100%;">Styl pickupów:</div>
+            <label class="option"><input type="radio" name="pickupstyle" value="circle"> 🔵 Kolorowe kółka</label>
+            <label class="option"><input type="radio" name="pickupstyle" value="emoji" checked> 😀 Emoji</label>
+          </div>
+        </div>
 
         <div id="tab-dev" class="tab-content">
+          <p style="color:#f44336; margin-bottom:15px;"><strong>⚠️ Uwaga:</strong> To menu jest przeznaczone do testowania. Ustawienia mogą zepsuć balans gry.</p>
+          <div class="dev-section">
+            <h4>🎮 Stan Gracza</h4>
+            <div class="dev-control">
+              <label>Poziom gracza:</label>
+              <input type="number" id="devLevel" min="1" max="100" value="1">
+            </div>
+            <div class="dev-control">
+              <label>Życie (HP):</label>
+              <input type="number" id="devHealth" min="1" max="9999" value="100">
+            </div>
+            <div class="dev-control">
+              <label>Max HP:</label>
+              <input type="number" id="devMaxHealth" min="1" max="9999" value="100">
+            </div>
+            <div class="dev-control">
+              <label>XP:</label>
+              <input type="number" id="devXP" min="0" max="9999" value="0">
+            </div>
+            <div class="dev-control">
+              <label>Czas Gry (s):</label>
+              <input type="number" id="devTime" min="0" max="999" value="0">
+            </div>
+            <div class="dev-control">
+              <label>Nieśmiertelność:</label>
+              <input type="checkbox" id="devGodMode">
+            </div>
           </div>
+          
+          <div class="dev-section">
+            <h4>⚔️ Broń i Perki</h4>
+            <div class="dev-control">
+              <label>Obrażenia:</label>
+              <input type="number" id="devDamage" min="1" max="999" value="1">
+            </div>
+            <div class="dev-control">
+              <label>Szybkostrzelność (ms):</label>
+              <input type="number" id="devFireRate" min="50" max="5000" value="500">
+            </div>
+            <div class="dev-control">
+              <label>Multishot:</label>
+              <input type="number" id="devMultishot" min="0" max="10" value="0">
+            </div>
+            <div class="dev-control">
+              <label>Pierce:</label>
+              <input type="number" id="devPierce" min="0" max="10" value="0">
+            </div>
+            <div class="dev-control">
+              <label>Orbital poziom:</label>
+              <input type="number" id="devOrbital" min="0" max="5" value="0">
+            </div>
+            <div class="dev-control">
+              <label>Nova poziom:</label>
+              <input type="number" id="devNova" min="0" max="5" value="0">
+            </div>
+          </div>
+          
+          <div class="dev-section">
+            <h4>👾 Spawning Przeciwników</h4>
+            <div class="dev-control">
+              <label>Dozwoleni wrogowie:</label>
+              <select id="devEnemyType" multiple style="height:120px;">
+                <option value="all" selected>Wszyscy</option>
+                <option value="standard">Standard</option>
+                <option value="horde">Horda</option>
+                <option value="aggressive">Agresywni</option>
+                <option value="kamikaze">Kamikaze</option>
+                <option value="splitter">Splitter</option>
+                <option value="tank">Tank</option>
+                <option value="ranged">Ranged</option>
+                <option value="wall">Oblężnik (Wall)</option>
+                <option value="elite">Elite</option>
+              </select>
+            </div>
+            <div class="dev-control">
+              <label>Spawn rate:</label>
+              <input type="number" id="devSpawnRate" min="0" max="1" step="0.01" value="0.02">
+            </div>
+            <div class="dev-control">
+              <label>Max wrogów:</label>
+              <input type="number" id="devMaxEnemies" min="0" max="500" value="110">
+            </div>
+          </div>
+          
+          <div class="dev-section">
+            <h4>💎 Pickupy</h4>
+            <div class="dev-control">
+              <label>Dropowane pickupy:</label>
+              <select id="devPickupType" multiple style="height:100px;">
+                <option value="all" selected>Wszystkie</option>
+                <option value="heal">Leczenie</option>
+                <option value="magnet">Magnes</option>
+                <option value="shield">Tarcza</option>
+                <option value="speed">Szybkość</option>
+                <option value="bomb">Bomba</option>
+                <option value="freeze">Zamrożenie</option>
+              </select>
+            </div>
+            <div class="dev-control">
+              <label>Spawn natychmiast:</label>
+              <button class="btn" onclick="devSpawnPickup('heal')">❤️ HP</button>
+              <button class="btn" onclick="devSpawnPickup('bomb')">💣 Bomba</button>
+              <button class="btn" onclick="devSpawnPickup('magnet')">🧲 Magnes</button>
+            </div>
+          </div>
+          
+          <div class="dev-section">
+            <h4>🚀 Scenariusze Testowe</h4>
+            <div class="dev-control" style="justify-content: space-around;">
+              <button class="btn btn-warning" onclick="devPresetAlmostMax()">Test: Prawie Max</button>
+              <button class="btn btn-danger" onclick="devPresetMax()">Test: Max Staty</button>
+            </div>
+          </div>
+          
+          <button class="btn" onclick="applyDevSettings()" style="width:100%; margin-top:10px;">✅ Zastosuj Ustawienia Dev</button>
+        </div>
 
         <div id="tab-guide" class="tab-content">
+          <div id="guideContent">
+            <p><strong>Witaj w dynamicznej grze survivalowej!</strong> Wcielasz się w wojownika, który musi przetrwać fale wrogów, zbierając doświadczenie (XP) i wybierając ulepszenia. Twoja postać automatycznie strzela do najbliższych przeciwników.</p>
+            
+            <h4>🎮 Podstawowe zasady</h4>
+            <ul>
+              <li><strong>Cel:</strong> Przetrwaj jak najdłużej 📈, zbieraj XP 💎, awansuj na wyższe poziomy ⭐</li>
+              <li><strong>Sterowanie:</strong> WASD/strzałki ⌨️ lub wirtualny joystick 🕹️ na ekranie</li>
+              <li><strong>Pauza:</strong> Klawisz ESC ⏸️ lub puść joystick (auto-pauza natychmiastowa)</li>
+              <li><strong>Postęp:</strong> Każdy poziom = wybór jednego z trzech ulepszeń 🎁</li>
+              <li><strong>Wrogowie:</strong> Pojawiają się coraz trudniejsi 👾 wraz z czasem ⏱️</li>
+            </ul>
+            
+            <h4>💎 Pickupy (Kółko / Emoji)</h4>
+            <ul style="list-style-type: none; padding-left: 5px;">
+              <li><span class="icon ico-circle" style="background:#E91E63;"></span> / <span style="font-size:16px;">❤️</span> <strong>Leczenie</strong> – przywraca <strong>+30 HP</strong></li>
+              <li><span class="icon ico-circle" style="background:#8BC34A;"></span> / <span style="font-size:16px;">🧲</span> <strong>Magnes</strong> – przyciąga wszystkie XP przez <strong>3 sekundy</strong></li>
+              <li><span class="icon ico-circle" style="background:#90CAF9;"></span> / <span style="font-size:16px;">🛡️</span> <strong>Tarcza</strong> – absorbuje obrażenia przez <strong>8 sekund</strong></li>
+              <li><span class="icon ico-circle" style="background:#FFD740;"></span> / <span style="font-size:16px;">⚡</span> <strong>Szybkość</strong> – <strong>+40%</strong> ruchu przez <strong>8 sekund</strong></li>
+              <li><span class="icon ico-circle" style="background:#FF7043;"></span> / <span style="font-size:16px;">💣</span> <strong>Bomba</strong> – niszczy wrogów w zasięgu <strong>200px</strong>, zostawia kulki XP</li>
+              <li><span class="icon ico-circle" style="background:#81D4FA;"></span> / <span style="font-size:16px;">❄️</span> <strong>Zamrożenie</strong> – spowalnia wrogów i ich ataki o <strong>75%</strong> przez <strong>5 sekund</strong></li>
+            </ul>
+            
+            <h4>☢️ Pola Zagrożenia (Hazards)</h4>
+            <p>Statyczne plamy na mapie, które zadają obrażenia i spowalniają. Pojawiają się co 6 sekund i zanikają po ~45 sekundach.</p>
+            <ul style="list-style-type: none; padding-left: 5px;">
+              <li><span class="icon ico-circle" style="background:rgba(0, 150, 0, 0.6); border:2px solid #0f0;"></span> <strong>Kwaśna Plama (Standard)</strong>:</li>
+              <ul>
+                <li>Zadaje obrażenia **~10 HP/s** graczowi i spowalnia Cię o **50%**.</li>
+                <li>Spowalnia (o 30%) i zadaje **małe obrażenia wrogom**.</li>
+                <li>Pojawia się z **3s ostrzeżeniem** (czerwony kontur) i może pojawić się blisko Ciebie.</li>
+              </ul>
+              <li><span class="icon ico-circle" style="background:rgba(150, 0, 150, 0.6); border:2px solid #f0f;"></span> <strong>Mega Plama</strong>: Rzadki wariant (20% szans). Ma znacznie **większy promień** (2.5x-6x) i zadaje **trochę większe obrażenia** (fioletowy kolor).</li>
+              <li>💧 **Efekt Bagna**: Wszystkie dropy (XP, Pickupy, Skrzynie) pozostawione w Hazardzie **powoli znikają** (~15s). Zdobądź je, zanim znikną!</li>
+            </ul>
+            <h4>👾 Wrogowie (zaktualizowany przewodnik)</h4>
+            <p>Nowe, silniejsze typy wrogów pojawiają się wraz z upływem czasu.</p>
+            <ul>
+              <li><span class="icon ico-square" style="background:#FFC107;"></span><strong>Standard</strong> (od 0:00) – Zbalansowany wróg, po prostu idzie w Twoją stronę. <span class="detail">(+10pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#8BC34A;"></span><strong>Horda</strong> (od 0:15) – Wolniejszy, ale zawsze pojawia się w ciasnych grupach po 4-6 sztuk. <span class="detail">(+10pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#2196F3;"></span><strong>Agresywny</strong> (od 0:30) – Porusza się normalnie, ale dostaje <strong>+50% prędkości</strong>, gdy znajdzie się blisko Ciebie (zasięg 220px). <span class="detail">(+10pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#FFEB3B;"></span><strong>Kamikaze</strong> (od 0:50) – Podobny do Agresywnego, ale jego przyspieszenie jest znacznie większe (<strong>+100% prędkości</strong> w zasięgu 140px) i zadaje większe obrażenia przy kolizji (8 zamiast 5). <span class="detail">(+10pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#EC407A;"></span><strong>Splitter</strong> (od 1:10) – Po pokonaniu <strong>dzieli się na 2</strong> mniejszych, szybszych wrogów typu 'Horda'. <span class="detail">(+10pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#795548;"></span><strong>Tank</strong> (od 1:30) – Bardzo wolny (60% prędkości), ale posiada <strong>potrójne HP</strong> w porównaniu do standardowego wroga. <span class="detail">(+20pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#00BCD4;"></span><strong>Ranged</strong> (od 2:00) – Wróg dystansowy. Stara się utrzymać dystans 180-220px. Ucieka, gdy jesteś za blisko i podchodzi, gdy za daleko. Strzela pociskami co ok. 1.2 sekundy. <span class="detail">(+10pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#607D8B;"></span><strong>Oblężnik (Wall)</strong> (Event od 2:30) – **Wydarzenie Specjalne.** Pojawia się nagle w grupie (15-20 sztuk) w **idealnym kręgu** wokół gracza. Bardzo wolny, ale ekstremalnie wytrzymały (30 HP). Zmusza do przebicia się przez formację. <span class="detail">(+25pkt, +2 XP)</span></li>
+              <li><span class="icon ico-square ico-elite" style="background:#9C27B0;"></span><strong>Elita</strong> 👑 (co 24 sek.) – Mini-boss. Posiada znacznie więcej HP (ok. 8x więcej niż standardowy wróg) i jest większy. Po pokonaniu zawsze upuszcza <strong>Skrzynię</strong> 🎁 oraz więcej XP. <span class="detail">(+80pkt, +7 XP)</span></li>
+            </ul>
+            
+            <h4>⚡ Mechaniki specjalne</h4>
+            <ul>
+              <li><strong>Tarcza po awansie:</strong> Każdy poziom daje 3 sekundy nieśmiertelności 🛡️</li>
+              <li><strong>Tarcza ze skrzyni:</strong> Zebranie skrzyni też daje 3 sekundy tarczy 🛡️</li>
+              <li><strong>Progresja wrogów:</strong> Nowe typy odblokowują się w miarę upływu czasu 📈</li>
+              <li><strong>Skalowanie HP:</strong> Wrogowie mają coraz więcej HP wraz z Twoim poziomem i czasem gry.</li>
+              <li><strong>Pickupy:</strong> Znikają po ~14 sekundach (efekt migania pod koniec) ✨</li>
+              <li><strong>Odrzut:</strong> Trafiony przeciwnik dostaje mikro-spowolnienie i odrzut ✋</li>
+              <li><strong>Kolizja z wrogami:</strong> Dotknięcie wroga spowalnia gracza (nawet z tarczą) 🐌</li>
+              <li><strong>Tablica wyników:</strong> Zapisuje 10 najlepszych wyników lokalnie 🏆</li>
+            </ul>
+            
+            <h4>🔧 Ulepszenia (Perki)</h4>
+            <ul style="list-style-type: none; padding-left: 5px;">
+              <li>🔫 <strong>Szybszy ostrzał</strong> – +15% szybkostrzelności (max 5)</li>
+              <li>💥 <strong>Silniejsze pociski</strong> – +1 obrażeń (max 6)</li>
+              <li>🎯 <strong>Multishot</strong> – +1 pocisk z większym rozrzutem (max 4)</li>
+              <li>➡️ <strong>Przebicie</strong> – Pociski przechodzą przez +1 wroga bez znikania (max 4)</li>
+              <li>🌀 <strong>Orbital</strong> – Orbitujące ostrza wokół postaci zadają obrażenia (max 5)</li>
+              <li>💫 <strong>Nova</strong> – Cykliczny wybuch pocisków wokół postaci (max 5)</li>
+              <li>🏃 <strong>Szybkość ruchu</strong> – +10% prędkości gracza (max 4)</li>
+              <li>🧲 <strong>Zasięg zbierania</strong> – +40% zasięgu pickupów (max 3)</li>
+              <li>❤️ <strong>Zdrowie +</strong> – +20 maks. HP i natychmiastowe leczenie (max 3)</li>
+            </ul>
           </div>
+        </div>
       </div>
     </div>
 

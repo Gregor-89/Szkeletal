@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.77d - FIX: Resetowanie spowolnienia kolizji)
+// COLLISIONS.JS (v0.77v - FIX: Naprawa błędu 'Unexpected end of input')
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -388,5 +388,6 @@ for (let i = hazards.length - 1; i >= 0; i--) {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77d] js/managers/collisions.js: Zresetowano collisionSlowdown.');
+// POPRAWKA v0.77v: Zakomentowano spamujący log
+// console.log('[DEBUG-v0.77d] js/managers/collisions.js: Zresetowano collisionSlowdown.');
 }

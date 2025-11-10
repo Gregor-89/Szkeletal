@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.77k - FIX: Usunięcie błędnego importu 'playerHPBarOuter')
+// UI.JS (v0.77p - FIX: Poprawa aktualizacji tytułu strony)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -85,10 +85,10 @@ export function updateUI(game, player, settings, weapons) {
     // Panel bonusów
     let bonusHTML = '';
     const bonusMap = { magnet: '🧲', shield: '🛡️', speed: '⚡', freeze: '❄️' };
-    if (game.magnetT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.magnet}</span><span class="bonus-txt">${Math.ceil(game.magnetT)}s</span></div>`;
-    if (game.shieldT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.shield}</span><span class="bonus-txt">${Math.ceil(game.shieldT)}s</span></div>`;
-    if (game.speedT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.speed}</span><span class="bonus-txt">${Math.ceil(game.speedT)}s</span></div>`;
-    if (game.freezeT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.freeze}</span><span class="bonus-txt">${Math.ceil(game.freezeT)}s</span></div>`;
+    if (game.magnetT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.magnet}</span><span class="bonus-txt">${Math.ceil(game.magnetT)}</span></div>`;
+    if (game.shieldT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.shield}</span><span class="bonus-txt">${Math.ceil(game.shieldT)}</span></div>`;
+    if (game.speedT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.speed}</span><span class="bonus-txt">${Math.ceil(game.speedT)}</span></div>`;
+    if (game.freezeT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.freeze}</span><span class="bonus-txt">${Math.ceil(game.freezeT)}</span></div>`;
     bonusPanel.innerHTML = bonusHTML;
 }
 
@@ -167,6 +167,10 @@ export function startRun(game, resetAll, uiData) {
         uiData.settings.currentSiegeInterval = startOffset + 10.0; 
     }
     console.log(`[EVENT] Pierwsze oblężenie o ${uiData.settings.currentSiegeInterval.toFixed(1)}s`);
+    
+    // POPRAWKA v0.77p: Ustawienie wersji w HTML (brakowało tego tutaj)
+    docTitle.textContent = `Szkeletal: Estrone Kiszok v${uiData.VERSION}`;
+    titleDiv.textContent = `Szkeletal: Estrone Kiszok v${uiData.VERSION}`;
 
 
     initAudio();
@@ -359,4 +363,4 @@ export function gameOver(game, uiData) {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77k] js/ui/ui.js: Usunięto błędny import paska HP.');
+console.log('[DEBUG-v0.77p] js/ui/ui.js: Dodano aktualizację tytułu w startRun().');

@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.76e - FIX: Refaktoryzacja logiki startu presetu)
+// DEV.JS (v0.77v - FIX: Naprawa błędu "Assignment to constant variable" w modalu)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -14,7 +14,8 @@ import { NovaWeapon } from '../config/weapons/novaWeapon.js';
 
 // POPRAWKA v0.74: Import mapy z managera efektów
 import { PICKUP_CLASS_MAP } from '../managers/effects.js';
-import { confirmOverlay, confirmText, btnConfirmYes, btnConfirmNo } from '../ui/domElements.js'; // NOWY IMPORT
+// POPRAWKA v0.77v: Usunięto 'btnConfirmNo' z importu, aby uniknąć błędu stałej
+import { confirmOverlay, confirmText, btnConfirmYes } from '../ui/domElements.js'; // NOWY IMPORT
 
 /**
  * Eksportowana zmienna przechowująca docelowy czas startu.
@@ -58,6 +59,9 @@ function calculateXpNeeded(level) {
 
 // NOWA FUNKCJA v0.75: Pokazuje prosty modal z wiadomością
 function showDevConfirmModal(text) {
+    // POPRAWKA v0.77v: Pobierz btnConfirmNo jako zmienną lokalną 'let'
+    let btnConfirmNo = document.getElementById('btnConfirmNo');
+    
     if (!confirmOverlay || !confirmText || !btnConfirmYes || !btnConfirmNo) return;
     
     // Tymczasowe ustawienie modala na wiadomość potwierdzającą
@@ -70,7 +74,7 @@ function showDevConfirmModal(text) {
     let newBtnNo = btnConfirmNo.cloneNode(true);
     newBtnNo.textContent = 'OK';
     btnConfirmNo.parentNode.replaceChild(newBtnNo, btnConfirmNo);
-    btnConfirmNo = newBtnNo; // Aktualizacja referencji
+    btnConfirmNo = newBtnNo; // Aktualizacja referencji (teraz działa, bo to 'let')
     
     // Ustawienie timera na automatyczne zniknięcie po 1.5s
     const timerId = setTimeout(() => {
@@ -84,7 +88,9 @@ function showDevConfirmModal(text) {
         clearTimeout(timerId);
         confirmOverlay.style.display = 'none';
         btnConfirmYes.style.display = 'inline-block';
-        btnConfirmNo.textContent = 'Anuluj';
+        // Musimy znaleźć oryginalny przycisk "No" w DOM, aby przywrócić mu tekst
+        let originalBtnNo = document.getElementById('btnConfirmNo');
+        if (originalBtnNo) originalBtnNo.textContent = 'Anuluj';
     };
 }
 

@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.76f - FIX: Zwiększenie separacji + Ochrona formacji Oblężnika)
+// ENEMY.JS (v0.77s - TEST: Zwiększenie separacji 2x)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -204,8 +204,8 @@ export class Enemy {
     }
 
     getSeparationRadius() {
-        // POPRAWKA v0.76f: Zwiększono bazową separację 2x (z 20 na 40)
-        return 40; 
+        // POPRAWKA v0.77s: Zwiększono bazową separację 2x (z 40 na 80)
+        return 80; 
     }
 
     getOutlineColor() {
@@ -222,4 +222,4 @@ export class Enemy {
 // Zostały usunięte z tego pliku.
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.76f] js/entities/enemy.js: Zwiększono bazową separację (do 40) i dodano logikę ignorowania dla Oblężnika.');
+console.log('[DEBUG-v0.77s] js/entities/enemy.js: Zwiększono bazową separację (do 80) i dodano logikę ignorowania dla Oblężnika.');

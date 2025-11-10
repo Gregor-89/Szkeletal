@@ -1,5 +1,5 @@
 // ==============
-// AUTOGUN.JS (v0.71 - Refaktoryzacja Broni)
+// AUTOGUN.JS (v0.77v - FIX: Usunięcie spamu z konsoli)
 // Lokalizacja: /js/config/weapons/autoGun.js
 // ==============
 
@@ -95,7 +95,8 @@ export class AutoGun extends Weapon {
       }
     }
     
-    console.log('[DEBUG] js/config/weapon.js: AutoGun re-targeted instantly.');
+    // POPRAWKA v0.77v: Zakomentowano spamujący log
+    // console.log('[DEBUG] js/config/weapon.js: AutoGun re-targeted instantly.');
   }
   
   toJSON() {
