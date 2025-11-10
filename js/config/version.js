@@ -1,10 +1,10 @@
 // ==============
-// VERSION.JS (v0.77 - Balans Oblężenia i QoL)
+// VERSION.JS (v0.78 - Wskaźniki Poza Ekranem)
 // Lokalizacja: /js/config/version.js
 // ==============
 
 // Definiuje aktualną wersję gry
-export const VERSION = '0.77';
+export const VERSION = '0.78';
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77] js/config/version.js: Ustawiono wersję na 0.77 (Balans Oblężenia i QoL).');
+console.log('[DEBUG-v0.78] js/config/version.js: Ustawiono wersję na 0.78 (Wskaźniki Poza Ekranem).');

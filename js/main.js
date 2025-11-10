@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.77r - FIX: Usunięcie fetch() dla menu)
+// MAIN.JS (v0.78 - Implementacja Menedżera Wskaźników)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -12,6 +12,8 @@ import { draw } from './core/draw.js';
 import { updateUI, resumeGame, showMenu, startRun, resetAll, gameOver, pauseGame } from './ui/ui.js';
 import { initializeMainEvents } from './core/eventManager.js';
 
+// NOWY IMPORT v0.78
+import { updateIndicators } from './managers/indicatorManager.js'; 
 import { updateVisualEffects, updateParticles } from './managers/effects.js';
 import { initInput } from './ui/input.js';
 import { devSettings, initDevTools } from './services/dev.js';
@@ -223,6 +225,9 @@ function update(dt){
       window.wrappedOpenChest, 
       camera
   );
+
+  // NOWA LINIA v0.78: Aktualizacja wskaźników (z throttlingiem)
+  updateIndicators(gameStateRef, dt);
 
   if (canvas && camera) {
       const roundedX = Math.round(camera.offsetX);

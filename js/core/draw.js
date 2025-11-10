@@ -1,9 +1,10 @@
 // ==============
-// DRAW.JS (v0.75 - Siege Enhancements: Rysowanie Sygnału Oblężenia)
+// DRAW.JS (v0.78 - Implementacja Menedżera Wskaźników)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
-// (Usunięto importy 'getPickup...', ponieważ są teraz w 'state' lub 'ui')
+// NOWY IMPORT v0.78
+import { drawIndicators } from '../managers/indicatorManager.js';
 
 /**
  * NOWA Funkcja Pomocnicza (v0.71): Rysuje tło (siatkę).
@@ -292,6 +293,11 @@ export function draw(ctx, state, ui, fps) {
 
     // Przywróć stan sprzed transformacji kamery
     ctx.restore(); 
+
+    // === RYSOWANIE HUD (NA WIERZCHU) ===
+
+    // NOWA LINIA v0.78: Rysowanie wskaźników
+    drawIndicators(ctx, state);
 
     // Rysowanie licznika FPS (NOWA FUNKCJA, na Canvasie)
     drawFPS(ctx, fps, ui, canvas);
