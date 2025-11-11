@@ -1,5 +1,5 @@
 // ==============
-// RANGEDENEMY.JS (v0.83v - Wzmocnienie Dystansu)
+// RANGEDENEMY.JS (v0.85a - Aktywny Kąt Ataku / Circle Strafe)
 // Lokalizacja: /js/entities/enemies/rangedEnemy.js
 // ==============
 
@@ -36,45 +36,47 @@ export class RangedEnemy extends Enemy {
             let vx = 0, vy = 0;
             let currentSpeed = this.getSpeed(game, dist); 
 
-            let moveAngle = 0; // Kąt do przodu/do tyłu
+            let moveAngle = Math.atan2(dy, dx); // Kąt do gracza
             let strafeAngle = 0; // Kąt ruchu bocznego
             
-            // NOWA LOGIKA V0.83V: Zwiększono optymalny dystans
-            const optimalMin = 250; 
-            const optimalMax = 300;
+            const optimalMin = 300; 
+            const optimalMax = 400;
             
-            // 1. Ruch do przodu/do tyłu (Utrzymywanie dystansu)
+            // --- Krok 1: Określenie siły (do przodu/do tyłu) ---
+            let moveForce = 0; // Początkowa siła ruchu
+            
             if (dist < optimalMin) { 
-                // Uciekaj (kąt przeciwny do gracza)
+                // Uciekaj (wektor przeciwny do gracza)
                 moveAngle = Math.atan2(-dy, -dx);
+                moveForce = currentSpeed;
                 isMoving = true;
             } else if (dist > optimalMax) { 
-                // Podchodź (kąt w kierunku gracza)
-                moveAngle = Math.atan2(dy, dx);
+                // Podchodź (wektor w kierunku gracza)
+                moveForce = currentSpeed;
                 isMoving = true;
-            } else {
-                // Jesteś w strefie, ale nie poruszaj się do przodu/do tyłu
-                moveAngle = Math.atan2(dy, dx); // Domyślny kąt (dla obliczeń bocznych)
             }
             
-            // 2. Ruch Boczny (Strafe) - TYLKO W STREFIE OPTYMALNEJ
+            // --- Krok 2: Aktywny Kąt Ataku (Circle Strafe) ---
             if (dist >= optimalMin && dist <= optimalMax) {
+                // NOWA LOGIKA V0.85A: W optymalnej strefie zmuszamy do krążenia
+                
+                // Kierunek krążenia (stały dla danego wroga)
+                const strafeDirection = Math.sign(Math.sin(this.id));
                 // Kąt prostopadły do gracza (ruch boczny)
-                const strafeDirection = Math.sign(Math.sin(game.time * 2 + this.id)); // Zmienia się wolno
                 strafeAngle = moveAngle + (Math.PI / 2) * strafeDirection;
                 
-                // Siła ruchu bocznego (np. 50% bazowej prędkości)
-                const strafeSpeed = currentSpeed * 0.5; // Zwiększono z 0.3 na 0.5
+                // Siła ruchu bocznego (75% bazowej prędkości)
+                const strafeSpeed = currentSpeed * 0.75; 
                 
                 vx += Math.cos(strafeAngle) * strafeSpeed;
                 vy += Math.sin(strafeAngle) * strafeSpeed;
                 isMoving = true;
             }
             
-            // 3. Dodaj ruch do przodu/do tyłu (jeśli jest)
-            if (dist < optimalMin || dist > optimalMax) {
-                vx += Math.cos(moveAngle) * currentSpeed;
-                vy += Math.sin(moveAngle) * currentSpeed;
+            // --- Krok 3: Dodaj ruch do przodu/do tyłu (jeśli jest) ---
+            if (moveForce > 0) {
+                vx += Math.cos(moveAngle) * moveForce;
+                vy += Math.sin(moveAngle) * moveForce;
             }
             
             this.x += (vx + this.separationX * 0.5) * dt;

@@ -4,61 +4,121 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ---
 
+## [v0.84] - Finalne Poprawki AI i QoL
+* **Poprawka QoL:** Logika spawnu Pól Zagrożenia (`Hazard`) teraz rezerwuje odpowiednio dużą przestrzeń dla potencjalnego Mega Hazardu, zapobiegając nakładaniu się dużych plam.
+* **Ulepszenie AI (Kamikaze):** Wprowadzono **agresywny ruch zygzakowaty ('Z')** o dużej amplitudzie i częstotliwości, co sprawia, że Kamikaze jest trudniejszy do uniknięcia na całej ścieżce podejścia. Usunięto nieużywany mnożnik prędkości bazowej.
+* **Ulepszenie AI (Horda):** Zwiększono **promień otaczania (Swarming)** z 100px do 150px, co zmusza wrogów Horde do wyraźniejszego okrążania gracza.
+* **Ulepszenie AI (Dystansowy/Ranged):** Zwiększono **dystans optymalny** (z 250-300px do 300-400px) oraz **wzmocniono siłę ruchu bocznego (Strafe)** (z 0.5x do 0.75x bazowej prędkości), czyniąc walkę z tym wrogiem bardziej dynamiczną i taktyczną.
+
+---
+
+## [v0.83] - AI wrogów i rebalans pacingu
+* **Rebalans:** Oblężnicy (`Wall Enemy`) nie wliczają się już do dynamicznego limitu wrogów, co eliminuje blokowanie spawnu standardowych przeciwników podczas Eventu Oblężenia.
+* **Rebalans:** Interwał spawnu Elity wydłużono z 24s do 144s.
+* **Ulepszenie AI (Aggressive):** Dodano krótki okres **sygnalizacji** (pauza i czerwony kontur) przed rozpoczęciem szarży.
+* **Ulepszenie AI (Tank):** Dodano pełną odporność na **HitStun** oraz **spowolnienie** (Freeze i Hazard).
+* **Ulepszenie AI (Splitter):** Dzieci spawnowane są teraz z efektem **odrzutu (knockback)** i krótką nietykalnością.
+* **Ulepszenie AI (Standard):** Dodano subtelny ruch **'wężykiem'** (directional evasion).
+
+---
+
+## [v0.82] - Piorun Łańcuchowy (Chain Lightning)
+* **Nowa Broń (v0.82a):** Dodano Chain Lightning (Piorun Łańcuchowy) – ulepszenie, które razi cele i przeskakuje na pobliskich wrogów.
+* **Poprawka (v0.82b):** Naprawiono błąd, który powodował, że Chain Lightning zadawał obrażenia, ale nie usuwał zabitych wrogów z tablicy.
+* **Balans (v0.82b):** Zwiększono maksymalny poziom Pioruna do 6.
+
+---
+
+## [v0.81] - Bicz i Optymalizacja Broni
+* **Zmiana Startowa (v0.81b):** Domyślną i startową bronią gracza jest teraz **Bicz** (`WhipWeapon`).
+* **Poprawka (v0.81c):** Dodano poprawne filtrowanie Perk Deck dla ulepszeń AutoGuna (dostępne tylko, jeśli AutoGun jest aktywny).
+* **Poprawka (v0.81g):** Wprowadzono separację rozmiaru rysowania (`drawScale`) od rozmiaru kolizji (`hitboxSize`) dla Bicza (Whip).
+* **Rebalans (v0.81e):** Zmieniono bazową szybkostrzelność AutoGuna (z 500ms na 650ms) i zwiększono max. poziom ulepszenia szybkostrzelności.
+
+---
+
+## [v0.80] - Ulepszenia Bicza (Whip)
+* **Wizualizacje (v0.80a):** Bicz rysuje teraz sprite (efekt cięcia) i jest odwracany w zależności od kierunku ataku.
+* **Poprawka (v0.80b):** Hitbox Bicza jest teraz **przyklejony** (offsetowany) do pozycji gracza na czas życia hitboksa, co stabilizuje mechanikę kolizji.
+
+---
+
+## [v0.79] - Czas Życia Pocisków i Odrzut
+* **Nowa Mechanika:** Wprowadzono logikę `life` i `maxLife` do `Bullet`, co pozwala na pociski o ograniczonym czasie życia (jak Bicz).
+
+---
+
+## [v0.77] - Balans Oblężnika i Pacing
+* **Poprawka Oblężenia (v0.77c):** Uproszczono logikę Eventu Oblężenia, wprowadzając absolutny czas respawnu (150s + losowy interwał).
+* **Rebalans:** Zwiększono dystans spawnu `Hazard` i `Ranged Enemy`.
+* **Poprawka UI (v0.77f):** Naprawiono migotanie paska HP przy niskim zdrowiu.
+
+---
+
+## [v0.76] - Milestone Balance
+* **Rebalans:** Zwiększono rozmiar świata (x8), limit wrogów (z 110 do 300) oraz czas życia Gemów i Pickupów (Gemy do 35s).
+* **Nowa Mechanika:** Gemy XP mają teraz **ograniczony czas życia** (35s).
+
+---
+
+## [v0.75] - Wydarzenie Oblężenia (Wall Enemy)
+* **Nowy Wróg:** Dodano `WallEnemy` (Oblężnik) – wolny, bardzo wytrzymały, detonujący się wróg, pojawiający się w ramach nowego Eventu.
+* **Nowa Mechanika:** Dodano `Siege Event` – wrogowie `Wall` pojawiają się w idealnym kręgu wokół gracza.
+* **Nowa Mechanika:** Detonacja Oblężnika aktywuje `AreaNuke`, które niszczy gemy i inne dropy w zasięgu.
+
+---
+
+## [v0.72 - v0.74] - Refaktoryzacja Logiki Pickupów i Broni
+* **Refaktoryzacja:** Logika `applyEffect()` została przeniesiona z `collisions.js` do podklas `Pickup` (`HealPickup.js`, `BombPickup.js` itd.).
+* **Refaktoryzacja:** Poprawiono użycie `PERK_CONFIG` w klasach broni (`NovaWeapon.js`, `OrbitalWeapon.js`).
+
+---
+
+## [v0.68] - Hazard (Pola Zagrożenia)
+* **Nowy Wróg/Środowisko:** Dodano `Hazard` (np. Kwaśna Plama) – statyczne pole zadające obrażenia i spowalniające gracza/wrogów.
+* **Nowa Mechanika:** Wprowadzono `Mega Hazard` (losowy, duży wariant).
+* **Nowa Mechanika:** `Efekt Bagna` - dropy (XP, Pickupy, Skrzynie) w Hazardzie zaczynają **zanikać** (Decay).
+
+---
+
+## [v0.61 - v0.67] - Object Pooling i Korekty
+* **Optymalizacja:** Wprowadzono wzorzec **Object Pool** dla pocisków, cząsteczek i tekstu obrażeń, co znacznie poprawiło wydajność gry.
+
+---
+
 ## [v0.57] - Silnik Grafiki i Animacji
-* **Nowa Funkcja (v0.56):** Stworzono Menedżera Zasobów (`js/services/assets.js`) odpowiedzialnego za ładowanie wszystkich plików graficznych przed startem gry.
-* **Zmiana (v0.56):** Zaktualizowano `main.js`, aby czekał na załadowanie zasobów przed uruchomieniem menu.
-* **Zmiana (v0.56):** Zaktualizowano metody `.draw()` we wszystkich klasach bytów (`Player`, `Enemy`, `Gem`, `Pickup`, `Chest`). Teraz rysują załadowane sprite'y (jeśli istnieją) lub wracają do rysowania domyślnych kształtów (kwadratów/kółek), jeśli grafiki brakuje.
-* **Nowa Funkcja (v0.57):** Zaimplementowano podstawowy silnik animacji. Klasy `Player` i `Enemy` posiadają teraz logikę do obsługi klatek animacji (przełączanie klatek w czasie).
-* **Nowa Funkcja (v0.57b):** Rozbudowano silnik animacji o "stany" (`idle` i `walk`), pozwalając bytom na wybór odpowiedniej animacji (wiersza na arkuszu sprite'ów) w zależności od tego, czy się poruszają.
-* **Organizacja (v0.57b):** Wyodrębniono numer wersji gry do dedykowanego pliku `js/config/version.js`.
+* **Nowa Funkcja:** Stworzono Menedżera Zasobów.
+* **Nowa Funkcja:** Zaimplementowano podstawowy silnik animacji.
 
 ---
 
 ## [v0.55] - Reorganizacja Projektu
-* **Refaktoryzacja:** Przeniesiono wszystkie 21 plików JavaScript do nowej, ustrukturyzowanej hierarchii folderów (`/js/core`, `/js/entities`, `/js/managers`, `/js/ui`, `/js/config`, `/js/services`).
-* **Zmiana:** Zaktualizowano wszystkie ścieżki `import` we wszystkich plikach, aby pasowały do nowej struktury.
-* **Zmiana:** Zaktualizowano `index.html`, aby ładował `main.js` z nowej lokalizacji (`js/main.js`).
+* **Refaktoryzacja:** Przeniesiono wszystkie 21 plików JavaScript do nowej, ustrukturyzowanej hierarchii folderów.
 
 ---
 
 ## [v0.54] - Refaktoryzacja Broni (OOP)
-* **Refaktoryzacja:** Przekształcono stary, proceduralny system broni (`weapon.js`) w pełni obiektowy.
-* **Nowa Funkcja:** Stworzono klasy broni (`AutoGun`, `OrbitalWeapon`, `NovaWeapon`), które same zarządzają swoim stanem, logiką strzelania (`update()`) i rysowania (`draw()`).
-* **Refaktoryzacja:** Klasa `Player` posiada teraz tablicę `this.weapons` i zarządza instancjami swoich broni.
-* **Poprawka:** Wieloetapowe debugowanie błędów `ReferenceError` i `TypeError` wprowadzonych przez refaktoryzację v0.54. Ustabilizowano pętlę gry i naprawiono kompatybilność z `dev.js`.
+* **Refaktoryzacja:** Przekształcono stary, proceduralny system broni w pełni obiektowy.
 
 ---
 
 ## [v0.50 - v0.53] - Refaktoryzacja Bytów (OOP)
-* **Refaktoryzacja:** Rozpoczęto masową konwersję projektu na programowanie obiektowe (OOP). Wszystkie byty w grze stały się klasami z własnymi metodami `.update()` i `.draw()`.
-* **Dotyczyło to:**
-    * `Player` (`player.js`)
-    * `Enemy` (oraz klas pochodnych jak `TankEnemy`, `RangedEnemy` w `enemy.js`)
-    * `PlayerBullet` i `EnemyBullet` (`bullet.js`)
-    * `Gem` (`gem.js`)
-    * `Pickup` (oraz klas pochodnych jak `HealPickup` w `pickup.js`)
-    * `Chest` (`chest.js`)
-* **Refaktoryzacja:** Stworzono `enemyManager.js` do zarządzania logiką spawnowania, statystykami i typami wrogów.
+* **Refaktoryzacja:** Konwersja wszystkich bytów (Player, Enemy, Bullet, Gem) na klasy.
 
 ---
 
 ## [v0.49] - Moduł Audio
-* **Refaktoryzacja:** Wydzielono całą logikę proceduralnego generowania dźwięków (Web Audio API `tone()`) do osobnego modułu `audio.js`.
-* **Nowa Funkcja:** Stworzono abstrakcyjną funkcję `playSound(eventName)`, aby ułatwić wywoływanie dźwięków z dowolnego miejsca w kodzie, ukrywając implementację.
+* **Refaktoryzacja:** Wydzielono całą logikę generowania dźwięków do `audio.js`.
 
 ---
 
 ## [v0.46 - v0.47] - Modularyzacja Logiki Gry
-* **Refaktoryzacja:** Wydzielono całą logikę sprawdzania kolizji (gracz-wróg, pocisk-wróg, gracz-pickup itd.) do dedykowanego pliku `collisions.js`.
-* **Refaktoryzacja:** Wydzielono główną pętlę aktualizacji stanu gry (ruch bytów, spawnowanie, timery) do pliku `gameLogic.js`.
-* **Zmiana:** Wprowadzono drobne poprawki QoL (formatowanie czasu, własny modal potwierdzenia).
+* **Refaktoryzacja:** Wydzielono logikę kolizji (`collisions.js`) i logikę gry (`gameLogic.js`).
 
 ---
 
 ## [v0.44 - v0.45] - Pierwsza Modularyzacja
-* **Refaktoryzacja:** Wydzielono logikę sterowania (klawiatura i wirtualny joystick) do `input.js`.
-* **Refaktoryzacja:** Wydzielono narzędzia deweloperskie (Dev Menu) do `dev.js`.
-* **Refaktoryzacja:** Wydzielono statyczną pulę definicji perków (ulepszeń) do `perks.js`.
+* **Refaktoryzacja:** Wydzielono sterowanie, narzędzia deweloperskie i definicje perków.
 
 ---
 

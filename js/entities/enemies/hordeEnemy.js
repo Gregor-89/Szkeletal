@@ -1,5 +1,5 @@
 // ==============
-// HORDEENEMY.JS (v0.83v - Wzmocnienie Roju)
+// HORDEENEMY.JS (v0.85a - Agresywny Rój / Kohezyjne Otaczanie)
 // Lokalizacja: /js/entities/enemies/hordeEnemy.js
 // ==============
 
@@ -33,11 +33,17 @@ export class HordeEnemy extends Enemy {
     if (this.hitStun > 0) {
         this.hitStun -= dt;
     } else {
-        // NOWA LOGIKA V0.83V: Wzmocniono promień Roju
-        const swarmRadius = 100;
-        // Losowy offset (bazowany na ID, aby był stały przez krótki czas)
-        const targetX = player.x + Math.sin(this.id) * swarmRadius;
-        const targetY = player.y + Math.cos(this.id) * swarmRadius;
+        // --- NOWA LOGIKA V0.85A: Kohezyjny Rój Atakujący ---
+        const SWARM_RADIUS = 20; // Docelowy punkt 20px za graczem
+        
+        // Target jest punktem offsetowym na małym okręgu wokół gracza (unikalnym dla każdego wroga)
+        // Kąt jest stabilny (tylko ID), co wymusza trwałą formację "pierścienia", 
+        // który jednocześnie wchodzi w kolizję z graczem (ze względu na SWARM_RADIUS).
+        const targetAngleOffset = (this.id % 7) * (Math.PI * 2 / 7); // Stały kąt offsetu
+        
+        const targetX = player.x + Math.cos(targetAngleOffset) * SWARM_RADIUS;
+        const targetY = player.y + Math.sin(targetAngleOffset) * SWARM_RADIUS;
+        // ---------------------------------------------------
 
         const dx = targetX - this.x;
         const dy = targetY - this.y;
@@ -47,9 +53,9 @@ export class HordeEnemy extends Enemy {
         let currentSpeed = this.getSpeed(game, dist);
 
         if (dist > 0.1) {
-            const targetAngle = Math.atan2(dy, dx);
-            vx = Math.cos(targetAngle) * currentSpeed;
-            vy = Math.sin(targetAngle) * currentSpeed;
+            const targetAngleToTarget = Math.atan2(dy, dx);
+            vx = Math.cos(targetAngleToTarget) * currentSpeed;
+            vy = Math.sin(targetAngleToTarget) * currentSpeed;
             isMoving = true;
         }
 

@@ -1,5 +1,5 @@
 // ==============
-// STANDARDENEMY.JS (v0.83o - Ostateczna Naprawa Składni)
+// STANDARDENEMY.JS (v0.85a - Agresywny Wężyk)
 // Lokalizacja: /js/entities/enemies/standardEnemy.js
 // ==============
 
@@ -34,17 +34,17 @@ export class StandardEnemy extends Enemy {
         if (dist > 0.1) {
             const targetAngle = Math.atan2(dy, dx);
             
-            // NOWA LOGIKA V0.83: Dodaj lekkie "unikanie kierunkowe" (wężyk)
+            // NOWA LOGIKA V0.85A: Mocniejszy i wolniejszy "wężyk"
             const targetAngleEvasion = targetAngle + Math.PI / 2; // Obróć o 90 stopni
             
             // Wektor w kierunku gracza
             vx = Math.cos(targetAngle) * currentSpeed;
             vy = Math.sin(targetAngle) * currentSpeed;
             
-            // Wektor unikania (bardzo mała siła, ~15% bazowej prędkości)
-            const sideSpeed = currentSpeed * 0.15;
-            vx += Math.cos(targetAngleEvasion) * sideSpeed * Math.sin(game.time * 5 + this.id);
-            vy += Math.sin(targetAngleEvasion) * sideSpeed * Math.sin(game.time * 5 + this.id);
+            // Wektor unikania (Mocniejsza siła, ~35% bazowej prędkości, wolniejsza oscylacja)
+            const sideSpeed = currentSpeed * 0.35; // Zwiększono z 0.15 na 0.35
+            vx += Math.cos(targetAngleEvasion) * sideSpeed * Math.sin(game.time * 2.5 + this.id); // Zmniejszono częstotliwość z 5 na 2.5
+            vy += Math.sin(targetAngleEvasion) * sideSpeed * Math.sin(game.time * 2.5 + this.id);
 
             isMoving = true;
         }

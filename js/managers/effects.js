@@ -1,5 +1,5 @@
 // ==============
-// EFFECTS.JS (v0.83t - FIX: Zapobieganie nakładaniu się Hazardów)
+// EFFECTS.JS (v0.84a - FIX: Zapobieganie nakładaniu się Mega Hazardów)
 // Lokalizacja: /js/managers/effects.js
 // ==============
 
@@ -28,6 +28,10 @@ export const PICKUP_CLASS_MAP = {
     freeze: FreezePickup
 };
 
+// NOWA LINIA V0.84: Max. promień, aby zarezerwować miejsce dla Mega Hazardu
+const MAX_HAZARD_SEPARATION_RADIUS = HAZARD_CONFIG.SIZE * HAZARD_CONFIG.MEGA_HAZARD_MAX_MULTIPLIER;
+
+
 /**
  * NOWA Funkcja (v0.83t): Znajduje miejsce dla nowego Hazardu, unikając kolizji z istniejącymi.
  * Dodatkowo próbuje utrzymać pozycję poza ekranem, ale w pobliżu gracza.
@@ -35,7 +39,8 @@ export const PICKUP_CLASS_MAP = {
 function findHazardSpawnSpot(player, camera, hazards) {
     const maxAttempts = 12; // Zwiększona liczba prób
     const spawnMargin = 50; // Margines poza ekranem (w px)
-    const separationDistance = HAZARD_CONFIG.SIZE * 1.5; // Minimalna odległość od centrum innego Hazardu
+    // POPRAWKA V0.84A: Używamy stałej rezerwującej miejsce dla największego możliwego Hazardu.
+    const separationDistance = MAX_HAZARD_SEPARATION_RADIUS; // Minimalna odległość od centrum innego Hazardu
     
     // Granice świata
     const worldWidth = camera.worldWidth;
@@ -78,7 +83,7 @@ function findHazardSpawnSpot(player, camera, hazards) {
             const dist = Math.hypot(dx, dy);
             
             // Sprawdź, czy odległość jest mniejsza niż suma promieni z marginesem
-            // Używamy ujednoliconej miary: separationDistance (1.5x HAZARD_CONFIG.SIZE)
+            // POPRAWKA V0.84A: separationDistance jest teraz wystarczająco duży, by objąć Mega Hazard
             if (dist < separationDistance + existingHazard.r) {
                 isClear = false;
                 break;

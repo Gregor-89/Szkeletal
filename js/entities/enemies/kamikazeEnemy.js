@@ -1,5 +1,5 @@
 // ==============
-// KAMIKAZEENEMY.JS (v0.83v - Szybszy i Zygzakowaty)
+// KAMIKAZEENEMY.JS (v0.85b - Nowy Kolor Obrysu)
 // Lokalizacja: /js/entities/enemies/kamikazeEnemy.js
 // ==============
 
@@ -20,8 +20,9 @@ export class KamikazeEnemy extends Enemy {
   
   // Zwiększam bazową prędkość, aby był szybszy nawet bez szarży
   getSpeed(game, dist) {
-    let speed = super.getSpeed(game, dist) * 1.5; // Zwiększenie bazowej prędkości 1.5x
-    if (dist < 140) speed *= 2.0; // +100% prędkości przy szarży (razem 3.0x bazowej)
+    let speed = super.getSpeed(game, dist); 
+    // Zostawiam tylko logikę szarży.
+    if (dist < 140) speed *= 2.0; // +100% prędkości przy szarży
     return speed;
   }
   
@@ -31,7 +32,8 @@ export class KamikazeEnemy extends Enemy {
   }
   
   getOutlineColor() {
-    return '#ffee58';
+    // NOWA LOGIKA V0.85B: Zmieniono kolor na bardziej wyróżniający (pomarańczowy dyniowy)
+    return '#ff7043'; // Poprzednio: '#ffee58' (jasny żółty)
   }
   
   /**
@@ -75,19 +77,31 @@ export class KamikazeEnemy extends Enemy {
         let currentSpeed = this.getSpeed(game, dist);
 
         if (dist > 0.1) {
-            const targetAngle = Math.atan2(dy, dx);
+            // NOWA LOGIKA V0.85A: Zygzak z predykcją (celowanie 150px przed graczem)
+            const PREDICT_DIST = 150; // Celuj 150px przed graczem
+            const SINUSOID_MAGNITUDE = 0.8; // Siła sinusa (0.8x prędkości)
+            const SINUSOID_FREQUENCY = 5.0; // Częstotliwość
             
-            // NOWA LOGIKA V0.83V: Mocniejszy ruch zygzakowaty (losowy offset co 0.5s)
-            // Użycie this.id i this.time do stworzenia powtarzalnego, ale widocznego zygzaka
-            const zigzagPeriod = 0.5;
-            const zigzagPhase = Math.floor(game.time / zigzagPeriod) + this.id * 0.1;
-            const zigzagOffset = Math.sin(zigzagPhase) * 0.5; // Maks. kąt 0.5 rad
+            // 1. Ustal kąt do gracza (podstawowy kierunek)
+            const angleToPlayer = Math.atan2(dy, dx);
             
-            // Stary offset (losowość) zostaje usunięty na rzecz sterowanego zygzaka
-            const finalAngle = targetAngle + zigzagOffset;
+            // 2. Ustal punkt docelowy z lekką predykcją (w kierunku ostatniego ruchu gracza)
+            const predictedTargetX = player.x + Math.cos(angleToPlayer) * PREDICT_DIST;
+            const predictedTargetY = player.y + Math.sin(angleToPlayer) * PREDICT_DIST;
+
+            // 3. Oblicz nowy kąt do *przewidywanego celu*
+            const pDx = predictedTargetX - this.x;
+            const pDy = predictedTargetY - this.y;
+            const angleToTarget = Math.atan2(pDy, pDx);
             
-            vx = Math.cos(finalAngle) * currentSpeed;
-            vy = Math.sin(finalAngle) * currentSpeed;
+            // 4. Dodaj stałą siłę boczną do kąta celu, oscylującą w czasie
+            const anglePerp = angleToTarget + Math.PI / 2;
+            const sideForce = currentSpeed * SINUSOID_MAGNITUDE * Math.sin(game.time * SINUSOID_FREQUENCY);
+
+            // 5. Wektor ruchu jest kombinacją siły do celu i siły bocznej
+            vx = Math.cos(angleToTarget) * currentSpeed + Math.cos(anglePerp) * sideForce;
+            vy = Math.sin(angleToTarget) * currentSpeed + Math.sin(anglePerp) * sideForce;
+
             isMoving = true;
         }
 

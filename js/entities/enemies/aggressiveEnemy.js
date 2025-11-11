@@ -1,5 +1,5 @@
 // ==============
-// AGGRESSIVEENEMY.JS (v0.83u - Naprawa logiki szarży)
+// AGGRESSIVEENEMY.JS (v0.85a - Wydłużona Sygnalizacja)
 // Lokalizacja: /js/entities/enemies/aggressiveEnemy.js
 // ==============
 
@@ -15,7 +15,7 @@ export class AggressiveEnemy extends Enemy {
     super(x, y, stats, hpScale);
     this.isCharging = false;
     this.chargeTimer = 0.0;
-    this.chargeDuration = 0.2; // Czas (s) sygnalizacji
+    this.chargeDuration = 0.4; // Zwiększono z 0.2s do 0.4s
     this.chargeSpeedBonus = 2.0; // Mnożnik po sygnalizacji
   }
   
@@ -85,8 +85,8 @@ export class AggressiveEnemy extends Enemy {
         // Ruch tylko jeśli prędkość > 0 (pozwala na zatrzymanie podczas isCharging)
         if (dist > 0.1 && currentSpeed > 0) { 
             const targetAngle = Math.atan2(dy, dx);
-            const randomOffset = Math.sin(game.time * 3 + this.id * 7.3) * 0.15;
-            const finalAngle = targetAngle + (this.isCharging ? 0 : randomOffset); 
+            // POPRAWKA: Usunięto randomOffset (jest w klasie bazowej, ale AggressiveEnemy go nie używa)
+            const finalAngle = targetAngle; // AggressiveEnemy zawsze celuje prosto (chyba że ma hitstun)
             
             vx = Math.cos(finalAngle) * currentSpeed;
             vy = Math.sin(finalAngle) * currentSpeed;
