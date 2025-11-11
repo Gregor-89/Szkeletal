@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.81f - Aktualizacja Dev Menu dla Bicza/AutoGuna)
+// DEV.JS (v0.82b - Balans Pioruna)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -11,8 +11,9 @@ import { PLAYER_CONFIG, GAME_CONFIG, WEAPON_CONFIG } from '../config/gameData.js
 import { AutoGun } from '../config/weapons/autoGun.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
-// NOWY IMPORT v0.81f
 import { WhipWeapon } from '../config/weapons/whipWeapon.js';
+// NOWY IMPORT v0.82a
+import { ChainLightningWeapon } from '../config/weapons/chainLightningWeapon.js';
 
 // POPRAWKA v0.74: Import mapy z managera efektów
 import { PICKUP_CLASS_MAP } from '../managers/effects.js';
@@ -192,7 +193,7 @@ function applyDevSettings() {
             // Uwaga: Nie przeliczamy perkLevels wstecz z tych wartości
         }
 
-        // 3. INNE BRONIE (Orbital, Nova)
+        // 3. INNE BRONIE (Orbital, Nova, Piorun)
         const orbital = player.getWeapon(OrbitalWeapon);
         const orbitalLevel = parseInt(document.getElementById('devOrbital').value) || 0;
         if (orbitalLevel === 0 && orbital) {
@@ -221,6 +222,25 @@ function applyDevSettings() {
             nova.level = novaLevel;
             nova.updateStats();
             perkLevels['nova'] = novaLevel;
+        }
+        
+        // POPRAWKA v0.82b: Zwiększono max do 6
+        const lightning = player.getWeapon(ChainLightningWeapon);
+        const lightningLevel = parseInt(document.getElementById('devLightning').value) || 0;
+         if (lightningLevel === 0 && lightning) {
+            player.weapons = player.weapons.filter(w => !(w instanceof ChainLightningWeapon));
+            delete perkLevels['chainLightning'];
+        } else if (lightningLevel > 0 && !lightning) {
+            const perk = perkPool.find(p => p.id === 'chainLightning');
+            for(let i=0; i<lightningLevel; i++) perk.apply(gameState, perk);
+            perkLevels['chainLightning'] = lightningLevel;
+        } else if (lightning && lightning.level !== lightningLevel) {
+            lightning.level = 1; // Reset
+            const perk = perkPool.find(p => p.id === 'chainLightning');
+            for(let i = 1; i < lightningLevel; i++) { // Ulepszaj poziom po poziomie
+                lightning.upgrade(perk);
+            }
+            perkLevels['chainLightning'] = lightningLevel - 1;
         }
     }
     
@@ -337,9 +357,9 @@ function applyDevPreset(level, perkLevelOffset = 0) {
         });
     }
     
-    // 3. INNE BRONIE (Bez zmian)
+    // 3. INNE BRONIE (Orbital, Nova, Piorun)
     perkPool.forEach(perk => {
-        if (perk.id === 'orbital' || perk.id === 'nova') {
+        if (['orbital', 'nova', 'chainLightning'].includes(perk.id)) { // POPRAWKA v0.82a
              const targetLevel = Math.max(0, perk.max - perkLevelOffset);
              if (targetLevel > 0) {
                  perkLevels[perk.id] = targetLevel;
@@ -388,8 +408,10 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     
     const orbital = player.getWeapon(OrbitalWeapon);
     const nova = player.getWeapon(NovaWeapon);
+    const lightning = player.getWeapon(ChainLightningWeapon); // NOWE v0.82a
     document.getElementById('devOrbital').value = orbital ? orbital.level : 0;
     document.getElementById('devNova').value = nova ? nova.level : 0;
+    document.getElementById('devLightning').value = lightning ? lightning.level : 0; // NOWE v0.82a
     
     devSettings.presetLoaded = true;
     

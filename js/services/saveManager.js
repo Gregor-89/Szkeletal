@@ -1,5 +1,5 @@
 // ==============
-// SAVEMANAGER.JS (v0.79a - Dodanie Bicza do mapy klas)
+// SAVEMANAGER.JS (v0.82a - Integracja Pioruna z systemem zapisu)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
@@ -19,8 +19,9 @@ import { FreezePickup } from '../entities/pickups/freezePickup.js';
 import { AutoGun } from '../config/weapons/autoGun.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
-// NOWY IMPORT v0.79
 import { WhipWeapon } from '../config/weapons/whipWeapon.js'; 
+// NOWY IMPORT v0.82a
+import { ChainLightningWeapon } from '../config/weapons/chainLightningWeapon.js';
 
 // Import mapy wrogów (zrefaktoryzowane w v0.71)
 import { ENEMY_CLASS_MAP } from '../managers/enemyManager.js';
@@ -43,7 +44,8 @@ const WEAPON_CLASS_MAP = {
     AutoGun: AutoGun,
     OrbitalWeapon: OrbitalWeapon,
     NovaWeapon: NovaWeapon,
-    WhipWeapon: WhipWeapon // NOWA LINIA v0.79
+    WhipWeapon: WhipWeapon,
+    ChainLightningWeapon: ChainLightningWeapon // NOWA LINIA v0.82a
 };
 
 /**
@@ -221,4 +223,4 @@ export function loadGame(savedState, state, uiData) {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.71-FIX] js/services/saveManager.js: Zaktualizowano importy broni do 3 oddzielnych plików.');
+console.log('[DEBUG-v0.82a] js/services/saveManager.js: Zarejestrowano ChainLightningWeapon.');

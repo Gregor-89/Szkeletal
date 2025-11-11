@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.81g - FIX: Hitbox Bicza v1 - Separacja configu)
+// GAMEDATA.JS (v0.82b - FIX: Balans i naprawa Pioruna)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -254,6 +254,18 @@ export const PERK_CONFIG = {
         const counts = [0, 1, 2, 3, 4, 4]; // [0] = placeholder
         return counts[level] || 4;
     }
+  },
+  
+  // NOWA BROŃ v0.82a
+  chainLightning: {
+    // POPRAWKA v0.82b: Zwiększono max poziom do 6
+    max: 6,
+    VISUAL_DURATION: 0.25, // Czas (s) przez jaki piorun jest widoczny
+    // POPRAWKA v0.82b: Dodano Lvl 6 i zmieniono Lvl 1
+    // Wartości [0] to placeholder
+    calculateCooldown: (level) => [0, 2.5, 2.3, 2.1, 1.9, 1.7, 1.6][level] || 1.6,
+    calculateDamage: (level) => [0, 1, 2, 2, 3, 3, 4][level] || 4,
+    calculateTargets: (level) => [0, 1, 2, 3, 4, 5, 6][level] || 6,
   }
 };
 
@@ -315,4 +327,4 @@ export const ENEMY_STATS = {
 };
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.81g] js/config/gameData.js: Wdrożono Hitbox Bicza v1 i naprawiono logikę spawnu v3.');
+console.log('[DEBUG-v0.82b] js/config/gameData.js: Zaktualizowano balans Pioruna (6 poziomów, Lvl 1 = 1 cel).');

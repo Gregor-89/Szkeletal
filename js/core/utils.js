@@ -1,5 +1,5 @@
 // ==============
-// UTILS.JS (v0.77 - Pełna wersja pliku)
+// UTILS.JS (v0.82a - Standaryzacja ikon Szybkości)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
@@ -288,7 +288,7 @@ export function getPickupEmoji(type) {
     if (type === 'heal') return '❤️';
     if (type === 'magnet') return '🧲';
     if (type === 'shield') return '🛡️';
-    if (type === 'speed') return '⚡';
+    if (type === 'speed') return '👟'; // POPRAWKA v0.82a
     if (type === 'bomb') return '💣';
     if (type === 'freeze') return '❄️';
     return '💎';

@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.81g - FIX: Poprawka UI statystyk na pauzie)
+// UI.JS (v0.82a - Standaryzacja ikon Szybkości)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -84,7 +84,8 @@ export function updateUI(game, player, settings, weapons) {
 
     // Panel bonusów
     let bonusHTML = '';
-    const bonusMap = { magnet: '🧲', shield: '🛡️', speed: '⚡', freeze: '❄️' };
+    // POPRAWKA v0.82a: Zmiana ikony 'speed'
+    const bonusMap = { magnet: '🧲', shield: '🛡️', speed: '👟', freeze: '❄️' };
     if (game.magnetT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.magnet}</span><span class="bonus-txt">${Math.ceil(game.magnetT)}</span></div>`;
     if (game.shieldT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.shield}</span><span class="bonus-txt">${Math.ceil(game.shieldT)}</span></div>`;
     if (game.speedT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.speed}</span><span class="bonus-txt">${Math.ceil(game.speedT)}</span></div>`;
@@ -363,4 +364,4 @@ export function gameOver(game, uiData) {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.81g] js/ui/ui.js: Naprawiono błąd statystyk na ekranie pauzy (przekazano "weapons").');
+console.log('[DEBUG-v0.82a] js/ui/ui.js: Zmieniono ikonę bonusu Szybkości na "👟".');

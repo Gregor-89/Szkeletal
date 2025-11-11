@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v0.81e - Balans i QoL)
+// LEVELMANAGER.JS (v0.82b - FIX: Balans Pioruna i UI Statystyk)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -16,6 +16,8 @@ import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
 // NOWY IMPORT v0.81b: Potrzebny do wyświetlania statystyk
 import { WhipWeapon } from '../config/weapons/whipWeapon.js';
+// NOWY IMPORT v0.82a
+import { ChainLightningWeapon } from '../config/weapons/chainLightningWeapon.js';
 
 // Import referencji DOM potrzebnych temu modułowi
 import {
@@ -25,7 +27,8 @@ import {
 
 // NOWA MAPA v0.81c: Rozwiązuje stringi z perks.js aby naprawić błąd TDZ
 const WEAPON_CLASS_MAP_LOCAL = {
-    'AutoGun': AutoGun
+    'AutoGun': AutoGun,
+    'ChainLightning': ChainLightningWeapon // NOWA LINIA v0.82a
 };
 
 /**
@@ -80,7 +83,7 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
 
 /**
  * Aktualizuje panel statystyk (przeniesione z ui.js).
- * POPRAWKA v0.81e: Zmiana emoji Bicza i tekst "BRAK".
+ * POPRAWKA v0.82b: Zaktualizowano UI Pioruna dla 6 poziomów.
  */
 export function updateStatsUI(game, player, settings, weapons, targetElement = statsDisplay) {
     targetElement.innerHTML = '';
@@ -92,11 +95,12 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
     const autoGun = weaponList.find(w => w instanceof AutoGun);
     const orbital = weaponList.find(w => w instanceof OrbitalWeapon);
     const nova = weaponList.find(w => w instanceof NovaWeapon);
+    const chainLightning = weaponList.find(w => w instanceof ChainLightningWeapon); // NOWE
 
     const stats = [
         { icon: '⭐', label: 'Poziom', value: game.level },
         { icon: '❤️', label: 'Zdrowie', value: `${Math.floor(game.health)}/${game.maxHealth}` },
-        { icon: '🏃', label: 'Prędkość gracza', value: player.speed.toFixed(2) },
+        { icon: '👟', label: 'Prędkość gracza', value: player.speed.toFixed(2) }, // v0.82a
         
         // Statystyki Bicza (zawsze obecne)
         { icon: '🪢', label: 'Bicz (Poziom)', value: `${whip ? whip.level : '1'} / ${PERK_CONFIG.whip?.max || 5}` },
@@ -108,6 +112,14 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
         // Statystyki Novy (jeśli istnieje)
         { icon: '💫', label: 'Nova', value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova?.max || 5}` },
         
+        // NOWE Statystyki Pioruna (jeśli istnieje)
+        ...(chainLightning ? [
+            // POPRAWKA v0.82b: Użyj PERK_CONFIG do odczytania max 6
+            { icon: '⚡', label: 'Piorun (Poziom)', value: `${chainLightning.level} / ${PERK_CONFIG.chainLightning?.max || 6}` },
+            { icon: '⚡', label: 'Piorun (Obr.)', value: `${chainLightning.damage}` },
+            { icon: '⚡', label: 'Piorun (Cele)', value: `${chainLightning.targets}` },
+        ] : []),
+
         // Statystyki AutoGuna (tylko jeśli istnieje)
         ...(autoGun ? [
             { icon: '🔫', label: 'AutoGun', value: `Poziom ${autoGun.level}` },

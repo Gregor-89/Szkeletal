@@ -1,5 +1,5 @@
 // ==============
-// PERKS.JS (v0.81f - FIX: Przywrócenie perka ulepszenia Bicza)
+// PERKS.JS (v0.82b - Balans Pioruna)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
@@ -7,8 +7,9 @@
 import { AutoGun } from './weapons/autoGun.js';
 import { OrbitalWeapon } from './weapons/orbitalWeapon.js';
 import { NovaWeapon } from './weapons/novaWeapon.js';
-// NOWY IMPORT v0.81f (Przywrócony)
 import { WhipWeapon } from './weapons/whipWeapon.js';
+// NOWY IMPORT v0.82a
+import { ChainLightningWeapon } from './weapons/chainLightningWeapon.js';
 
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
 import { PERK_CONFIG } from './gameData.js';
@@ -105,10 +106,19 @@ export const perkPool = [
             state.player.addWeapon(NovaWeapon, perk);
         }
     },
+    // NOWA BROŃ v0.82a
+    {
+        id: 'chainLightning', name: 'Piorun Łańcuchowy', desc:'Rażenie prądem, które przeskakuje między wrogami', 
+        max: PERK_CONFIG.chainLightning?.max || 6, // POPRAWKA v0.82b: Zwiększono max
+        color:'#40C4FF', emoji:'⚡',
+        apply: (state, perk) => { 
+            state.player.addWeapon(ChainLightningWeapon, perk);
+        }
+    },
     {
         id: 'speed', name: 'Szybkość ruchu', desc:'+10% prędkości gracza', 
         max: PERK_CONFIG.speed?.max || 4, 
-        color:'#66bb6a', emoji:'🏃',
+        color:'#66bb6a', emoji:'👟', // POPRAWKA v0.82a: Zmiana emoji
         apply: (state, perk) => { 
             state.player.speed *= PERK_CONFIG.speed.value; 
         }
