@@ -1,5 +1,5 @@
 // ==============
-// AUDIO.JS (v0.77e - FIX: Zwiększenie głośności głównej)
+// AUDIO.JS (v0.79a - Dodanie dźwięku Bicza)
 // Lokalizacja: /js/services/audio.js
 // ==============
 
@@ -32,6 +32,8 @@ const AUDIO_ASSET_LIST = [
     { id: 'BombPickup', src: 'sounds/bomb.wav' },
     { id: 'FreezePickup', src: 'sounds/freeze.wav' },
     { id: 'EliteSpawn', src: 'sounds/elite_spawn.wav' },
+    // NOWY DŹWIĘK v0.79
+    { id: 'Whip', src: 'sounds/whip_crack.wav' },
 ];
 
 /**
@@ -198,6 +200,10 @@ export function playSound(eventName) {
             break;
         case 'Nova':
             tone(680, 'square', 0.08, 0.07);
+            break;
+        // NOWY FALLBACK v0.79
+        case 'Whip':
+            tone(1200, 'triangle', 0.06, 0.08);
             break;
 
         // Pickups

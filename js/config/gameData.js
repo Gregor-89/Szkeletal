@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.78 - Dynamiczny Pacing v1)
+// GAMEDATA.JS (v0.79i - Balans Obrażeń Bicza)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -221,6 +221,22 @@ export const PERK_CONFIG = {
   health: {
     value: 20, // +20 HP
     max: 3
+  },
+  
+  // NOWA BROŃ v0.79
+  whip: {
+    max: 5,
+    /** Cooldown (s) = max(1.0, 3.0 - 0.4 * level) */
+    calculateCooldown: (level) => (Math.max(1.0, 3.0 - 0.4 * level)),
+    // POPRAWKA v0.79i: Zmniejszenie obrażeń
+    /** Damage = 1 + floor(level / 2) */
+    calculateDamage: (level) => (1 + Math.floor(level / 2)),
+    // POPRAWKA v0.79d: Zwiększono 2x bazową długość (30->60) i skalowanie (10->20)
+    /** Size (długość hitoxa) = 60 + 20 * (level - 1) */
+    calculateSize: (level) => (60 + 20 * (level - 1)),
+    // POPRAWKA v0.79e: Zmiana na Lvl 1-2: 2, Lvl 3-5: 4
+    /** Count (liczba cięć) = 2 lub 4 */
+    calculateCount: (level) => (level < 3 ? 2 : 4)
   }
 };
 

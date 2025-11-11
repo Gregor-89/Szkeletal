@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.70 - FIX: Naprawa błędu TypeError w main.js)
+// ASSETS.JS (v0.79h - Dodanie zasobu dla efektu Bicza)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
@@ -90,6 +90,9 @@ const assetDefinitions = {
   // Inne
   'gem': 'gem.png',
   'chest': 'chest.png',
+  
+  // NOWY ZASÓB v0.79h (Efekty)
+  'effect_whip': 'effects/whip_slash.png',
 };
 
 /**

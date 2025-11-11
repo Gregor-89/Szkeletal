@@ -1,5 +1,5 @@
 // ==============
-// SAVEMANAGER.JS (v0.77p - FIX: Poprawa aktualizacji tytułu strony przy wczytaniu)
+// SAVEMANAGER.JS (v0.79a - Dodanie Bicza do mapy klas)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
@@ -19,6 +19,8 @@ import { FreezePickup } from '../entities/pickups/freezePickup.js';
 import { AutoGun } from '../config/weapons/autoGun.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
+// NOWY IMPORT v0.79
+import { WhipWeapon } from '../config/weapons/whipWeapon.js'; 
 
 // Import mapy wrogów (zrefaktoryzowane w v0.71)
 import { ENEMY_CLASS_MAP } from '../managers/enemyManager.js';
@@ -40,7 +42,8 @@ const PICKUP_CLASS_MAP = {
 const WEAPON_CLASS_MAP = {
     AutoGun: AutoGun,
     OrbitalWeapon: OrbitalWeapon,
-    NovaWeapon: NovaWeapon
+    NovaWeapon: NovaWeapon,
+    WhipWeapon: WhipWeapon // NOWA LINIA v0.79
 };
 
 /**

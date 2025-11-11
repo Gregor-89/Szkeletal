@@ -1,10 +1,12 @@
 // ==============
-// PLAYER.JS (v0.71 - FIX: Poprawiony Import Broni)
+// PLAYER.JS (v0.79a - Dodanie śledzenia kierunku dla Bicza)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
 // POPRAWKA v0.71: Import 1 podklasy broni z nowego folderu
 import { AutoGun } from '../config/weapons/autoGun.js';
+// NOWY IMPORT v0.79
+import { WhipWeapon } from '../config/weapons/whipWeapon.js'; 
 import { get as getAsset } from '../services/assets.js';
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
 import { PLAYER_CONFIG } from '../config/gameData.js';
@@ -43,6 +45,10 @@ export class Player {
         this.animationTimer = 0;
         this.currentFrame = 0;
         this.isMoving = false;
+        
+        // NOWE v0.79: Śledzenie ostatniego kierunku ruchu dla Bicza
+        this.lastMoveX = 1; // Domyślnie w prawo
+        this.lastMoveY = 0;
     }
 
     /**
@@ -65,6 +71,10 @@ export class Player {
         this.currentFrame = 0;
         this.isMoving = false;
         this.currentState = 'idle';
+        
+        // NOWE v0.79: Reset śledzenia kierunku
+        this.lastMoveX = 1;
+        this.lastMoveY = 0;
     }
 
     /**
@@ -102,6 +112,12 @@ export class Player {
         this.y += vy * dt;
         
         this.isMoving = (Math.abs(vx) > 0 || Math.abs(vy) > 0);
+        
+        // NOWE v0.79: Zapisz ostatni wektor ruchu
+        if (this.isMoving) {
+            this.lastMoveX = vx;
+            this.lastMoveY = vy;
+        }
 
         // Aktualizacja stanów animacji
         const oldState = this.currentState;

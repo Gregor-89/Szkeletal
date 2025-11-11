@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.77d - FIX: Resetowanie spowolnienia kolizji)
+// COLLISIONS.JS (v0.79h - FIX: Ochrona przed 'undefined' w pętlach kolizji)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -190,6 +190,9 @@ for (let j = enemies.length - 1; j >= 0; j--) {
 // --- Gracz vs Gemy (XP) ---
 for (let i = gems.length - 1; i >= 0; i--) {
     const g = gems[i];
+    // POPRAWKA v0.79h: Dodano zabezpieczenie
+    if (!g) { continue; }
+    
     // POPRAWKA v0.76: Użyj isDecayedByHazard() zamiast isDecayed()
     if (g.isDecayedByHazard()) { g.release(); continue; } // Znikaj, jeśli dotarł do końca zaniku (z bagna)
     // UWAGA: Standardowy czas życia (isDead) jest obsługiwany w gem.update()
@@ -211,6 +214,10 @@ for (let i = gems.length - 1; i >= 0; i--) {
 // --- Gracz vs Pickupy ---
 for (let i = pickups.length - 1; i >= 0; i--) {
     const p = pickups[i];
+    
+    // POPRAWKA v0.79h: Dodano zabezpieczenie przed 'undefined'
+    if (!p) { continue; } 
+    
     if (p.isDecayed()) { pickups.splice(i, 1); continue; } // Znikaj, jeśli dotarł do końca zaniku
 
     const hitRadiusPP = player.size * 0.5 + p.r;
@@ -229,6 +236,10 @@ for (let i = pickups.length - 1; i >= 0; i--) {
 // --- Gracz vs Skrzynie ---
 for (let i = chests.length - 1; i >= 0; i--) {
     const c = chests[i];
+    
+    // POPRAWKA v0.79h: Dodano zabezpieczenie przed 'undefined'
+    if (!c) { continue; }
+    
     if (c.isDecayed()) { chests.splice(i, 1); continue; } // Znikaj, jeśli dotarł do końca zaniku
 
     const hitRadiusPC = player.size * 0.5 + c.r;
@@ -261,7 +272,8 @@ for (let i = hazards.length - 1; i >= 0; i--) {
     // A. Gemy (gems)
     for (let j = gems.length - 1; j >= 0; j--) {
         const g = gems[j];
-        if (!g.active) continue;
+        // POPRAWKA v0.79h: Dodano zabezpieczenie
+        if (!g || !g.active) continue;
 
         const d = Math.hypot(g.x - h.x, g.y - h.y);
         if (d < hazardRadius + g.r) {
@@ -278,6 +290,8 @@ for (let i = hazards.length - 1; i >= 0; i--) {
     // B. Pickupy (pickups)
     for (let j = pickups.length - 1; j >= 0; j--) {
         const p = pickups[j];
+        // POPRAWKA v0.79h: Dodano zabezpieczenie
+        if (!p) { continue; }
 
         const d = Math.hypot(p.x - h.x, p.y - h.y);
         if (d < hazardRadius + p.r) {
@@ -292,6 +306,8 @@ for (let i = hazards.length - 1; i >= 0; i--) {
     // C. Skrzynie (chests)
     for (let j = chests.length - 1; j >= 0; j--) {
         const c = chests[j];
+        // POPRAWKA v0.79h: Dodano zabezpieczenie
+        if (!c) { continue; }
 
         const d = Math.hypot(c.x - h.x, c.y - h.y);
         if (d < hazardRadius + c.r) {
@@ -361,6 +377,8 @@ for (let i = hazards.length - 1; i >= 0; i--) {
 
     for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
+        // POPRAWKA v0.79h: Dodano zabezpieczenie
+        if (!e) { continue; }
         
         const hitRadiusEH = e.size * 0.5 + hazardRadius;
         const d = Math.hypot(e.x - h.x, e.y - h.y);
@@ -388,5 +406,5 @@ for (let i = hazards.length - 1; i >= 0; i--) {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77d] js/managers/collisions.js: Zresetowano collisionSlowdown.');
+console.log('[DEBUG-v0.79h] js/managers/collisions.js: Dodano zabezpieczenia (if !p) w pętlach pickups i chests.');
 }

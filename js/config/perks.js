@@ -1,5 +1,5 @@
 // ==============
-// PERKS.JS (v0.71 - FIX: Poprawiony Import Broni)
+// PERKS.JS (v0.79a - Dodanie perka Bicz)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
@@ -7,6 +7,8 @@
 import { AutoGun } from './weapons/autoGun.js';
 import { OrbitalWeapon } from './weapons/orbitalWeapon.js';
 import { NovaWeapon } from './weapons/novaWeapon.js';
+// NOWY IMPORT v0.79
+import { WhipWeapon } from './weapons/whipWeapon.js';
 
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
 import { PERK_CONFIG } from './gameData.js';
@@ -77,6 +79,15 @@ export const perkPool = [
         color:'#ffd54f', emoji:'💫',
         apply: (state, perk) => { 
             state.player.addWeapon(NovaWeapon, perk);
+        }
+    },
+    // NOWY PERK v0.79
+    {
+        id: 'whip', name: 'Bicz', desc:'Atakuje poziomo w kierunku ruchu', 
+        max: PERK_CONFIG.whip?.max || 5, 
+        color:'#C8E6C9', emoji:'🌿',
+        apply: (state, perk) => { 
+            state.player.addWeapon(WhipWeapon, perk);
         }
     },
     {
