@@ -1,5 +1,5 @@
 // ==============
-// EFFECTS.JS (v0.84a - FIX: Zapobieganie nakładaniu się Mega Hazardów)
+// EFFECTS.JS (v0.86h - DEFINITYWNY FIX: Zapobieganie nakładaniu się Hazardów)
 // Lokalizacja: /js/managers/effects.js
 // ==============
 
@@ -30,6 +30,8 @@ export const PICKUP_CLASS_MAP = {
 
 // NOWA LINIA V0.84: Max. promień, aby zarezerwować miejsce dla Mega Hazardu
 const MAX_HAZARD_SEPARATION_RADIUS = HAZARD_CONFIG.SIZE * HAZARD_CONFIG.MEGA_HAZARD_MAX_MULTIPLIER;
+// NOWA LINIA V0.86G: Bufor bezpieczeństwa, aby zapobiec nakładaniu się (5px)
+const MIN_SEPARATION_BUFFER = 5;
 
 
 /**
@@ -39,8 +41,6 @@ const MAX_HAZARD_SEPARATION_RADIUS = HAZARD_CONFIG.SIZE * HAZARD_CONFIG.MEGA_HAZ
 function findHazardSpawnSpot(player, camera, hazards) {
     const maxAttempts = 12; // Zwiększona liczba prób
     const spawnMargin = 50; // Margines poza ekranem (w px)
-    // POPRAWKA V0.84A: Używamy stałej rezerwującej miejsce dla największego możliwego Hazardu.
-    const separationDistance = MAX_HAZARD_SEPARATION_RADIUS; // Minimalna odległość od centrum innego Hazardu
     
     // Granice świata
     const worldWidth = camera.worldWidth;
@@ -82,9 +82,11 @@ function findHazardSpawnSpot(player, camera, hazards) {
             const dy = y - existingHazard.y;
             const dist = Math.hypot(dx, dy);
             
-            // Sprawdź, czy odległość jest mniejsza niż suma promieni z marginesem
-            // POPRAWKA V0.84A: separationDistance jest teraz wystarczająco duży, by objąć Mega Hazard
-            if (dist < separationDistance + existingHazard.r) {
+            // Wymagana odległość to: MAX_RAD_NOWEGO_HAZARDU + RZECZYWISTY_RAD_ISTNIEJACEGO_HAZARDU + BUFOR
+            // Używamy MAX_HAZARD_SEPARATION_RADIUS jako gwarancji, że jeśli nowy Hazard okaże się Mega, będzie miał miejsce.
+            const requiredSeparation = MAX_HAZARD_SEPARATION_RADIUS + existingHazard.r + MIN_SEPARATION_BUFFER;
+            
+            if (dist < requiredSeparation) {
                 isClear = false;
                 break;
             }

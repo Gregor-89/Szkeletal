@@ -1,5 +1,5 @@
 // ==============
-// UTILS.JS (v0.82a - Standaryzacja ikon Szybkości)
+// UTILS.JS (v0.86f - Rebalans HP wrogów)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
@@ -307,7 +307,8 @@ export function getPickupLabel(type) {
 // --- POMOCNIKI OBLICZEŃ ---
 
 export function hpScale(game) {
-    return 1 + 0.12 * (game.level - 1) + game.time / 90;
+    // ZMIANA V0.86F: Wzrost HP z 12% na 10%
+    return 1 + 0.10 * (game.level - 1) + game.time / 90;
 }
 
 export function findFreeSpotForPickup(pickups, baseX, baseY) {

@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.83s - Ostateczny Rebalans Elity 2.0)
+// GAMEDATA.JS (v0.86f - Rebalans Limitu i Wzrostu HP)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -36,9 +36,9 @@ export const GAME_CONFIG = {
   // ZBALANSOWANIE v0.81f: Dalsze zmniejszenie (z 0.01 na 0.008)
   INITIAL_SPAWN_RATE: 0.008,
   
-  // ZBALANSOWANIE v0.76: Zwiększenie limitu wrogów (110 -> 300)
+  // ZMIANA V0.86F: Zwiększenie twardego limitu wrogów
   // Maksymalna liczba wrogów dozwolona jednocześnie na mapie (TWARDY LIMIT).
-  MAX_ENEMIES: 300,
+  MAX_ENEMIES: 400, // Zmieniono z 300 na 400
   // ZBALANSOWANIE v0.83s: Zwiększenie interwału spawnu Elity (z 72s na 144s)
   // Czas (w milisekundach) co jaki pojawia się Elita.
   ELITE_SPAWN_INTERVAL: 144000,
@@ -46,8 +46,8 @@ export const GAME_CONFIG = {
   // NOWE v0.78: Dynamiczny limit wrogów
   // ZBALANSOWANIE v0.81f: Dalsze zmniejszenie (5 -> 3)
   INITIAL_MAX_ENEMIES: 3,
-  // ZBALANSOWANIE v0.83b: Dalsze spowolnienie (z 18 na 15)
-  ENEMY_LIMIT_GROWTH_PER_MINUTE: 15,
+  // ZMIANA V0.86F: Zwiększenie tempa wzrostu limitu
+  ENEMY_LIMIT_GROWTH_PER_MINUTE: 20, // Zmieniono z 15 na 20
   
   // Ilość XP potrzebna do zdobycia pierwszego poziomu.
   INITIAL_XP_NEEDED: 5,
