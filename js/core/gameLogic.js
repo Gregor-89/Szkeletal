@@ -1,11 +1,11 @@
 // ==============
-// GAMELOGIC.JS (v0.83v - Separacja limitu Oblężników)
+// GAMELOGIC.JS (v0.86 - New Enemy Warning & Dynamic Limit)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
 import { keys, jVec } from '../ui/input.js';
 // POPRAWKA v0.75: Importujemy funkcję spawnWallEnemies i spawnSiegeRing
-import { spawnEnemy, spawnElite, spawnSiegeRing, spawnWallEnemies, killEnemy } from '../managers/enemyManager.js'; 
+import { spawnEnemy, spawnElite, spawnSiegeRing, spawnWallEnemies, killEnemy, getAvailableEnemyTypes } from '../managers/enemyManager.js'; 
 import { spawnHazard } from '../managers/effects.js';
 import { applyPickupSeparation, spawnConfetti } from './utils.js'; 
 import { checkCollisions } from '../managers/collisions.js';
@@ -75,6 +75,20 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     if (game.shield) { game.shieldT -= dt; if (game.shieldT <= 0) game.shield = false; }
     if (game.speedT > 0) game.speedT -= dt;
     if (game.freezeT > 0) game.freezeT -= dt;
+    
+    // --- NOWA LOGIKA V0.86: New Enemy Warning Timer ---
+    if (game.newEnemyWarningT > 0) {
+        game.newEnemyWarningT -= dt;
+        if (game.newEnemyWarningT <= 0) {
+            // Czas ostrzeżenia minął: dodaj wroga do listy widzianych
+            game.seenEnemyTypes.push(game.newEnemyWarningType);
+            game.newEnemyWarningType = null;
+            console.log(`[ENEMY-WARN] Ostrzeżenie minęło. Dodano '${game.seenEnemyTypes[game.seenEnemyTypes.length-1]}' do puli spawnów.`);
+        }
+    }
+    
+    // Upewniamy się, że funkcja sprawdza nowych wrogów co klatkę (dla logiki warningu)
+    getAvailableEnemyTypes(game);
 
     // --- Timery Wrogów ---
     for (let i = enemies.length - 1; i >= 0; i--) { // Pętla wsteczna dla usuwania wrogów
@@ -97,6 +111,14 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         settings.lastHazardSpawn = game.time;
     }
 
+    // --- Obliczenia Limitów (dla HUD) ---
+    const minutesElapsed = game.time / 60;
+    const dynamicLimit = Math.min(
+        settings.maxEnemies, // Twardy limit (np. 300)
+        GAME_CONFIG.INITIAL_MAX_ENEMIES + (minutesElapsed * GAME_CONFIG.ENEMY_LIMIT_GROWTH_PER_MINUTE)
+    );
+    game.dynamicEnemyLimit = Math.floor(dynamicLimit); // Zapisz dla HUD
+
     // --- Logika Spawnu (Standard) ---
     // POPRAWKA v0.81d: Implementacja okresu ochronnego
     if (game.time > GAME_CONFIG.SPAWN_GRACE_PERIOD) {
@@ -104,23 +126,20 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         // NOWA LOGIKA V0.83V: Obliczanie liczby WROGÓW NIE-OBLĘŻNIKÓW
         const nonWallEnemiesCount = enemies.filter(e => e.type !== 'wall').length;
         
-        // POPRAWKA v0.78: Obliczanie dynamicznego limitu wrogów
-        const minutesElapsed = game.time / 60;
-        const dynamicLimit = Math.min(
-            settings.maxEnemies, // Twardy limit (np. 300)
-            GAME_CONFIG.INITIAL_MAX_ENEMIES + (minutesElapsed * GAME_CONFIG.ENEMY_LIMIT_GROWTH_PER_MINUTE)
-        );
-        
         const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
-        // POPRAWKA v0.78: Użyj 'dynamicLimit' zamiast 'settings.maxEnemies'
-        // ZMIANA V0.83V: Sprawdź nonWallEnemiesCount zamiast enemies.length
-        if (Math.random() < spawnRate && nonWallEnemiesCount < dynamicLimit && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
+        
+        // ZMIANA V0.86: Blokuj spawn, jeśli ostrzeżenie o nowym wrogu jest aktywne
+        const isWarningActive = game.newEnemyWarningT > 0;
+
+        // POPRAWKA v0.78: Użyj 'dynamicLimit' i 'nonWallEnemiesCount'
+        if (!isWarningActive && Math.random() < spawnRate && nonWallEnemiesCount < game.dynamicEnemyLimit && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
             state.enemyIdCounter = spawnEnemy(enemies, game, canvas, state.enemyIdCounter, camera);
         }
 
         // --- Logika Spawnu (Elita) ---
         const timeSinceLastElite = game.time - settings.lastElite;
-        if (timeSinceLastElite > (settings.eliteInterval / 1000) / (game.hyper ? 1.15 : 1) && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
+        // ZMIANA V0.86: Blokuj spawn Elity, jeśli ostrzeżenie o nowym wrogu jest aktywne
+        if (!isWarningActive && timeSinceLastElite > (settings.eliteInterval / 1000) / (game.hyper ? 1.15 : 1) && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
             state.enemyIdCounter = spawnElite(enemies, game, canvas, state.enemyIdCounter, camera);
             settings.lastElite = game.time;
         }
@@ -142,12 +161,12 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         settings.lastSiegeEvent = game.time;
         
         // Ustaw NOWY losowy interwał (względny do obecnego czasu)
-        const min = SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL_MIN;
-        const max = SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL_MAX;
+        const min = SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL_MIN || 120; // Dodano fallback
+        const max = SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL_MAX || 180; // Dodano fallback
         const nextInterval = min + Math.random() * (max - min);
         settings.currentSiegeInterval = game.time + nextInterval; // Ustaw absolutny czas następnego spawnu
         
-        console.log(`[EVENT] Oblężenie aktywowane! Następne oblężenie za ${nextInterval.toFixed(1)}s (o ${settings.currentSiegeInterval.toFixed(1)}s)`);
+        console.log(`[EVENT] Pierwsze oblężenie aktywowane! Następne oblężenie o ${settings.currentSiegeInterval.toFixed(1)}s`);
     }
 
     // 2. Obsłuż timer OSTRZEŻENIA i SPRAWN

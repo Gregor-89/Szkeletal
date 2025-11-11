@@ -1,5 +1,5 @@
 // ==============
-// DOMELEMENTS.JS (v0.77j - FIX: Usunięcie zawodnego eksportu paska HP)
+// DOMELEMENTS.JS (v0.86 - Export Licznika Wrogów)
 // Lokalizacja: /js/ui/domElements.js
 // ==============
 
@@ -33,6 +33,12 @@ export const finalLevel = document.getElementById('finalLevel');
 export const finalTime = document.getElementById('finalTime');
 export const titleDiv = document.getElementById('title');
 export const docTitle = document.querySelector('title');
+
+// NOWE REFERENCJE V0.86
+export const enemyCountSpan = document.getElementById('enemyCount');
+export const enemyLimitSpan = document.getElementById('enemyLimit');
+export const enemyProgressDiv = document.getElementById('enemyProgress');
+
 
 export const confirmOverlay = document.getElementById('confirmOverlay');
 export const confirmText = document.getElementById('confirmText');

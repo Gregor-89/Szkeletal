@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.82a - Standaryzacja ikon Szybkości)
+// UI.JS (v0.86 - Throttled Enemy Counter)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -20,7 +20,9 @@ import {
     statsDisplayPause, menuOverlay, btnContinue,
     levelUpOverlay, pauseOverlay, resumeOverlay, resumeText, 
     chestOverlay, gameOverOverlay, finalScore, finalLevel,
-    finalTime, titleDiv, docTitle
+    finalTime, titleDiv, docTitle,
+    // NOWE REFERENCJE V0.86
+    enemyCountSpan, enemyLimitSpan, enemyProgressDiv 
     // POPRAWKA v0.77k: Fizycznie usunięto 'playerHPBarOuter' z tej listy
 } from './domElements.js';
 
@@ -38,8 +40,34 @@ import { updateStatsUI } from '../managers/levelManager.js';
 // POPRAWKA v0.77j: Przechowuje referencję do paska HP (ładowaną leniwie)
 let hpBarOuterRef = null;
 
-export function updateUI(game, player, settings, weapons) {
-    // Statystyki na górze
+// NOWA FUNKCJA V0.86: Ograniczona aktualizacja licznika wrogów
+export function updateEnemyCounter(game, enemies) {
+    if (!game.running || game.paused) return;
+    
+    // Obliczanie liczby wrogów (bez Oblężników)
+    const nonWallEnemiesCount = enemies.filter(e => e.type !== 'wall').length;
+    const limit = game.dynamicEnemyLimit; // Użyj wstępnie obliczonego limitu z gameLogic
+    
+    if (enemyCountSpan) enemyCountSpan.textContent = nonWallEnemiesCount;
+    if (enemyLimitSpan) enemyLimitSpan.textContent = limit;
+    
+    if (enemyProgressDiv && limit > 0) {
+        const enemyPct = Math.min(100, (nonWallEnemiesCount / limit) * 100);
+        enemyProgressDiv.style.width = enemyPct.toFixed(1) + '%';
+        // ZMIANA KOLORU POSTĘPU W ZALEŻNOŚCI OD OBCIĄŻENIA
+        if (enemyPct > 85) {
+             enemyProgressDiv.style.background = 'linear-gradient(90deg, #f44336, #e53935)';
+        } else if (enemyPct > 50) {
+             enemyProgressDiv.style.background = 'linear-gradient(90deg, #ff9800, #fb8c00)';
+        } else {
+             enemyProgressDiv.style.background = 'linear-gradient(90deg, #4fc3f7, #81c784)';
+        }
+    }
+}
+
+
+export function updateUI(game, player, settings, weapons, enemies = []) {
+    // Statystyki na górze (BEZ LICZNIKA WROGÓW)
     document.getElementById('score').textContent = game.score;
     document.getElementById('level').textContent = game.level;
     document.getElementById('xp').textContent = game.xp;
@@ -216,6 +244,11 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         settings.lastFire = 0;
         settings.lastElite = 0;
 
+        // NOWA LINIA V0.86: Resetowanie stanu ostrzeżeń
+        game.newEnemyWarningT = 0;
+        game.newEnemyWarningType = null;
+        game.seenEnemyTypes = ['standard'];
+        
         // POPRAWKA V0.66: Użyj rozmiarów świata zamiast canvas.width/height
         const worldWidth = canvas.width * WORLD_CONFIG.SIZE; 
         const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
@@ -239,6 +272,11 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         // POPRAWKA v0.77: Resetowanie interwału oblężenia (do stałej wartości startowej 150s)
         settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
         
+        // NOWA LINIA V0.86: Resetowanie stanu ostrzeżeń (tylko timer)
+        game.newEnemyWarningT = 0;
+        game.newEnemyWarningType = null;
+        // game.seenEnemyTypes jest wypełniane przez dev.js w przypadku presetów.
+
         devSettings.presetLoaded = false;
         
         // POPRAWKA V0.67: Upewnij się, że gracz jest na środku świata po resecie presetów
@@ -254,6 +292,7 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     game.magnet = false; game.magnetT = 0;
     game.shield = false; game.shieldT = 0; game.speedT = 0; game.freezeT = 0; game.shakeT = 0;
     game.shakeMag = 0; game.manualPause = false; game.collisionSlowdown = 0;
+    game.dynamicEnemyLimit = GAME_CONFIG.INITIAL_MAX_ENEMIES; // NOWA LINIA V0.86: Reset limitu
 
     // Czyszczenie tablic (te, które nie są pulami)
     uiData.enemies.length = 0; 

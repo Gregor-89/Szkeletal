@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.78 - Implementacja Menedżera Wskaźników)
+// MAIN.JS (v0.86 - Throttling Enemy Counter)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -9,7 +9,7 @@ import { Player } from './entities/player.js';
 import { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG } from './config/gameData.js';
 import { draw } from './core/draw.js';
 
-import { updateUI, resumeGame, showMenu, startRun, resetAll, gameOver, pauseGame } from './ui/ui.js';
+import { updateUI, resumeGame, showMenu, startRun, resetAll, gameOver, pauseGame, updateEnemyCounter } from './ui/ui.js';
 import { initializeMainEvents } from './core/eventManager.js';
 
 // NOWY IMPORT v0.78
@@ -49,9 +49,10 @@ let savedGameState = null; // Przechowywany przez uiData
 let fps = 0;
 let lastFrameTime = 0;
 let frameCount = 0;
-// POPRAWKA v0.77i: Usunięto 'lastUiUpdateTime' i 'UI_UPDATE_INTERVAL', ponieważ UI jest teraz renderowane co klatkę.
-// let lastUiUpdateTime = 0;
-// const UI_UPDATE_INTERVAL = 100;
+
+// NOWE ZMIENNE V0.86: Throttling Licznika Wrogów
+let lastEnemyCounterUpdate = 0;
+const ENEMY_COUNTER_UPDATE_INTERVAL = 200; // Co 200ms
 
 const game={
   score:0, level:1, health: PLAYER_CONFIG.INITIAL_HEALTH, maxHealth: PLAYER_CONFIG.INITIAL_HEALTH, 
@@ -61,7 +62,12 @@ const game={
   magnet:false, magnetT:0, shakeT:0, shakeMag:0, hyper:false,
   shield:false, shieldT:0, speedT:0, freezeT:0, screenShakeDisabled:false, manualPause:false,
   collisionSlowdown: 0,
-  triggerChestOpen: false 
+  triggerChestOpen: false,
+  // NOWE WŁAŚCIWOŚCI V0.86
+  newEnemyWarningT: 0, // Czas trwania ostrzeżenia o nowym wrogu
+  newEnemyWarningType: null, // Typ nowego wroga
+  seenEnemyTypes: ['standard'], // Wrogowie, których gracz już spotkał (startujemy ze Standard)
+  dynamicEnemyLimit: GAME_CONFIG.INITIAL_MAX_ENEMIES // Aktualny limit wrogów na planszy
 };
 
 const settings={ 
@@ -265,6 +271,12 @@ function loop(currentTime){
         updateVisualEffects(dt, [], [], bombIndicators); 
         updateParticles(dt, particles); 
         
+        // NOWA LOGIKA V0.86: Throttling Licznika Wrogów
+        if (currentTime - lastEnemyCounterUpdate > ENEMY_COUNTER_UPDATE_INTERVAL) {
+            updateEnemyCounter(game, enemies);
+            lastEnemyCounterUpdate = currentTime;
+        }
+
         if (game.paused || !game.running) {
             // Logika pauzy/menu
             uiData.drawCallback();

@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.78 - Implementacja Menedżera Wskaźników)
+// DRAW.JS (v0.86e - Subtelniejsze Ostrzeżenie o Nowym Wrogu)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -295,6 +295,35 @@ export function draw(ctx, state, ui, fps) {
     ctx.restore(); 
 
     // === RYSOWANIE HUD (NA WIERZCHU) ===
+
+    // NOWA LOGIKA V0.86: Rysowanie ostrzeżenia o nowym wrogu
+    if (game.newEnemyWarningT > 0 && game.newEnemyWarningType) {
+        const warningTime = game.newEnemyWarningT;
+        const warningText = `NOWY WRÓG: ${game.newEnemyWarningType.toUpperCase()}!`;
+        const canvasCenterX = canvas.width / 2;
+        const warningY = 50; // Nowa pozycja Y (50px od góry)
+        
+        // Pulsowanie Alphy
+        const alpha = Math.min(1, 0.5 + 0.5 * Math.sin(performance.now() / 80));
+        ctx.globalAlpha = alpha;
+        
+        // Główny tekst (NOWY WRÓG)
+        ctx.font = 'bold 24px Arial'; // Zmniejszone z 36px
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ff7043'; // Pomarańczowy
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+        ctx.shadowBlur = 8;
+        ctx.fillText(warningText, canvasCenterX, warningY); // Rysuj na warningY
+        
+        // Mniejszy tekst z odliczaniem
+        ctx.font = 'bold 16px Arial'; // Zmniejszone z 24px
+        ctx.fillStyle = '#fff';
+        ctx.shadowBlur = 4;
+        ctx.fillText(`SPAWN ZA: ${warningTime.toFixed(1)}s`, canvasCenterX, warningY + 25); // 25px niżej
+        
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
+    }
 
     // NOWA LINIA v0.78: Rysowanie wskaźników
     drawIndicators(ctx, state);

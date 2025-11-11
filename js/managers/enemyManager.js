@@ -1,12 +1,12 @@
 // ==============
-// ENEMYMANAGER.JS (v0.83v - Efekty wizualne dla spawnów)
+// ENEMYMANAGER.JS (v0.86d - FIX: Poprawiony import Audio)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
 import { devSettings } from '../services/dev.js';
 // POPRAWKA v0.75: Import addBombIndicator dla sygnału Oblężenia
 import { findFreeSpotForPickup, addBombIndicator } from '../core/utils.js';
-// POPRAWKA v0.77n: Import playSound
+// POPRAWKA v0.86d: Poprawiona ścieżka importu Audio (było ../../services/audio.js)
 import { playSound } from '../services/audio.js';
 
 // Import klasy bazowej
@@ -60,23 +60,76 @@ const PICKUP_CLASS_MAP = {
 };
 
 /**
- * Zwraca listę typów wrogów dozwolonych na podstawie czasu gry i ustawień dev.
+ * Zwraca listę typów wrogów dozwolonych na podstawie czasu gry i ustawień dev,
+ * jednocześnie aktywując ostrzeżenie o nowym typie wroga.
+ *
+ * ZMIANA V0.86: Ta funkcja teraz zwraca TYLKO wrogów, których gracz już spotkał.
+ * Nowo dostępni wrogowie są umieszczani w game.newEnemyWarning, aby aktywować ostrzeżenie.
  */
-function getAvailableEnemyTypes(game) {
+export function getAvailableEnemyTypes(game) {
     const t = game.time;
-    const types = ['standard'];
-    // ZMIANA V0.83a: Opóźnienie spawnu wrogów
-    if (t > 30) types.push('horde'); // Z 15s na 30s
-    if (t > 60) types.push('aggressive'); // Z 30s na 60s
-    if (t > 90) types.push('kamikaze'); // Z 50s na 90s
-    if (t > 120) types.push('splitter'); // Z 70s na 120s (2:00)
-    if (t > 150) types.push('tank'); // Z 90s na 150s (2:30)
-    if (t > 180) types.push('ranged'); // Z 120s na 180s (3:00)
+    // Pamiętaj o wrogach, których gracz już spotkał
+    const seen = game.seenEnemyTypes; 
+
+    // Wrogowie dostępni w tej chwili gry (włączając Oblężnika, jeśli czas pozwala)
+    const availableAtTime = [
+        t > 0 ? 'standard' : null,
+        t > 30 ? 'horde' : null,
+        t > 60 ? 'aggressive' : null,
+        t > 90 ? 'kamikaze' : null,
+        t > 120 ? 'splitter' : null,
+        t > 150 ? 'tank' : null,
+        t > 180 ? 'ranged' : null
+        // Elite jest spawnowany osobno
+    ].filter(type => type !== null);
+
+    let typesToSpawn = [];
+    let newEnemyType = null;
+    let newEnemyTime = Infinity;
+
+    for (const type of availableAtTime) {
+        if (!seen.includes(type)) {
+            // Znalazłem nowego wroga
+            newEnemyType = type;
+            
+            // Określamy czas, w którym się pojawi (dla logowania)
+            if (type === 'horde') newEnemyTime = 30;
+            else if (type === 'aggressive') newEnemyTime = 60;
+            else if (type === 'kamikaze') newEnemyTime = 90;
+            else if (type === 'splitter') newEnemyTime = 120;
+            else if (type === 'tank') newEnemyTime = 150;
+            else if (type === 'ranged') newEnemyTime = 180;
+            
+            break; // Ostrzegamy tylko o pierwszym nowym
+        }
+    }
     
-    // POPRAWKA v0.75: 'wall' nie jest spawnowany losowo
-    
-    if (devSettings.allowedEnemies.includes('all')) return types;
-    return types.filter(type => devSettings.allowedEnemies.includes(type));
+    // --- Logika Ostrzeżenia ---
+    if (newEnemyType && game.newEnemyWarningT <= 0) {
+        // Aktywuj timer ostrzegawczy, blokując normalne spawny na 3s
+        game.newEnemyWarningT = 3.0;
+        game.newEnemyWarningType = newEnemyType;
+        playSound('EliteSpawn'); // Użyjemy dźwięku Elity jako ogólnego alarmu
+        console.log(`[ENEMY-WARN] Aktywowano ostrzeżenie: ${newEnemyType} (o ${newEnemyTime}s).`);
+        // Zwracamy listę TYLKO WROGÓW, których już widziano.
+        typesToSpawn = availableAtTime.filter(type => seen.includes(type));
+    } else if (newEnemyType && game.newEnemyWarningT > 0) {
+         // Ostrzeżenie jest AKTYWNE, blokujemy nowy spawn.
+         typesToSpawn = availableAtTime.filter(type => seen.includes(type));
+    } else {
+        // Nowych wrogów nie ma lub ostrzeżenie minęło
+        typesToSpawn = availableAtTime;
+    }
+
+    // Dodajemy wrogów, których gracz już spotkał, do listy do spawnienia
+    const typesToSpawnFinal = typesToSpawn.filter(type => seen.includes(type));
+
+    // --- Dev Settings Filter ---
+    if (devSettings.allowedEnemies.includes('all')) {
+        // Użyj listy wszystkich dostępnych typów (włączając 'wall')
+        return typesToSpawnFinal.filter(type => type !== 'wall'); 
+    }
+    return typesToSpawnFinal.filter(type => devSettings.allowedEnemies.includes(type) && type !== 'wall');
 }
 
 /**
@@ -274,7 +327,6 @@ export function spawnWallEnemies(state) {
 
 /**
  * Główna funkcja spawnująca Wydarzenie Oblężenia.
- * POPRAWKA v0.75: Zmieniona, aby używać wskaźników.
  */
 export function spawnSiegeRing(state) {
     // 1. Dodaj wskaźniki (ostrzeżenie)
@@ -330,7 +382,6 @@ function spawnColorParticles(particlePool, x, y, color, count = 10, speed = 240,
 
 /**
  * Logika zabicia wroga (wywoływana z kolizji)
- * POPRAWKA v0.77: Dodano flagę 'preventDrops'
  */
 export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital = false, preventDrops = false) {
     
