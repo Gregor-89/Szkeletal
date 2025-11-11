@@ -1,5 +1,5 @@
 // ==============
-// RANGEDENEMY.JS (v0.77s - TEST: Zwiększenie separacji 2x)
+// RANGEDENEMY.JS (v0.83v - Wzmocnienie Dystansu)
 // Lokalizacja: /js/entities/enemies/rangedEnemy.js
 // ==============
 
@@ -9,7 +9,7 @@ import { WEAPON_CONFIG } from '../../config/gameData.js';
 
 /**
  * Wróg Dystansowy.
- * Utrzymuje dystans i strzela do gracza.
+ * Utrzymuje dystans, strzela do gracza i porusza się bokiem (strafe).
  */
 export class RangedEnemy extends Enemy {
     getSeparationRadius() { 
@@ -36,24 +36,63 @@ export class RangedEnemy extends Enemy {
             let vx = 0, vy = 0;
             let currentSpeed = this.getSpeed(game, dist); 
 
-            if (dist < 180) { vx = -(dx / dist) * currentSpeed; vy = -(dy / dist) * currentSpeed; isMoving = true; } // Uciekaj
-            else if (dist > 220) { vx = (dx / dist) * currentSpeed; vy = (dy / dist) * currentSpeed; isMoving = true; } // Podchodź
-            else { vx = 0; vy = 0; } // Stój
+            let moveAngle = 0; // Kąt do przodu/do tyłu
+            let strafeAngle = 0; // Kąt ruchu bocznego
+            
+            // NOWA LOGIKA V0.83V: Zwiększono optymalny dystans
+            const optimalMin = 250; 
+            const optimalMax = 300;
+            
+            // 1. Ruch do przodu/do tyłu (Utrzymywanie dystansu)
+            if (dist < optimalMin) { 
+                // Uciekaj (kąt przeciwny do gracza)
+                moveAngle = Math.atan2(-dy, -dx);
+                isMoving = true;
+            } else if (dist > optimalMax) { 
+                // Podchodź (kąt w kierunku gracza)
+                moveAngle = Math.atan2(dy, dx);
+                isMoving = true;
+            } else {
+                // Jesteś w strefie, ale nie poruszaj się do przodu/do tyłu
+                moveAngle = Math.atan2(dy, dx); // Domyślny kąt (dla obliczeń bocznych)
+            }
+            
+            // 2. Ruch Boczny (Strafe) - TYLKO W STREFIE OPTYMALNEJ
+            if (dist >= optimalMin && dist <= optimalMax) {
+                // Kąt prostopadły do gracza (ruch boczny)
+                const strafeDirection = Math.sign(Math.sin(game.time * 2 + this.id)); // Zmienia się wolno
+                strafeAngle = moveAngle + (Math.PI / 2) * strafeDirection;
+                
+                // Siła ruchu bocznego (np. 50% bazowej prędkości)
+                const strafeSpeed = currentSpeed * 0.5; // Zwiększono z 0.3 na 0.5
+                
+                vx += Math.cos(strafeAngle) * strafeSpeed;
+                vy += Math.sin(strafeAngle) * strafeSpeed;
+                isMoving = true;
+            }
+            
+            // 3. Dodaj ruch do przodu/do tyłu (jeśli jest)
+            if (dist < optimalMin || dist > optimalMax) {
+                vx += Math.cos(moveAngle) * currentSpeed;
+                vy += Math.sin(moveAngle) * currentSpeed;
+            }
             
             this.x += (vx + this.separationX * 0.5) * dt;
             this.y += (vy + this.separationY * 0.5) * dt;
             
-            // Strzelanie
+            // Strzelanie (bez zmian)
             this.rangedCooldown -= dt;
             if (this.rangedCooldown <= 0 && dist > 0.1 && state.eBulletsPool) {
                 const bulletSpeed = WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED * (game.freezeT > 0 ? 0.25 : 1); // px/s
                 
                 const bullet = state.eBulletsPool.get();
                 if (bullet) {
+                    // Kąt strzału jest zawsze prosto na gracza
+                    const targetAngle = Math.atan2(dy, dx);
                     bullet.init(
                         this.x, this.y,
-                        (dx / dist) * bulletSpeed,
-                        (dy / dist) * bulletSpeed,
+                        Math.cos(targetAngle) * bulletSpeed,
+                        Math.sin(targetAngle) * bulletSpeed,
                         5, 5, '#00BCD4'
                     );
                 }
@@ -62,7 +101,7 @@ export class RangedEnemy extends Enemy {
             }
         }
         
-        // Logika animacji (skopiowana z bazowego 'update')
+        // Logika animacji (skopiowana z klasy bazowej i NAPRAWIONA)
         const dtMs = dt * 1000;
         if (isMoving) {
             this.animationTimer += dtMs;

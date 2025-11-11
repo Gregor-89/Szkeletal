@@ -1,5 +1,5 @@
 // ==============
-// AGGRESSIVEENEMY.JS (v0.71 - Refaktoryzacja Wrogów)
+// AGGRESSIVEENEMY.JS (v0.83u - Naprawa logiki szarży)
 // Lokalizacja: /js/entities/enemies/aggressiveEnemy.js
 // ==============
 
@@ -7,16 +7,107 @@ import { Enemy } from '../enemy.js';
 
 /**
  * Wróg Agresywny.
- * Przyspiesza, gdy jest blisko gracza.
+ * Przyspiesza po krótkiej sygnalizacji, gdy jest blisko gracza.
  */
 export class AggressiveEnemy extends Enemy {
+  
+  constructor(x, y, stats, hpScale) {
+    super(x, y, stats, hpScale);
+    this.isCharging = false;
+    this.chargeTimer = 0.0;
+    this.chargeDuration = 0.2; // Czas (s) sygnalizacji
+    this.chargeSpeedBonus = 2.0; // Mnożnik po sygnalizacji
+  }
+  
   getSpeed(game, dist) {
     let speed = super.getSpeed(game, dist);
-    if (dist < 220) speed *= 1.5; // +50% prędkości
+    
+    // Jeśli się sygnalizuje (pauzuje), jest zatrzymany
+    if (this.isCharging) {
+        return 0;
+    }
+    
+    // Jeśli JEST w zasięgu (dist < 220) i NIE JEST w trakcie sygnalizacji
+    // to automatycznie oznacza, że szarżuje, więc dostaje bonus.
+    if (dist < 220) {
+        speed *= this.chargeSpeedBonus; // 2.0x prędkości
+    }
+    
     return speed;
   }
   
   getOutlineColor() {
+    // NOWA LOGIKA V0.83: Sygnalizacja szarży kolorem
+    if (this.isCharging) {
+        return '#f44336'; // Czerwona ramka podczas ładowania
+    }
     return '#42a5f5';
+  }
+  
+  update(dt, player, game, state) {
+    let isMoving = false;
+    
+    if (this.hitStun > 0) {
+        this.hitStun -= dt;
+    } else {
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const dist = Math.hypot(dx, dy);
+        
+        // --- LOGIKA SZARŻY ---
+        
+        // 1. Wróg jest w zasięgu ataku
+        if (dist < 220) {
+            if (!this.isCharging && this.chargeTimer <= 0) {
+                // Warunek: Wejście w zasięg. Ustaw Sygnalizację/Pauzę.
+                this.isCharging = true;
+                this.chargeTimer = this.chargeDuration;
+                
+            } else if (this.isCharging) {
+                // Warunek: Faza Sygnalizacji/Pauzy
+                this.chargeTimer -= dt;
+                
+                if (this.chargeTimer <= 0) {
+                    // Koniec Pauzy. Rozpocznij Szarżę.
+                    this.isCharging = false;
+                    this.chargeTimer = 1.5; // Ustaw cooldown na szybkie ponowienie szarży
+                }
+            }
+        } else {
+            // Poza zasięgiem - normalny ruch
+            this.isCharging = false;
+            if (this.chargeTimer > 0) this.chargeTimer -= dt; // Czekaj na reset cooldownu
+        }
+        
+        let vx = 0, vy = 0;
+        let currentSpeed = this.getSpeed(game, dist); 
+
+        // Ruch tylko jeśli prędkość > 0 (pozwala na zatrzymanie podczas isCharging)
+        if (dist > 0.1 && currentSpeed > 0) { 
+            const targetAngle = Math.atan2(dy, dx);
+            const randomOffset = Math.sin(game.time * 3 + this.id * 7.3) * 0.15;
+            const finalAngle = targetAngle + (this.isCharging ? 0 : randomOffset); 
+            
+            vx = Math.cos(finalAngle) * currentSpeed;
+            vy = Math.sin(finalAngle) * currentSpeed;
+            isMoving = true;
+        }
+        
+        this.x += (vx + this.separationX * 0.5) * dt;
+        this.y += (vy + this.separationY * 0.5) * dt;
+    }
+    
+    // Aktualizacja animacji (skopiowana z klasy bazowej i naprawiona)
+    const dtMs = dt * 1000;
+    if (isMoving) {
+        this.animationTimer += dtMs;
+        if (this.animationTimer >= this.animationSpeed) {
+            this.animationTimer = 0;
+            this.currentFrame = (this.currentFrame + 1) % this.frameCount;
+        }
+    } else {
+        this.currentFrame = 0;
+        this.animationTimer = 0;
+    }
   }
 }

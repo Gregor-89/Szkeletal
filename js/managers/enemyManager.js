@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.77w - FIX: Blokowanie gemów 0 XP)
+// ENEMYMANAGER.JS (v0.83v - Efekty wizualne dla spawnów)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -65,12 +65,13 @@ const PICKUP_CLASS_MAP = {
 function getAvailableEnemyTypes(game) {
     const t = game.time;
     const types = ['standard'];
-    if (t > 15) types.push('horde');
-    if (t > 30) types.push('aggressive');
-    if (t > 50) types.push('kamikaze');
-    if (t > 70) types.push('splitter');
-    if (t > 90) types.push('tank');
-    if (t > 120) types.push('ranged');
+    // ZMIANA V0.83a: Opóźnienie spawnu wrogów
+    if (t > 30) types.push('horde'); // Z 15s na 30s
+    if (t > 60) types.push('aggressive'); // Z 30s na 60s
+    if (t > 90) types.push('kamikaze'); // Z 50s na 90s
+    if (t > 120) types.push('splitter'); // Z 70s na 120s (2:00)
+    if (t > 150) types.push('tank'); // Z 90s na 150s (2:30)
+    if (t > 180) types.push('ranged'); // Z 120s na 180s (3:00)
     
     // POPRAWKA v0.75: 'wall' nie jest spawnowany losowo
     
@@ -81,7 +82,7 @@ function getAvailableEnemyTypes(game) {
 /**
  * Tworzy instancję wroga na podstawie typu.
  */
-function createEnemyInstance(type, x, y, hpScale, enemyIdCounter) {
+export function createEnemyInstance(type, x, y, hpScale, enemyIdCounter) { // DODANO EXPORT
     const stats = ENEMY_STATS[type];
     const EnemyClass = ENEMY_CLASS_MAP[type];
     
@@ -308,11 +309,38 @@ export function findClosestEnemy(player, enemies) {
     return { enemy: closestEnemy, distance: closestDist };
 }
 
+// Funkcja pomocnicza do tworzenia cząsteczek przy spawnach
+function spawnColorParticles(particlePool, x, y, color, count = 10, speed = 240, life = 0.4) {
+    for (let k = 0; k < count; k++) {
+        const p = particlePool.get();
+        if (p) {
+            p.init(
+                x, y,
+                (Math.random() - 0.5) * speed, // vx (px/s)
+                (Math.random() - 0.5) * speed, // vy (px/s)
+                life, // life
+                color, // color
+                0, // gravity
+                (1.0 - 0.98) // friction
+            );
+        }
+    }
+}
+
+
 /**
  * Logika zabicia wroga (wywoływana z kolizji)
  * POPRAWKA v0.77: Dodano flagę 'preventDrops'
  */
 export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital = false, preventDrops = false) {
+    
+    // NOWA LOGIKA V0.83: Wprowadzenie logiki odrzutu dla dzieci Splittera
+    let spawnKnockback = false;
+    if (e.type === 'splitter' && !preventDrops) {
+         // Oznacz flagę (dla późniejszego użycia), ale nie usuwaj wroga, dopóki reszta killEnemy się nie wykona.
+         spawnKnockback = true; 
+    }
+    // Koniec NOWEJ LOGIKI
     
     // POPRAWKA v0.77: Logika dropu i wyniku jest teraz warunkowa
     if (!preventDrops) {
@@ -378,19 +406,48 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         const child1 = createEnemyInstance('horde', e.x - 5, e.y, hpScale, enemyIdCounter++);
         const child2 = createEnemyInstance('horde', e.x + 5, e.y, hpScale, enemyIdCounter++);
         
+        // NOWA LOGIKA V0.83V: Dodaj efekty wizualne
+        if (spawnKnockback) {
+            const color = ENEMY_STATS.splitter.color; // Różowy Splitter
+            spawnColorParticles(particlePool, e.x, e.y, color, 15, 300, 0.5);
+        }
+        
         if (child1) {
             child1.speed *= 1.1; 
             enemies.push(child1);
+            
+            // NOWA LOGIKA V0.83: Odrzut i hitStun dla dzieci Splittera
+            if (spawnKnockback) {
+                // Siła odrzutu od centrum (e.x, e.y)
+                const angle = Math.atan2(child1.y - e.y, child1.x - e.x) + (Math.random() * 0.5 - 0.25);
+                child1.x += Math.cos(angle) * 15;
+                child1.y += Math.sin(angle) * 15;
+                child1.hitStun = 0.5; // Nietykalność na 0.5s
+            }
         }
         if (child2) {
             child2.speed *= 1.1; 
             enemies.push(child2);
+             // NOWA LOGIKA V0.83: Odrzut i hitStun dla dzieci Splittera
+            if (spawnKnockback) {
+                const angle = Math.atan2(child2.y - e.y, child2.x - e.x) + (Math.random() * 0.5 - 0.25);
+                child2.x += Math.cos(angle) * 15;
+                child2.y += Math.sin(angle) * 15;
+                child2.hitStun = 0.5; // Nietykalność na 0.5s
+            }
         }
     }
+    
+    // NOWA LOGIKA V0.83V: Efekty wizualne dla minionów Elity
+    if (e.type === 'elite' && preventDrops) { // preventDrops jest true tylko jeśli killEnemy jest wywołane przez spawnMinions() Elity
+        const color = ENEMY_STATS.elite.color; // Fioletowy Elita
+        spawnColorParticles(particlePool, e.x, e.y, color, 20, 350, 0.6);
+    }
+
 
     enemies.splice(idx, 1);
     return enemyIdCounter;
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77n] js/managers/enemyManager.js: Dodano import playSound() i wywołanie w spawnElite().');
+console.log('[DEBUG-v0.83a] js/managers/enemyManager.js: Opóźniono spawn agresywnych wrogów (z 15/30/50/70/90/120s na 30/60/90/120/150/180s) i dodano odrzut dla dzieci Splittera.');

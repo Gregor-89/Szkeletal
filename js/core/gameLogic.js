@@ -1,11 +1,11 @@
 // ==============
-// GAMELOGIC.JS (v0.81d - Balans początku gry)
+// GAMELOGIC.JS (v0.83v - Separacja limitu Oblężników)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
 import { keys, jVec } from '../ui/input.js';
 // POPRAWKA v0.75: Importujemy funkcję spawnWallEnemies i spawnSiegeRing
-import { spawnEnemy, spawnElite, spawnSiegeRing, spawnWallEnemies } from '../managers/enemyManager.js'; 
+import { spawnEnemy, spawnElite, spawnSiegeRing, spawnWallEnemies, killEnemy } from '../managers/enemyManager.js'; 
 import { spawnHazard } from '../managers/effects.js';
 import { applyPickupSeparation, spawnConfetti } from './utils.js'; 
 import { checkCollisions } from '../managers/collisions.js';
@@ -43,10 +43,16 @@ export function updateCamera(player, camera, canvas) {
  */
 export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     const { 
-        game, player, settings, canvas,
+        player, game, settings, canvas,
         enemies, eBullets, bullets, gems, pickups, stars, // 'bullets', 'eBullets', 'gems' to teraz 'activeItems'
         particles, hitTexts, chests, particlePool, hazards 
     } = state;
+
+    // NOWA LINIA V0.83: Dodaj killEnemy do obiektu stanu
+    // Używane do obsługi detonacji Kamikaze (którzy wywołują killEnemy na samym sobie)
+    state.killEnemy = (idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital, preventDrops) => 
+        killEnemy(idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital, preventDrops);
+
 
     // POPRAWKA v0.66: Przekazanie 'camera' do Player.update
     const playerMoved = player.update(dt, game, keys, jVec(), camera); 
@@ -95,6 +101,9 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     // POPRAWKA v0.81d: Implementacja okresu ochronnego
     if (game.time > GAME_CONFIG.SPAWN_GRACE_PERIOD) {
         
+        // NOWA LOGIKA V0.83V: Obliczanie liczby WROGÓW NIE-OBLĘŻNIKÓW
+        const nonWallEnemiesCount = enemies.filter(e => e.type !== 'wall').length;
+        
         // POPRAWKA v0.78: Obliczanie dynamicznego limitu wrogów
         const minutesElapsed = game.time / 60;
         const dynamicLimit = Math.min(
@@ -104,7 +113,8 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         
         const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
         // POPRAWKA v0.78: Użyj 'dynamicLimit' zamiast 'settings.maxEnemies'
-        if (Math.random() < spawnRate && enemies.length < dynamicLimit && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
+        // ZMIANA V0.83V: Sprawdź nonWallEnemiesCount zamiast enemies.length
+        if (Math.random() < spawnRate && nonWallEnemiesCount < dynamicLimit && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
             state.enemyIdCounter = spawnEnemy(enemies, game, canvas, state.enemyIdCounter, camera);
         }
 

@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.82b - FIX: Balans i naprawa Pioruna)
+// GAMEDATA.JS (v0.83s - Ostateczny Rebalans Elity 2.0)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -39,14 +39,15 @@ export const GAME_CONFIG = {
   // ZBALANSOWANIE v0.76: Zwiększenie limitu wrogów (110 -> 300)
   // Maksymalna liczba wrogów dozwolona jednocześnie na mapie (TWARDY LIMIT).
   MAX_ENEMIES: 300,
+  // ZBALANSOWANIE v0.83s: Zwiększenie interwału spawnu Elity (z 72s na 144s)
   // Czas (w milisekundach) co jaki pojawia się Elita.
-  ELITE_SPAWN_INTERVAL: 24000,
+  ELITE_SPAWN_INTERVAL: 144000,
   
   // NOWE v0.78: Dynamiczny limit wrogów
   // ZBALANSOWANIE v0.81f: Dalsze zmniejszenie (5 -> 3)
   INITIAL_MAX_ENEMIES: 3,
-  // ZBALANSOWANIE v0.81f: Dalsze spowolnienie (35 -> 18)
-  ENEMY_LIMIT_GROWTH_PER_MINUTE: 18,
+  // ZBALANSOWANIE v0.83b: Dalsze spowolnienie (z 18 na 15)
+  ENEMY_LIMIT_GROWTH_PER_MINUTE: 15,
   
   // Ilość XP potrzebna do zdobycia pierwszego poziomu.
   INITIAL_XP_NEEDED: 5,
@@ -119,7 +120,7 @@ export const HAZARD_CONFIG = {
   MEGA_HAZARD_BASE_MULTIPLIER: 4.0, // Min. mnożnik rozmiaru
   MEGA_HAZARD_MAX_MULTIPLIER: 8.0, // Max. mnożnik rozmiaru
   // NOWE MULTIPLERY DLA OSOBNEJ KONTROLI OBRAŻEŃ
-  MEGA_HAZARD_PLAYER_DAMAGE_MULTIPLIER: 0.6, // Niewiele większe od zwykłego
+  MEGA_HAZARD_PLAYER_DAMAGE_MULTIPLIER: 0.6, // Niewielkie większe od zwykłego
   MEGA_HAZARD_ENEMY_DAMAGE_MULTIPLIER: 1.0, // Obrażenia wroga x1 (czyli takie same jak Standard)
   
   // --- Zanikanie Bagna ---
@@ -327,4 +328,4 @@ export const ENEMY_STATS = {
 };
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.82b] js/config/gameData.js: Zaktualizowano balans Pioruna (6 poziomów, Lvl 1 = 1 cel).');
+console.log('[DEBUG-v0.83s] js/config/gameData.js: Zwiększono interwał spawnu Elity (z 72s na 144s), aby jeszcze bardziej poprawić pacing.');

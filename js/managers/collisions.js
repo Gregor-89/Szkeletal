@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.79h - FIX: Ochrona przed 'undefined' w pętlach kolizji)
+// COLLISIONS.JS (v0.83i - FIX: Usunięcie knockback dla TankEnemy)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -91,7 +91,8 @@ for (let i = bullets.length - 1; i >= 0; i--) {
             e.takeDamage(b.damage); 
             
             // POPRAWKA v0.75: Odrzut tylko, jeśli to NIE jest Oblężnik
-            if (e.type !== 'wall') {
+            // ZMIANA V0.83: Dodatkowo usuń knockback dla TankEnemy
+            if (e.type !== 'wall' && e.type !== 'tank') {
                 const angle = Math.atan2(e.y - player.y, e.x - player.x);
                 e.x += Math.cos(angle) * 3;
                 e.y += Math.sin(angle) * 3;
