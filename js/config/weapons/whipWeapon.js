@@ -1,5 +1,5 @@
 // ==============
-// WHIPWEAPON.JS (v0.79L - Balans Bicza v3 - Zmniejszenie zasięgu)
+// WHIPWEAPON.JS (v0.80b - FIX: Przekazanie playerRef do pocisku)
 // Lokalizacja: /js/config/weapons/whipWeapon.js
 // ==============
 
@@ -83,36 +83,52 @@ export class WhipWeapon extends Weapon {
         animSpeed: (WHIP_HITBOX_LIFE * 1000) / 6 // np. 250ms / 6 klatek = ~41.6ms na klatkę
       };
       
-      for (let i = 0; i < this.count; i++) {
-        // Strona: 1 (prawo), -1 (lewo)
-        const side = (i % 2 === 0) ? 1 : -1;
-        // Odległość od gracza (np. i=0,1 -> 40px; i=2,3 -> 65px)
-        const offsetDist = WHIP_BASE_OFFSET + (Math.floor(i / 2) * WHIP_SPACING);
-        
+      // --- LOGIKA ASYMETRYCZNA (v0.80a) ---
+      
+      const facingDir = this.player.facingDir; // (1 lub -1)
+      const oppositeDir = -facingDir;
+      
+      // Funkcja pomocnicza do spawnowania hitboxa
+      const spawnHitbox = (side, offsetIdx) => {
+        const offsetDist = WHIP_BASE_OFFSET + (offsetIdx * WHIP_SPACING);
+        // Pozycja X/Y jest obliczana względem gracza
         const hitboxX = this.player.x + (attackX * offsetDist * side);
         const hitboxY = this.player.y + (attackY * offsetDist * side);
         
         const bullet = bulletsPool.get();
         if (bullet) {
-          // POPRAWKA v0.79h: Dodano 'animParams' jako ostatni argument
-          // init(x, y, vx, vy, size, damage, color, pierce, life, bouncesLeft, curveDir, animParams)
+          // init(x, y, vx, vy, size, damage, color, pierce, life, bouncesLeft, curveDir, animParams, playerRef)
           bullet.init(
-            hitboxX,
-            hitboxY,
-            0, // vx
-            0, // vy
-            // 'this.size' (np. 60) jest teraz używane jako SKALOWANIE (w % rozmiaru bazowego 125px)
-            // (60 / 100 = 0.6) -> 0.6 * 125px = 75px szerokości rysunku
-            this.size,
+            hitboxX, hitboxY,
+            0, 0, // vx, vy
+            this.size, // Skalowanie sprite'a (np. 60)
             this.damage,
             WHIP_COLOR,
             WHIP_PIERCE,
             WHIP_HITBOX_LIFE, // 0.25s
             0, // bouncesLeft
-            side, // curveDir (np. 1 lub -1)
-            animParams // Parametry animacji
+            side, // curveDir (kierunek odwrócenia sprite'a)
+            animParams,
+            this.player // <-- NOWE v0.80b: Przekaż referencję gracza
           );
         }
+      };
+      
+      // Zastosuj logikę poziomów (this.count = 1, 2, 3, lub 4)
+      if (this.count === 1) { // Lvl 1: Tylko w kierunku patrzenia
+        spawnHitbox(facingDir, 0);
+      } else if (this.count === 2) { // Lvl 2: Symetrycznie (jeden z przodu, jeden z tyłu)
+        spawnHitbox(facingDir, 0);
+        spawnHitbox(oppositeDir, 0);
+      } else if (this.count === 3) { // Lvl 3: Dwa z przodu, jeden z tyłu
+        spawnHitbox(facingDir, 0);
+        spawnHitbox(facingDir, 1); // Drugi z przodu
+        spawnHitbox(oppositeDir, 0);
+      } else if (this.count >= 4) { // Lvl 4 & 5: Dwa z przodu, dwa z tyłu
+        spawnHitbox(facingDir, 0);
+        spawnHitbox(facingDir, 1);
+        spawnHitbox(oppositeDir, 0);
+        spawnHitbox(oppositeDir, 1);
       }
       
       playSound('Whip');
@@ -131,3 +147,6 @@ export class WhipWeapon extends Weapon {
     };
   }
 }
+
+// LOG DIAGNOSTYCZNY
+console.log('[DEBUG-v0.80b] js/config/weapons/whipWeapon.js: Przekazano playerRef do pocisku Bicza.');

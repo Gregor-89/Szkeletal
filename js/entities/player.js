@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v0.79a - Dodanie śledzenia kierunku dla Bicza)
+// PLAYER.JS (v0.80a - Śledzenie facingDir dla Asymetrycznego Bicza)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -46,9 +46,8 @@ export class Player {
         this.currentFrame = 0;
         this.isMoving = false;
         
-        // NOWE v0.79: Śledzenie ostatniego kierunku ruchu dla Bicza
-        this.lastMoveX = 1; // Domyślnie w prawo
-        this.lastMoveY = 0;
+        // NOWE v0.80a: Śledzenie ostatniego kierunku *poziomego* (1 = prawo, -1 = lewo)
+        this.facingDir = 1;
     }
 
     /**
@@ -72,9 +71,8 @@ export class Player {
         this.isMoving = false;
         this.currentState = 'idle';
         
-        // NOWE v0.79: Reset śledzenia kierunku
-        this.lastMoveX = 1;
-        this.lastMoveY = 0;
+        // NOWE v0.80a: Reset śledzenia kierunku
+        this.facingDir = 1;
     }
 
     /**
@@ -113,10 +111,11 @@ export class Player {
         
         this.isMoving = (Math.abs(vx) > 0 || Math.abs(vy) > 0);
         
-        // NOWE v0.79: Zapisz ostatni wektor ruchu
-        if (this.isMoving) {
-            this.lastMoveX = vx;
-            this.lastMoveY = vy;
+        // NOWE v0.80a: Zapisz ostatni kierunek POZIOMY
+        // Aktualizuj tylko, jeśli ruch poziomy jest wystarczająco duży,
+        // aby uniknąć zmiany kierunku przy ruchu pionowym lub dryfowaniu joysticka.
+        if (Math.abs(vx) > 0.1) {
+            this.facingDir = Math.sign(vx);
         }
 
         // Aktualizacja stanów animacji

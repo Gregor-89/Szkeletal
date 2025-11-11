@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.79i - Balans Obrażeń Bicza)
+// GAMEDATA.JS (v0.80a - Balans Asymetrycznego Bicza)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -234,9 +234,13 @@ export const PERK_CONFIG = {
     // POPRAWKA v0.79d: Zwiększono 2x bazową długość (30->60) i skalowanie (10->20)
     /** Size (długość hitoxa) = 60 + 20 * (level - 1) */
     calculateSize: (level) => (60 + 20 * (level - 1)),
-    // POPRAWKA v0.79e: Zmiana na Lvl 1-2: 2, Lvl 3-5: 4
-    /** Count (liczba cięć) = 2 lub 4 */
-    calculateCount: (level) => (level < 3 ? 2 : 4)
+    
+    // POPRAWKA v0.80a: Logika Asymetryczna
+    /** Count (liczba cięć) = Lvl 1: 1, Lvl 2: 2, Lvl 3: 3, Lvl 4+: 4 */
+    calculateCount: (level) => {
+        const counts = [0, 1, 2, 3, 4, 4]; // [0] = placeholder
+        return counts[level] || 4;
+    }
   }
 };
 
@@ -298,4 +302,4 @@ export const ENEMY_STATS = {
 };
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.78] js/config/gameData.js: Wdrożono dynamiczny pacing (v1).');
+console.log('[DEBUG-v0.80a] js/config/gameData.js: Zaktualizowano logikę Bicza (Whip).');

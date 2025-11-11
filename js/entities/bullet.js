@@ -1,5 +1,5 @@
 // ==============
-// BULLET.JS (v0.79k - FIX: Błąd składni w logu)
+// BULLET.JS (v0.80b - FIX: Bicz "przykleja się" do gracza)
 // Lokalizacja: /js/entities/bullet.js
 // ==============
 
@@ -141,15 +141,21 @@ export class PlayerBullet extends Bullet {
     this.animParams = null;
     this.animTimer = 0;
     this.currentFrame = 0;
+    
+    // NOWE v0.80b: Referencja do gracza (dla "przyklejonych" broni jak Bicz)
+    this.playerRef = null;
+    this.offsetX = 0;
+    this.offsetY = 0;
   }
   
   /**
    * POPRAWKA v0.61: Dedykowana metoda init
-   * POPRAWKA v0.79h: Dodano 'animParams' jako ostatni argument
+   * POPRAWKA v0.80b: Dodano 'playerRef' jako ostatni argument
    */
-  init(x, y, vx, vy, size, damage, color, pierce, life = Infinity, bouncesLeft = 0, curveDir = 0, animParams = null) {
+  init(x, y, vx, vy, size, damage, color, pierce, life = Infinity, bouncesLeft = 0, curveDir = 0, animParams = null, playerRef = null) {
     // Wywołaj metodę init() klasy bazowej (przekazując 'life')
     super.init(x, y, vx, vy, size, damage, color, life);
+    
     // Ustaw specyficzne właściwości
     this.pierce = pierce;
     this.bouncesLeft = bouncesLeft;
@@ -160,15 +166,52 @@ export class PlayerBullet extends Bullet {
     this.animParams = animParams;
     this.animTimer = 0;
     this.currentFrame = 0;
+    
+    // NOWE v0.80b: Ustaw referencję gracza i oblicz offset
+    this.playerRef = playerRef;
+    if (this.playerRef) {
+        this.offsetX = this.x - this.playerRef.x;
+        this.offsetY = this.y - this.playerRef.y;
+    }
+  }
+  
+  /**
+   * NOWE v0.80b: Nadpisanie metody release(), aby wyczyścić referencje
+   */
+  release() {
+    super.release(); // Wywołaj bazowe czyszczenie (m.in. active = false)
+    this.playerRef = null; // Wyczyść referencję
+    this.offsetX = 0;
+    this.offsetY = 0;
+    this.animParams = null; // Wyczyść też parametry animacji
   }
   
   /**
    * Aktualizuje pocisk gracza (nadpisanie dla animacji Bicza).
    */
   update(dt) {
-    super.update(dt); // Wywołaj logikę bazową (ruch, czas życia)
     
-    // NOWE v0.79h: Logika animacji
+    // NOWE v0.80b: Logika "przyklejania" broni
+    if (this.playerRef) {
+        // Pozycja jest aktualizowana względem gracza
+        this.x = this.playerRef.x + this.offsetX;
+        this.y = this.playerRef.y + this.offsetY;
+        
+        // Ręcznie obsługujemy czas życia (skopiowane z Bullet.update)
+        if (this.life !== Infinity) {
+            this.life -= dt;
+            if (this.life <= 0) {
+                this.release();
+                return; // Ważne: Zakończ update, jeśli pocisk został zwolniony
+            }
+        }
+    } else {
+        // Normalny ruch i czas życia dla pocisków nieprzyklejonych
+        super.update(dt);
+        if (!this.active) return; // Zakończ, jeśli super.update() zwolnił pocisk
+    }
+    
+    // NOWE v0.79h: Logika animacji (dla Bicza)
     if (this.animParams) {
       this.animTimer += dt * 1000; // Czas w ms
       if (this.animTimer >= this.animParams.animSpeed) {
@@ -189,8 +232,8 @@ export class PlayerBullet extends Bullet {
    */
   draw(ctx) {
     // POPRAWKA v0.79h: Logika rysowania animacji sprite Bicza
-    // Jeśli pocisk ma parametry animacji ORAZ stoi w miejscu, traktuj go jak Bicz
-    if (this.animParams && this.vx === 0 && this.vy === 0) {
+    // POPRAWKA v0.80b: Zmieniono warunek z (this.vx === 0 && this.vy === 0) na (this.playerRef)
+    if (this.animParams && this.playerRef) {
       
       const ap = this.animParams;
       const sprite = ap.spriteSheet;
@@ -273,4 +316,4 @@ export class EnemyBullet extends Bullet {
 }
 
 // LOG DIAGNOSTYCZNY (POPRAWIONY)
-console.log("[DEBUG-v0.79j] js/entities/bullet.js: Odwrócono logikę 'ctx.scale' dla sprite'u Bicza.");
+console.log("[DEBUG-v0.80b] js/entities/bullet.js: Zaimplementowano logikę 'przyklejania' pocisku (playerRef).");
