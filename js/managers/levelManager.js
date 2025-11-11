@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v0.71 - FIX: Poprawiony Import Broni)
+// LEVELMANAGER.JS (v0.81e - Balans i QoL)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -14,12 +14,19 @@ import { playSound } from '../services/audio.js';
 import { AutoGun } from '../config/weapons/autoGun.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
+// NOWY IMPORT v0.81b: Potrzebny do wyświetlania statystyk
+import { WhipWeapon } from '../config/weapons/whipWeapon.js';
 
 // Import referencji DOM potrzebnych temu modułowi
 import {
     statsDisplay, levelUpOverlay, perksDiv, btnContinueMaxLevel, 
     chestRewardDisplay, chestOverlay
 } from '../ui/domElements.js';
+
+// NOWA MAPA v0.81c: Rozwiązuje stringi z perks.js aby naprawić błąd TDZ
+const WEAPON_CLASS_MAP_LOCAL = {
+    'AutoGun': AutoGun
+};
 
 /**
  * Logika zdobycia poziomu (przeniesione z ui.js).
@@ -62,7 +69,8 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
             updateStatsUI(game, player, settings, weapons, statsDisplay);
             
             console.log('[DEBUG-LVLUP-03] Wywołuję showPerks.');
-            showPerks(perkLevels); 
+            // POPRAWKA v0.81b: Przekaż 'player' do showPerks
+            showPerks(perkLevels, player); 
 
         } else {
             console.warn('[levelUp] Warunki NIESPEŁNIONE (gra nierozpoczęta lub w menu). Nie pokazano perków.');
@@ -72,12 +80,15 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
 
 /**
  * Aktualizuje panel statystyk (przeniesione z ui.js).
+ * POPRAWKA v0.81e: Zmiana emoji Bicza i tekst "BRAK".
  */
 export function updateStatsUI(game, player, settings, weapons, targetElement = statsDisplay) {
     targetElement.innerHTML = '';
     
     const weaponList = weapons || [];
     
+    // Pobierz wszystkie bronie
+    const whip = weaponList.find(w => w instanceof WhipWeapon);
     const autoGun = weaponList.find(w => w instanceof AutoGun);
     const orbital = weaponList.find(w => w instanceof OrbitalWeapon);
     const nova = weaponList.find(w => w instanceof NovaWeapon);
@@ -87,12 +98,27 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
         { icon: '❤️', label: 'Zdrowie', value: `${Math.floor(game.health)}/${game.maxHealth}` },
         { icon: '🏃', label: 'Prędkość gracza', value: player.speed.toFixed(2) },
         
-        { icon: '💥', label: 'Obrażenia', value: `${autoGun ? autoGun.bulletDamage.toFixed(0) : WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE} / ${ (PERK_CONFIG.damage?.max || 6) + 1}` },
-        { icon: '🔫', label: 'Szybkostrzelność', value: `${autoGun ? (1000 / autoGun.fireRate).toFixed(2) : (1000 / WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE).toFixed(2)}/s` },
-        { icon: '🎯', label: 'Multishot', value: `${autoGun ? autoGun.multishot : '0'} / ${PERK_CONFIG.multishot?.max || 4}` },
-        { icon: '➡️', label: 'Przebicie', value: `${autoGun ? autoGun.pierce : '0'} / ${PERK_CONFIG.pierce?.max || 4}` },
+        // Statystyki Bicza (zawsze obecne)
+        { icon: '🪢', label: 'Bicz (Poziom)', value: `${whip ? whip.level : '1'} / ${PERK_CONFIG.whip?.max || 5}` },
+        { icon: '🪢', label: 'Bicz (Obr.)', value: `${whip ? whip.damage : '1'}` },
+        { icon: '🪢', label: 'Bicz (Liczba)', value: `${whip ? whip.count : '1'}` },
+        
+        // Statystyki Orbitala (jeśli istnieje)
         { icon: '🌀', label: 'Orbital', value: `${orbital ? orbital.level : '0'} / ${PERK_CONFIG.orbital?.max || 5}` },
-        { icon: '💫', label: 'Nova', value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova?.max || 5}` }
+        // Statystyki Novy (jeśli istnieje)
+        { icon: '💫', label: 'Nova', value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova?.max || 5}` },
+        
+        // Statystyki AutoGuna (tylko jeśli istnieje)
+        ...(autoGun ? [
+            { icon: '🔫', label: 'AutoGun', value: `Poziom ${autoGun.level}` },
+            { icon: '💥', label: 'AutoGun (Obr.)', value: `${autoGun.bulletDamage.toFixed(0)} / ${ (PERK_CONFIG.damage?.max || 6) + (WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE || 1)}` },
+            { icon: '⏩', label: 'AutoGun (Ostrzał)', value: `${(1000 / autoGun.fireRate).toFixed(2)}/s` }, // Używamy ⏩ dla szybkostrzelności
+            { icon: '🎯', label: 'AutoGun (Multi)', value: `${autoGun.multishot} / ${PERK_CONFIG.multishot?.max || 4}` },
+            { icon: '➡️', label: 'AutoGun (Przebicie)', value: `${autoGun.pierce} / ${PERK_CONFIG.pierce?.max || 4}` }
+        ] : [
+            // Pokaż slot na AutoGun, jeśli go nie ma
+            { icon: '🔫', label: 'AutoGun', value: `---` } // POPRAWKA v0.81e
+        ])
     ];
     
     stats.forEach(s => {
@@ -102,7 +128,7 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
         <div class="stat-item-icon">${s.icon}</div>
         <div class="stat-item-content">
           <div class="stat-item-label">${s.label}</div>
-          <div class="stat-item-value">${s.value}</div>
+          <div class.stat-item-value">${s.value}</div>
         </div>
       `;
         targetElement.appendChild(el);
@@ -111,14 +137,35 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
 
 /**
  * Pokazuje perki do wyboru (przeniesione z ui.js).
+ * POPRAWKA v0.81c: Dodano filtrowanie na podstawie stringów (FIX TDZ).
  */
-export function showPerks(perkLevels) {
+export function showPerks(perkLevels, player) {
     console.log('[DEBUG-SHOWPERKS-01] Rozpoczynam showPerks.');
     
-    const avail = perkPool.filter(p => (perkLevels[p.id] || 0) < p.max);
+    // NOWA LOGIKA FILTROWANIA v0.81c
+    const avail = perkPool.filter(p => {
+        const currentLevel = perkLevels[p.id] || 0;
+        
+        // 1. Odrzuć, jeśli perk jest na maksymalnym poziomie
+        if (currentLevel >= p.max) {
+            return false;
+        }
+        
+        // 2. Odrzuć, jeśli perk wymaga broni, której gracz nie ma
+        if (p.requiresWeapon) { // p.requiresWeapon to string (np. 'AutoGun')
+            const WeaponClass = WEAPON_CLASS_MAP_LOCAL[p.requiresWeapon];
+            if (!WeaponClass || !player.getWeapon(WeaponClass)) {
+                // console.log(`[showPerks] Ukrywam perk '${p.id}', ponieważ brakuje broni: ${p.requiresWeapon}`);
+                return false;
+            }
+        }
+        
+        return true; // Perk jest dostępny
+    });
+
     const picks = [];
 
-    console.log(`[showPerks] Perki w puli: ${perkPool.length}. Perki dostępne (avail): ${avail.length}`);
+    console.log(`[showPerks] Perki w puli: ${perkPool.length}. Perki dostępne (avail) po filtrowaniu: ${avail.length}`);
 
     while (picks.length < 3 && avail.length > 0) {
         console.log(`[showPerks] Pętla WHILE: picks.length=${picks.length}, avail.length=${avail.length}`);
@@ -171,6 +218,7 @@ export function pickPerk(perk, game, perkLevels, settings, weapons, player, resu
         return;
     }
     
+    // POPRAWKA v0.81b: 'state' musi zawierać 'player', aby 'apply' mogło go odczytać
     const state = { game, settings, weapons, player }; 
     perk.apply(state, perk); 
     
@@ -182,18 +230,31 @@ export function pickPerk(perk, game, perkLevels, settings, weapons, player, resu
 
 /**
  * Wybiera losową nagrodę ze skrzyni (przeniesione z ui.js).
+ * POPRAWKA v0.81c: Musi także filtrować perki (tak samo jak showPerks) i przyjmować 'player'.
  */
-export function pickChestReward(perkLevels) {
-    const pool = perkPool.filter(p => (perkLevels[p.id] || 0) < p.max);
+export function pickChestReward(perkLevels, player) {
+    // Użyj tej samej logiki filtrowania co showPerks
+    const pool = perkPool.filter(p => {
+        const currentLevel = perkLevels[p.id] || 0;
+        if (currentLevel >= p.max) return false;
+        
+        if (p.requiresWeapon) { // p.requiresWeapon to string
+            const WeaponClass = WEAPON_CLASS_MAP_LOCAL[p.requiresWeapon];
+            return !!(WeaponClass && player.getWeapon(WeaponClass));
+        }
+        return true;
+    });
+    
     if (!pool.length) return null;
     return pool[Math.floor(Math.random() * pool.length)];
 }
 
 /**
  * Logika otwierania skrzyni (przeniesione z ui.js).
+ * POPRAWKA v0.81c: Przekazuje 'player' do pickChestReward.
  */
-export function openChest(game, perkLevels, uiData) {
-    uiData.currentChestReward = pickChestReward(perkLevels);
+export function openChest(game, perkLevels, uiData, player) { // Dodano 'player'
+    uiData.currentChestReward = pickChestReward(perkLevels, player); // Przekaż 'player'
     const reward = uiData.currentChestReward;
 
     if (reward) {

@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.77p - FIX: Poprawa aktualizacji tytułu strony)
+// UI.JS (v0.81g - FIX: Poprawka UI statystyk na pauzie)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -299,8 +299,8 @@ export function pauseGame(game, settings, weapons, player) {
     if (game.paused || game.inMenu) return;
     game.manualPause = true;
     game.paused = true;
-    // POPRAWKA v0.70: Wywołanie funkcji z zaimportowanego levelManager
-    updateStatsUI(game, player, settings, null, statsDisplayPause);
+    // POPRAWKA v0.81g: Przekaż 'weapons' (zamiast 'null') do UI statystyk
+    updateStatsUI(game, player, settings, weapons, statsDisplayPause);
     pauseOverlay.style.display = 'flex';
 }
 
@@ -363,4 +363,4 @@ export function gameOver(game, uiData) {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77p] js/ui/ui.js: Dodano aktualizację tytułu w startRun().');
+console.log('[DEBUG-v0.81g] js/ui/ui.js: Naprawiono błąd statystyk na ekranie pauzy (przekazano "weapons").');

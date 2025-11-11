@@ -154,27 +154,35 @@
           <div class="dev-section">
             <h4>⚔️ Broń i Perki</h4>
             <div class="dev-control">
-              <label>Obrażenia:</label>
+              <label>🪢 Bicz poziom:</label>
+              <input type="number" id="devWhip" min="1" max="5" value="1">
+            </div>
+            <div class="dev-control">
+              <label>🔫 AutoGun poziom:</label>
+              <input type="number" id="devAutoGun" min="0" max="1" value="0">
+            </div>
+            <div class="dev-control">
+              <label>Obrażenia (AutoGun):</label>
               <input type="number" id="devDamage" min="1" max="999" value="1">
             </div>
             <div class="dev-control">
-              <label>Szybkostrzelność (ms):</label>
-              <input type="number" id="devFireRate" min="50" max="5000" value="500">
+              <label>Szybkostrzelność (AutoGun ms):</label>
+              <input type="number" id="devFireRate" min="50" max="5000" value="650">
             </div>
             <div class="dev-control">
-              <label>Multishot:</label>
+              <label>Multishot (AutoGun):</label>
               <input type="number" id="devMultishot" min="0" max="10" value="0">
             </div>
             <div class="dev-control">
-              <label>Pierce:</label>
+              <label>Pierce (AutoGun):</label>
               <input type="number" id="devPierce" min="0" max="10" value="0">
             </div>
             <div class="dev-control">
-              <label>Orbital poziom:</label>
+              <label>🌀 Orbital poziom:</label>
               <input type="number" id="devOrbital" min="0" max="5" value="0">
             </div>
             <div class="dev-control">
-              <label>Nova poziom:</label>
+              <label>💫 Nova poziom:</label>
               <input type="number" id="devNova" min="0" max="5" value="0">
             </div>
           </div>
@@ -198,11 +206,11 @@
             </div>
             <div class="dev-control">
               <label>Spawn rate:</label>
-              <input type="number" id="devSpawnRate" min="0" max="1" step="0.01" value="0.02">
+              <input type="number" id="devSpawnRate" min="0" max="1" step="0.01" value="0.008">
             </div>
             <div class="dev-control">
               <label>Max wrogów:</label>
-              <input type="number" id="devMaxEnemies" min="0" max="500" value="110">
+              <input type="number" id="devMaxEnemies" min="0" max="500" value="300">
             </div>
           </div>
           
@@ -241,7 +249,7 @@
 
         <div id="tab-guide" class="tab-content">
           <div id="guideContent">
-            <p><strong>Witaj w dynamicznej grze survivalowej!</strong> Wcielasz się w wojownika, który musi przetrwać fale wrogów, zbierając doświadczenie (XP) i wybierając ulepszenia. Twoja postać automatycznie strzela do najbliższych przeciwników.</p>
+            <p><strong>Witaj w dynamicznej grze survivalowej!</strong> Wcielasz się w wojownika, który musi przetrwać fale wrogów, zbierając doświadczenie (XP) i wybierając ulepszenia. Twoją bronią startową jest <strong>Bicz</strong>, który atakuje automatycznie.</p>
             
             <h4>🎮 Podstawowe zasady</h4>
             <ul>
@@ -284,8 +292,8 @@
               <li><span class="icon ico-square" style="background:#EC407A;"></span><strong>Splitter</strong> (od 1:10) – Po pokonaniu <strong>dzieli się na 2</strong> mniejszych, szybszych wrogów typu 'Horda'. <span class="detail">(+10pkt)</span></li>
               <li><span class="icon ico-square" style="background:#795548;"></span><strong>Tank</strong> (od 1:30) – Bardzo wolny (60% prędkości), ale posiada <strong>potrójne HP</strong> w porównaniu do standardowego wroga. <span class="detail">(+20pkt)</span></li>
               <li><span class="icon ico-square" style="background:#00BCD4;"></span><strong>Ranged</strong> (od 2:00) – Wróg dystansowy. Stara się utrzymać dystans 180-220px. Ucieka, gdy jesteś za blisko i podchodzi, gdy za daleko. Strzela pociskami co ok. 1.2 sekundy. <span class="detail">(+10pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#607D8B;"></span><strong>Oblężnik (Wall)</strong> (Event od 2:30) – **Wydarzenie Specjalne.** Pojawia się nagle w grupie (15-20 sztuk) w **idealnym kręgu** wokół gracza. Bardzo wolny, ale ekstremalnie wytrzymały (30 HP). Zmusza do przebicia się przez formację. <span class="detail">(+25pkt, +2 XP)</span></li>
-              <li><span class="icon ico-square ico-elite" style="background:#9C27B0;"></span><strong>Elita</strong> 👑 (co 24 sek.) – Mini-boss. Posiada znacznie więcej HP (ok. 8x więcej niż standardowy wróg) i jest większy. Po pokonaniu zawsze upuszcza <strong>Skrzynię</strong> 🎁 oraz więcej XP. <span class="detail">(+80pkt, +7 XP)</span></li>
+              <li><span class="icon ico-square" style="background:#607D8B;"></span><strong>Oblężnik (Wall)</strong> (Event od 2:30) – **Wydarzenie Specjalne.** Pojawia się nagle w grupie (15-20 sztuk) w **idealnym kręgu** wokół gracza. Bardzo wolny, ale ekstremalnie wytrzymały (30 HP). Zmusza do przebicia się przez formację. <span class="detail">(+25pkt, +0 XP)</span></li>
+              <li><span class="icon ico-square ico-elite" style="background:#9C27B0;"></span><strong>Elita</strong> 👑 (co 24 sek.) – Mini-boss. Posiada znacznie więcej HP (ok. 8x więcej niż standardowy wróg) i jest większy. Po pokonaniu zawsze upuszcza <strong>Skrzynię</strong> 🎁 oraz więcej XP. <span class="detail">(+80pkt, +1 XP)</span></li>
             </ul>
             
             <h4>⚡ Mechaniki specjalne</h4>
@@ -301,11 +309,11 @@
             </ul>
             
             <h4>🔧 Ulepszenia (Perki)</h4>
+            <p>Twoją bronią startową jest <strong>Bicz</strong> 🪢. Możesz go ulepszać, a także odblokowywać nowe bronie i bonusy pasywne.</p>
             <ul style="list-style-type: none; padding-left: 5px;">
-              <li>🔫 <strong>Szybszy ostrzał</strong> – +15% szybkostrzelności (max 5)</li>
-              <li>💥 <strong>Silniejsze pociski</strong> – +1 obrażeń (max 6)</li>
-              <li>🎯 <strong>Multishot</strong> – +1 pocisk z większym rozrzutem (max 4)</li>
-              <li>➡️ <strong>Przebicie</strong> – Pociski przechodzą przez +1 wroga bez znikania (max 4)</li>
+              <li>🪢 <strong>Ulepsz Bicz</strong> – Zwiększa obrażenia i liczbę cięć (max 5)</li>
+              <li>🔫 <strong>AutoGun</strong> – Odblokowuje nową broń: szybkostrzelny karabin (max 1)</li>
+              <li>⏩ <strong>Ulepszenia AutoGuna</strong> – (Pojawiają się po odblokowaniu) Zwiększają obrażenia, szybkostrzelność, przebicie i multishot.</li>
               <li>🌀 <strong>Orbital</strong> – Orbitujące ostrza wokół postaci zadają obrażenia (max 5)</li>
               <li>💫 <strong>Nova</strong> – Cykliczny wybuch pocisków wokół postaci (max 5)</li>
               <li>🏃 <strong>Szybkość ruchu</strong> – +10% prędkości gracza (max 4)</li>

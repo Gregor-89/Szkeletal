@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.78 - Dynamiczny Pacing v2)
+// GAMELOGIC.JS (v0.81d - Balans początku gry)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -92,25 +92,31 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     }
 
     // --- Logika Spawnu (Standard) ---
-    // POPRAWKA v0.78: Obliczanie dynamicznego limitu wrogów
-    const minutesElapsed = game.time / 60;
-    const dynamicLimit = Math.min(
-        settings.maxEnemies, // Twardy limit (np. 300)
-        GAME_CONFIG.INITIAL_MAX_ENEMIES + (minutesElapsed * GAME_CONFIG.ENEMY_LIMIT_GROWTH_PER_MINUTE)
-    );
-    
-    const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
-    // POPRAWKA v0.78: Użyj 'dynamicLimit' zamiast 'settings.maxEnemies'
-    if (Math.random() < spawnRate && enemies.length < dynamicLimit && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
-        state.enemyIdCounter = spawnEnemy(enemies, game, canvas, state.enemyIdCounter, camera);
-    }
+    // POPRAWKA v0.81d: Implementacja okresu ochronnego
+    if (game.time > GAME_CONFIG.SPAWN_GRACE_PERIOD) {
+        
+        // POPRAWKA v0.78: Obliczanie dynamicznego limitu wrogów
+        const minutesElapsed = game.time / 60;
+        const dynamicLimit = Math.min(
+            settings.maxEnemies, // Twardy limit (np. 300)
+            GAME_CONFIG.INITIAL_MAX_ENEMIES + (minutesElapsed * GAME_CONFIG.ENEMY_LIMIT_GROWTH_PER_MINUTE)
+        );
+        
+        const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
+        // POPRAWKA v0.78: Użyj 'dynamicLimit' zamiast 'settings.maxEnemies'
+        if (Math.random() < spawnRate && enemies.length < dynamicLimit && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
+            state.enemyIdCounter = spawnEnemy(enemies, game, canvas, state.enemyIdCounter, camera);
+        }
 
-    // --- Logika Spawnu (Elita) ---
-    const timeSinceLastElite = game.time - settings.lastElite;
-    if (timeSinceLastElite > (settings.eliteInterval / 1000) / (game.hyper ? 1.15 : 1) && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
-        state.enemyIdCounter = spawnElite(enemies, game, canvas, state.enemyIdCounter, camera);
-        settings.lastElite = game.time;
+        // --- Logika Spawnu (Elita) ---
+        const timeSinceLastElite = game.time - settings.lastElite;
+        if (timeSinceLastElite > (settings.eliteInterval / 1000) / (game.hyper ? 1.15 : 1) && !(settings.siegeWarningT > 0)) { // Zablokuj spawny, gdy timer ostrzeżenia jest AKTYWNY
+            state.enemyIdCounter = spawnElite(enemies, game, canvas, state.enemyIdCounter, camera);
+            settings.lastElite = game.time;
+        }
     }
+    // --- Koniec bloku okresu ochronnego ---
+    
     
     // --- POPRAWKA v0.77c: Uproszczona logika spawnu Oblężenia ---
     
@@ -223,4 +229,4 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77c] js/core/gameLogic.js: Uproszczono logikę spawnu Oblężenia (tylko 1 warunek czasowy).');
+console.log('[DEBUG-v0.81d] js/core/gameLogic.js: Zaimplementowano okres ochronny (Grace Period).');

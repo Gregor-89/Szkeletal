@@ -1,5 +1,5 @@
 // ==============
-// BULLET.JS (v0.80b - FIX: Bicz "przykleja się" do gracza)
+// BULLET.JS (v0.81g - FIX: Hitbox Bicza v2 - Separacja logiki)
 // Lokalizacja: /js/entities/bullet.js
 // ==============
 
@@ -146,13 +146,16 @@ export class PlayerBullet extends Bullet {
     this.playerRef = null;
     this.offsetX = 0;
     this.offsetY = 0;
+    
+    // NOWE v0.81g: Oddzielny rozmiar do rysowania (dla sprite'ów)
+    this.drawScale = 0;
   }
   
   /**
    * POPRAWKA v0.61: Dedykowana metoda init
-   * POPRAWKA v0.80b: Dodano 'playerRef' jako ostatni argument
+   * POPRAWKA v0.81g: Dodano 'drawScale' jako ostatni argument
    */
-  init(x, y, vx, vy, size, damage, color, pierce, life = Infinity, bouncesLeft = 0, curveDir = 0, animParams = null, playerRef = null) {
+  init(x, y, vx, vy, size, damage, color, pierce, life = Infinity, bouncesLeft = 0, curveDir = 0, animParams = null, playerRef = null, drawScale = 0) {
     // Wywołaj metodę init() klasy bazowej (przekazując 'life')
     super.init(x, y, vx, vy, size, damage, color, life);
     
@@ -173,6 +176,9 @@ export class PlayerBullet extends Bullet {
         this.offsetX = this.x - this.playerRef.x;
         this.offsetY = this.y - this.playerRef.y;
     }
+    
+    // NOWE v0.81g
+    this.drawScale = drawScale;
   }
   
   /**
@@ -184,6 +190,7 @@ export class PlayerBullet extends Bullet {
     this.offsetX = 0;
     this.offsetY = 0;
     this.animParams = null; // Wyczyść też parametry animacji
+    this.drawScale = 0; // NOWE v0.81g
   }
   
   /**
@@ -251,18 +258,22 @@ export class PlayerBullet extends Bullet {
         ctx.globalAlpha = 1;
       }
       
-      // Używamy 'this.size' jako *mnożnika* rozmiaru (np. 60 z configu)
+      // POPRAWKA v0.81g: Użyj this.drawScale (jeśli dostępne) zamiast this.size
+      // this.size to teraz promień kolizji (np. 20)
+      // this.drawScale to skala rysowania (np. 60)
+      const scalePercent = (this.drawScale > 0 ? this.drawScale : this.size) / 100.0;
+      
       // Bazowy rozmiar klatki to 125x150
-      const drawWidth = ap.frameWidth * (this.size / 100); // Skalowanie przez 'size'
-      const drawHeight = ap.frameHeight * (this.size / 100);
+      const drawWidth = ap.frameWidth * scalePercent; // Skalowanie przez 'drawScale'
+      const drawHeight = ap.frameHeight * scalePercent;
       
       // Źródło (Sprite Sheet)
       const sx = this.currentFrame * ap.frameWidth;
       const sy = ap.animRow * ap.frameHeight;
       
       // Cel (Canvas)
-      const dx = this.x - drawWidth / 2;
-      const dy = this.y - drawHeight / 2;
+      // const dx = this.x - drawWidth / 2; // Stara logika, niepotrzebna przy translate
+      // const dy = this.y - drawHeight / 2; // Stara logika, niepotrzebna przy translate
       
       ctx.save();
       ctx.translate(this.x, this.y);
@@ -316,4 +327,4 @@ export class EnemyBullet extends Bullet {
 }
 
 // LOG DIAGNOSTYCZNY (POPRAWIONY)
-console.log("[DEBUG-v0.80b] js/entities/bullet.js: Zaimplementowano logikę 'przyklejania' pocisku (playerRef).");
+console.log("[DEBUG-v0.81g] js/entities/bullet.js: Zaimplementowano logikę 'drawScale' (separacja hitbox/draw).");

@@ -1,11 +1,11 @@
 // ==============
-// PLAYER.JS (v0.80a - Śledzenie facingDir dla Asymetrycznego Bicza)
+// PLAYER.JS (v0.81b - Bicz (Whip) jako broń startowa, Plan B)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
 // POPRAWKA v0.71: Import 1 podklasy broni z nowego folderu
 import { AutoGun } from '../config/weapons/autoGun.js';
-// NOWY IMPORT v0.79
+// NOWY IMPORT v0.79 (teraz broń startowa)
 import { WhipWeapon } from '../config/weapons/whipWeapon.js'; 
 import { get as getAsset } from '../services/assets.js';
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
@@ -25,7 +25,8 @@ export class Player {
         this.color = '#4CAF50';
         
         this.weapons = [];
-        this.weapons.push(new AutoGun(this));
+        // POPRAWKA v0.81b: Zmiana broni startowej
+        this.weapons.push(new WhipWeapon(this));
         
         // POPRAWKA v0.68: Dodanie stanu dla Pól Zagrożenia
         this.inHazard = false; // Nowy stan
@@ -60,7 +61,8 @@ export class Player {
         this.speed = PLAYER_CONFIG.BASE_SPEED;
         
         this.weapons = [];
-        this.weapons.push(new AutoGun(this));
+        // POPRAWKA v0.81b: Zmiana broni startowej
+        this.weapons.push(new WhipWeapon(this));
         
         // POPRAWKA v0.68: Resetowanie stanu dla Pól Zagrożenia
         this.inHazard = false;

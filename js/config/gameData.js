@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.80a - Balans Asymetrycznego Bicza)
+// GAMEDATA.JS (v0.81g - FIX: Hitbox Bicza v1 - Separacja configu)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -30,8 +30,12 @@ export const COLLISION_CONFIG = {
 
 // --- Konfiguracja Gry i Spawnowania ---
 export const GAME_CONFIG = {
-  // ZBALANSOWANIE v0.78: Zmniejszono spawn początkowy (z 0.02 na 0.015)
-  INITIAL_SPAWN_RATE: 0.015,
+  // NOWE v0.81d: Czas (w sekundach) bez spawnów na początku gry.
+  SPAWN_GRACE_PERIOD: 4.0,
+
+  // ZBALANSOWANIE v0.81f: Dalsze zmniejszenie (z 0.01 na 0.008)
+  INITIAL_SPAWN_RATE: 0.008,
+  
   // ZBALANSOWANIE v0.76: Zwiększenie limitu wrogów (110 -> 300)
   // Maksymalna liczba wrogów dozwolona jednocześnie na mapie (TWARDY LIMIT).
   MAX_ENEMIES: 300,
@@ -39,8 +43,10 @@ export const GAME_CONFIG = {
   ELITE_SPAWN_INTERVAL: 24000,
   
   // NOWE v0.78: Dynamiczny limit wrogów
-  INITIAL_MAX_ENEMIES: 30, // Limit wrogów na starcie (t=0)
-  ENEMY_LIMIT_GROWTH_PER_MINUTE: 50, // O ile limit rośnie co minutę
+  // ZBALANSOWANIE v0.81f: Dalsze zmniejszenie (5 -> 3)
+  INITIAL_MAX_ENEMIES: 3,
+  // ZBALANSOWANIE v0.81f: Dalsze spowolnienie (35 -> 18)
+  ENEMY_LIMIT_GROWTH_PER_MINUTE: 18,
   
   // Ilość XP potrzebna do zdobycia pierwszego poziomu.
   INITIAL_XP_NEEDED: 5,
@@ -75,7 +81,7 @@ export const WALL_DETONATION_CONFIG = {
   // Czas (w sekundach), przez jaki Oblężnik miga przed detonacją
   WALL_DETONATION_WARNING_TIME: 3.0,
   // Maksymalna losowa różnica czasu detonacji między jednostkami (np. od 0 do 6s)
-  WALL_DETONATION_TIME_VARIANCE: 6.0, // (Bez zmian z v0.75)
+  WALL_DETONATION_TIME_VARIANCE: 6.0, // (Bez zmian v0.75)
   // ZBALANSOWANIE v0.76: Zwiększenie promienia wybuchu (100 -> 200)
   // Promień (w pikselach) efektu AreaNuke po detonacji
   WALL_DETONATION_RADIUS: 200,
@@ -131,7 +137,8 @@ export const WEAPON_CONFIG = {
     // Bazowe obrażenia każdego pocisku.
     BASE_DAMAGE: 1,
     // Czas (w milisekundach) między wystrzałami. Mniej = szybciej.
-    BASE_FIRE_RATE: 500,
+    // ZBALANSOWANIE v0.81e: Wolniejszy start (500 -> 650)
+    BASE_FIRE_RATE: 650,
     // Rozmiar (promień) pocisków.
     BASE_SIZE: 3,
   },
@@ -177,8 +184,10 @@ export const GEM_CONFIG = {
 export const PERK_CONFIG = {
   // Każdy obiekt definiuje WARTOŚĆ ulepszenia i MAKSYMALNY poziom
   firerate: {
-    value: 0.85, // Mnożnik czasu odnowienia (0.85 = +15% prędkości)
-    max: 5
+    // ZBALANSOWANIE v0.81e: Mocniejszy bonus (0.85 -> 0.80)
+    value: 0.80,
+    // ZBALANSOWANIE v0.81e: Więcej poziomów (5 -> 6)
+    max: 6
   },
   damage: {
     value: 1, // +1 obrażeń
@@ -191,6 +200,10 @@ export const PERK_CONFIG = {
   pierce: {
     value: 1, // +1 przebicia
     max: 4
+  },
+  // NOWY PERK v0.81b
+  autogun: {
+    max: 1
   },
   orbital: {
     max: 5,
@@ -223,17 +236,17 @@ export const PERK_CONFIG = {
     max: 3
   },
   
-  // NOWA BROŃ v0.79
+  // BROŃ BAZOWA v0.81b
   whip: {
     max: 5,
+    // NOWE v0.81g: Promień hitboxa (kolizji)
+    HITBOX_RADIUS: 20,
     /** Cooldown (s) = max(1.0, 3.0 - 0.4 * level) */
     calculateCooldown: (level) => (Math.max(1.0, 3.0 - 0.4 * level)),
-    // POPRAWKA v0.79i: Zmniejszenie obrażeń
     /** Damage = 1 + floor(level / 2) */
     calculateDamage: (level) => (1 + Math.floor(level / 2)),
-    // POPRAWKA v0.79d: Zwiększono 2x bazową długość (30->60) i skalowanie (10->20)
-    /** Size (długość hitoxa) = 60 + 20 * (level - 1) */
-    calculateSize: (level) => (60 + 20 * (level - 1)),
+    /** POPRAWKA v0.81g: Zmiana nazwy na 'DrawScale' (to jest rozmiar wizualny) */
+    calculateDrawScale: (level) => (60 + 20 * (level - 1)),
     
     // POPRAWKA v0.80a: Logika Asymetryczna
     /** Count (liczba cięć) = Lvl 1: 1, Lvl 2: 2, Lvl 3: 3, Lvl 4+: 4 */
@@ -302,4 +315,4 @@ export const ENEMY_STATS = {
 };
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.80a] js/config/gameData.js: Zaktualizowano logikę Bicza (Whip).');
+console.log('[DEBUG-v0.81g] js/config/gameData.js: Wdrożono Hitbox Bicza v1 i naprawiono logikę spawnu v3.');

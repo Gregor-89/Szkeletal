@@ -1,5 +1,5 @@
 // ==============
-// PERKS.JS (v0.79a - Dodanie perka Bicz)
+// PERKS.JS (v0.81f - FIX: Przywrócenie perka ulepszenia Bicza)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
@@ -7,7 +7,7 @@
 import { AutoGun } from './weapons/autoGun.js';
 import { OrbitalWeapon } from './weapons/orbitalWeapon.js';
 import { NovaWeapon } from './weapons/novaWeapon.js';
-// NOWY IMPORT v0.79
+// NOWY IMPORT v0.81f (Przywrócony)
 import { WhipWeapon } from './weapons/whipWeapon.js';
 
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
@@ -18,9 +18,10 @@ import { PERK_CONFIG } from './gameData.js';
  */
 export const perkPool = [
     {
-        id: 'firerate', name: 'Szybszy ostrzał', desc:'+15% szybkostrzelności', 
-        max: PERK_CONFIG.firerate?.max || 5, 
-        color:'#90caf9', emoji:'🔫',
+        id: 'firerate', name: 'Szybszy ostrzał', desc:'+20% szybkostrzelności AutoGuna', // Opis zmieniony w v0.81e
+        max: PERK_CONFIG.firerate?.max || 6, 
+        color:'#90caf9', emoji:'⏩', // POPRAWKA v0.81e: Zmiana emoji
+        requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
@@ -30,9 +31,10 @@ export const perkPool = [
         }
     },
     {
-        id: 'damage', name: 'Silniejsze pociski', desc:'+1 obrażeń pocisków', 
+        id: 'damage', name: 'Silniejsze pociski', desc:'+1 obrażeń pocisków AutoGuna', 
         max: PERK_CONFIG.damage?.max || 6, 
         color:'#ef5350', emoji:'💥',
+        requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
@@ -42,9 +44,10 @@ export const perkPool = [
         }
     },
     {
-        id: 'multishot', name: 'Multishot', desc:'+1 pocisk i większy rozrzut', 
+        id: 'multishot', name: 'Multishot', desc:'+1 pocisk AutoGuna i większy rozrzut', 
         max: PERK_CONFIG.multishot?.max || 4, 
         color:'#ffca28', emoji:'🎯',
+        requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
@@ -54,15 +57,36 @@ export const perkPool = [
         }
     },
     {
-        id: 'pierce', name: 'Przebicie', desc:'+1 przebicia pocisków', 
+        id: 'pierce', name: 'Przebicie', desc:'+1 przebicia pocisków AutoGuna', 
         max: PERK_CONFIG.pierce?.max || 4, 
         color:'#ab47bc', emoji:'➡️',
+        requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
                 gun.pierce += PERK_CONFIG.pierce.value;
                 gun.upgrade(perk);
             }
+        }
+    },
+    // NOWY PERK v0.81b
+    {
+        id: 'autogun', name: 'AutoGun', desc:'Odblokowuje nową broń: szybkostrzelny karabin.', // POPRAWKA v0.81e: Zmiana nazwy
+        max: 1, 
+        color:'#90caf9', emoji:'🔫',
+        apply: (state, perk) => { 
+            // Ta funkcja tylko dodaje broń (level 1)
+            state.player.addWeapon(AutoGun, perk);
+        }
+    },
+    // NOWY PERK v0.81f (Przywrócenie ulepszenia dla Bicza)
+    {
+        id: 'whip', name: 'Ulepsz Bicz', desc:'Zwiększa obrażenia i liczbę cięć Bicza', 
+        max: PERK_CONFIG.whip?.max || 5, 
+        color:'#C8E6C9', emoji:'🪢',
+        apply: (state, perk) => { 
+            // Gracz już ma Bicz, więc addWeapon() wywoła upgrade()
+            state.player.addWeapon(WhipWeapon, perk);
         }
     },
     {
@@ -79,15 +103,6 @@ export const perkPool = [
         color:'#ffd54f', emoji:'💫',
         apply: (state, perk) => { 
             state.player.addWeapon(NovaWeapon, perk);
-        }
-    },
-    // NOWY PERK v0.79
-    {
-        id: 'whip', name: 'Bicz', desc:'Atakuje poziomo w kierunku ruchu', 
-        max: PERK_CONFIG.whip?.max || 5, 
-        color:'#C8E6C9', emoji:'🌿',
-        apply: (state, perk) => { 
-            state.player.addWeapon(WhipWeapon, perk);
         }
     },
     {

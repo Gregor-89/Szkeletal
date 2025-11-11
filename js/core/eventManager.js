@@ -1,5 +1,5 @@
 // ==============
-// EVENTMANAGER.JS (v0.77 - Implementacja pauzy przy utracie fokusu)
+// EVENTMANAGER.JS (v0.81c - FIX: Przekazanie 'player' do openChest)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
@@ -78,7 +78,8 @@ function wrappedLevelUp() {
 }
 
 function wrappedOpenChest() {
-    openChest(gameStateRef.game, gameStateRef.perkLevels, uiDataRef); // uiData jest potrzebne do currentChestReward
+    // POPRAWKA v0.81c: Przekaż 'player' do openChest, aby umożliwić filtrowanie nagród
+    openChest(gameStateRef.game, gameStateRef.perkLevels, uiDataRef, gameStateRef.player);
 }
 
 function wrappedGameOver() {
@@ -227,6 +228,7 @@ function initEvents() {
     chestButton.addEventListener('click',() => {
         chestOverlay.style.display='none';
         if(uiDataRef.currentChestReward){
+            // POPRAWKA v0.81c: Upewnij się, że obiekt 'state' zawiera 'player'
             const state = { game: gameStateRef.game, settings: gameStateRef.settings, weapons: gameStateRef.player.weapons, player: gameStateRef.player };
             uiDataRef.currentChestReward.apply(state, uiDataRef.currentChestReward);
             
@@ -279,4 +281,4 @@ export function initializeMainEvents(stateRef, uiRef) {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77] js/core/eventManager.js: Dodano listener zdarzenia "blur" (pauza przy utracie fokusu).');
+console.log('[DEBUG-v0.81c] js/core/eventManager.js: Zweryfikowano przekazanie "player" do openChest i applyPerk (Chest).');

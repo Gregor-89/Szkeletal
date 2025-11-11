@@ -1,5 +1,5 @@
 // ==============
-// WHIPWEAPON.JS (v0.80b - FIX: Przekazanie playerRef do pocisku)
+// WHIPWEAPON.JS (v0.81g - FIX: Hitbox Bicza v3 - Przekazanie poprawnych rozmiarów)
 // Lokalizacja: /js/config/weapons/whipWeapon.js
 // ==============
 
@@ -33,8 +33,9 @@ export class WhipWeapon extends Weapon {
     // Statystyki dynamiczne
     this.cooldown = 0;
     this.damage = 0;
-    // 'this.size' z configu (60+) będzie teraz używane jako *skalowanie* sprite'a
-    this.size = 0;
+    // POPRAWKA v0.81g: Rozdzielenie rozmiaru kolizji od rozmiaru rysowania
+    this.drawScale = 0; // Skala procentowa (np. 60) do rysowania sprite'a
+    this.hitboxSize = 20; // Promień (w px) do sprawdzania kolizji
     this.count = 0;
     
     // NOWE v0.79h: Pobranie sprite'a
@@ -49,7 +50,9 @@ export class WhipWeapon extends Weapon {
   updateStats() {
     this.damage = this.whipConfig.calculateDamage(this.level);
     this.cooldown = this.whipConfig.calculateCooldown(this.level);
-    this.size = this.whipConfig.calculateSize(this.level);
+    // POPRAWKA v0.81g: Użyj nowych nazw funkcji i wartości z gameData.js
+    this.drawScale = this.whipConfig.calculateDrawScale(this.level);
+    this.hitboxSize = this.whipConfig.HITBOX_RADIUS || 20; // 20px jako fallback
     this.count = this.whipConfig.calculateCount(this.level);
     
     // Ustaw timer przy pierwszym ulepszeniu
@@ -97,11 +100,11 @@ export class WhipWeapon extends Weapon {
         
         const bullet = bulletsPool.get();
         if (bullet) {
-          // init(x, y, vx, vy, size, damage, color, pierce, life, bouncesLeft, curveDir, animParams, playerRef)
+          // init(x, y, vx, vy, size, damage, color, pierce, life, bouncesLeft, curveDir, animParams, playerRef, drawScale)
           bullet.init(
             hitboxX, hitboxY,
             0, 0, // vx, vy
-            this.size, // Skalowanie sprite'a (np. 60)
+            this.hitboxSize, // POPRAWKA v0.81g: Przekaż rozmiar kolizji (np. 20)
             this.damage,
             WHIP_COLOR,
             WHIP_PIERCE,
@@ -109,7 +112,8 @@ export class WhipWeapon extends Weapon {
             0, // bouncesLeft
             side, // curveDir (kierunek odwrócenia sprite'a)
             animParams,
-            this.player // <-- NOWE v0.80b: Przekaż referencję gracza
+            this.player, // v0.80b: Przekaż referencję gracza
+            this.drawScale // POPRAWKA v0.81g: Przekaż rozmiar rysowania (np. 60)
           );
         }
       };
@@ -149,4 +153,4 @@ export class WhipWeapon extends Weapon {
 }
 
 // LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.80b] js/config/weapons/whipWeapon.js: Przekazano playerRef do pocisku Bicza.');
+console.log('[DEBUG-v0.81g] js/config/weapons/whipWeapon.js: Przekazano hitboxSize i drawScale do bullet.init().');

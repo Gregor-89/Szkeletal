@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.77v - FIX: Naprawa błędu "Assignment to constant variable" w modalu)
+// DEV.JS (v0.81f - Aktualizacja Dev Menu dla Bicza/AutoGuna)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -11,6 +11,8 @@ import { PLAYER_CONFIG, GAME_CONFIG, WEAPON_CONFIG } from '../config/gameData.js
 import { AutoGun } from '../config/weapons/autoGun.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
+// NOWY IMPORT v0.81f
+import { WhipWeapon } from '../config/weapons/whipWeapon.js';
 
 // POPRAWKA v0.74: Import mapy z managera efektów
 import { PICKUP_CLASS_MAP } from '../managers/effects.js';
@@ -119,7 +121,7 @@ function applyDevSettings() {
         return;
     }
     
-    const { game, settings, player } = gameState;
+    const { game, settings, player, perkLevels } = gameState;
     
     // --- LOGIKA CZASU (Zawsze Ustawiana) ---
     const devTimeInput = document.getElementById('devTime');
@@ -146,22 +148,79 @@ function applyDevSettings() {
         // Obliczenia zależne od poziomu
         game.xpNeeded = calculateXpNeeded(game.level);
         
-        const autoGun = player.getWeapon(AutoGun);
-        const orbital = player.getWeapon(OrbitalWeapon);
-        const nova = player.getWeapon(NovaWeapon);
+        // --- LOGIKA BRONI (v0.81f) ---
         
+        // 1. BICZ (Zawsze istnieje)
+        const whip = player.getWeapon(WhipWeapon);
+        const whipLevel = parseInt(document.getElementById('devWhip').value) || 1;
+        if (whip && whip.level !== whipLevel) {
+            whip.level = 1; // Reset
+            const whipPerk = perkPool.find(p => p.id === 'whip');
+            for(let i = 1; i < whipLevel; i++) {
+                whip.upgrade(whipPerk); // Ulepszaj poziom po poziomie
+            }
+            perkLevels['whip'] = whipLevel - 1;
+        }
+
+        // 2. AUTOGUN (Opcjonalny)
+        let autoGun = player.getWeapon(AutoGun);
+        const autoGunLevel = parseInt(document.getElementById('devAutoGun').value) || 0; // 0 lub 1
+        
+        if (autoGunLevel === 0 && autoGun) {
+            // Usuń AutoGun
+            player.weapons = player.weapons.filter(w => !(w instanceof AutoGun));
+            autoGun = null;
+            delete perkLevels['autogun'];
+            delete perkLevels['damage'];
+            delete perkLevels['firerate'];
+            delete perkLevels['multishot'];
+            delete perkLevels['pierce'];
+        } else if (autoGunLevel === 1 && !autoGun) {
+            // Dodaj AutoGun
+            const autogunPerk = perkPool.find(p => p.id === 'autogun');
+            autogunPerk.apply(gameState, autogunPerk);
+            autoGun = player.getWeapon(AutoGun); // Pobierz nową instancję
+            perkLevels['autogun'] = 1;
+        }
+
+        // Ustaw statystyki AutoGuna (jeśli istnieje)
         if (autoGun) {
-            autoGun.bulletDamage = parseInt(document.getElementById('devDamage').value) || WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE;
-            autoGun.fireRate = parseInt(document.getElementById('devFireRate').value) || WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE;
+            autoGun.bulletDamage = parseInt(document.getElementById('devDamage').value) || (WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE || 1);
+            autoGun.fireRate = parseInt(document.getElementById('devFireRate').value) || (WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE || 650);
             autoGun.multishot = parseInt(document.getElementById('devMultishot').value) || 0;
             autoGun.pierce = parseInt(document.getElementById('devPierce').value) || 0;
+            // Uwaga: Nie przeliczamy perkLevels wstecz z tych wartości
         }
-        if (orbital) {
-            orbital.level = parseInt(document.getElementById('devOrbital').value) || 0;
+
+        // 3. INNE BRONIE (Orbital, Nova)
+        const orbital = player.getWeapon(OrbitalWeapon);
+        const orbitalLevel = parseInt(document.getElementById('devOrbital').value) || 0;
+        if (orbitalLevel === 0 && orbital) {
+            player.weapons = player.weapons.filter(w => !(w instanceof OrbitalWeapon));
+            delete perkLevels['orbital'];
+        } else if (orbitalLevel > 0 && !orbital) {
+            const perk = perkPool.find(p => p.id === 'orbital');
+            for(let i=0; i<orbitalLevel; i++) perk.apply(gameState, perk);
+            perkLevels['orbital'] = orbitalLevel;
+        } else if (orbital && orbital.level !== orbitalLevel) {
+            orbital.level = orbitalLevel;
             orbital.updateStats();
+            perkLevels['orbital'] = orbitalLevel;
         }
-        if (nova) {
-            nova.level = parseInt(document.getElementById('devNova').value) || 0;
+        
+        const nova = player.getWeapon(NovaWeapon);
+        const novaLevel = parseInt(document.getElementById('devNova').value) || 0;
+         if (novaLevel === 0 && nova) {
+            player.weapons = player.weapons.filter(w => !(w instanceof NovaWeapon));
+            delete perkLevels['nova'];
+        } else if (novaLevel > 0 && !nova) {
+            const perk = perkPool.find(p => p.id === 'nova');
+            for(let i=0; i<novaLevel; i++) perk.apply(gameState, perk);
+            perkLevels['nova'] = novaLevel;
+        } else if (nova && nova.level !== novaLevel) {
+            nova.level = novaLevel;
+            nova.updateStats();
+            perkLevels['nova'] = novaLevel;
         }
     }
     
@@ -206,6 +265,7 @@ function devSpawnPickup(type) {
 
 /**
  * Funkcja pomocnicza do stosowania presetów
+ * POPRAWKA v0.81f: Zaktualizowano logikę dla Bicza (bazowy) i AutoGuna (opcjonalny).
  */
 function applyDevPreset(level, perkLevelOffset = 0) {
     if (!gameState.game || !gameState.settings || !gameState.perkLevels || !gameState.player) {
@@ -215,7 +275,7 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     
     const { game, settings, perkLevels, player } = gameState;
     
-    Object.assign(settings, {
+    Object.assign(settings, { 
         spawn: GAME_CONFIG.INITIAL_SPAWN_RATE,
         maxEnemies: GAME_CONFIG.MAX_ENEMIES,
         eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL,
@@ -239,47 +299,97 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     game.time = 121; // Ustawienie czasu na potrzeby presetu (może zostać nadpisane przez devTime)
     devSettings.allowedEnemies = ['all'];
     
-    // POPRAWKA v0.75: Używamy teraz game.level ustawionego powyżej
     game.xp = 0;
     game.xpNeeded = calculateXpNeeded(game.level);
     
-    perkPool.forEach(perk => {
-        const targetLevel = Math.max(0, perk.max - perkLevelOffset);
-        if (targetLevel > 0) {
-            perkLevels[perk.id] = targetLevel;
+    // --- Nowa logika presetów v0.81f ---
+    
+    // 1. BICZ (Bazowy)
+    const whip = player.getWeapon(WhipWeapon); // Ma Lvl 1 po resecie
+    const whipPerk = perkPool.find(p => p.id === 'whip');
+    const targetWhipLevel = Math.max(1, (whipPerk.max || 5) - perkLevelOffset);
+    if (targetWhipLevel > 1) {
+        for(let i = 1; i < targetWhipLevel; i++) { // Zaczynamy od 1, bo Lvl 1 już jest
+            whip.upgrade(whipPerk);
+        }
+        perkLevels['whip'] = targetWhipLevel - 1; // (Lvl 5 -> 4 ulepszenia)
+    }
+
+    // 2. AUTOGUN (Opcjonalny)
+    let autoGun = null;
+    const autogunPerk = perkPool.find(p => p.id === 'autogun');
+    if (autogunPerk) {
+        autogunPerk.apply(gameState, autogunPerk); // Dodaje AutoGun (Lvl 1)
+        perkLevels['autogun'] = 1;
+        autoGun = player.getWeapon(AutoGun); // Pobierz instancję
+    }
+    
+    // Ulepsz AutoGun (jeśli istnieje)
+    if (autoGun) {
+        const perksToApply = ['damage', 'firerate', 'multishot', 'pierce'];
+        perksToApply.forEach(perkId => {
+            const perk = perkPool.find(p => p.id === perkId);
+            const targetLevel = Math.max(0, perk.max - perkLevelOffset);
             for (let i = 0; i < targetLevel; i++) {
                 perk.apply(gameState, perk);
             }
+            perkLevels[perkId] = targetLevel;
+        });
+    }
+    
+    // 3. INNE BRONIE (Bez zmian)
+    perkPool.forEach(perk => {
+        if (perk.id === 'orbital' || perk.id === 'nova') {
+             const targetLevel = Math.max(0, perk.max - perkLevelOffset);
+             if (targetLevel > 0) {
+                 perkLevels[perk.id] = targetLevel;
+                 for (let i = 0; i < targetLevel; i++) {
+                     perk.apply(gameState, perk);
+                 }
+             }
+        } else if (['speed', 'pickup', 'health'].includes(perk.id)) {
+            // Statystyki pasywne (bez zmian)
+            const targetLevel = Math.max(0, perk.max - perkLevelOffset);
+             if (targetLevel > 0) {
+                 perkLevels[perk.id] = targetLevel;
+                 for (let i = 0; i < targetLevel; i++) {
+                     perk.apply(gameState, perk);
+                 }
+             }
         }
     });
+    // --- Koniec nowej logiki ---
     
-    const autoGun = player.getWeapon(AutoGun);
-    const orbital = player.getWeapon(OrbitalWeapon);
-    const nova = player.getWeapon(NovaWeapon);
-    
+    // Zaktualizuj UI Dev Menu, aby pasowało do presetu
     document.getElementById('devLevel').value = game.level;
     document.getElementById('devHealth').value = game.health;
     document.getElementById('devMaxHealth').value = game.maxHealth;
     document.getElementById('devXP').value = game.xp;
     
     const devTimeInput = document.getElementById('devTime');
-    if (devTimeInput) devTimeInput.value = game.time; // Ustawienie wartości w UI
-    
-    // ZAPISUJEMY CZAS Z PRESETU
+    if (devTimeInput) devTimeInput.value = game.time; 
     devStartTime = game.time;
+    
+    // Zaktualizuj UI Broni
+    document.getElementById('devWhip').value = whip.level;
+    document.getElementById('devAutoGun').value = autoGun ? 1 : 0;
     
     if (autoGun) {
         document.getElementById('devDamage').value = autoGun.bulletDamage;
         document.getElementById('devFireRate').value = autoGun.fireRate;
         document.getElementById('devMultishot').value = autoGun.multishot;
         document.getElementById('devPierce').value = autoGun.pierce;
+    } else {
+        document.getElementById('devDamage').value = WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE || 1;
+        document.getElementById('devFireRate').value = WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE || 650;
+        document.getElementById('devMultishot').value = 0;
+        document.getElementById('devPierce').value = 0;
     }
-    if (orbital) {
-        document.getElementById('devOrbital').value = orbital.level;
-    }
-    if (nova) {
-        document.getElementById('devNova').value = nova.level;
-    }
+    
+    const orbital = player.getWeapon(OrbitalWeapon);
+    const nova = player.getWeapon(NovaWeapon);
+    document.getElementById('devOrbital').value = orbital ? orbital.level : 0;
+    document.getElementById('devNova').value = nova ? nova.level : 0;
     
     devSettings.presetLoaded = true;
     
