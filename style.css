@@ -1,5 +1,5 @@
 :root { --ui-panel:#2b2b2b; --ui-text:#fff; --ui-accent:#4caf50; --bar-bg:#333; --bar-fill:#4fc3f7; }
-body { margin:0; background:#1a1a1a; color:#fff; font-family:Arial, sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+body { margin:0; background:#1a1a1a; color:#fff; font-family:Arial, sans-serif; display:flex; justify-content:center; align-items:center; min-height:100vh; touch-action: none; }
 #gameContainer { text-align:center; position:relative; }
 /* POPRAWKA v0.77g: Dodano z-index, aby tytuł był nad canvasem */
 #title { margin:10px 0 6px 0; font-size:20px; letter-spacing:0.5px; position:relative; z-index:10; }
@@ -289,6 +289,50 @@ body { margin:0; background:#1a1a1a; color:#fff; font-family:Arial, sans-serif; 
   border-color: #f44336 !important; /* Wymuś czerwoną ramkę */
 }
 
+/* NOWE STYLE V0.87E: INTRO OVERLAY (Ostateczny Fix dla Pinch-to-Zoom) */
+.intro-panel {
+    display: flex;
+    flex-direction: column;
+    width: min(95vw, 600px);
+    padding: 0;
+    max-height: 90vh; 
+    overflow: hidden; /* 1. Panel główny ukrywa overflow */
+    touch-action: auto; /* 2. Włącz gesty na panelu */
+}
+
+/* Kontener obrazu, aby umożliwić przewijanie (zoom) */
+.intro-image-container {
+    /* 3. Usunięto stałą wysokość (height: 400px) */
+    /* 4. Usunięto max-height: 70vh */
+    background: #000;
+    overflow: auto; /* 5. Włączono scroll i zoom wewnątrz kontenera */
+    flex-grow: 1;   /* 6. Pozwól kontenerowi rosnąć, aby wypełnić panel */
+    flex-shrink: 1;
+    border-bottom: 2px solid #555;
+    touch-action: auto; /* 7. Włącz gesty na kontenerze */
+}
+
+img.intro-image {
+    width: 100%;
+    height: auto;
+    object-fit: contain; /* Dopasuj obraz w całości */
+    display: block;
+    touch-action: auto; /* 8. Włącz gesty na obrazie */
+}
+
+.intro-text {
+    /* Usunięto */
+}
+
+.intro-controls {
+    justify-content: space-between;
+    padding: 10px 18px;
+    background: #1f1f1f;
+    border-top: 1px solid #444;
+    flex-shrink: 0;
+}
+/* KONIEC STYLI INTRO */
+
 
 @media (max-width:850px){
   #xpBarOuter{width:95vw;}
@@ -298,6 +342,7 @@ body { margin:0; background:#1a1a1a; color:#fff; font-family:Arial, sans-serif; 
   #playerHPBarOuter{width:95vw;}
   .stat { font-size:11px; min-width:70px; padding:6px 8px; }
   .stat-icon { width:14px; height:14px; font-size:11px; }
+  /* 9. Usunięto (było .intro-image-container { height: 300px; }) */
 }
 
 /* LOG DIAGNOSTYCZNY (w komentarzu CSS) */

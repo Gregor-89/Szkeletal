@@ -1,5 +1,5 @@
 // ==============
-// DOMELEMENTS.JS (v0.86 - Export Licznika Wrogów)
+// DOMELEMENTS.JS (v0.87b - Aktualizacja Intro DOM)
 // Lokalizacja: /js/ui/domElements.js
 // ==============
 
@@ -38,6 +38,14 @@ export const docTitle = document.querySelector('title');
 export const enemyCountSpan = document.getElementById('enemyCount');
 export const enemyLimitSpan = document.getElementById('enemyLimit');
 export const enemyProgressDiv = document.getElementById('enemyProgress');
+
+// NOWE REFERENCJE V0.87B (Intro)
+export const introOverlay = document.getElementById('introOverlay');
+export const introImage = document.getElementById('introImage');
+// export const introText = document.getElementById('introText'); // Usunięto
+export const btnIntroNext = document.getElementById('btnIntroNext');
+export const btnIntroSkip = document.getElementById('btnIntroSkip');
+export const btnIntroPrev = document.getElementById('btnIntroPrev'); // Dodano
 
 
 export const confirmOverlay = document.getElementById('confirmOverlay');

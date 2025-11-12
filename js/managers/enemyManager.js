@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.86d - FIX: Poprawiony import Audio)
+// ENEMYMANAGER.JS (v0.87h - FIX: Dodanie ostrzeżenia tekstowego dla Oblężenia)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -72,14 +72,15 @@ export function getAvailableEnemyTypes(game) {
     const seen = game.seenEnemyTypes; 
 
     // Wrogowie dostępni w tej chwili gry (włączając Oblężnika, jeśli czas pozwala)
+    // ZMIANA V0.87G: Przesunięto Tank (150->180) i Ranged (180->210)
     const availableAtTime = [
         t > 0 ? 'standard' : null,
         t > 30 ? 'horde' : null,
         t > 60 ? 'aggressive' : null,
         t > 90 ? 'kamikaze' : null,
         t > 120 ? 'splitter' : null,
-        t > 150 ? 'tank' : null,
-        t > 180 ? 'ranged' : null
+        t > 180 ? 'tank' : null,    // ZMIENIONO (było 150)
+        t > 210 ? 'ranged' : null   // ZMIENIONO (było 180)
         // Elite jest spawnowany osobno
     ].filter(type => type !== null);
 
@@ -93,12 +94,13 @@ export function getAvailableEnemyTypes(game) {
             newEnemyType = type;
             
             // Określamy czas, w którym się pojawi (dla logowania)
+            // ZMIANA V0.87G: Aktualizacja czasów
             if (type === 'horde') newEnemyTime = 30;
             else if (type === 'aggressive') newEnemyTime = 60;
             else if (type === 'kamikaze') newEnemyTime = 90;
             else if (type === 'splitter') newEnemyTime = 120;
-            else if (type === 'tank') newEnemyTime = 150;
-            else if (type === 'ranged') newEnemyTime = 180;
+            else if (type === 'tank') newEnemyTime = 180; // ZMIENIONO
+            else if (type === 'ranged') newEnemyTime = 210; // ZMIENIONO
             
             break; // Ostrzegamy tylko o pierwszym nowym
         }
@@ -204,7 +206,7 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
     }
     
     const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
-    const hpScale = 1 + 0.12 * (game.level - 1) + game.time / 90;
+    const hpScale = 1 + 0.10 * (game.level - 1) + game.time / 90; // Użycie 10% (z utils.js)
 
     if (type === 'horde') {
         enemyIdCounter = spawnHorde(enemies, x, y, hpScale, enemyIdCounter);
@@ -252,7 +254,7 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     x = Math.max(0, Math.min(worldWidth, x));
     y = Math.max(0, Math.min(worldHeight, y));
     
-    const hpScale = (1 + 0.12 * (game.level - 1) + game.time / 90) * 1.5; // Elity mają +50% HP
+    const hpScale = (1 + 0.10 * (game.level - 1) + game.time / 90) * 1.5; // Elity mają +50% HP (Użycie 10%)
     const newEnemy = createEnemyInstance('elite', x, y, hpScale, enemyIdCounter++);
     if (newEnemy) {
         enemies.push(newEnemy);
@@ -310,7 +312,7 @@ export function spawnWallEnemies(state) {
     for (let i = 0; i < spawnQueue.length; i++) {
         const { x, y } = spawnQueue[i];
         
-        const hpScale = 1 + 0.12 * (game.level - 1) + game.time / 90;
+        const hpScale = 1 + 0.10 * (game.level - 1) + game.time / 90; // Użycie 10%
         
         const newEnemy = createEnemyInstance('wall', x, y, hpScale, state.enemyIdCounter++);
         if (newEnemy) {
@@ -327,12 +329,22 @@ export function spawnWallEnemies(state) {
 
 /**
  * Główna funkcja spawnująca Wydarzenie Oblężenia.
+ * ZMIANA v0.87h: Aktywuje również globalne ostrzeżenie tekstowe.
  */
 export function spawnSiegeRing(state) {
-    // 1. Dodaj wskaźniki (ostrzeżenie)
+    const { game } = state;
+    
+    // 1. Dodaj wskaźniki (ostrzeżenie na ziemi)
     addSiegeIndicators(state);
     
-    // 2. Wróć, a reszta logiczna zostanie wykonana w gameLogic.js
+    // 2. NOWA LOGIKA (v0.87h): Aktywuj ostrzeżenie tekstowe, jeśli to pierwszy raz
+    if (!game.seenEnemyTypes.includes('wall')) {
+        game.newEnemyWarningT = SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME;
+        game.newEnemyWarningType = 'OBLĘŻENIE'; // Użyj przyjaznej nazwy
+        game.seenEnemyTypes.push('wall'); // Oznacz jako widziane, aby nie powtarzać
+        playSound('EliteSpawn'); // Odtwórz dźwięk alarmu (ten sam co dla Elity)
+    }
+
     console.log('[EVENT] Wysłano ostrzeżenie o Oblężeniu. Spawnowanie za ' + SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME + 's.');
     
     // Zwróć niezmieniony licznik - wrogowie zostaną dodani później
@@ -452,7 +464,7 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
 
     // Specjalna logika (zawsze występuje)
     if (e.type === 'splitter') {
-        const hpScale = (1 + 0.12 * (game.level - 1) + game.time / 90) * 0.8; 
+        const hpScale = (1 + 0.10 * (game.level - 1) + game.time / 90) * 0.8; // Użycie 10%
         
         const child1 = createEnemyInstance('horde', e.x - 5, e.y, hpScale, enemyIdCounter++);
         const child2 = createEnemyInstance('horde', e.x + 5, e.y, hpScale, enemyIdCounter++);

@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes" />
 <title>Szkeletal: Estrone Kiszok</title> 
 <link rel="stylesheet" href="style.css">
 </head>
@@ -67,8 +67,10 @@
 
         <div id="tab-game" class="tab-content active">
           <p style="margin-bottom:15px;">Witaj w grze Szkeletal: Estrone Kiszok! Wybierz poziom trudności i rozpocznij rozgrywkę.</p>
-          <button id="btnStart" class="btn" type="button" style="width:100%; font-size:18px; padding:15px;">▶️ Start Gry</button>
+          <button id="btnStart" class="btn" type="button" style="width:100%; font-size:18px; padding:15px;">▶️ Zacznij nową grę</button>
           <button id="btnContinue" class="btn btn-warning" type="button" style="width:100%; font-size:18px; padding:15px; display:none; margin-top:10px;">⏯️ Kontynuuj Grę</button>
+          
+          <button id="btnReplayIntro" class="btn btn-secondary" type="button" onclick="wrappedDisplayIntro()" style="width:100%; font-size:14px; padding:10px; margin-top:10px;">🎥 Włącz Intro</button>
         
           <div class="scores-container" style="margin-top:20px;">
             <button class="btn btn-danger btn-clear-scores" type="button">🗑️ Wyczyść</button>
@@ -295,13 +297,15 @@
             <p>Nowe, silniejsze typy wrogów pojawiają się wraz z upływem czasu.</p>
             <ul>
               <li><span class="icon ico-square" style="background:#FFC107;"></span><strong>Standard</strong> (od 0:00) – Zbalansowany wróg, po prostu idzie w Twoją stronę. <span class="detail">(+10pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#8BC34A;"></span><strong>Horda</strong> (od 0:15) – Wolniejszy, ale zawsze pojawia się w ciasnych grupach po 4-6 sztuk. <span class="detail">(+10pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#2196F3;"></span><strong>Agresywny</strong> (od 0:30) – Porusza się normalnie, ale dostaje <strong>+50% prędkości</strong>, gdy znajdzie się blisko Ciebie (zasięg 220px). <span class="detail">(+10pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#FFEB3B;"></span><strong>Kamikaze</strong> (od 0:50) – Podobny do Agresywnego, ale jego przyspieszenie jest znacznie większe (<strong>+100% prędkości</strong> w zasięgu 140px) i zadaje większe obrażenia przy kolizji (8 zamiast 5). <span class="detail">(+10pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#EC407A;"></span><strong>Splitter</strong> (od 1:10) – Po pokonaniu <strong>dzieli się na 2</strong> mniejszych, szybszych wrogów typu 'Horda'. <span class="detail">(+10pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#795548;"></span><strong>Tank</strong> (od 1:30) – Bardzo wolny (60% prędkości), ale posiada <strong>potrójne HP</strong> w porównaniu do standardowego wroga. <span class="detail">(+20pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#00BCD4;"></span><strong>Ranged</strong> (od 2:00) – Wróg dystansowy. Stara się utrzymać dystans 180-220px. Ucieka, gdy jesteś za blisko i podchodzi, gdy za daleko. Strzela pociskami co ok. 1.2 sekundy. <span class="detail">(+10pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#8BC34A;"></span><strong>Horda</strong> (od 0:30) – Wolniejszy, ale zawsze pojawia się w ciasnych grupach po 4-6 sztuk. <span class="detail">(+10pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#2196F3;"></span><strong>Agresywny</strong> (od 1:00) – Porusza się normalnie, ale dostaje <strong>+50% prędkości</strong>, gdy znajdzie się blisko Ciebie (zasięg 220px). <span class="detail">(+10pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#FFEB3B;"></span><strong>Kamikaze</strong> (od 1:30) – Podobny do Agresywnego, ale jego przyspieszenie jest znacznie większe (<strong>+100% prędkości</strong> w zasięgu 140px) i zadaje większe obrażenia przy kolizji (8 zamiast 5). <span class="detail">(+10pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#EC407A;"></span><strong>Splitter</strong> (od 2:00) – Po pokonaniu <strong>dzieli się na 2</strong> mniejszych, szybszych wrogów typu 'Horda'. <span class="detail">(+10pkt)</span></li>
+              
               <li><span class="icon ico-square" style="background:#607D8B;"></span><strong>Oblężnik (Wall)</strong> (Event od 2:30) – **Wydarzenie Specjalne.** Pojawia się nagle w grupie (15-20 sztuk) w **idealnym kręgu** wokół gracza. Bardzo wolny, ale ekstremalnie wytrzymały (30 HP). Zmusza do przebicia się przez formację. <span class="detail">(+25pkt, +0 XP)</span></li>
+              <li><span class="icon ico-square" style="background:#795548;"></span><strong>Tank</strong> (od 3:00) – Bardzo wolny (60% prędkości), ale posiada <strong>potrójne HP</strong> w porównaniu do standardowego wroga. <span class="detail">(+20pkt)</span></li>
+              <li><span class="icon ico-square" style="background:#00BCD4;"></span><strong>Ranged</strong> (od 3:30) – Wróg dystansowy. Stara się utrzymać dystans 180-220px. Ucieka, gdy jesteś za blisko i podchodzi, gdy za daleko. Strzela pociskami co ok. 1.2 sekundy. <span class="detail">(+10pkt)</span></li>
+              
               <li><span class="icon ico-square ico-elite" style="background:#9C27B0;"></span><strong>Elita</strong> 👑 (co 24 sek.) – Mini-boss. Posiada znacznie więcej HP (ok. 8x więcej niż standardowy wróg) i jest większy. Po pokonaniu zawsze upuszcza <strong>Skrzynię</strong> 🎁 oraz więcej XP. <span class="detail">(+80pkt, +1 XP)</span></li>
             </ul>
             
@@ -335,6 +339,18 @@
       </div>
     </div>
 
+    <div id="introOverlay" class="overlay">
+      <div class="panel intro-panel">
+        <div class="intro-image-container">
+          <img id="introImage" class="intro-image" src="" alt="Obraz intro">
+        </div>
+        <div class="row intro-controls">
+          <button id="btnIntroPrev" class="btn btn-secondary" style="display: none;">Wstecz</button>
+          <button id="btnIntroSkip" class="btn btn-danger">Pomiń (Zamknij)</button>
+          <button id="btnIntroNext" class="btn">Dalej</button>
+        </div>
+      </div>
+    </div>
     <div id="levelUpOverlay" class="overlay">
       <div id="levelUpPanel" class="panel">
         <h3>Wybierz ulepszenie</h3>

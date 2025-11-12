@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.86 - Throttling Enemy Counter)
+// MAIN.JS (v0.87b - Wprowadzenie Intro)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -11,6 +11,8 @@ import { draw } from './core/draw.js';
 
 import { updateUI, resumeGame, showMenu, startRun, resetAll, gameOver, pauseGame, updateEnemyCounter } from './ui/ui.js';
 import { initializeMainEvents } from './core/eventManager.js';
+// NOWY IMPORT V0.87A
+import { initializeIntro } from './managers/introManager.js'; 
 
 // NOWY IMPORT v0.78
 import { updateIndicators } from './managers/indicatorManager.js'; 
@@ -67,7 +69,9 @@ const game={
   newEnemyWarningT: 0, // Czas trwania ostrzeżenia o nowym wrogu
   newEnemyWarningType: null, // Typ nowego wroga
   seenEnemyTypes: ['standard'], // Wrogowie, których gracz już spotkał (startujemy ze Standard)
-  dynamicEnemyLimit: GAME_CONFIG.INITIAL_MAX_ENEMIES // Aktualny limit wrogów na planszy
+  dynamicEnemyLimit: GAME_CONFIG.INITIAL_MAX_ENEMIES, // Aktualny limit wrogów na planszy
+  // NOWA WŁAŚCIWOŚĆ V0.87A
+  introSeen: false 
 };
 
 const settings={ 
@@ -406,7 +410,8 @@ Promise.all([
     
     initInput(handleEscape, handleJoyStart, handleJoyEnd); 
     
-    window.wrappedShowMenu(false);
+    // POPRAWKA V0.87B: Wywołujemy initializeIntro, które zdecyduje, czy pokazać Intro, czy Menu
+    initializeIntro(gameStateRef);
 
 }).catch((err) => { // POPRAWKA v0.77r: Usunięto async
     console.error("[Main] Krytyczny błąd podczas ładowania zasobów:", err);
@@ -424,10 +429,6 @@ Promise.all([
     initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
     initInput(handleEscape, handleJoyStart, handleJoyEnd);
     
-    if (window.wrappedShowMenu) {
-        window.wrappedShowMenu(false);
-    } else {
-        document.getElementById('menuOverlay').style.display = 'flex';
-        console.error("FATAL: Nie można było nawet zainicjować Menedżera Eventów.");
-    }
+    // POPRAWKA V0.87B: Wywołujemy initializeIntro, które zdecyduje, czy pokazać Intro, czy Menu
+    initializeIntro(gameStateRef);
 });

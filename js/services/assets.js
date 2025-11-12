@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.79h - Dodanie zasobu dla efektu Bicza)
+// ASSETS.JS (v0.87a - Dodanie zasobów Intro)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
@@ -90,6 +90,11 @@ const assetDefinitions = {
   // Inne
   'gem': 'gem.png',
   'chest': 'chest.png',
+  
+  // NOWE ZASOBY V0.87A (Intro)
+  'intro_1': 'intro/slide_1.png',
+  'intro_2': 'intro/slide_2.png',
+  'intro_3': 'intro/slide_3.png',
   
   // NOWY ZASÓB v0.79h (Efekty)
   'effect_whip': 'effects/whip_slash.png',
