@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.86 - Throttled Enemy Counter)
+// UI.JS (v0.88 - Nowa Nazwa Gry)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -149,9 +149,10 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
         uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
     }
 
-    // Ustawienie wersji w HTML
-    docTitle.textContent = `Szkeletal: Estrone Kiszok v${uiData.VERSION}`;
-    titleDiv.textContent = `Szkeletal: Estrone Kiszok v${uiData.VERSION}`;
+    // Ustawienie wersji w HTML (ZMIANA V0.88 - Nowa Nazwa)
+    const newTitle = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${uiData.VERSION}`;
+    docTitle.textContent = newTitle;
+    titleDiv.textContent = newTitle;
 
     updateUI(game, uiData.player, uiData.settings, null); 
     uiData.ctx.clearRect(0, 0, uiData.canvas.width, uiData.canvas.height);
@@ -197,9 +198,10 @@ export function startRun(game, resetAll, uiData) {
     }
     console.log(`[EVENT] Pierwsze oblężenie o ${uiData.settings.currentSiegeInterval.toFixed(1)}s`);
     
-    // POPRAWKA v0.77p: Ustawienie wersji w HTML (brakowało tego tutaj)
-    docTitle.textContent = `Szkeletal: Estrone Kiszok v${uiData.VERSION}`;
-    titleDiv.textContent = `Szkeletal: Estrone Kiszok v${uiData.VERSION}`;
+    // Ustawienie wersji w HTML (ZMIANA V0.88 - Nowa Nazwa)
+    const newTitle = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${uiData.VERSION}`;
+    docTitle.textContent = newTitle;
+    titleDiv.textContent = newTitle;
 
 
     initAudio();

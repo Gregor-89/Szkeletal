@@ -1,5 +1,5 @@
 // ==============
-// SAVEMANAGER.JS (v0.82a - Integracja Pioruna z systemem zapisu)
+// SAVEMANAGER.JS (v0.88 - Nowa Nazwa Gry)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
@@ -207,9 +207,10 @@ export function loadGame(savedState, state, uiData) {
     game.paused = false; 
     game.running = true; 
     
-    // POPRAWKA v0.77p: Ustawienie wersji w HTML (brakowało tego tutaj)
-    docTitle.textContent = `Szkeletal: Estrone Kiszok v${uiData.VERSION}`;
-    titleDiv.textContent = `Szkeletal: Estrone Kiszok v${uiData.VERSION}`;
+    // POPRAWKA v0.88: Ustawienie nowej nazwy gry
+    const newTitle = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${uiData.VERSION}`;
+    docTitle.textContent = newTitle;
+    titleDiv.textContent = newTitle;
     
     initAudio();
     

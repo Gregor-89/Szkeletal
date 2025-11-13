@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.87b - Wprowadzenie Intro)
+// MAIN.JS (v0.88c - Wolniejszy Splash Screen)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -45,6 +45,9 @@ class Camera {
 let canvas = null;
 let ctx = null;
 
+// NOWA LINIA V0.88: Referencja do Splash Screenu
+const splashOverlay = document.getElementById('splashOverlay');
+
 // === Ustawienia i stan gry (Obiekty proste) ===
 let savedGameState = null; // Przechowywany przez uiData
 
@@ -88,7 +91,7 @@ const settings={
 
 let perkLevels={};
 
-// === Obiekty dynamiczne (zostaną zainicjowane w initializeCanvas) ===
+// === Obiekty dynamiczne (zostaną zainicjalizowane w initializeCanvas) ===
 let player = null;
 let camera = null;
 let playerBulletPool = null;
@@ -367,8 +370,102 @@ function initMenuAndEvents() {
     }
 }
 
-// === START GRY ===
+// === START GRY (Logika V0.88c - Splash Screen) ===
 
+// 1. Zmienne stanu Splash Screenu
+let assetsLoaded = false;
+let splashTimerFired = false;
+let splashSkipped = false;
+
+// 2. Funkcja, która faktycznie uruchamia grę (ładowanie zasobów, inicjalizacja)
+function launchApp() {
+    console.log('[Main] Ładowanie zasobów...');
+    Promise.all([
+        loadAssets(),
+        loadAudio()
+    ]).then((results) => { 
+        console.log('[Main] Wszystkie zasoby (grafika i audio) załadowane. Inicjalizacja Canvas i Obiektów Gry.');
+        
+        uiData.gameData = { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG };
+        
+        initializeCanvas();
+        updateUiDataReferences(); 
+        initStars(); 
+        
+        const { wrappedLoadConfig, wrappedStartRun } = initMenuAndEvents();
+        initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
+        initInput(handleEscape, handleJoyStart, handleJoyEnd); 
+        
+        // Oznacz zasoby jako załadowane
+        assetsLoaded = true;
+        tryLaunchApp(); // Spróbuj uruchomić
+
+    }).catch((err) => { 
+        console.error("[Main] Krytyczny błąd podczas ładowania zasobów:", err);
+        
+        uiData.gameData = { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG };
+        
+        initializeCanvas();
+        updateUiDataReferences();
+        initStars(); 
+        
+        const { wrappedLoadConfig, wrappedStartRun } = initMenuAndEvents();
+        initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
+        initInput(handleEscape, handleJoyStart, handleJoyEnd);
+        
+        // Mimo błędu, oznaczamy zasoby jako "załadowane", aby kontynuować
+        assetsLoaded = true;
+        tryLaunchApp(); 
+    });
+}
+
+// 3. Funkcja, która ukrywa Splash Screen i uruchamia logikę Intro/Menu
+function hideSplashScreenAndLaunch() {
+    splashOverlay.classList.add('fade-out');
+    
+    // ZMIANA V0.88C: Zwiększono czas oczekiwania na 1000ms (1.0s), aby pasował do CSS
+    setTimeout(() => {
+        splashOverlay.style.display = 'none';
+        // POPRAWKA V0.87B: Wywołujemy initializeIntro, które zdecyduje, czy pokazać Intro, czy Menu
+        initializeIntro(gameStateRef);
+    }, 1000); // Czas musi pasować do animacji CSS (1.0s)
+}
+
+// 4. Funkcja sprawdzająca, czy można już ukryć Splash Screen
+let appLaunched = false;
+function tryLaunchApp() {
+    if (appLaunched) return; // Już uruchomiono
+
+    // Sprawdź, czy (Zasoby są załadowane) ORAZ (Minął timer LUB gracz pominął)
+    if (assetsLoaded && (splashTimerFired || splashSkipped)) {
+        appLaunched = true;
+        hideSplashScreenAndLaunch();
+    }
+}
+
+// 5. Inicjalizacja Logiki Startowej
+// Uruchom ładowanie zasobów natychmiast
+launchApp();
+
+// Uruchom timer Splash Screenu
+// ZMIANA V0.88C: Zwiększono minimalny czas wyświetlania z 3000ms do 5000ms
+setTimeout(() => {
+    splashTimerFired = true;
+    tryLaunchApp(); // Spróbuj uruchomić, gdy minie czas
+}, 5000);
+
+// Dodaj listenery pominięcia
+const skipSplash = () => {
+    if (splashSkipped) return;
+    splashSkipped = true;
+    tryLaunchApp(); // Spróbuj uruchomić, gdy gracz pominie
+};
+window.addEventListener('keydown', skipSplash, { once: true });
+window.addEventListener('mousedown', skipSplash, { once: true });
+window.addEventListener('touchstart', skipSplash, { once: true });
+
+
+// === Listenery (muszą być zdefiniowane globalnie dla initInput) ===
 const handleEscape = () => {
   if(!game.inMenu && game.running){
     if(game.manualPause){
@@ -388,47 +485,3 @@ const handleJoyEnd = () => {
     window.wrappedPauseGame ? window.wrappedPauseGame() : pauseGame(game, settings, player.weapons, player);
   }
 };
-
-console.log('[Main] Ładowanie zasobów...');
-Promise.all([
-    loadAssets(),
-    loadAudio()
-]).then((results) => { // POPRAWKA v0.77r: Usunięto async
-    console.log('[Main] Wszystkie zasoby (grafika i audio) załadowane. Inicjalizacja Canvas i Obiektów Gry.');
-    
-    uiData.gameData = { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG };
-    
-    initializeCanvas();
-    updateUiDataReferences(); 
-    initStars(); 
-    
-    // POPRAWKA v0.77r: Wywołanie synchroniczne
-    const { wrappedLoadConfig, wrappedStartRun } = initMenuAndEvents();
-    
-    // Przekaż obie funkcje do devTools
-    initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
-    
-    initInput(handleEscape, handleJoyStart, handleJoyEnd); 
-    
-    // POPRAWKA V0.87B: Wywołujemy initializeIntro, które zdecyduje, czy pokazać Intro, czy Menu
-    initializeIntro(gameStateRef);
-
-}).catch((err) => { // POPRAWKA v0.77r: Usunięto async
-    console.error("[Main] Krytyczny błąd podczas ładowania zasobów:", err);
-    
-    uiData.gameData = { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG };
-    
-    initializeCanvas();
-    updateUiDataReferences();
-    initStars(); 
-    
-    // POPRAWKA v0.77r: Wywołanie synchroniczne
-    const { wrappedLoadConfig, wrappedStartRun } = initMenuAndEvents();
-    
-    // Przekaż obie funkcje do devTools
-    initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
-    initInput(handleEscape, handleJoyStart, handleJoyEnd);
-    
-    // POPRAWKA V0.87B: Wywołujemy initializeIntro, które zdecyduje, czy pokazać Intro, czy Menu
-    initializeIntro(gameStateRef);
-});

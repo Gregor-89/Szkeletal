@@ -40,6 +40,14 @@ body { margin:0; background:#1a1a1a; color:#fff; font-family:Arial, sans-serif; 
 .overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.7); z-index:50; }
 .panel { background:var(--ui-panel); border:2px solid #555; border-radius:10px; padding:18px; width:min(95vw, 760px); box-shadow:0 10px 30px rgba(0,0,0,.6); max-height:90vh; overflow-y:auto; }
 
+/* NOWE STYLE V0.88: Logo w Menu */
+#menuLogo {
+    max-width: 80%;
+    height: auto;
+    margin-bottom: 10px;
+}
+/* Koniec Nowych Styli */
+
 /* Przezroczystość z v0.38 */
 #pauseOverlay, #resumeOverlay {
   background: rgba(0, 0, 0, 0.10);
@@ -288,6 +296,31 @@ body { margin:0; background:#1a1a1a; color:#fff; font-family:Arial, sans-serif; 
   animation: lowHealthPulse 1.2s ease-in-out infinite;
   border-color: #f44336 !important; /* Wymuś czerwoną ramkę */
 }
+
+/* NOWE STYLE V0.88C: SPLASH SCREEN (Wydłużone animacje) */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+#splashOverlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+#splashImage {
+    max-width: 90%;
+    max-height: 90vh;
+    object-fit: contain;
+    animation: fadeIn 1.2s ease-out forwards; /* Zmieniono z 0.5s */
+}
+#splashOverlay.fade-out {
+    animation: fadeOut 1.0s ease-in forwards; /* Zmieniono z 0.5s */
+}
+/* KONIEC STYLI SPLASH */
+
 
 /* NOWE STYLE V0.87E: INTRO OVERLAY (Ostateczny Fix dla Pinch-to-Zoom) */
 .intro-panel {
