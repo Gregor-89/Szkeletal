@@ -4,6 +4,35 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ---
 
+# Changelog (Dziennik Zmian)
+
+Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Szkeletal: Estrone Kiszok".
+
+---
+
+## [v0.87] - Sekwencja Intro i Wskaźniki Spawnu
+* **Nowa Mechanika (Intro):** Zaimplementowano sekwencję Intro (tylko obrazy, z nawigacją Wstecz/Dalej/Pomiń), która kończy się w Menu Głównym. Dodano obsługę `pinch-to-zoom` na urządzeniach mobilnych i przycisk "Zacznij nową grę".
+* **Nowa Mechanika (Warning):** Wprowadzono system **Ostrzeżeń o Nowym Wrogu**. Gdy czas gry odblokowuje nowy, nieznany graczowi typ wroga, spawn jest blokowany na 3 sekundy i pojawia się subtelne ostrzeżenie na górze ekranu.
+* **Nowa Mechanika (HUD):** Dodano dynamiczny **Licznik Wrogów** na pasku statystyk, pokazujący aktualną liczbę wrogów / dynamiczny limit wrogów (aktualizacja co 200ms).
+* **Hotfix (Ostrzeżenie):** Naprawiono błąd, w wyniku którego Wydarzenie Oblężenia (Oblężnik) nie wyświetlało tekstowego ostrzeżenia na górze ekranu (pokazywało tylko wskaźniki na ziemi).
+* **Hotfix Balansu (Spawn):** Przesunięto czas spawnu 'Tank' (150s -> 180s) i 'Ranged' (180s -> 210s), aby uniknąć konfliktu z Eventem Oblężenia (150s).
+* **Hotfix Balansu (Hazardy):** Wprowadzono bufor bezpieczeństwa do obliczeń spawnu Hazardów, aby definitywnie zapobiec nakładaniu się Mega Hazardów.
+* **Poprawka Balansu (Limit):** Zwiększono twardy limit wrogów (`MAX_ENEMIES`) z 300 do **400**.
+* **Poprawka Balansu (Limit):** Zwiększono tempo wzrostu limitu wrogów z 15 na **20** na minutę.
+* **Poprawka Balansu (HP):** Zmniejszono wzrost HP wrogów zależny od poziomu gracza z 12% na **10%** na poziom.
+
+---
+
+## [v0.85 - v0.86] - Zaawansowane AI Wrogów
+* **Ulepszenie AI (Horda):** Wprowadzono logikę **Kohezyjnego Roju Atakującego**, która zmusza jednostki do ciasnego i agresywnego okrążania gracza, eliminując efekt pasywnego "zawisania".
+* **Ulepszenie AI (Kamikaze):** Wprowadzono trajektorię **sinusoidalną z predykcją**, celującą w punkt przed graczem. Zmieniono kolor obrysu na **pomarańcz dyniowy** (`#ff7043`), aby odróżnić go od wroga Standard.
+* **Ulepszenie AI (Standard):** Zwiększono siłę ruchu **"wężykiem"** z 15% na **35%**.
+* **Ulepszenie AI (Aggressive):** Wydłużono czas sygnalizacji szarży z 0.2s do **0.4s**.
+* **Ulepszenie AI (Splitter):** Dodano stały **bonus prędkości** (+15%) i usunięto ruch "wężykiem", aby był prostszy do trafienia przed podziałem.
+* **Ulepszenie AI (Dystansowy/Ranged):** Zmieniono ruch boczny (Strafe) na **Aktywny Kąt Ataku (Circle Strafe)**, zmuszając wroga do aktywnego krążenia w optymalnym dystansie.
+
+---
+
 ## [v0.84] - Finalne Poprawki AI i QoL
 * **Poprawka QoL:** Logika spawnu Pól Zagrożenia (`Hazard`) teraz rezerwuje odpowiednio dużą przestrzeń dla potencjalnego Mega Hazardu, zapobiegając nakładaniu się dużych plam.
 * **Ulepszenie AI (Kamikaze):** Wprowadzono **agresywny ruch zygzakowaty ('Z')** o dużej amplitudzie i częstotliwości, co sprawia, że Kamikaze jest trudniejszy do uniknięcia na całej ścieżce podejścia. Usunięto nieużywany mnożnik prędkości bazowej.
