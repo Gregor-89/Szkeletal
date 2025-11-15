@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.87a - Dodanie zasobów Intro)
+// ASSETS.JS (v0.88f - Aktualizacja nazw Splash Screen)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
@@ -95,6 +95,11 @@ const assetDefinitions = {
   'intro_1': 'intro/slide_1.png',
   'intro_2': 'intro/slide_2.png',
   'intro_3': 'intro/slide_3.png',
+  
+  // NOWE ZASOBY V0.88 (Splash Screen) - ZMIANA v0.88f
+  'splash_dev': 'splash_dev.png',
+  'splash_ratings': 'splash_ratings.png',
+  'splash_logo': 'splash_logo.jpg',
   
   // NOWY ZASÓB v0.79h (Efekty)
   'effect_whip': 'effects/whip_slash.png',

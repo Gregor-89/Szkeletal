@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.88c - Wolniejszy Splash Screen)
+// MAIN.JS (v0.88f - Aktualizacja nazw Splash Screen)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -91,7 +91,7 @@ const settings={
 
 let perkLevels={};
 
-// === Obiekty dynamiczne (zostaną zainicjalizowane w initializeCanvas) ===
+// === Obiekty dynamiczne (zostaną zainicjowane w initializeCanvas) ===
 let player = null;
 let camera = null;
 let playerBulletPool = null;
@@ -370,23 +370,36 @@ function initMenuAndEvents() {
     }
 }
 
-// === START GRY (Logika V0.88c - Splash Screen) ===
+// === START GRY (Logika V0.88f - Sekwencja Splash Screen) ===
 
-// 1. Zmienne stanu Splash Screenu
+// 1. Zmienne stanu Splash
 let assetsLoaded = false;
-let splashTimerFired = false;
-let splashSkipped = false;
+let splashSequenceActive = true;
+let currentSplashIndex = 0;
+let splashTimer = null;
+const splashImageEl = document.getElementById('splashImage');
+
+// ZMIANA V0.88F: Zaktualizowano nazwy plików
+const SPLASH_SEQUENCE = [
+    'img/splash_dev.png',
+    'img/splash_ratings.png',
+    'img/splash_logo.jpg'
+];
+const SPLASH_DURATIONS = [
+    5000, // Czas dla 'splash_dev.png' (5 sekund)
+    8000, // Czas dla 'splash_ratings.png' (8 sekund)
+    5000 // Czas dla 'splash_logo.jpg' (5 sekund)
+];
 
 // 2. Funkcja, która faktycznie uruchamia grę (ładowanie zasobów, inicjalizacja)
 function launchApp() {
     console.log('[Main] Ładowanie zasobów...');
     Promise.all([
-        loadAssets(),
+        loadAssets(), // assets.js musi być zaktualizowany o nowe obrazy
         loadAudio()
     ]).then((results) => { 
-        console.log('[Main] Wszystkie zasoby (grafika i audio) załadowane. Inicjalizacja Canvas i Obiektów Gry.');
-        
-        uiData.gameData = { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG };
+        console.log('[Main] Wszystkie zasoby załadowane. Inicjalizacja Canvas.');
+        assetsLoaded = true;
         
         initializeCanvas();
         updateUiDataReferences(); 
@@ -396,73 +409,82 @@ function launchApp() {
         initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
         initInput(handleEscape, handleJoyStart, handleJoyEnd); 
         
-        // Oznacz zasoby jako załadowane
-        assetsLoaded = true;
-        tryLaunchApp(); // Spróbuj uruchomić
+        // Uruchom pierwszy splash
+        showSplash(currentSplashIndex);
 
     }).catch((err) => { 
         console.error("[Main] Krytyczny błąd podczas ładowania zasobów:", err);
-        
-        uiData.gameData = { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG };
-        
+        // Mimo błędu, spróbuj uruchomić grę
+        assetsLoaded = true;
         initializeCanvas();
         updateUiDataReferences();
-        initStars(); 
-        
+        initStars();
         const { wrappedLoadConfig, wrappedStartRun } = initMenuAndEvents();
         initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
         initInput(handleEscape, handleJoyStart, handleJoyEnd);
-        
-        // Mimo błędu, oznaczamy zasoby jako "załadowane", aby kontynuować
-        assetsLoaded = true;
-        tryLaunchApp(); 
+        showSplash(currentSplashIndex); // Pokaż pierwszy splash nawet jeśli audio zawiedzie
     });
 }
 
 // 3. Funkcja, która ukrywa Splash Screen i uruchamia logikę Intro/Menu
-function hideSplashScreenAndLaunch() {
+function finishSplashSequence() {
+    if (!splashSequenceActive) return; // Już zakończono
+    splashSequenceActive = false;
+    clearTimeout(splashTimer);
+    
+    // Usuń listenery skip
+    window.removeEventListener('keydown', advanceSplash);
+    window.removeEventListener('mousedown', advanceSplash);
+    window.removeEventListener('touchstart', advanceSplash);
+
     splashOverlay.classList.add('fade-out');
     
-    // ZMIANA V0.88C: Zwiększono czas oczekiwania na 1000ms (1.0s), aby pasował do CSS
     setTimeout(() => {
         splashOverlay.style.display = 'none';
-        // POPRAWKA V0.87B: Wywołujemy initializeIntro, które zdecyduje, czy pokazać Intro, czy Menu
-        initializeIntro(gameStateRef);
+        initializeIntro(gameStateRef); // Przejdź do Intro (które zdecyduje, czy pokazać Intro, czy Menu)
     }, 1000); // Czas musi pasować do animacji CSS (1.0s)
 }
 
-// 4. Funkcja sprawdzająca, czy można już ukryć Splash Screen
-let appLaunched = false;
-function tryLaunchApp() {
-    if (appLaunched) return; // Już uruchomiono
+// 4. Funkcja Pokaż Slajd
+function showSplash(index) {
+    if (!assetsLoaded || !splashSequenceActive) return;
 
-    // Sprawdź, czy (Zasoby są załadowane) ORAZ (Minął timer LUB gracz pominął)
-    if (assetsLoaded && (splashTimerFired || splashSkipped)) {
-        appLaunched = true;
-        hideSplashScreenAndLaunch();
+    // Reset animacji (wymuszenie reflow)
+    splashImageEl.classList.remove('fade-in');
+    void splashImageEl.offsetWidth; 
+    
+    // Ustaw nowy obraz i animację
+    splashImageEl.src = SPLASH_SEQUENCE[index];
+    splashImageEl.classList.add('fade-in');
+    
+    // Ustaw timer na automatyczne przejście
+    const duration = SPLASH_DURATIONS[index] || 5000; // Użyj 5s jako fallback
+splashTimer = setTimeout(advanceSplash, duration);
+}
+
+// 5. Funkcja Przejdź do Następnego (wywoływana przez timer lub kliknięcie)
+function advanceSplash() {
+    if (!splashSequenceActive || !assetsLoaded) return;
+    
+    clearTimeout(splashTimer);
+    currentSplashIndex++;
+
+    if (currentSplashIndex >= SPLASH_SEQUENCE.length) {
+        finishSplashSequence(); // Koniec sekwencji
+    } else {
+        showSplash(currentSplashIndex); // Pokaż następny slajd
     }
 }
 
-// 5. Inicjalizacja Logiki Startowej
+// 6. Inicjalizacja Logiki Startowej
 // Uruchom ładowanie zasobów natychmiast
 launchApp();
 
-// Uruchom timer Splash Screenu
-// ZMIANA V0.88C: Zwiększono minimalny czas wyświetlania z 3000ms do 5000ms
-setTimeout(() => {
-    splashTimerFired = true;
-    tryLaunchApp(); // Spróbuj uruchomić, gdy minie czas
-}, 5000);
-
-// Dodaj listenery pominięcia
-const skipSplash = () => {
-    if (splashSkipped) return;
-    splashSkipped = true;
-    tryLaunchApp(); // Spróbuj uruchomić, gdy gracz pominie
-};
-window.addEventListener('keydown', skipSplash, { once: true });
-window.addEventListener('mousedown', skipSplash, { once: true });
-window.addEventListener('touchstart', skipSplash, { once: true });
+// Dodaj listenery pominięcia (aktywne tylko podczas splash)
+// UWAGA: Te listenery zostaną usunięte w finishSplashSequence()
+window.addEventListener('keydown', advanceSplash);
+window.addEventListener('mousedown', advanceSplash);
+window.addEventListener('touchstart', advanceSplash);
 
 
 // === Listenery (muszą być zdefiniowane globalnie dla initInput) ===

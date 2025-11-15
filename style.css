@@ -297,7 +297,7 @@ body { margin:0; background:#1a1a1a; color:#fff; font-family:Arial, sans-serif; 
   border-color: #f44336 !important; /* Wymuś czerwoną ramkę */
 }
 
-/* NOWE STYLE V0.88C: SPLASH SCREEN (Wydłużone animacje) */
+/* NOWE STYLE V0.88D: SPLASH SCREEN (Dynamiczne animacje) */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
@@ -314,10 +314,15 @@ body { margin:0; background:#1a1a1a; color:#fff; font-family:Arial, sans-serif; 
     max-width: 90%;
     max-height: 90vh;
     object-fit: contain;
-    animation: fadeIn 1.2s ease-out forwards; /* Zmieniono z 0.5s */
+    opacity: 0; /* Domyślnie ukryty, animacja dodaje widoczność */
 }
+/* Klasa dodawana przez JS do rozpoczęcia animacji fade-in */
+#splashImage.fade-in {
+    animation: fadeIn 1.2s ease-out forwards;
+}
+/* Klasa dodawana przez JS do rozpoczęcia animacji fade-out */
 #splashOverlay.fade-out {
-    animation: fadeOut 1.0s ease-in forwards; /* Zmieniono z 0.5s */
+    animation: fadeOut 1.0s ease-in forwards;
 }
 /* KONIEC STYLI SPLASH */
 
