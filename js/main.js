@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.88f - Aktualizacja nazw Splash Screen)
+// MAIN.JS (v0.88g - Sekwencja Splash Screen + Debounce Fix)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -370,25 +370,27 @@ function initMenuAndEvents() {
     }
 }
 
-// === START GRY (Logika V0.88f - Sekwencja Splash Screen) ===
+// === START GRY (Logika V0.88g - Sekwencja Splash Screen + Debounce Fix) ===
 
 // 1. Zmienne stanu Splash
 let assetsLoaded = false;
 let splashSequenceActive = true;
 let currentSplashIndex = 0;
 let splashTimer = null;
+let splashAdvanceLocked = true; // Zaczyna zablokowany, dopóki zasoby się nie załadują
 const splashImageEl = document.getElementById('splashImage');
 
-// ZMIANA V0.88F: Zaktualizowano nazwy plików
+// ZMIANA V0.88f: Zaktualizowano nazwy plików
 const SPLASH_SEQUENCE = [
     'img/splash_dev.png',
     'img/splash_ratings.png',
     'img/splash_logo.jpg'
 ];
+// ZMIANA V0.88g: Użycie niestandardowych czasów (zgodnie z życzeniem)
 const SPLASH_DURATIONS = [
-    5000, // Czas dla 'splash_dev.png' (5 sekund)
-    8000, // Czas dla 'splash_ratings.png' (8 sekund)
-    5000 // Czas dla 'splash_logo.jpg' (5 sekund)
+    4000, // Czas dla 'splash_dev.png' (4 sekundy)
+    15000, // Czas dla 'splash_ratings.png' (15 sekund)
+    6000  // Czas dla 'splash_logo.jpg' (6 sekund)
 ];
 
 // 2. Funkcja, która faktycznie uruchamia grę (ładowanie zasobów, inicjalizacja)
@@ -445,9 +447,11 @@ function finishSplashSequence() {
     }, 1000); // Czas musi pasować do animacji CSS (1.0s)
 }
 
-// 4. Funkcja Pokaż Slajd
+// 4. Funkcja Pokaż Slajd (v0.88g - z blokadą)
 function showSplash(index) {
     if (!assetsLoaded || !splashSequenceActive) return;
+
+    splashAdvanceLocked = true; // Zablokuj natychmiast
 
     // Reset animacji (wymuszenie reflow)
     splashImageEl.classList.remove('fade-in');
@@ -457,14 +461,22 @@ function showSplash(index) {
     splashImageEl.src = SPLASH_SEQUENCE[index];
     splashImageEl.classList.add('fade-in');
     
-    // Ustaw timer na automatyczne przejście
-    const duration = SPLASH_DURATIONS[index] || 5000; // Użyj 5s jako fallback
-splashTimer = setTimeout(advanceSplash, duration);
+    // Ustaw timer na automatyczne przejście (używa tablicy czasów)
+    const duration = SPLASH_DURATIONS[index] || 4000; // Użyj 4s jako fallback
+    splashTimer = setTimeout(advanceSplash, duration); 
+    
+    // Odblokuj możliwość przejścia DOPIERO po zakończeniu animacji fade-in (1.2s)
+    setTimeout(() => {
+        splashAdvanceLocked = false;
+    }, 1200); // Musi pasować do czasu animacji 'fadeIn' w style.css
 }
 
-// 5. Funkcja Przejdź do Następnego (wywoływana przez timer lub kliknięcie)
+// 5. Funkcja Przejdź do Następnego (v0.88g - z blokadą)
 function advanceSplash() {
-    if (!splashSequenceActive || !assetsLoaded) return;
+    // Sprawdź blokadę
+    if (!splashSequenceActive || !assetsLoaded || splashAdvanceLocked) return;
+    
+    splashAdvanceLocked = true; // Zablokuj dalsze kliknięcia
     
     clearTimeout(splashTimer);
     currentSplashIndex++;

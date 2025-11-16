@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.88f - Aktualizacja nazw Splash Screen)
+// ASSETS.JS (v0.88g - Aktualizacja nazw Splash Screen)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
