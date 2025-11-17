@@ -36,7 +36,7 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 ---
 
 ## [v0.88] - Rebranding i Sekwencja Startowa
-* **Nowa Nazwa:** Nazwa gry została zmieniona na "Szkeletal: Ziemniaczyany Głód Estrogenowego Drakula"
+* **Nowa Nazwa:** Nazwa gry została zmieniona na "Szkeletal: Ziemniaczany Głód Estrogenowego Drakula"
 
 ---
 

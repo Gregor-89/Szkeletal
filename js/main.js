@@ -1,9 +1,9 @@
 // ==============
-// MAIN.JS (v0.90 - Inicjalizacja i18n)
+// MAIN.JS (v0.90b - FIX: Inicjalizacja i18n)
 // Lokalizacja: /js/main.js
 // ==============
 
-// === NOWY IMPORT v0.90: Musi być pierwszy, aby zainicjować silnik ===
+// === NOWY IMPORT v0.90 (FIX): Musi być pierwszy, aby zainicjować silnik ===
 import './services/i18n.js'; 
 
 // === Importowanie modułów ===

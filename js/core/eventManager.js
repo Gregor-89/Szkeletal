@@ -1,5 +1,5 @@
 // ==============
-// EVENTMANAGER.JS (v0.90b - Poprawka na <select> i18n)
+// EVENTMANAGER.JS (v0.90d - FIX: Użycie ui_game_title)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
@@ -219,8 +219,8 @@ function updateAllStaticText() {
     // Słownik ID -> Klucz Językowy
     const idMap = {
         // Tytuły
-        'docTitle': 'ui_player_name', // Tytuł strony
-        'title': 'ui_player_name', // Tytuł w grze
+        'docTitle': 'ui_game_title', // POPRAWKA v0.90c
+        'title': 'ui_game_title', // POPRAWKA v0.90c
         
         // HUD
         'statLabelScore': 'ui_hud_score',
@@ -335,8 +335,8 @@ function updateAllStaticText() {
 }
 
 /**
- * (NOWA FUNKCJA v0.90b)
- * Buduje przełącznik języka (lista rozwijana <select>) w menu konfiguracji.
+ * (NOWA FUNKCJA v0.90c)
+ * Buduje przełącznik języka (radio buttons) w menu konfiguracji.
  */
 function buildLanguageSelector() {
     const container = document.getElementById('lang-selector-container');
@@ -346,28 +346,29 @@ function buildLanguageSelector() {
     const availableLangs = getAvailableLanguages();
     const currentLang = getCurrentLanguage();
     
-    const select = document.createElement('select');
-    select.style.cssText = "background:#333; color:#fff; border:1px solid #555; padding:6px; border-radius:4px; width: 200px;";
-    
     availableLangs.forEach(langName => {
-        const option = document.createElement('option');
-        option.value = langName;
-        option.textContent = langName;
+        const label = document.createElement('label');
+        label.className = 'option';
+        
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'lang';
+        input.value = langName;
         
         if (langName === currentLang) {
-            option.selected = true;
+            input.checked = true;
         }
         
-        select.appendChild(option);
+        // Zmień język i przetłumacz wszystko od razu
+        input.onchange = () => {
+            setLanguage(langName);
+            updateAllStaticText(); 
+        };
+        
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(` ${langName}`)); // (Dodaj spację)
+        container.appendChild(label);
     });
-    
-    // Zmień język i przetłumacz wszystko od razu
-    select.onchange = (e) => {
-        setLanguage(e.target.value);
-        updateAllStaticText(); 
-    };
-    
-    container.appendChild(select);
 }
 
 
@@ -524,7 +525,7 @@ export function initializeMainEvents(stateRef, uiRef) {
     window.wrappedStartRun = wrappedStartRun; 
     
     // Import SIEGE_EVENT_CONFIG (potrzebny do wrappedResetAll)
-    if (uiRef.gameData && uiRef.gameData.SIEGE_EVENT_CONFIG) {
+    if (uiRef.gameData && uiDataRef.gameData.SIEGE_EVENT_CONFIG) {
         window.SIEGE_EVENT_CONFIG = uiRef.gameData.SIEGE_EVENT_CONFIG;
     }
     

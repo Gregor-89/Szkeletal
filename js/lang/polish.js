@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v0.90b - Poprawki kluczy i Przewodnika)
+// POLISH.JS (v0.90c - FIX: Dodanie brakujących kluczy Tytułu i HUD)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -10,6 +10,8 @@
 export const LANG_PL = {
   
   // === 1. Podstawowe Mechaniki (GDD) ===
+  // POPRAWKA v0.90c: Dodano tytuł gry
+  ui_game_title: "Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula",
   ui_player_name: "Drakul",
   
   // (Klucz GDD)
@@ -38,6 +40,10 @@ export const LANG_PL = {
   ui_hud_enemies: "Wrogowie",
   ui_hud_time: "Czas",
   ui_hud_health: "Życia", // (Używane w starym UI, może się przydać)
+  
+  // POPRAWKA v0.90c: Dodano klucze ostrzeżeń
+  ui_hud_new_enemy: "NOWY WRÓG",
+  ui_hud_spawn_in: "SPAWN ZA",
   
   // === 3. UI - Menu Główne i Zakładki ===
   ui_menu_tab_game: "Gra",

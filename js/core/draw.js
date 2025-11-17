@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.89 - Implementacja Tła Trawy ze Skalowaniem)
+// DRAW.JS (v0.90c - FIX: Tłumaczenie ostrzeżeń HUD)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -7,6 +7,8 @@
 import { drawIndicators } from '../managers/indicatorManager.js';
 // NOWY IMPORT v0.89
 import { get as getAsset } from '../services/assets.js';
+// NOWY IMPORT v0.90
+import { getLang } from '../services/i18n.js';
 
 // Zmienna do przechowania wzoru (cache), aby nie tworzyć go co klatkę
 let backgroundPattern = null;
@@ -358,7 +360,8 @@ export function draw(ctx, state, ui, fps) {
     // NOWA LOGIKA V0.86: Rysowanie ostrzeżenia o nowym wrogu
     if (game.newEnemyWarningT > 0 && game.newEnemyWarningType) {
         const warningTime = game.newEnemyWarningT;
-        const warningText = `NOWY WRÓG: ${game.newEnemyWarningType.toUpperCase()}!`;
+        // ZMIANA v0.90c: Użyj i18n
+        const warningText = `${getLang('ui_hud_new_enemy')}: ${game.newEnemyWarningType.toUpperCase()}!`;
         const canvasCenterX = canvas.width / 2;
         const warningY = 50; // Nowa pozycja Y (50px od góry)
         
@@ -378,7 +381,8 @@ export function draw(ctx, state, ui, fps) {
         ctx.font = 'bold 16px Arial'; // Zmniejszone z 24px
         ctx.fillStyle = '#fff';
         ctx.shadowBlur = 4;
-        ctx.fillText(`SPAWN ZA: ${warningTime.toFixed(1)}s`, canvasCenterX, warningY + 25); // 25px niżej
+        // ZMIANA v0.90c: Użyj i18n
+        ctx.fillText(`${getLang('ui_hud_spawn_in')}: ${warningTime.toFixed(1)}s`, canvasCenterX, warningY + 25); // 25px niżej
         
         ctx.globalAlpha = 1;
         ctx.shadowBlur = 0;

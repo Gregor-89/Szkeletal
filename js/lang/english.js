@@ -1,5 +1,5 @@
 // ==============
-// ENGLISH.JS (v0.90b - Poprawki kluczy i Przewodnika)
+// ENGLISH.JS (v0.90c - FIX: Dodanie brakujących kluczy Tytułu i HUD)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
@@ -9,6 +9,8 @@
 export const LANG_EN = {
   
   // === 1. Podstawowe Mechaniki (GDD) ===
+  // POPRAWKA v0.90c: Dodano tytuł gry
+  ui_game_title: "Szkeletal: Drakul's Estrogen Potato Hunger",
   ui_player_name: "Drakul",
   
   // (Klucz GDD)
@@ -37,6 +39,10 @@ export const LANG_EN = {
   ui_hud_enemies: "Enemies",
   ui_hud_time: "Time",
   ui_hud_health: "Health", // (Placeholder, jeśli gdzieś się ostał)
+  
+  // POPRAWKA v0.90c: Dodano klucze ostrzeżeń
+  ui_hud_new_enemy: "NEW ENEMY",
+  ui_hud_spawn_in: "SPAWNING IN",
   
   // === 3. UI - Menu Główne i Zakładki ===
   ui_menu_tab_game: "Game",
