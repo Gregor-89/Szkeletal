@@ -1,5 +1,5 @@
 // ==============
-// TANKENEMY.JS (v0.83v - Odporność na Spowolnienie)
+// TANKENEMY.JS (v0.89d - Białe Mignięcie HitStun)
 // Lokalizacja: /js/entities/enemies/tankEnemy.js
 // ==============
 
@@ -43,8 +43,11 @@ export class TankEnemy extends Enemy {
     ctx.save();
     
     // Spowolnienie Freeze lub Hazard jest rysowane TYLKO jeśli NIE jest to Tank
+    
+    // POPRAWKA v0.89d: Zmiana mignięcia na biały filtr
+    // (Tank ignoruje hitStun, więc ten kod rzadko się wykona, ale musi być spójny)
     if (this.hitStun > 0 && Math.floor(performance.now() / 50) % 2 === 0) {
-      ctx.globalAlpha = 0.7;
+      ctx.filter = 'grayscale(1) brightness(5)'; // Białe mignięcie
     }
     
     if (this.spriteSheet) {
@@ -72,6 +75,7 @@ export class TankEnemy extends Enemy {
       ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
     }
     
+    ctx.filter = 'none'; // Zawsze resetuj filtr
     ctx.globalAlpha = 1;
     
     this.drawHealthBar(ctx);

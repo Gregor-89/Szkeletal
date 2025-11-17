@@ -1,34 +1,93 @@
 // ==============
-// DRAW.JS (v0.86e - Subtelniejsze Ostrzeżenie o Nowym Wrogu)
+// DRAW.JS (v0.89 - Implementacja Tła Trawy ze Skalowaniem)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
 // NOWY IMPORT v0.78
 import { drawIndicators } from '../managers/indicatorManager.js';
+// NOWY IMPORT v0.89
+import { get as getAsset } from '../services/assets.js';
+
+// Zmienna do przechowania wzoru (cache), aby nie tworzyć go co klatkę
+let backgroundPattern = null;
+// NOWA ZMIENNA v0.89b: Przechowuje, dla jakiej skali wzór został wygenerowany
+let generatedPatternScale = 0;
 
 /**
- * NOWA Funkcja Pomocnicza (v0.71): Rysuje tło (siatkę).
+ * NOWA Funkcja Pomocnicza (v0.71): Rysuje tło (siatkę lub teksturę).
+ * POPRAWKA v0.89b: Dodano skalowanie tekstury tła za pomocą off-screen canvas.
  */
 function drawBackground(ctx, camera) {
-    const tileSize = 40;
-    const color1 = '#2d2d2d';
-    const color2 = '#252525';
     
-    // Obliczanie początkowego punktu rysowania w oparciu o offset kamery
-    const startX = Math.floor(camera.offsetX / tileSize) * tileSize;
-    const startY = Math.floor(camera.offsetY / tileSize) * tileSize;
+    // --- TUTAJ JEST REGULATOR ROZMIARU TŁA ---
+    // 0.25 = 25% oryginalnego rozmiaru (np. tekstura 512px będzie kafelkiem 128px)
+    const TILE_SCALE = 0.25; 
     
-    // Rysowanie siatki w zasięgu widoku + mały margines
-    for (let x = startX; x < camera.offsetX + camera.viewWidth + tileSize; x += tileSize) {
-        for (let y = startY; y < camera.offsetY + camera.viewHeight + tileSize; y += tileSize) {
-            
-            // Określenie koloru dla kafelka (szachownica)
-            const isOddX = (x / tileSize) % 2 !== 0;
-            const isOddY = (y / tileSize) % 2 !== 0;
-            const color = (isOddX === isOddY) ? color1 : color2;
-            
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, tileSize, tileSize);
+    const bgTexture = getAsset('bg_grass');
+    
+    if (bgTexture) {
+        
+        // Optymalizacja: Stwórz wzór tylko raz. 
+        // Jeśli skala się zmieni (np. w devtools w przyszłości), wygeneruj go ponownie.
+        if (!backgroundPattern || generatedPatternScale !== TILE_SCALE) {
+            try {
+                // 1. Oblicz docelowy rozmiar kafelka
+                const tileWidth = bgTexture.width * TILE_SCALE;
+                const tileHeight = bgTexture.height * TILE_SCALE;
+                
+                // 2. Stwórz tymczasowe płótno (off-screen)
+                const offscreenCanvas = document.createElement('canvas');
+                offscreenCanvas.width = tileWidth;
+                offscreenCanvas.height = tileHeight;
+                const offCtx = offscreenCanvas.getContext('2d');
+                
+                // 3. Narysuj dużą teksturę na małym płótnie (to ją skaluje)
+                // Wyłączenie wygładzania obrazu, aby zachować styl pixel art
+                offCtx.imageSmoothingEnabled = false; 
+                offCtx.drawImage(bgTexture, 0, 0, tileWidth, tileHeight);
+                
+                // 4. Stwórz wzór z małego, przeskalowanego płótna
+                backgroundPattern = ctx.createPattern(offscreenCanvas, 'repeat');
+                generatedPatternScale = TILE_SCALE; // Zapisz użytą skalę
+                
+                console.log(`[DEBUG-v0.89b] draw.js: Utworzono wzór tła (pattern) z przeskalowanej tekstury (do ${tileWidth}px).`);
+            } catch (e) {
+                console.error("[DEBUG-v0.89b] draw.js: Błąd krytyczny createPattern! Tekstura może być uszkodzona.", e);
+                backgroundPattern = null; // Zablokuj ponowne próby
+            }
+        }
+        
+        if (backgroundPattern) {
+            ctx.fillStyle = backgroundPattern;
+            // Rysujemy tło na całym świecie gry
+            // (Kamera zajmie się przesunięciem, my tylko wypełniamy)
+            ctx.fillRect(0, 0, camera.worldWidth, camera.worldHeight);
+        }
+        
+    } 
+    
+    // Fallback: Rysuj starą siatkę, jeśli tekstura zawiodła lub jej nie ma
+    if (!backgroundPattern) {
+        const tileSize = 40;
+        const color1 = '#2d2d2d';
+        const color2 = '#252525';
+        
+        // Obliczanie początkowego punktu rysowania w oparciu o offset kamery
+        const startX = Math.floor(camera.offsetX / tileSize) * tileSize;
+        const startY = Math.floor(camera.offsetY / tileSize) * tileSize;
+        
+        // Rysowanie siatki w zasięgu widoku + mały margines
+        for (let x = startX; x < camera.offsetX + camera.viewWidth + tileSize; x += tileSize) {
+            for (let y = startY; y < camera.offsetY + camera.viewHeight + tileSize; y += tileSize) {
+                
+                // Określenie koloru dla kafelka (szachownica)
+                const isOddX = (x / tileSize) % 2 !== 0;
+                const isOddY = (y / tileSize) % 2 !== 0;
+                const color = (isOddX === isOddY) ? color1 : color2;
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, tileSize, tileSize);
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.83i - FIX: Usunięcie knockback dla TankEnemy)
+// COLLISIONS.JS (v0.89d - Aktywacja Player Hit Flash)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -50,6 +50,7 @@ for (let i = eBullets.length - 1; i >= 0; i--) {
                 addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#90CAF9', 'Tarcza');
             } else {
                 game.health -= 5;
+                game.playerHitFlashT = 0.15; // NOWA LINIA v0.89d
                 playSound('PlayerHurt');
                 limitedShake(game, settings, 7, 100);
             }
@@ -179,6 +180,7 @@ for (let j = enemies.length - 1; j >= 0; j--) {
             } else {
                 const dmg = (e.type === 'kamikaze' ? 8 : 5);
                 game.health -= dmg;
+                game.playerHitFlashT = 0.15; // NOWA LINIA v0.89d
                 // POPRAWKA v0.62: Użyj puli hitText
                 addHitText(hitTextPool, hitTexts, player.x, player.y - 16, dmg, '#f44336');
                 playSound('PlayerHurt'); 
@@ -355,6 +357,7 @@ for (let i = hazards.length - 1; i >= 0; i--) {
             
             if (!game.shield) {
                 game.health -= discreteDmg;
+                game.playerHitFlashT = 0.15; // NOWA LINIA v0.89d
                 // Pokazuj uderzenie
                 addHitText(hitTextPool, hitTexts, player.x, player.y - 16, discreteDmg, '#ff0000');
             } else {

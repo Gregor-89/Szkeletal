@@ -1,5 +1,5 @@
 // ==============
-// WHIPWEAPON.JS (v0.81g - FIX: Hitbox Bicza v3 - Przekazanie poprawnych rozmiarów)
+// WHIPWEAPON.JS (v0.89 - Dostosowanie offsetu do rozmiaru gracza)
 // Lokalizacja: /js/config/weapons/whipWeapon.js
 // ==============
 
@@ -15,8 +15,10 @@ import { get as getAsset } from '../../services/assets.js';
 const WHIP_HITBOX_LIFE = 0.25; // Czas życia hitoxa (w sekundach) (było 0.15)
 const WHIP_PIERCE = 99; // Bicz domyślnie przebija wszystko
 const WHIP_COLOR = '#C8E6C9'; // Jasnozielony (używany tylko jeśli sprite zawiedzie)
-// POPRAWKA v0.79L: Zmniejszenie zasięgu o 50% (powrót do v0.79c)
-const WHIP_BASE_OFFSET = 40; // Jak daleko od gracza (było 80)
+
+// POPRAWKA v0.89c: Zwiększono offset, aby zaczynał się na krawędzi sprite'a gracza
+// (Promień wizualny gracza 40px + promień hitboxa bicza 20px = 60px)
+const WHIP_BASE_OFFSET = 60; // Było 40
 const WHIP_SPACING = 25; // Odstęp między kolejnymi cięciami (było 50)
 
 /**

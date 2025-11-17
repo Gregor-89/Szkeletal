@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.86f - Rebalans Limitu i Wzrostu HP)
+// GAMEDATA.JS (v0.89c - Dostosowanie promienia Orbitala)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -211,8 +211,8 @@ export const PERK_CONFIG = {
     // POPRAWKA v0.73: Logika przeniesiona z OrbitalWeapon.js
     /** Damage = 1 + floor(level / 2) */
     calculateDamage: (level) => (1 + Math.floor(level / 2)),
-    /** Radius = (28 + 6 * level) * 1.5 */
-    calculateRadius: (level) => ((28 + 6 * level) * 1.5),
+    /** POPRAWKA v0.89d: Radius = ((50 + 6 * level) * 1.5) */
+    calculateRadius: (level) => ((50 + 6 * level) * 1.5), // Było 28
     /** Speed (rad/s) = 1.2 + 0.2 * level */
     calculateSpeed: (level) => (1.2 + 0.2 * level)
   },
@@ -246,8 +246,10 @@ export const PERK_CONFIG = {
     calculateCooldown: (level) => (Math.max(1.0, 3.0 - 0.4 * level)),
     /** Damage = 1 + floor(level / 2) */
     calculateDamage: (level) => (1 + Math.floor(level / 2)),
+    
+    // POPRAWKA v0.89c: Zwiększenie wizualnej skali bicza
     /** POPRAWKA v0.81g: Zmiana nazwy na 'DrawScale' (to jest rozmiar wizualny) */
-    calculateDrawScale: (level) => (60 + 20 * (level - 1)),
+    calculateDrawScale: (level) => (80 + 25 * (level - 1)), // Było (60 + 20 * (level - 1))
     
     // POPRAWKA v0.80a: Logika Asymetryczna
     /** Count (liczba cięć) = Lvl 1: 1, Lvl 2: 2, Lvl 3: 3, Lvl 4+: 4 */

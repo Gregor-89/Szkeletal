@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.88g - Sekwencja Splash Screen + Debounce Fix)
+// MAIN.JS (v0.89 - Dodanie timera playerHitFlashT)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -68,6 +68,8 @@ const game={
   shield:false, shieldT:0, speedT:0, freezeT:0, screenShakeDisabled:false, manualPause:false,
   collisionSlowdown: 0,
   triggerChestOpen: false,
+  // NOWA WŁAŚCIWOŚĆ v0.89d
+  playerHitFlashT: 0, // Czas mignięcia gracza po trafieniu
   // NOWE WŁAŚCIWOŚCI V0.86
   newEnemyWarningT: 0, // Czas trwania ostrzeżenia o nowym wrogu
   newEnemyWarningType: null, // Typ nowego wroga

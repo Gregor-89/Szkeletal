@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.77s - TEST: Zwiększenie separacji 2x)
+// ENEMY.JS (v0.89d - Białe Mignięcie HitStun)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -149,6 +149,11 @@ export class Enemy {
      */
     draw(ctx, game) {
         ctx.save();
+        
+        // NOWA LOGIKA v0.89d: Zmiana mignięcia na biały filtr
+        if (this.hitStun > 0 && Math.floor(performance.now() / 50) % 2 === 0) {
+            ctx.filter = 'grayscale(1) brightness(5)'; // Białe mignięcie
+        }
 
         if (game.freezeT > 0 || this.hazardSlowdownT > 0) { // Sprawdź, czy wróg jest spowolniony przez Freeze lub Hazard
             // Rysowanie efektu spowolnienia (niebieski/zielony kontur)
@@ -156,10 +161,8 @@ export class Enemy {
             ctx.lineWidth = 2;
             ctx.strokeRect(this.x - this.size / 2 - 2, this.y - this.size / 2 - 2, this.size + 4, this.size + 4);
         }
-
-        if (this.hitStun > 0 && Math.floor(performance.now() / 50) % 2 === 0) {
-            ctx.globalAlpha = 0.7;
-        }
+        
+        // Usunięto starą logikę globalAlpha (przeniesiona wyżej jako filtr)
 
         if (this.spriteSheet) {
             const sourceX = this.currentFrame * this.frameWidth;
@@ -186,7 +189,8 @@ export class Enemy {
             ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
 
-        ctx.globalAlpha = 1;
+        ctx.filter = 'none'; // Zawsze resetuj filtr
+        ctx.globalAlpha = 1; // Upewnij się, że alpha jest 1
 
         this.drawHealthBar(ctx);
 

@@ -66,7 +66,7 @@ async function loadAndRegister(key, src) {
  */
 const assetDefinitions = {
   // Gracz
-  'player': 'player.png',
+  'player': 'drakul.png', // ZMIANA v0.89: Podmieniono na nowy plik gracza
   
   // Wrogowie
   'enemy_standard': 'enemies/standard.png',
@@ -90,6 +90,9 @@ const assetDefinitions = {
   // Inne
   'gem': 'gem.png',
   'chest': 'chest.png',
+  
+  // NOWY ZASÓB V0.89 (Tło)
+  'bg_grass': 'bg_grass.png',
   
   // NOWE ZASOBY V0.87A (Intro)
   'intro_1': 'intro/slide_1.png',

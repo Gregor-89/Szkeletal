@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.86 - New Enemy Warning & Dynamic Limit)
+// GAMELOGIC.JS (v0.89d - Hit Flash Timer i Usunięcie "śladu")
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -61,6 +61,8 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     updateCamera(player, camera, canvas);
 
     // POPRAWKA v0.62: Użyj puli cząsteczek do tworzenia śladów
+    // (ZAKOMENTOWANE v0.89 na prośbę użytkownika)
+    /*
     if (playerMoved && Math.random() < 0.15) {
         if (particlePool) {
             const particle = particlePool.get();
@@ -70,11 +72,14 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
             }
         }
     }
+    */
 
     if (game.magnet) { game.magnetT -= dt; if (game.magnetT <= 0) game.magnet = false; }
     if (game.shield) { game.shieldT -= dt; if (game.shieldT <= 0) game.shield = false; }
     if (game.speedT > 0) game.speedT -= dt;
     if (game.freezeT > 0) game.freezeT -= dt;
+    // NOWA LOGIKA v0.89d: Odliczanie timera mignięcia gracza
+    if (game.playerHitFlashT > 0) game.playerHitFlashT -= dt;
     
     // --- NOWA LOGIKA V0.86: New Enemy Warning Timer ---
     if (game.newEnemyWarningT > 0) {

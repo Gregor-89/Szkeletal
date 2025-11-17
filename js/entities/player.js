@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v0.81b - Bicz (Whip) jako broń startowa, Plan B)
+// PLAYER.JS (v0.89c - Zwiększenie Hitboxa Gracza)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -16,8 +16,11 @@ export class Player {
         // Pozycja i rozmiar
         this.x = startX;
         this.y = startY;
-        // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG
-        this.size = PLAYER_CONFIG.SIZE;
+        
+        // POPRAWKA v0.89c: Zmiana hitboxa (średnicy kolizji)
+        // Stara wartość 40. Nowa wartość 80 pasuje do wizualnego rozmiaru
+        // sprite'a (drawScale 2.5 * 32px = 80px).
+        this.size = 80; 
 
         // Statystyki
         // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG
@@ -31,20 +34,29 @@ export class Player {
         // POPRAWKA v0.68: Dodanie stanu dla Pól Zagrożenia
         this.inHazard = false; // Nowy stan
         
-        // POPRAWKA v0.57b: Stan animacji
-        this.spriteSheet = getAsset('player'); // Pobierz arkusz sprite'ów
-        this.frameWidth = 32;     // Placeholder: szerokość jednej klatki
-        this.frameHeight = 32;    // Placeholder: wysokość jednej klatki
+        // --- NOWA LOGIKA GRAFIKI (v0.89) ---
+        this.spriteSheet = getAsset('player'); // Pobierz statyczny obrazek 'drakul.png'
+        
+        // REGULATOR ROZMIARU:
+        // Bazowy rozmiar pliku drakul.png to 32x32 (nawet jeśli plik jest większy, tak go traktujemy).
+        // 2.5 oznacza, że postać będzie miała ok. 80x80 pikseli (32 * 2.5).
+        this.drawScale = 2.5; 
+        
+        // (Stara logika animacji - zakomentowana na czas statycznego obrazka)
+        // this.frameWidth = 32;     // Placeholder: szerokość jednej klatki
+        // this.frameHeight = 32;    // Placeholder: wysokość jednej klatki
         
         // Definicje animacji
-        this.animations = {
-            'idle': { row: 0, frameCount: 4, animationSpeed: 200 }, // Placeholder: 4 klatki, 200ms/klatkę
-            'walk': { row: 1, frameCount: 4, animationSpeed: 150 }  // Placeholder: 4 klatki, 150ms/klatkę
-        };
-        this.currentState = 'idle'; // Domyślny stan
+        // this.animations = {
+        //     'idle': { row: 0, frameCount: 4, animationSpeed: 200 }, // Placeholder: 4 klatki, 200ms/klatkę
+        //     'walk': { row: 1, frameCount: 4, animationSpeed: 150 }  // Placeholder: 4 klatki, 150ms/klatkę
+        // };
+        // this.currentState = 'idle'; // Domyślny stan
         
-        this.animationTimer = 0;
-        this.currentFrame = 0;
+        // this.animationTimer = 0;
+        // this.currentFrame = 0;
+        // --- Koniec logiki grafiki ---
+        
         this.isMoving = false;
         
         // NOWE v0.80a: Śledzenie ostatniego kierunku *poziomego* (1 = prawo, -1 = lewo)
@@ -67,11 +79,11 @@ export class Player {
         // POPRAWKA v0.68: Resetowanie stanu dla Pól Zagrożenia
         this.inHazard = false;
         
-        // Reset animacji
-        this.animationTimer = 0;
-        this.currentFrame = 0;
+        // Reset animacji (dla logiki v0.89)
+        // this.animationTimer = 0;
+        // this.currentFrame = 0;
         this.isMoving = false;
-        this.currentState = 'idle';
+        // this.currentState = 'idle';
         
         // NOWE v0.80a: Reset śledzenia kierunku
         this.facingDir = 1;
@@ -120,23 +132,24 @@ export class Player {
             this.facingDir = Math.sign(vx);
         }
 
-        // Aktualizacja stanów animacji
-        const oldState = this.currentState;
-        this.currentState = this.isMoving ? 'walk' : 'idle';
+        // (Stara logika animacji - zakomentowana na czas statycznego obrazka v0.89)
+        // const oldState = this.currentState;
+        // this.currentState = this.isMoving ? 'walk' : 'idle';
         
-        if (oldState !== this.currentState) {
-            this.animationTimer = 0;
-            this.currentFrame = 0;
-        }
+        // if (oldState !== this.currentState) {
+        //     this.animationTimer = 0;
+        //     this.currentFrame = 0;
+        // }
         
-        const dtMs = dt * 1000; 
-        const currentAnim = this.animations[this.currentState];
+        // const dtMs = dt * 1000; 
+        // const currentAnim = this.animations[this.currentState];
         
-        this.animationTimer += dtMs;
-        if (this.animationTimer >= currentAnim.animationSpeed) {
-            this.animationTimer = 0;
-            this.currentFrame = (this.currentFrame + 1) % currentAnim.frameCount;
-        }
+        // this.animationTimer += dtMs;
+        // if (this.animationTimer >= currentAnim.animationSpeed) {
+        //     this.animationTimer = 0;
+        //     this.currentFrame = (this.currentFrame + 1) % currentAnim.frameCount;
+        // }
+        // --- Koniec logiki animacji ---
 
         return this.isMoving;
     }
@@ -165,37 +178,53 @@ export class Player {
      */
     draw(ctx, game) {
         
+        // --- NOWA LOGIKA RYSOWANIA (v0.89) ---
         if (this.spriteSheet) {
-            const currentAnim = this.animations[this.currentState];
+            // Bazowy rozmiar obrazka (umowny 32x32) pomnożony przez regulator
+            const drawSize = 32 * this.drawScale; 
             
-            const sourceX = this.currentFrame * this.frameWidth;
-            const sourceY = currentAnim.row * this.frameHeight; 
+            ctx.save();
+            ctx.translate(this.x, this.y); // Przesuń kontekst na pozycję gracza
             
-            const drawSize = this.size * 2.5; 
-
+            // Odbicie lustrzane, jeśli gracz idzie w lewo
+            // Obrazek domyślnie patrzy w prawo (this.facingDir = 1)
+            if (this.facingDir === -1) {
+                ctx.scale(-1, 1);
+            }
+            
+            // NOWA LOGIKA v0.89d: Mignięcie gracza po trafieniu
+            if (game.playerHitFlashT > 0 && Math.floor(performance.now() / 50) % 2 === 0) {
+                // Miganie na "biało" (użyjemy filtra)
+                ctx.filter = 'grayscale(1) brightness(5)';
+            }
+            
+            // Wyłączenie wygładzania obrazu (dla pixel artu)
+            ctx.imageSmoothingEnabled = false; 
+            
             ctx.drawImage(
                 this.spriteSheet, 
-                sourceX,           
-                sourceY,           
-                this.frameWidth,   
-                this.frameHeight,  
-                this.x - drawSize / 2, 
-                this.y - drawSize / 2, 
+                -drawSize / 2, // Rysuj wycentrowane na (0,0)
+                -drawSize / 2, // Rysuj wycentrowane na (0,0)
                 drawSize,          
                 drawSize           
             );
             
+            ctx.filter = 'none'; // Zawsze resetuj filtr
+            ctx.restore(); // Przywróć kontekst (usuń scale i translate)
+            
         } else {
-            // Fallback
+            // Fallback (stara logika kwadratu)
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 2;
             ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
+        // --- KONIEC LOGIKI RYSOWANIA (v0.89) ---
         
         if (this.inHazard) {
-            const hazardPulse = 22 + 3 * Math.sin(performance.now() / 80);
+            // POPRAWKA v0.89d: Zwiększenie promienia efektu hazardu
+            const hazardPulse = 50 + 3 * Math.sin(performance.now() / 80); // Było 22
             ctx.strokeStyle = '#00FF00'; // Zielony kontur
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -207,7 +236,11 @@ export class Player {
         const hpBarW = 64;
         const hpBarH = 6;
         const hpBarX = this.x - hpBarW / 2;
-        const hpBarY = this.y - this.size / 2 - 12;
+        
+        // POPRAWKA v0.89b: Oblicz górną krawędź wizualną (sprite'a lub hitboxa)
+        const visualTopOffset = (this.spriteSheet ? (32 * this.drawScale) / 2 : this.size / 2);
+        const hpBarY = this.y - visualTopOffset - 12; // 12px nad wizualną górą
+        
         const healthPct = Math.max(0, Math.min(1, game.health / game.maxHealth));
 
         ctx.fillStyle = '#222';
@@ -225,7 +258,8 @@ export class Player {
         ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
 
         if (game.shield) {
-            const pulse = 22 + 3 * Math.sin(performance.now() / 100);
+            // POPRAWKA v0.89d: Zwiększenie promienia tarczy
+            const pulse = 50 + 3 * Math.sin(performance.now() / 100); // Było 22
             ctx.strokeStyle = '#90CAF9';
             ctx.lineWidth = 2;
             ctx.beginPath();
