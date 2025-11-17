@@ -1,7 +1,10 @@
 // ==============
-// MAIN.JS (v0.89 - Dodanie timera playerHitFlashT)
+// MAIN.JS (v0.90 - Inicjalizacja i18n)
 // Lokalizacja: /js/main.js
 // ==============
+
+// === NOWY IMPORT v0.90: Musi być pierwszy, aby zainicjować silnik ===
+import './services/i18n.js'; 
 
 // === Importowanie modułów ===
 import { ObjectPool } from './core/objectPool.js';

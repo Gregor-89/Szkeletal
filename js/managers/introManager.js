@@ -1,5 +1,5 @@
 // ==============
-// INTROMANAGER.JS (v0.87b - Refaktoryzacja: Tylko Obrazy, Nawigacja, Przejście do Menu)
+// INTROMANAGER.JS (v0.90 - Implementacja i18n)
 // Lokalizacja: /js/managers/introManager.js
 // ==============
 
@@ -7,6 +7,8 @@ import { get as getAsset } from '../services/assets.js';
 import { playSound } from '../services/audio.js';
 // POPRAWKA v0.87b: Dodano btnIntroPrev, usunięto introText
 import { introOverlay, introImage, btnIntroNext, btnIntroSkip, btnIntroPrev } from '../ui/domElements.js';
+// NOWY IMPORT v0.90: Silnik i18n
+import { getLang } from '../services/i18n.js';
 
 // Definicja slajdów (tylko klucze obrazów)
 const INTRO_SLIDES = [
@@ -60,9 +62,11 @@ function loadSlide(index) {
     // Zmiana tekstu przycisku "Dalej"
     if (btnIntroNext) {
         if (index === INTRO_SLIDES.length - 1) {
-            btnIntroNext.textContent = 'Do Menu Głównego ▶️';
+            // ZMIANA v0.90: Użyj i18n
+            btnIntroNext.textContent = getLang('ui_intro_finish'); // "Do Menu Głównego ▶️"
         } else {
-            btnIntroNext.textContent = 'Dalej';
+            // ZMIANA v0.90: Użyj i18n
+            btnIntroNext.textContent = getLang('ui_intro_next'); // "Dalej"
         }
     }
     

@@ -1,5 +1,5 @@
 // ==============
-// EVENTMANAGER.JS (v0.81c - FIX: Przekazanie 'player' do openChest)
+// EVENTMANAGER.JS (v0.90b - Poprawka na <select> i18n)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
@@ -12,10 +12,15 @@ import { setJoystickSide } from '../ui/input.js';
 // POPRAWKA v0.76d: Import devSettings ORAZ resetDevTime
 import { devSettings, resetDevTime } from '../services/dev.js';
 
+// NOWY IMPORT v0.90: Silnik i18n
+import { 
+    getLang, setLanguage, getAvailableLanguages, getCurrentLanguage 
+} from '../services/i18n.js';
+
 // Import referencji DOM (potrzebne do eventów)
 import {
     gameOverOverlay, pauseOverlay, levelUpOverlay, chestOverlay,
-    btnContinueMaxLevel, chestButton
+    btnContinueMaxLevel, chestButton, docTitle
 } from '../ui/domElements.js';
 
 
@@ -29,6 +34,9 @@ function wrappedShowMenu(allowContinue = false) {
     uiDataRef.animationFrameId = uiDataRef.animationFrameId; // Użyj referencji
     uiDataRef.savedGameState = uiDataRef.savedGameState;
     showMenu(uiDataRef.game, wrappedResetAll, uiDataRef, allowContinue);
+    
+    // NOWA LINIA v0.90: Zawsze aktualizuj teksty przy pokazywaniu menu
+    updateAllStaticText(); 
 }
 
 function wrappedResetAll() {
@@ -52,7 +60,10 @@ function wrappedResetAll() {
     uiDataRef.camera = gameStateRef.camera; 
     
     // POPRAWKA v0.77: Zresetuj pierwszy interwał oblężenia
-    uiDataRef.settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
+    // (Upewnijmy się, że SIEGE_EVENT_CONFIG jest dostępne globalnie, jeśli jest potrzebne)
+    if (window.SIEGE_EVENT_CONFIG) {
+        uiDataRef.settings.currentSiegeInterval = window.SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
+    }
     
     resetAll(uiDataRef.canvas, uiDataRef.settings, uiDataRef.perkLevels, uiDataRef, uiDataRef.camera);
     
@@ -66,6 +77,8 @@ function wrappedResetAll() {
 
 function wrappedPauseGame() {
     pauseGame(gameStateRef.game, gameStateRef.settings, gameStateRef.player.weapons, gameStateRef.player);
+    // NOWA LINIA v0.90: Przetłumacz ekran pauzy
+    updateAllStaticText();
 }
 
 function wrappedResumeGame() {
@@ -75,17 +88,23 @@ function wrappedResumeGame() {
 
 function wrappedLevelUp() {
     levelUp(gameStateRef.game, gameStateRef.player, gameStateRef.hitTextPool, gameStateRef.particlePool, gameStateRef.settings, gameStateRef.player.weapons, gameStateRef.perkLevels);
+    // NOWA LINIA v0.90: Przetłumacz ekran level up
+    updateAllStaticText();
 }
 
 function wrappedOpenChest() {
     // POPRAWKA v0.81c: Przekaż 'player' do openChest, aby umożliwić filtrowanie nagród
     openChest(gameStateRef.game, gameStateRef.perkLevels, uiDataRef, gameStateRef.player);
+    // NOWA LINIA v0.90: Przetłumacz ekran skrzyni
+    updateAllStaticText();
 }
 
 function wrappedGameOver() {
     uiDataRef.savedGameState = uiDataRef.savedGameState;
     gameOver(gameStateRef.game, uiDataRef);
     uiDataRef.savedGameState = null; // Zaktualizuj zapisany stan (na null)
+    // NOWA LINIA v0.90: Przetłumacz ekran game over
+    updateAllStaticText();
 }
 
 function wrappedStartRun() {
@@ -120,11 +139,248 @@ function wrappedLoadConfig() {
     console.log(`[DEBUG-v0.76e] js/core/eventManager.js: Konfiguracja UI odczytana (Labels: ${uiDataRef.pickupShowLabels})`);
 }
 
+// --- NOWE FUNKCJE i18n (v0.90) ---
+
+/**
+ * (NOWA FUNKCJA v0.90)
+ * Dynamicznie buduje zawartość Przewodnika na podstawie aktywnego języka.
+ */
+function populateGuide() {
+    const guide = document.getElementById('guideContent');
+    if (!guide) return;
+
+    // Definicje kluczy (dla łatwiejszego zarządzania)
+    const pickups = ['heal', 'magnet', 'shield', 'speed', 'bomb', 'freeze', 'chest'];
+    const enemies = ['standard', 'horde', 'aggressive', 'kamikaze', 'splitter', 'tank', 'ranged', 'elite', 'wall'];
+    const hazards = ['hazard', 'megahazard'];
+    const weapons = ['whip', 'autogun', 'orbital', 'nova', 'chainLightning'];
+    const perks = ['firerate', 'damage', 'multishot', 'pierce', 'speed', 'pickup', 'health'];
+
+    const h = (tag, content) => `<${tag}>${content}</${tag}>`;
+    const p = (content) => h('p', content);
+    const li = (content) => h('li', content);
+    
+    let html = '';
+
+    // Wprowadzenie
+    html += h('h4', getLang('ui_guide_title'));
+    html += p(getLang('ui_guide_intro'));
+    
+    // Zasady
+    html += h('h4', getLang('ui_guide_basics_title'));
+    html += h('ul', 
+        li(getLang('ui_guide_basics_1')) +
+        li(getLang('ui_guide_basics_2')) +
+        li(getLang('ui_guide_basics_3')) +
+        li(getLang('ui_guide_basics_4')) +
+        li(getLang('ui_guide_basics_5'))
+    );
+
+    // Pickupy
+    html += h('h4', getLang('ui_guide_pickups_title'));
+    html += h('ul', pickups.map(key => 
+        li(`<strong>${getLang(`pickup_${key}_name`)}:</strong> ${getLang(`pickup_${key}_desc`)}`)
+    ).join(''));
+
+    // Wrogowie
+    html += h('h4', getLang('ui_guide_enemies_title'));
+    html += h('ul', enemies.map(key => 
+        li(`<strong>${getLang(`enemy_${key}_name`)}:</strong> ${getLang(`enemy_${key}_desc`)}`)
+    ).join(''));
+
+    // Zagrożenia
+    html += h('h4', getLang('ui_guide_hazards_title'));
+    html += h('ul', hazards.map(key => 
+        li(`<strong>${getLang(`enemy_${key}_name`)}:</strong> ${getLang(`enemy_${key}_desc`)}`)
+    ).join(''));
+    
+    // Bronie
+    html += h('h4', getLang('ui_guide_weapons_title'));
+    html += h('ul', weapons.map(key => 
+        li(`<strong>${getLang(`perk_${key}_name`)}:</strong> ${getLang(`perk_${key}_desc`)}`)
+    ).join(''));
+
+    // Perki
+    html += h('h4', getLang('ui_guide_perks_title'));
+    html += h('ul', perks.map(key => 
+        li(`<strong>${getLang(`perk_${key}_name`)}:</strong> ${getLang(`perk_${key}_desc`)}`)
+    ).join(''));
+
+    guide.innerHTML = html;
+}
+
+/**
+ * (NOWA FUNKCJA v0.90)
+ * Tłumaczy wszystkie statyczne elementy UI na podstawie ID.
+ */
+function updateAllStaticText() {
+    const lang = getCurrentLanguage();
+    
+    // Słownik ID -> Klucz Językowy
+    const idMap = {
+        // Tytuły
+        'docTitle': 'ui_player_name', // Tytuł strony
+        'title': 'ui_player_name', // Tytuł w grze
+        
+        // HUD
+        'statLabelScore': 'ui_hud_score',
+        'statLabelLevel': 'ui_hud_level',
+        'statLabelXP': 'ui_hud_xp_name',
+        'statLabelHealth': 'ui_hud_hp_name',
+        'statLabelEnemies': 'ui_hud_enemies',
+        'statLabelTime': 'ui_hud_time',
+        
+        // Zakładki Menu
+        'tabBtnGame': 'ui_menu_tab_game',
+        'tabBtnConfig': 'ui_menu_tab_config',
+        'tabBtnDev': 'ui_menu_tab_dev',
+        'tabBtnGuide': 'ui_menu_tab_guide',
+        'menuNewGamePrompt': 'ui_menu_new_game_prompt',
+        'btnStart': 'ui_menu_start',
+        'btnContinue': 'ui_menu_continue',
+        'btnReplayIntro': 'ui_menu_replay_intro',
+        
+        // Tablica Wyników (wspólna dla Menu i Game Over)
+        'btnClearScoresMenu': 'ui_scores_clear',
+        'scoresTitleMenu': 'ui_scores_title',
+        'scoresRankMenu': 'ui_scores_col_rank',
+        'scoresScoreMenu': 'ui_scores_col_score',
+        'scoresLevelMenu': 'ui_scores_col_level',
+        'scoresTimeMenu': 'ui_scores_col_time',
+        
+        'btnClearScoresGO': 'ui_scores_clear',
+        'scoresTitleGO': 'ui_scores_title',
+        'scoresRankGO': 'ui_scores_col_rank',
+        'scoresScoreGO': 'ui_scores_col_score',
+        'scoresLevelGO': 'ui_scores_col_level',
+        'scoresTimeGO': 'ui_scores_col_time',
+        
+        // Konfiguracja
+        'configTitleGame': 'ui_config_title_game',
+        'configJoystickTitle': 'ui_config_joystick',
+        'configJoyLeft': 'ui_config_joy_left',
+        'configJoyRight': 'ui_config_joy_right',
+        'configJoyOff': 'ui_config_joy_off',
+        'configHyper': 'ui_config_hyper',
+        'configShake': 'ui_config_shake',
+        'configTitleVisual': 'ui_config_title_visual',
+        'configFPS': 'ui_config_fps',
+        'configFpsPosTitle': 'ui_config_fps_pos',
+        'configFpsPosLeft': 'ui_config_fps_pos_left',
+        'configFpsPosRight': 'ui_config_fps_pos_right',
+        'configLabels': 'ui_config_labels',
+        'configStyleTitle': 'ui_config_style',
+        'configStyleCircle': 'ui_config_style_circle',
+        'configStyleEmoji': 'ui_config_style_emoji',
+        'configTitleLang': 'ui_config_title_lang',
+        
+        // Intro
+        'btnIntroPrev': 'ui_intro_prev',
+        'btnIntroSkip': 'ui_intro_skip',
+        'btnIntroNext': 'ui_intro_next',
+        
+        // Level Up
+        'levelUpTitle': 'ui_levelup_title',
+        'btnContinueMaxLevel': 'ui_levelup_max',
+        'levelUpStatsTitle': 'ui_levelup_stats',
+        
+        // Pauza
+        'pauseTitle': 'ui_pause_title',
+        'pauseText': 'ui_pause_text',
+        'btnResume': 'ui_pause_resume',
+        'btnPauseMenu': 'ui_pause_menu',
+        'pauseStatsTitle': 'ui_levelup_stats', // (Używa tego samego klucza co levelup)
+        
+        // Wznowienie
+        'resumeTitle': 'ui_resume_text', // (Tymczasowo, zaraz zostanie nadpisane)
+        
+        // Skrzynia
+        'chestTitle': 'ui_chest_title',
+        'chestButton': 'ui_chest_button',
+        
+        // Game Over
+        'gameOverTitle': 'ui_gameover_title',
+        'gameOverScoreLabel': 'ui_gameover_score',
+        'gameOverLevelLabel': 'ui_gameover_level',
+        'gameOverTimeLabel': 'ui_gameover_time',
+        'btnRetry': 'ui_gameover_retry',
+        'btnMenu': 'ui_gameover_menu',
+        
+        // Modal Potwierdzenia
+        'confirmTitle': 'ui_confirm_title',
+        'btnConfirmYes': 'ui_confirm_yes',
+        'btnConfirmNo': 'ui_confirm_no',
+    };
+
+    // Tłumacz elementy
+    for (const [id, key] of Object.entries(idMap)) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.textContent = getLang(key);
+        } else {
+            // Obsłuż specjalny przypadek tytułu dokumentu
+            if (id === 'docTitle' && docTitle) {
+                // Do tytułu strony dodajemy też wersję
+                docTitle.textContent = `${getLang(key)} v${uiDataRef.VERSION || '0.90'}`;
+            }
+        }
+    }
+    
+    // Tłumacz teksty, które nie są 'textContent'
+    const prompt = document.getElementById('confirmText');
+    if (prompt) prompt.textContent = getLang('ui_confirm_clear_scores');
+    
+    // Zaktualizuj Przewodnik
+    populateGuide();
+}
+
+/**
+ * (NOWA FUNKCJA v0.90b)
+ * Buduje przełącznik języka (lista rozwijana <select>) w menu konfiguracji.
+ */
+function buildLanguageSelector() {
+    const container = document.getElementById('lang-selector-container');
+    if (!container) return;
+    
+    container.innerHTML = ''; // Wyczyść
+    const availableLangs = getAvailableLanguages();
+    const currentLang = getCurrentLanguage();
+    
+    const select = document.createElement('select');
+    select.style.cssText = "background:#333; color:#fff; border:1px solid #555; padding:6px; border-radius:4px; width: 200px;";
+    
+    availableLangs.forEach(langName => {
+        const option = document.createElement('option');
+        option.value = langName;
+        option.textContent = langName;
+        
+        if (langName === currentLang) {
+            option.selected = true;
+        }
+        
+        select.appendChild(option);
+    });
+    
+    // Zmień język i przetłumacz wszystko od razu
+    select.onchange = (e) => {
+        setLanguage(e.target.value);
+        updateAllStaticText(); 
+    };
+    
+    container.appendChild(select);
+}
+
 
 /**
  * Inicjalizuje wszystkie eventy (przeniesione z main.js)
  */
 function initEvents() {
+    // === NOWA INICJALIZACJA i18n (v0.90) ===
+    // Zbuduj przełącznik języka i przetłumacz UI po raz pierwszy
+    buildLanguageSelector();
+    updateAllStaticText(); 
+    // === Koniec i18n ===
+
     // === Przycisk Start/Continue ===
     document.getElementById('btnStart').addEventListener('click', () => {
         // 1. Zresetuj flagi deweloperskie (pełny reset)

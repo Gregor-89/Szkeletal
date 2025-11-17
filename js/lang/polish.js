@@ -1,0 +1,227 @@
+// ==============
+// POLISH.JS (v0.90b - Poprawki kluczy i Przewodnika)
+// Lokalizacja: /js/lang/polish.js
+// ==============
+
+// Ten plik zawiera wszystkie tłumaczenia dla języka polskiego.
+// Jest to plik "wzorcowy" (fallback) dla innych języków.
+// Klucze są oparte na placeholderach, a wartości na dokumencie GDD v0.9.
+
+export const LANG_PL = {
+  
+  // === 1. Podstawowe Mechaniki (GDD) ===
+  ui_player_name: "Drakul",
+  
+  // (Klucz GDD)
+  ui_hp_name: "Sytość",
+  ui_hp_desc: "Ataki hejterów redukują Wskaźnik Sytości. Spadek do zera implikuje egzystencjalną porażkę.",
+  ui_hp_icon: "😋", // (Nabrzmiały brzuszek)
+  
+  // (Klucz GDD)
+  ui_xp_name: "Wertykalność",
+  ui_xp_desc: "Akwizycja \"Ziemniaczków\" jest kluczowa dla progresji Wertykalności.",
+  ui_xp_icon: "🥔", // (Ziemniak)
+  
+  ui_gem_name: "Ziemniaczki",
+  ui_gem_desc: "Pokonani adwersarze uwalniają esencję \"Ziemniaczka\". Akwizycja jest imperatywem! Niezebrane Ziemniaczki z czasem ulegają deprecjacji.",
+  
+  ui_levelup_name: "Poziom Wertykalności",
+  ui_levelup_desc: "Obiektywne osiągnięcie Wertykalności. Pozwala na re-ewaluację strategii i dobór nowych atrybutów oraz pełną restytucję \"Sytości\".",
+  
+  // === 2. UI - HUD (Paski i Statystyki na górze) ===
+  // POPRAWKA v0.90b: Dodano brakujące klucze dla HUD
+  ui_hud_hp_name: "Sytość",
+  ui_hud_xp_name: "Wertykalność",
+  
+  ui_hud_score: "Wynik",
+  ui_hud_level: "Poziom",
+  ui_hud_enemies: "Wrogowie",
+  ui_hud_time: "Czas",
+  ui_hud_health: "Życia", // (Używane w starym UI, może się przydać)
+  
+  // === 3. UI - Menu Główne i Zakładki ===
+  ui_menu_tab_game: "Gra",
+  ui_menu_tab_config: "Konfiguracja",
+  ui_menu_tab_dev: "🛠️ Dev Menu",
+  ui_menu_tab_guide: "Przewodnik",
+  ui_menu_start: "▶️ Zacznij nową grę",
+  ui_menu_continue: "⏯️ Kontynuuj Grę",
+  ui_menu_replay_intro: "🎥 Włącz Intro",
+  ui_menu_new_game_prompt: "Witaj w grze Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula! Wybierz poziom trudności i rozpocznij rozgrywkę.",
+  
+  // === 4. UI - Zakładka Konfiguracja ===
+  ui_config_title_game: "Ustawienia Rozgrywki",
+  ui_config_joystick: "Pozycja joysticka:",
+  ui_config_joy_left: "Lewa",
+  ui_config_joy_right: "Prawa",
+  ui_config_joy_off: "Wyłączony",
+  ui_config_hyper: "⚡ Hyper Mode (+20% tempo gry)",
+  ui_config_shake: "📳 Drżenie ekranu",
+  
+  ui_config_title_visual: "Ustawienia Wizualne i Debugowanie",
+  ui_config_fps: "📊 Pokaż licznik FPS",
+  ui_config_fps_pos: "Pozycja licznika FPS:",
+  ui_config_fps_pos_left: "Lewa",
+  ui_config_fps_pos_right: "Prawa",
+  ui_config_labels: "🏷️ Pokazuj podpisy pickupów",
+  ui_config_style: "Styl pickupów:",
+  ui_config_style_circle: "🔵 Kolorowe kółka",
+  ui_config_style_emoji: "😀 Emoji",
+  
+  ui_config_title_lang: "Język",
+  // (Opcje języka będą dodawane dynamicznie)
+  
+  // === 5. UI - Zakładka Przewodnik (Tytuły Sekcji) ===
+  // POPRAWKA v0.90b: Oczyszczono nazwy i dodano emoji
+  ui_guide_title: "Przewodnik Hrabiego",
+  ui_guide_intro: "Wcielasz się w Estrogenowego Hrabiego Drakula. Zaspokój jego \"Ziemniaczkowy Głód\", gromiąc hejterów i dążąc do absolutnej Wertykalności.",
+  ui_guide_basics_title: "🎮 Podstawowe zasady",
+  ui_guide_basics_1: "Cel: Przetrwaj jak najdłużej 📈, zbieraj Ziemniaczki 🥔, awansuj na wyższe Poziomy Wertykalności ⭐",
+  ui_guide_basics_2: "Sterowanie: WASD/strzałki ⌨️ lub wirtualny joystick 🕹️ na ekranie",
+  ui_guide_basics_3: "Pauza: Klawisz ESC ⏸️ lub puść joystick (auto-pauza natychmiastowa)",
+  ui_guide_basics_4: "Postęp: Każdy Poziom Wertykalności = wybór jednego z trzech ulepszeń 🎁",
+  ui_guide_basics_5: "Wrogowie: Pojawiają się coraz trudniejsi 👾 wraz z czasem ⏱️",
+  
+  ui_guide_pickups_title: "🎁 Pickupy",
+  ui_guide_enemies_title: "👾 Lista Hejterów", // Skrócono
+  ui_guide_hazards_title: "☢️ Pola Zagrożenia",
+  ui_guide_weapons_title: "⚔️ Arsenał Hrabiego",
+  ui_guide_perks_title: "🔧 Ulepszenia",
+  
+  // === 6. UI - Ekrany Nakładkowe (Overlays) ===
+  ui_pause_title: "⏸️ Pauza",
+  ui_pause_text: "Gra wstrzymana",
+  ui_pause_resume: "Wznów",
+  ui_pause_menu: "Menu główne",
+  
+  ui_resume_text: "Wznawianie za:", // (np. "Wznawianie za: 0.75 s")
+  
+  ui_levelup_title: "Wybierz ulepszenie",
+  ui_levelup_stats: "📊 Aktualne statystyki",
+  ui_levelup_max: "Wszystkie perki wymaksowane! Kontynuuj...",
+  
+  ui_chest_title: "🎁 Otwórz LudoBox", // Zmieniono z "skrzynię"
+  ui_chest_button: "Otwórz i odbierz",
+  ui_chest_empty_title: "LudoBox pusty",
+  ui_chest_empty_desc: "Wszystkie ulepszenia są już wymaksowane!",
+  
+  ui_gameover_title: "💀 GAME OVER",
+  ui_gameover_score: "🎯 Wynik:",
+  ui_gameover_level: "⭐ Poziom:",
+  ui_gameover_time: "⏱️ Czas przetrwania:",
+  ui_gameover_retry: "Zagraj ponownie",
+  ui_gameover_menu: "Menu",
+  
+  // === 7. UI - Tablica Wyników i Modale ===
+  ui_scores_title: "🏆 Tablica wyników",
+  ui_scores_clear: "🗑️ Wyczyść",
+  ui_scores_col_rank: "#️⃣",
+  ui_scores_col_score: "🎯 Wynik",
+  ui_scores_col_level: "⭐ Poziom",
+  ui_scores_col_time: "⏱️ Czas",
+  
+  ui_confirm_title: "Potwierdzenie",
+  ui_confirm_clear_scores: "Czy na pewno chcesz wyzerować tablicę wyników? Tej operacji nie można cofnąć.",
+  ui_confirm_yes: "Tak, wyczyść",
+  ui_confirm_no: "Anuluj",
+  
+  // === 8. UI - Intro ===
+  ui_intro_prev: "Wstecz",
+  ui_intro_skip: "Pomiń (Zamknij)",
+  ui_intro_next: "Dalej",
+  ui_intro_finish: "Do Menu Głównego ▶️",
+  
+  // === 9. Pickupy (GDD) ===
+  pickup_heal_name: "Talerz Hrabianki",
+  pickup_heal_desc: "Relikt utraconej miłości. Natychmiastowa restytucja +30 punktów Sytości.",
+  
+  pickup_magnet_name: "Łakomstwo Hrabiego",
+  pickup_magnet_desc: "Wywczas trwający 2 sekundy, podczas którego Hrabia manifestuje magnetyczną predylekcję do pobliskich \"Ziemniaczków\".",
+  
+  pickup_shield_name: "Tarcza LodoBoga",
+  pickup_shield_desc: "Transcendentalna aura \"Syndromu Boga\". Gwarantuje absolutną nietykalność i immanencję na obrażenia przez 8 sekund.",
+  
+  pickup_speed_name: "Trampki Menela",
+  pickup_speed_desc: "Relikt z Olszynek. Gwarantuje bonus +40% do prędkości poruszania się przez 8 sekund. Idealne do repozycjonowania.",
+  
+  pickup_bomb_name: "BanWave",
+  pickup_bomb_desc: "Ostateczny werdykt moderatora. Natychmiastowa anihilacja wszystkich hejterów w bliskim promieniu.",
+  
+  pickup_freeze_name: "Ochłonięcie",
+  pickup_freeze_desc: "Indukuje \"Potężny Cringe\", spowalniając wszystkich adwersarzy na ekranie (-75% prędkości) przez 5 sekund.",
+  
+  pickup_chest_name: "LudoBox",
+  pickup_chest_desc: "Zaproszenie do \"ludologicznej\" ruletki. Gwarantuje jeden losowy atrybut po akwizycji. Wypada z pokonanych \"Boss-Soulsów\".",
+  
+  // === 10. Wrogowie i Zagrożenia (GDD) ===
+  enemy_standard_name: "Dadgamer",
+  enemy_standard_desc: "Bazowy hejter, zakała gamingu. Jego wektor ruchu jest sinusoidalny, utrudniając wertykalną anihilację.",
+  
+  enemy_horde_name: "Maciek z czatu",
+  enemy_horde_desc: "Bezmózgi idol. Pojawia się wyłącznie w kohezji. Wykazuje niższą prędkość bazową, lecz jego behawior \"Roju\" aktywnie dąży do otoczenia Hrabiego.",
+  
+  enemy_aggressive_name: "Prowokator",
+  enemy_aggressive_desc: "Asekurowy adwersarz. W bliskim zasięgu zatrzymuje się (sygnalizacja), po czym wykonuje gwałtowną szarżę z bonusem do prędkości.",
+  
+  enemy_kamikaze_name: "Troll",
+  enemy_kamikaze_desc: "Szybki, chaotyczny adwersarz. Wykonuje agresywny ruch sinusoidalny (\"zygzak\") i stosuje predykcję ruchu, celując przed Hrabią. Detonuje przy kontakcie.",
+  
+  enemy_splitter_name: "Wykopek",
+  enemy_splitter_desc: "Nagłaśniacz dram. Porusza się w linii prostej z bonusem prędkości. Po dekonstrukcji, jego \"lore\" dzieli się na dwie mniejsze jednostki \"Maćka z czatu\".",
+  
+  enemy_tank_name: "Szkeletal",
+  enemy_tank_desc: "Relikt porzuconego \"lore\". Ekstremalnie powolny, lecz o potrójnej \"Sytości\". Całkowicie immanentny na efekty odrzutu oraz spowolnienia (\"Ochłonięcie\" i \"Szambo\").",
+  
+  enemy_ranged_name: "Menel",
+  enemy_ranged_desc: "Adwersarz dystansowy z Olszynek. Utrzymuje optymalny dystans (średni zasięg), unikając bliskiego kontaktu. Aktywnie krąży, miotając butelkami.",
+  
+  enemy_elite_name: "Boss-Soul",
+  enemy_elite_desc: "Elitarny Hejter o znacznie zwiększonej \"Sytości\". Co 7 sekund stosuje atak specjalny: gwałtowną szarżę, emisję pocisków wokół siebie lub przywołuje wsparcie (tworzy 3 \"Maćków z czatu\"). Zawsze upuszcza LudoBox.",
+  
+  enemy_wall_name: "Syndrom Oblężenia", // Używane też do ostrzeżenia
+  enemy_wall_desc: "Pojawia się w idealnym pierścieniu. Ekstremalnie wolny, ale wytrzymały. Po określonym czasie (ok. 34-40s) detonuje, niszcząc wszystkie Ziemniaczki i Pickupy w pobliżu.",
+  
+  enemy_hazard_name: "Szambo",
+  enemy_hazard_desc: "Spowalnia Hrabiego i zadaje mu obrażenia. Rani i spowalnia również hejterów (z wyjątkiem Szkeletala). Ziemniaczki i Pickupy pozostawione w \"Szambie\" ulegają deprecjacji.",
+  
+  enemy_megahazard_name: "Pole Dramy",
+  enemy_megahazard_desc: "Wersja \"Mega\". Znacznie większy (4x-8x) obszar \"Szamba\", zadający zwiększone obrażenia Hrabiemu.",
+  
+  // === 11. Bronie (Perki) (GDD) ===
+  perk_whip_name: "Tłuczek Hrabianki",
+  perk_whip_desc: "Broń startowa. Tłucze horyzontalnie (asymetrycznie). Przebija wszystkich adwersarzy. Lvl 1: 1 uderzenie (przód). Lvl 2: 2 (1 przód, 1 tył). Lvl 3: 3 (2 przód, 1 tył). Lvl 4-5: 4 (2 przód, 2 tył). Kolejne poziomy zwiększają obrażenia, skalę i skracają czas odnowienia.",
+  
+  perk_autogun_name: "Plujko Jad",
+  perk_autogun_desc: "Automatyczny oręż, strzelający toksycznym jadem w najbliższego hejtera. Nie posiada własnych poziomów – jest ulepszany przez 4 osobne perki \"Plujko\".",
+  
+  perk_orbital_name: "Orbitalne Ziemniaczki",
+  perk_orbital_desc: "Krążące artefakty-ziemniaczki. Lvl 1: 1 Ziemniaczek (promień bliski). Lvl 2: 2 (promień +1). Lvl 3: 3 (promień +2). Lvl 4: 4 (promień +3). Lvl 5: 5 (promień +4). Kolejne poziomy zwiększają obrażenia i prędkość obrotu.",
+  
+  perk_nova_name: "Eksplozja Mentalu",
+  perk_nova_desc: "Cykliczna emanacja \"pato-lore\". Rozsiewa pociski jadu wokół Hrabiego. Statystyki pocisków (obrażenia, przebicie) są dziedziczone z Plujko Jadu. Lvl 1: 10 pocisków (co 1.9s). Lvl 2: 12 (1.6s). Lvl 3: 14 (1.3s). Lvl 4: 16 (1.0s). Lvl 5: 18 (0.7s).",
+  
+  perk_chainLightning_name: "Pierun Ludologa",
+  perk_chainLightning_desc: "Automatyczny atak, razi najbliższego hejtera i przeskakuje na kolejnych (w bliskim zasięgu). Lvl 1: 1 Obr., 1 Cel (co 2.5s). Lvl 2: 2 Obr., 2 Cele (2.3s). Lvl 3: 2 Obr., 3 Cele (2.1s). Lvl 4: 3 Obr., 4 Cele (1.9s). Lvl 5: 3 Obr., 5 Celów (1.7s). Lvl 6: 4 Obr., 6 Celów (1.6s).",
+  
+  // === 12. Perki (Pasywne i AutoGun) (GDD) ===
+  perk_firerate_name: "Plujko Prędszy Jad",
+  perk_firerate_desc: "Bo hejt trzeba dawkować szybko! Zwiększa szybkostrzelność Plujko Jadu o +20% na poziom.",
+  
+  perk_damage_name: "Plujko Bólu Jad",
+  perk_damage_desc: "Obiektywne zwiększenie toksyczności. Dodaje +1 obrażeń bazowych do pocisków Plujko Jadu na poziom.",
+  
+  perk_multishot_name: "Plujko Multi Jad",
+  perk_multishot_desc: "Wertykalna dywersyfikacja hejtu. Wystrzeliwuje +1 dodatkowy pocisk Plujko Jadu na poziom.",
+  
+  perk_pierce_name: "Plujko Dziurko Jad",
+  perk_pierce_desc: "Twój jad jest tak żrący, że przebija narrację. Pociski Plujko Jadu mogą przebić +1 dodatkowego hejtera na poziom.",
+  
+  perk_speed_name: "Chyżność Ucieczki",
+  perk_speed_desc: "Nawet Hrabia musi czasem re-ewaluować swoją pozycję. Zwiększa bazową prędkość poruszania się o +10% na poziom.",
+  
+  perk_pickup_name: "Zasięg Żerowania",
+  perk_pickup_desc: "Im większy głód, tym dłuższe ręce po Ziemniaczki. Zwiększa bazowy promień przyciągania Ziemniaczków i Pickupów o +40% na poziom.",
+  
+  perk_health_name: "Poziom Sytości",
+  perk_health_desc: "Większy żołądek na hejt (i Ziemniaczki). Zwiększa maksymalną Sytość o +20 i natychmiast leczy Hrabiego o 20 HP."
+};

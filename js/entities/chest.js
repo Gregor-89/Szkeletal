@@ -1,5 +1,5 @@
 // ==============
-// CHEST.JS (v0.68 - FINAL FIX: Dodano mechanikę zaniku)
+// CHEST.JS (v0.90 - Implementacja i18n)
 // Lokalizacja: /js/entities/chest.js
 // ==============
 
@@ -103,8 +103,9 @@ export class Chest {
       ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
       ctx.shadowBlur = 4;
       
+      // POPRAWKA v0.90: Użyj zmiennej 'label', która jest już pobrana i przetłumaczona
       const label = getPickupLabel('chest'); // Używamy 'chest' jako tymczasowego typu
-      ctx.fillText('Skrzynia', this.x, this.y + 20);
+      ctx.fillText(label, this.x, this.y + 20); // Zmieniono 'Skrzynia' na label
     }
     
     ctx.restore();

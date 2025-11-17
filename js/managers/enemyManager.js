@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.87h - FIX: Dodanie ostrzeżenia tekstowego dla Oblężenia)
+// ENEMYMANAGER.JS (v0.90 - Implementacja i18n)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -8,6 +8,8 @@ import { devSettings } from '../services/dev.js';
 import { findFreeSpotForPickup, addBombIndicator } from '../core/utils.js';
 // POPRAWKA v0.86d: Poprawiona ścieżka importu Audio (było ../../services/audio.js)
 import { playSound } from '../services/audio.js';
+// NOWY IMPORT v0.90: Silnik i18n
+import { getLang } from '../services/i18n.js';
 
 // Import klasy bazowej
 import { Enemy } from '../entities/enemy.js';
@@ -110,7 +112,9 @@ export function getAvailableEnemyTypes(game) {
     if (newEnemyType && game.newEnemyWarningT <= 0) {
         // Aktywuj timer ostrzegawczy, blokując normalne spawny na 3s
         game.newEnemyWarningT = 3.0;
-        game.newEnemyWarningType = newEnemyType;
+        // ZMIANA v0.90: Użyj i18n
+        game.newEnemyWarningType = getLang(`enemy_${newEnemyType}_name`).toUpperCase();
+        game.seenEnemyTypes.push(newEnemyType); // Oznacz jako widziane od razu
         playSound('EliteSpawn'); // Użyjemy dźwięku Elity jako ogólnego alarmu
         console.log(`[ENEMY-WARN] Aktywowano ostrzeżenie: ${newEnemyType} (o ${newEnemyTime}s).`);
         // Zwracamy listę TYLKO WROGÓW, których już widziano.
@@ -340,7 +344,8 @@ export function spawnSiegeRing(state) {
     // 2. NOWA LOGIKA (v0.87h): Aktywuj ostrzeżenie tekstowe, jeśli to pierwszy raz
     if (!game.seenEnemyTypes.includes('wall')) {
         game.newEnemyWarningT = SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME;
-        game.newEnemyWarningType = 'OBLĘŻENIE'; // Użyj przyjaznej nazwy
+        // ZMIANA v0.90: Użyj i18n
+        game.newEnemyWarningType = getLang('enemy_wall_name').toUpperCase(); // "SYNDROM OBLĘŻENIA"
         game.seenEnemyTypes.push('wall'); // Oznacz jako widziane, aby nie powtarzać
         playSound('EliteSpawn'); // Odtwórz dźwięk alarmu (ten sam co dla Elity)
     }

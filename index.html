@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes" />
-<title>Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula</title> 
+<title>Szkeletal</title> 
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
   </div>
 
   <div id="gameContainer">
-    <div id="title">Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula</div>
+    <div id="title">Szkeletal</div>
     <div id="playerHPBarOuter">
       <div id="playerHPBarInner"></div>
       <div id="playerHPBarTxt"></div>
@@ -26,33 +26,33 @@
     <div id="bonusPanel"></div>
     <div id="gameInfo">
       <div class="stat">
-        <div class="stat-icon" style="background:#FFD700;">🎯</div>
-        Wynik: <span id="score">0</span>
+        <div class="stat-icon" style="background:#FFD700;" id="statIconScore">🎯</div>
+        <span id="statLabelScore">Wynik</span>: <span id="score">0</span>
         <div class="stat-progress" id="scoreProgress" style="width:0%;"></div>
       </div>
       <div class="stat">
-        <div class="stat-icon" style="background:#4CAF50;">⭐</div>
-        Poziom: <span id="level">1</span>
+        <div class="stat-icon" style="background:#4CAF50;" id="statIconLevel">⭐</div>
+        <span id="statLabelLevel">Poziom</span>: <span id="level">1</span>
         <div class="stat-progress" id="levelProgress" style="width:0%;"></div>
       </div>
       <div class="stat">
-        <div class="stat-icon" style="background:#2196F3;">📈</div>
-        XP: <span id="xp">0</span>/<span id="xpNeeded">5</span>
+        <div class="stat-icon" style="background:#2196F3;" id="statIconXP">📈</div>
+        <span id="statLabelXP">XP</span>: <span id="xp">0</span>/<span id="xpNeeded">5</span>
         <div class="stat-progress" id="xpProgress" style="width:0%;"></div>
       </div>
       <div class="stat">
-        <div class="stat-icon" style="background:#444;">❤️</div>
-        Życia: <span id="health">100</span>
+        <div class="stat-icon" style="background:#444;" id="statIconHealth">❤️</div>
+        <span id="statLabelHealth">Życia</span>: <span id="health">100</span>
         <div class="stat-progress" id="healthProgress" style="width:100%;"></div>
       </div>
       <div class="stat" id="enemyStat">
-        <div class="stat-icon" style="background:#ff7043;">👾</div>
-        Wrogowie: <span id="enemyCount">0</span>/<span id="enemyLimit">3</span>
+        <div class="stat-icon" style="background:#ff7043;" id="statIconEnemies">👾</div>
+        <span id="statLabelEnemies">Wrogowie</span>: <span id="enemyCount">0</span>/<span id="enemyLimit">3</span>
         <div class="stat-progress" id="enemyProgress" style="width:0%;"></div>
       </div>
       <div class="stat">
-        <div class="stat-icon" style="background:#9C27B0;">⏱️</div>
-        Czas: <span id="time">0</span>
+        <div class="stat-icon" style="background:#9C27B0;" id="statIconTime">⏱️</div>
+        <span id="statLabelTime">Czas</span>: <span id="time">0</span>
         <div class="stat-progress" id="timeProgress" style="width:0%;"></div>
       </div>
     </div>
@@ -64,30 +64,30 @@
         <img id="menuLogo" src="img/logo.png" alt="Szkeletal Logo">
         
         <div class="tabs">
-          <button class="tab active">Gra</button>
-          <button class="tab">Konfiguracja</button>
-          <button class="tab btn-danger">🛠️ Dev Menu</button>
-          <button class="tab btn-secondary">Przewodnik</button>
+          <button class="tab active" id="tabBtnGame">Gra</button>
+          <button class="tab" id="tabBtnConfig">Konfiguracja</button>
+          <button class="tab btn-danger" id="tabBtnDev">🛠️ Dev Menu</button>
+          <button class="tab btn-secondary" id="tabBtnGuide">Przewodnik</button>
         </div>
 
         <div id="tab-game" class="tab-content active">
-          <p style="margin-bottom:15px;">Witaj w grze Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula! Wybierz poziom trudności i rozpocznij rozgrywkę.</p>
+          <p style="margin-bottom:15px;" id="menuNewGamePrompt">Witaj w grze...</p>
           <button id="btnStart" class="btn" type="button" style="width:100%; font-size:18px; padding:15px;">▶️ Zacznij nową grę</button>
           <button id="btnContinue" class="btn btn-warning" type="button" style="width:100%; font-size:18px; padding:15px; display:none; margin-top:10px;">⏯️ Kontynuuj Grę</button>
           
           <button id="btnReplayIntro" class="btn btn-secondary" type="button" onclick="wrappedDisplayIntro()" style="width:100%; font-size:14px; padding:10px; margin-top:10px;">🎥 Włącz Intro</button>
         
           <div class="scores-container" style="margin-top:20px;">
-            <button class="btn btn-danger btn-clear-scores" type="button">🗑️ Wyczyść</button>
+            <button class="btn btn-danger btn-clear-scores" type="button" id="btnClearScoresMenu">🗑️ Wyczyść</button>
             <div id="scoresTable">
-              <h4>🏆 Tablica wyników</h4>
+              <h4 id="scoresTitleMenu">🏆 Tablica wyników</h4>
               <table>
                 <thead>
                   <tr>
-                    <th>#️⃣</th>
-                    <th>🎯 Wynik</th>
-                    <th>⭐ Poziom</th>
-                    <th>⏱️ Czas</th>
+                    <th id="scoresRankMenu">#️⃣</th>
+                    <th id="scoresScoreMenu">🎯 Wynik</th>
+                    <th id="scoresLevelMenu">⭐ Poziom</th>
+                    <th id="scoresTimeMenu">⏱️ Czas</th>
                   </tr>
                 </thead>
                 <tbody id="scoresBodyMenu"></tbody>
@@ -98,38 +98,44 @@
         </div>
 
         <div id="tab-config" class="tab-content">
-          <h4 style="margin-top:0;">Ustawienia Rozgrywki</h4>
+          <h4 style="margin-top:0;" id="configTitleGame">Ustawienia Rozgrywki</h4>
           <div class="row" style="margin-bottom:12px;">
-            <div style="width:100%;">Pozycja joysticka:</div>
-            <label class="option"><input type="radio" name="joypos" value="left"> Lewa</label>
-            <label class="option"><input type="radio" name="joypos" value="right" checked> Prawa</label>
-            <label class="option"><input type="radio" name="joypos" value="off"> Wyłączony</label>
+            <div style="width:100%;" id="configJoystickTitle">Pozycja joysticka:</div>
+            <label class="option"><input type="radio" name="joypos" value="left"> <span id="configJoyLeft">Lewa</span></label>
+            <label class="option"><input type="radio" name="joypos" value="right" checked> <span id="configJoyRight">Prawa</span></label>
+            <label class="option"><input type="radio" name="joypos" value="off"> <span id="configJoyOff">Wyłączony</span></label>
           </div>
           <div class="row" style="margin-bottom:12px;">
-            <label class="option"><input type="checkbox" id="chkHyper"> ⚡ Hyper Mode (+20% tempo gry)</label>
+            <label class="option"><input type="checkbox" id="chkHyper"> <span id="configHyper">⚡ Hyper Mode (+20% tempo gry)</span></label>
           </div>
           <div class="row" style="margin-bottom:12px;">
-            <label class="option"><input type="checkbox" id="chkShake" checked> 📳 Drżenie ekranu</label>
-          </div>
-          
-          <h4 style="margin-top:16px;">Ustawienia Wizualne i Debugowanie</h4>
-          <div class="row" style="margin-bottom:12px;">
-            <label class="option"><input type="checkbox" id="chkFPS" checked> 📊 Pokaż licznik FPS</label>
+            <label class="option"><input type="checkbox" id="chkShake" checked> <span id="configShake">📳 Drżenie ekranu</span></label>
           </div>
           
+          <h4 style="margin-top:16px;" id="configTitleVisual">Ustawienia Wizualne i Debugowanie</h4>
           <div class="row" style="margin-bottom:12px;">
-            <div style="width:100%;">Pozycja licznika FPS:</div>
-            <label class="option"><input type="radio" name="fpspos" value="left"> Lewa</label>
-            <label class="option"><input type="radio" name="fpspos" value="right" checked> Prawa</label>
+            <label class="option"><input type="checkbox" id="chkFPS" checked> <span id="configFPS">📊 Pokaż licznik FPS</span></label>
           </div>
           
           <div class="row" style="margin-bottom:12px;">
-            <label class="option"><input type="checkbox" id="chkPickupLabels" checked> 🏷️ Pokazuj podpisy pickupów</label>
+            <div style="width:100%;" id="configFpsPosTitle">Pozycja licznika FPS:</div>
+            <label class="option"><input type="radio" name="fpspos" value="left"> <span id="configFpsPosLeft">Lewa</span></label>
+            <label class="option"><input type="radio" name="fpspos" value="right" checked> <span id="configFpsPosRight">Prawa</span></label>
+          </div>
+          
+          <div class="row" style="margin-bottom:12px;">
+            <label class="option"><input type="checkbox" id="chkPickupLabels" checked> <span id="configLabels">🏷️ Pokazuj podpisy pickupów</span></label>
           </div>
           <div class="row" style="margin-bottom:12px;">
-            <div style="width:100%;">Styl pickupów:</div>
-            <label class="option"><input type="radio" name="pickupstyle" value="circle"> 🔵 Kolorowe kółka</label>
-            <label class="option"><input type="radio" name="pickupstyle" value="emoji" checked> 😀 Emoji</label>
+            <div style="width:100%;" id="configStyleTitle">Styl pickupów:</div>
+            <label class="option"><input type="radio" name="pickupstyle" value="circle"> <span id="configStyleCircle">🔵 Kolorowe kółka</span></label>
+            <label class="option"><input type="radio" name="pickupstyle" value="emoji" checked> <span id="configStyleEmoji">😀 Emoji</span></label>
+          </div>
+
+          <h4 style="margin-top:16px;" id="configTitleLang">Język</h4>
+          <div class="row" style="margin-bottom:12px;">
+            <select id="lang-select" class="btn" style="background-color: #607d8b; border: 2px solid #546e7a; padding: 8px; width: 250px;">
+                </select>
           </div>
         </div>
 
@@ -265,81 +271,7 @@
 
         <div id="tab-guide" class="tab-content">
           <div id="guideContent">
-            <p><strong>Witaj w dynamicznej grze survivalowej!</strong> Wcielasz się w wojownika, który musi przetrwać fale wrogów, zbierając doświadczenie (XP) i wybierając ulepszenia. Twoją bronią startową jest <strong>Bicz</strong>, który atakuje automatycznie.</p>
-            
-            <h4>🎮 Podstawowe zasady</h4>
-            <ul>
-              <li><strong>Cel:</strong> Przetrwaj jak najdłużej 📈, zbieraj XP 💎, awansuj na wyższe poziomy ⭐</li>
-              <li><strong>Sterowanie:</strong> WASD/strzałki ⌨️ lub wirtualny joystick 🕹️ na ekranie</li>
-              <li><strong>Pauza:</strong> Klawisz ESC ⏸️ lub puść joystick (auto-pauza natychmiastowa)</li>
-              <li><strong>Postęp:</strong> Każdy poziom = wybór jednego z trzech ulepszeń 🎁</li>
-              <li><strong>Wrogowie:</strong> Pojawiają się coraz trudniejsi 👾 wraz z czasem ⏱️</li>
-            </ul>
-            
-            <h4>💎 Pickupy (Kółko / Emoji)</h4>
-            <ul style="list-style-type: none; padding-left: 5px;">
-              <li><span class="icon ico-circle" style="background:#E91E63;"></span> / <span style="font-size:16px;">❤️</span> <strong>Leczenie</strong> – przywraca <strong>+30 HP</strong></li>
-              <li><span class="icon ico-circle" style="background:#8BC34A;"></span> / <span style="font-size:16px;">🧲</span> <strong>Magnes</strong> – przyciąga wszystkie XP przez <strong>3 sekundy</strong></li>
-              <li><span class="icon ico-circle" style="background:#90CAF9;"></span> / <span style="font-size:16px;">🛡️</span> <strong>Tarcza</strong> – absorbuje obrażenia przez <strong>8 sekund</strong></li>
-              <li><span class="icon ico-circle" style="background:#FFD740;"></span> / <span style="font-size:16px;">👟</span> <strong>Szybkość</strong> – <strong>+40%</strong> ruchu przez <strong>8 sekund</strong></li>
-              <li><span class="icon ico-circle" style="background:#FF7043;"></span> / <span style="font-size:16px;">💣</span> <strong>Bomba</strong> – niszczy wrogów w zasięgu <strong>200px</strong>, zostawia kulki XP</li>
-              <li><span class="icon ico-circle" style="background:#81D4FA;"></span> / <span style="font-size:16px;">❄️</span> <strong>Zamrożenie</strong> – spowalnia wrogów i ich ataki o <strong>75%</strong> przez <strong>5 sekund</strong></li>
-            </ul>
-            
-            <h4>☢️ Pola Zagrożenia (Hazards)</h4>
-            <p>Statyczne plamy na mapie, które zadają obrażenia i spowalniają. Pojawiają się co 6 sekund i zanikają po ~45 sekundach.</p>
-            <ul style="list-style-type: none; padding-left: 5px;">
-              <li><span class="icon ico-circle" style="background:rgba(0, 150, 0, 0.6); border:2px solid #0f0;"></span> <strong>Kwaśna Plama (Standard)</strong>:</li>
-              <ul>
-                <li>Zadaje obrażenia **~10 HP/s** graczowi i spowalnia Cię o **50%**.</li>
-                <li>Spowalnia (o 30%) i zadaje **małe obrażenia wrogom**.</li>
-                <li>Pojawia się z **3s ostrzeżeniem** (czerwony kontur) i może pojawić się blisko Ciebie.</li>
-              </ul>
-              <li><span class="icon ico-circle" style="background:rgba(150, 0, 150, 0.6); border:2px solid #f0f;"></span> <strong>Mega Plama</strong>: Rzadki wariant (20% szans). Ma znacznie **większy promień** (2.5x-6x) i zadaje **trochę większe obrażenia** (fioletowy kolor).</li>
-              <li>💧 **Efekt Bagna**: Wszystkie dropy (XP, Pickupy, Skrzynie) pozostawione w Hazardzie **powoli znikają** (~15s). Zdobądź je, zanim znikną!</li>
-            </ul>
-            <h4>👾 Wrogowie (zaktualizowany przewodnik)</h4>
-            <p>Nowe, silniejsze typy wrogów pojawiają się wraz z upływem czasu.</p>
-            <ul>
-              <li><span class="icon ico-square" style="background:#FFC107;"></span><strong>Standard</strong> (od 0:00) – Zbalansowany wróg, po prostu idzie w Twoją stronę. <span class="detail">(+10pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#8BC34A;"></span><strong>Horda</strong> (od 0:30) – Wolniejszy, ale zawsze pojawia się w ciasnych grupach po 4-6 sztuk. <span class="detail">(+10pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#2196F3;"></span><strong>Agresywny</strong> (od 1:00) – Porusza się normalnie, ale dostaje <strong>+50% prędkości</strong>, gdy znajdzie się blisko Ciebie (zasięg 220px). <span class="detail">(+10pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#FFEB3B;"></span><strong>Kamikaze</strong> (od 1:30) – Podobny do Agresywnego, ale jego przyspieszenie jest znacznie większe (<strong>+100% prędkości</strong> w zasięgu 140px) i zadaje większe obrażenia przy kolizji (8 zamiast 5). <span class="detail">(+10pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#EC407A;"></span><strong>Splitter</strong> (od 2:00) – Po pokonaniu <strong>dzieli się na 2</strong> mniejszych, szybszych wrogów typu 'Horda'. <span class="detail">(+10pkt)</span></li>
-              
-              <li><span class="icon ico-square" style="background:#607D8B;"></span><strong>Oblężnik (Wall)</strong> (Event od 2:30) – **Wydarzenie Specjalne.** Pojawia się nagle w grupie (15-20 sztuk) w **idealnym kręgu** wokół gracza. Bardzo wolny, ale ekstremalnie wytrzymały (30 HP). Zmusza do przebicia się przez formację. <span class="detail">(+25pkt, +0 XP)</span></li>
-              <li><span class="icon ico-square" style="background:#795548;"></span><strong>Tank</strong> (od 3:00) – Bardzo wolny (60% prędkości), ale posiada <strong>potrójne HP</strong> w porównaniu do standardowego wroga. <span class="detail">(+20pkt)</span></li>
-              <li><span class="icon ico-square" style="background:#00BCD4;"></span><strong>Ranged</strong> (od 3:30) – Wróg dystansowy. Stara się utrzymać dystans 180-220px. Ucieka, gdy jesteś za blisko i podchodzi, gdy za daleko. Strzela pociskami co ok. 1.2 sekundy. <span class="detail">(+10pkt)</span></li>
-              
-              <li><span class="icon ico-square ico-elite" style="background:#9C27B0;"></span><strong>Elita</strong> 👑 (co 24 sek.) – Mini-boss. Posiada znacznie więcej HP (ok. 8x więcej niż standardowy wróg) i jest większy. Po pokonaniu zawsze upuszcza <strong>Skrzynię</strong> 🎁 oraz więcej XP. <span class="detail">(+80pkt, +1 XP)</span></li>
-            </ul>
-            
-            <h4>⚡ Mechaniki specjalne</h4>
-            <ul>
-              <li><strong>Tarcza po awansie:</strong> Każdy poziom daje 3 sekundy nieśmiertelności 🛡️</li>
-              <li><strong>Tarcza ze skrzyni:</strong> Zebranie skrzyni też daje 3 sekundy tarczy 🛡️</li>
-              <li><strong>Progresja wrogów:</strong> Nowe typy odblokowują się w miarę upływu czasu 📈</li>
-              <li><strong>Skalowanie HP:</strong> Wrogowie mają coraz więcej HP wraz z Twoim poziomem i czasem gry.</li>
-              <li><strong>Pickupy:</strong> Znikają po ~14 sekundach (efekt migania pod koniec) ✨</li>
-              <li><strong>Odrzut:</strong> Trafiony przeciwnik dostaje mikro-spowolnienie i odrzut ✋</li>
-              <li><strong>Kolizja z wrogami:</strong> Dotknięcie wroga spowalnia gracza (nawet z tarczą) 🐌</li>
-              <li><strong>Tablica wyników:</strong> Zapisuje 10 najlepszych wyników lokalnie 🏆</li>
-            </ul>
-            
-            <h4>🔧 Ulepszenia (Perki)</h4>
-            <p>Twoją bronią startową jest <strong>Bicz</strong> 🪢. Możesz go ulepszać, a także odblokowywać nowe bronie i bonusy pasywne.</p>
-            <ul style="list-style-type: none; padding-left: 5px;">
-              <li>🪢 <strong>Ulepsz Bicz</strong> – Zwiększa obrażenia i liczbę cięć (max 5)</li>
-              <li>🔫 <strong>AutoGun</strong> – Odblokowuje nową broń: szybkostrzelny karabin (max 1)</li>
-              <li>⏩ <strong>Ulepszenia AutoGuna</strong> – (Pojawiają się po odblokowaniu) Zwiększają obrażenia, szybkostrzelność, przebicie i multishot.</li>
-              <li>⚡ <strong>Piorun Łańcuchowy</strong> – Nowa broń. Lvl 1 trafia 1 cel, Lvl 2+ przeskakuje na kolejne cele (max 6)</li>
-              <li>🌀 <strong>Orbital</strong> – Orbitujące ostrza wokół postaci zadają obrażenia (max 5)</li>
-              <li>💫 <strong>Nova</strong> – Cykliczny wybuch pocisków wokół postaci (max 5)</li>
-              <li>👟 <strong>Szybkość ruchu</strong> – +10% prędkości gracza (max 4)</li>
-              <li>🧲 <strong>Zasięg zbierania</strong> – +40% zasięgu pickupów (max 3)</li>
-              <li>❤️ <strong>Zdrowie +</strong> – +20 maks. HP i natychmiastowe leczenie (max 3)</li>
-            </ul>
-          </div>
+            </div>
         </div>
       </div>
     </div>
@@ -358,13 +290,13 @@
     </div>
     <div id="levelUpOverlay" class="overlay">
       <div id="levelUpPanel" class="panel">
-        <h3>Wybierz ulepszenie</h3>
+        <h3 id="levelUpTitle">Wybierz ulepszenie</h3>
         <div id="perks"></div>
         <button id="btnContinueMaxLevel" class="btn btn-warning" type="button" style="width:100%; font-size:16px; padding:12px; display:none; margin-top:10px;">
           Wszystkie perki wymaksowane! Kontynuuj...
         </button>
         <div style="margin-top:16px;">
-          <h4 style="margin:0 0 10px 0;">📊 Aktualne statystyki</h4>
+          <h4 style="margin:0 0 10px 0;" id="levelUpStatsTitle">📊 Aktualne statystyki</h4>
           <div id="statsDisplay"></div>
         </div>
       </div>
@@ -372,14 +304,14 @@
 
     <div id="pauseOverlay" class="overlay">
       <div class="panel" style="text-align:center;">
-        <h3>⏸️ Pauza</h3>
-        <p style="font-size:16px; margin:20px 0;">Gra wstrzymana</p>
+        <h3 id="pauseTitle">⏸️ Pauza</h3>
+        <p style="font-size:16px; margin:20px 0;" id="pauseText">Gra wstrzymana</p>
         <div class="row" style="justify-content:center;">
           <button id="btnResume" class="btn" type="button">Wznów</button>
           <button id="btnPauseMenu" class="btn btn-secondary" type="button">Menu główne</button>
         </div>
         <div style="margin-top:16px;">
-          <h4 style="margin:15px 0 10px 0;">📊 Aktualne statystyki</h4>
+          <h4 style="margin:15px 0 10px 0;" id="pauseStatsTitle">📊 Aktualne statystyki</h4>
           <div id="statsDisplayPause"></div>
         </div>
       </div>
@@ -387,14 +319,14 @@
 
     <div id="resumeOverlay" class="overlay">
       <div class="panel">
-        <h3>Wznawianie gry</h3>
+        <h3 id="resumeTitle">Wznawianie gry</h3>
         <div id="resumeText">Wznawianie za: 1.50 s</div>
       </div>
     </div>
 
     <div id="chestOverlay" class="overlay">
       <div class="panel" style="text-align:center;">
-        <h3>🎁 Otwórz skrzynię</h3>
+        <h3 id="chestTitle">🎁 Otwórz skrzynię</h3>
         <div id="chestRewardDisplay" class="chest-reward"></div>
         <button id="chestButton" class="btn" type="button">Otwórz i odbierz</button>
       </div>
@@ -402,23 +334,23 @@
 
     <div id="gameOverOverlay" class="overlay">
       <div class="panel" style="text-align:center;">
-        <h3>💀 GAME OVER</h3>
+        <h3 id="gameOverTitle">💀 GAME OVER</h3>
         <div style="margin:20px 0; font-size:18px;">
-          <p style="margin:8px 0;"><strong>🎯 Wynik:</strong> <span id="finalScore">0</span> punktów</p>
-          <p style="margin:8px 0;"><strong>⭐ Poziom:</strong> <span id="finalLevel">1</span></p>
-          <p style="margin:8px 0;"><strong>⏱️ Czas przetrwania:</strong> <span id="finalTime">0</span></p>
+          <p style="margin:8px 0;"><strong id="gameOverScoreLabel">🎯 Wynik:</strong> <span id="finalScore">0</span> punktów</p>
+          <p style="margin:8px 0;"><strong id="gameOverLevelLabel">⭐ Poziom:</strong> <span id="finalLevel">1</span></p>
+          <p style="margin:8px 0;"><strong id="gameOverTimeLabel">⏱️ Czas przetrwania:</strong> <span id="finalTime">0</span></p>
         </div>
         <div class="scores-container">
-          <button class="btn btn-danger btn-clear-scores" type="button">🗑️ Wyczyść</button>
+          <button class="btn btn-danger btn-clear-scores" type="button" id="btnClearScoresGO">🗑️ Wyczyść</button>
           <div id="scoresTable">
-            <h4>🏆 Tablica wyników</h4>
+            <h4 id="scoresTitleGO">🏆 Tablica wyników</h4>
             <table>
               <thead>
                 <tr>
-                  <th>#️⃣</th>
-                  <th>🎯 Wynik</th>
-                  <th>⭐ Poziom</th>
-                  <th>⏱️ Czas</th>
+                  <th id="scoresRankGO">#️⃣</th>
+                  <th id="scoresScoreGO">🎯 Wynik</th>
+                  <th id="scoresLevelGO">⭐ Poziom</th>
+                  <th id="scoresTimeGO">⏱️ Czas</th>
                 </tr>
               </thead>
               <tbody id="scoresBodyGameOver"></tbody>

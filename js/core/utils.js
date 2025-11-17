@@ -1,5 +1,5 @@
 // ==============
-// UTILS.JS (v0.86f - Rebalans HP wrogów)
+// UTILS.JS (v0.90 - Implementacja i18n)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
@@ -8,6 +8,8 @@
 import { EFFECTS_CONFIG, WALL_DETONATION_CONFIG, GEM_CONFIG } from '../config/gameData.js';
 import { devSettings } from '../services/dev.js'; 
 import { PICKUP_CLASS_MAP } from '../managers/effects.js'; // Mapa klas pickupów
+// NOWY IMPORT v0.90: Silnik i18n
+import { getLang } from '../services/i18n.js';
 
 // --- EFEKTY WIZUALNE ---
 
@@ -294,13 +296,17 @@ export function getPickupEmoji(type) {
     return '💎';
 }
 
+/**
+ * ZMIANA v0.90: Ta funkcja pobiera teraz nazwy z silnika i18n.
+ */
 export function getPickupLabel(type) {
-    if (type === 'heal') return 'Leczenie';
-    if (type === 'magnet') return 'Magnes';
-    if (type === 'shield') return 'Tarcza';
-    if (type === 'speed') return 'Szybkość';
-    if (type === 'bomb') return 'Bomba';
-    if (type === 'freeze') return 'Zamrożenie';
+    if (type === 'heal') return getLang('pickup_heal_name');
+    if (type === 'magnet') return getLang('pickup_magnet_name');
+    if (type === 'shield') return getLang('pickup_shield_name');
+    if (type === 'speed') return getLang('pickup_speed_name');
+    if (type === 'bomb') return getLang('pickup_bomb_name');
+    if (type === 'freeze') return getLang('pickup_freeze_name');
+    if (type === 'chest') return getLang('pickup_chest_name'); // Dodano dla LudoBox
     return 'Bonus';
 }
 

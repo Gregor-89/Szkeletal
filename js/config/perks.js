@@ -1,5 +1,5 @@
 // ==============
-// PERKS.JS (v0.82b - Balans Pioruna)
+// PERKS.JS (v0.90 - Implementacja i18n)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
@@ -13,13 +13,17 @@ import { ChainLightningWeapon } from './weapons/chainLightningWeapon.js';
 
 // POPRAWKA v0.65: Import nowej centralnej konfiguracji
 import { PERK_CONFIG } from './gameData.js';
+// NOWY IMPORT v0.90: Silnik i18n
+import { getLang } from '../services/i18n.js';
 
 /**
  * Definicja puli perków.
  */
 export const perkPool = [
     {
-        id: 'firerate', name: 'Szybszy ostrzał', desc:'+20% szybkostrzelności AutoGuna', // Opis zmieniony w v0.81e
+        id: 'firerate', 
+        name: getLang('perk_firerate_name'), // "Plujko Prędszy Jad"
+        desc: getLang('perk_firerate_desc'), // "Bo hejt trzeba dawkować szybko!..."
         max: PERK_CONFIG.firerate?.max || 6, 
         color:'#90caf9', emoji:'⏩', // POPRAWKA v0.81e: Zmiana emoji
         requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
@@ -32,7 +36,9 @@ export const perkPool = [
         }
     },
     {
-        id: 'damage', name: 'Silniejsze pociski', desc:'+1 obrażeń pocisków AutoGuna', 
+        id: 'damage', 
+        name: getLang('perk_damage_name'), // "Plujko Bólu Jad"
+        desc: getLang('perk_damage_desc'), // "Obiektywne zwiększenie toksyczności..."
         max: PERK_CONFIG.damage?.max || 6, 
         color:'#ef5350', emoji:'💥',
         requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
@@ -45,7 +51,9 @@ export const perkPool = [
         }
     },
     {
-        id: 'multishot', name: 'Multishot', desc:'+1 pocisk AutoGuna i większy rozrzut', 
+        id: 'multishot', 
+        name: getLang('perk_multishot_name'), // "Plujko Multi Jad"
+        desc: getLang('perk_multishot_desc'), // "Wertykalna dywersyfikacja hejtu..."
         max: PERK_CONFIG.multishot?.max || 4, 
         color:'#ffca28', emoji:'🎯',
         requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
@@ -58,7 +66,9 @@ export const perkPool = [
         }
     },
     {
-        id: 'pierce', name: 'Przebicie', desc:'+1 przebicia pocisków AutoGuna', 
+        id: 'pierce', 
+        name: getLang('perk_pierce_name'), // "Plujko Dziurko Jad"
+        desc: getLang('perk_pierce_desc'), // "Twój jad jest tak żrący..."
         max: PERK_CONFIG.pierce?.max || 4, 
         color:'#ab47bc', emoji:'➡️',
         requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
@@ -72,7 +82,9 @@ export const perkPool = [
     },
     // NOWY PERK v0.81b
     {
-        id: 'autogun', name: 'AutoGun', desc:'Odblokowuje nową broń: szybkostrzelny karabin.', // POPRAWKA v0.81e: Zmiana nazwy
+        id: 'autogun', 
+        name: getLang('perk_autogun_name'), // "Plujko Jad"
+        desc: getLang('perk_autogun_desc'), // "Automatyczny oręż..."
         max: 1, 
         color:'#90caf9', emoji:'🔫',
         apply: (state, perk) => { 
@@ -82,7 +94,9 @@ export const perkPool = [
     },
     // NOWY PERK v0.81f (Przywrócenie ulepszenia dla Bicza)
     {
-        id: 'whip', name: 'Ulepsz Bicz', desc:'Zwiększa obrażenia i liczbę cięć Bicza', 
+        id: 'whip', 
+        name: getLang('perk_whip_name'), // "Tłuczek Hrabianki"
+        desc: getLang('perk_whip_desc'), // "Broń startowa. Tłucze horyzontalnie..."
         max: PERK_CONFIG.whip?.max || 5, 
         color:'#C8E6C9', emoji:'🪢',
         apply: (state, perk) => { 
@@ -91,7 +105,9 @@ export const perkPool = [
         }
     },
     {
-        id: 'orbital', name: 'Orbital', desc:'Orbitujące ostrza zadają obrażenia', 
+        id: 'orbital', 
+        name: getLang('perk_orbital_name'), // "Orbitalne Ziemniaczki"
+        desc: getLang('perk_orbital_desc'), // "Krążące artefakty-ziemniaczki..."
         max: PERK_CONFIG.orbital?.max || 5, 
         color:'#80deea', emoji:'🌀',
         apply: (state, perk) => { 
@@ -99,7 +115,9 @@ export const perkPool = [
         }
     },
     {
-        id: 'nova', name: 'Nova', desc:'Cykliczny wybuch pocisków wokół postaci', 
+        id: 'nova', 
+        name: getLang('perk_nova_name'), // "Eksplozja Mentalu"
+        desc: getLang('perk_nova_desc'), // "Cykliczna emanacja \"pato-lore\"..."
         max: PERK_CONFIG.nova?.max || 5, 
         color:'#ffd54f', emoji:'💫',
         apply: (state, perk) => { 
@@ -108,7 +126,9 @@ export const perkPool = [
     },
     // NOWA BROŃ v0.82a
     {
-        id: 'chainLightning', name: 'Piorun Łańcuchowy', desc:'Rażenie prądem, które przeskakuje między wrogami', 
+        id: 'chainLightning', 
+        name: getLang('perk_chainLightning_name'), // "Pierun Ludologa"
+        desc: getLang('perk_chainLightning_desc'), // "Automatyczny atak, razi najbliższego..."
         max: PERK_CONFIG.chainLightning?.max || 6, // POPRAWKA v0.82b: Zwiększono max
         color:'#40C4FF', emoji:'⚡',
         apply: (state, perk) => { 
@@ -116,7 +136,9 @@ export const perkPool = [
         }
     },
     {
-        id: 'speed', name: 'Szybkość ruchu', desc:'+10% prędkości gracza', 
+        id: 'speed', 
+        name: getLang('perk_speed_name'), // "Chyżność Ucieczki"
+        desc: getLang('perk_speed_desc'), // "Nawet Hrabia musi czasem..."
         max: PERK_CONFIG.speed?.max || 4, 
         color:'#66bb6a', emoji:'👟', // POPRAWKA v0.82a: Zmiana emoji
         apply: (state, perk) => { 
@@ -124,7 +146,9 @@ export const perkPool = [
         }
     },
     {
-        id: 'pickup', name: 'Zasięg zbierania', desc:'+40% zasięgu pickupów', 
+        id: 'pickup', 
+        name: getLang('perk_pickup_name'), // "Zasięg Żerowania"
+        desc: getLang('perk_pickup_desc'), // "Im większy głód, tym dłuższe ręce..."
         max: PERK_CONFIG.pickup?.max || 3, 
         color:'#b39ddb', emoji:'🧲',
         apply: (state, perk) => { 
@@ -132,7 +156,9 @@ export const perkPool = [
         }
     },
     {
-        id: 'health', name: 'Zdrowie +', desc:'+20 maks. zdrowia i leczenie', 
+        id: 'health', 
+        name: getLang('perk_health_name'), // "Poziom Sytości"
+        desc: getLang('perk_health_desc'), // "Większy żołądek na hejt..."
         max: PERK_CONFIG.health?.max || 3, 
         color:'#e57373', emoji:'❤️',
         apply: (state, perk) => {

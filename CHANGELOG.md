@@ -1,12 +1,42 @@
-CHANGELOG.md# Changelog (Dziennik Zmian)
+# Changelog (Dziennik Zmian)
 
 Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Szkeletal: Estrone Kiszok".
 
 ---
 
-# Changelog (Dziennik Zmian)
+## [v0.90] - Globalna Refaktoryzacja Lokalizacji (i18n) i Re-skin
+* **Refaktoryzacja (i18n):** Zaimplementowano globalny system lokalizacji.
+    * Utworzono silnik `i18n.js` zarządzający językiem i obsługujący **fallback do języka polskiego** (wzorcowego).
+    * Utworzono pliki językowe `polish.js` i `english.js` w nowym katalogu `/lang/`.
+    * Zrefaktoryzowano **11 plików** (`perks.js`, `utils.js`, `ui.js`, `eventManager.js`, `levelManager.js`, `collisions.js`, `introManager.js`, `enemyManager.js`, `chest.js`, `main.js`, `index.html`), aby usunąć wszystkie "zahardkodowane" teksty (nazwy, opisy, etykiety UI) i zastąpić je wywołaniami `getLang(key)`.
+* **Re-skin (Lore):** Wdrożono wszystkie nowe nazwy i opisy z dokumentu GDD v0.9.
+    * **Mechaniki:** "HP" -> "Sytość", "XP" -> "Wertykalność", "Gemy" -> "Ziemniaczki", "Skrzynia" -> "LudoBox".
+    * **Bronie:** "Bicz" -> "Tłuczek Hrabianki", "AutoGun" -> "Plujko Jad", "Orbital" -> "Orbitalne Ziemniaczki", "Nova" -> "Eksplozja Mentalu", "Piorun" -> "Pierun Ludologa".
+    * **Wrogowie:** "Standard" -> "Dadgamer", "Horda" -> "Maciek z czatu", "Tank" -> "Szkeletal", "Oblężnik" -> "Syndrom Oblężenia" itd.
+    * **Pickupy:** "Leczenie" -> "Talerz Hrabianki", "Magnes" -> "Łakomstwo Hrabiego", "Tarcza" -> "Tarcza LodoBoga" itd.
+* **Nowa Funkcja (UI):** Dodano dynamiczny **przełącznik języka** (Polski / English) w zakładce "Konfiguracja". Wybór jest zapisywany w `localStorage`.
+* **Nowa Funkcjonalność (UI):** Zawartość zakładki "Przewodnik" (`#guideContent`) jest teraz generowana dynamicznie w całości z plików językowych przy otwieraniu menu.
 
-Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Szkeletal: Estrone Kiszok".
+---
+
+## [v0.89] - Implementacja Grafiki (Część 1)
+* **Grafika (Gracz):** Zastąpiono animowany kwadrat statycznym obrazkiem `drakul.png`.
+    * Dodano logikę `drawScale` (regulator rozmiaru) oraz lustrzanego odbicia sprite'a (`facingDir`).
+    * Poprawiono pozycję paska HP, aby renderował się *nad* sprite'em.
+    * Dostosowano hitbox gracza (`this.size`) do wizualnego rozmiaru sprite'a (80px).
+* **Grafika (Tło):** Zastąpiono proceduralną siatkę (szachownicę) bezszwową teksturą trawy (`bg_grass.png`).
+    * Zaimplementowano skalowanie tekstury tła (`TILE_SCALE`), aby uniknąć problemu "wielkiej trawy".
+* **Poprawki Balansu (Dostosowanie do Grafiki):**
+    * Zwiększono promień wizualny Tarczy i efektu Hazardu na graczu, aby pasowały do nowego sprite'a.
+    * Zwiększono bazowy promień `Orbitala` (z 28 na 50) i `Tłuczka` (`WHIP_BASE_OFFSET` z 40 na 60), aby ataki zaczynały się na krawędzi sprite'a gracza.
+    * Zwiększono skalę wizualną animacji `Tłuczka` (z 60 na 80).
+* **VFX (Mignięcie):** Zastąpiono stary efekt `globalAlpha` (przezroczystość) przy trafieniu na `filter: brightness(5)` (białe mignięcie), co działa lepiej na sprite'ach. Dotyczy to zarówno gracza (`playerHitFlashT`), jak i wrogów (`hitStun`).
+* **VFX (Usunięcie):** Zakomentowano stary efekt "śladu" (trail) za graczem, który nie pasował do nowego sprite'a.
+
+---
+
+## [v0.88] - Rebranding i Sekwencja Startowa
+* **Nowa Nazwa:** Nazwa gry została zmieniona na "Szkeletal: Ziemniaczyany Głód Estrogenowego Drakula"
 
 ---
 

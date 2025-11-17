@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.88 - Nowa Nazwa Gry)
+// UI.JS (v0.90 - Implementacja i18n)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -10,6 +10,8 @@ import { initAudio, playSound } from '../services/audio.js';
 import { 
     GAME_CONFIG, WEAPON_CONFIG, PLAYER_CONFIG, PERK_CONFIG, UI_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG 
 } from '../config/gameData.js';
+// NOWY IMPORT v0.90: Silnik i18n
+import { getLang } from '../services/i18n.js';
 
 // NOWY IMPORT v0.76: Importujemy zmienną z ustawionym czasem startowym
 import { devStartTime } from '../services/dev.js';
@@ -87,7 +89,8 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
     // Główny pasek HP
     const healthPct = Math.max(0, Math.min(1, game.health / game.maxHealth));
     playerHPBarInner.style.width = (healthPct * 100).toFixed(1) + '%';
-    playerHPBarTxt.innerHTML = `❤️ ${Math.max(0, Math.floor(game.health))} / ${game.maxHealth}`;
+    // ZMIANA v0.90: Użyj i18n dla ikony i nazwy
+    playerHPBarTxt.innerHTML = `${getLang('ui_hp_icon')} ${Math.max(0, Math.floor(game.health))} / ${game.maxHealth}`;
 
     // POPRAWKA v0.77j: Bezpieczne pobieranie paska HP (lazy loading)
     if (!hpBarOuterRef) {
@@ -107,7 +110,8 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
     }
 
     if (xpBarTxt) {
-        xpBarTxt.innerHTML = `📈 ${game.xp} / ${game.xpNeeded}`;
+        // ZMIANA v0.90: Użyj i18n dla ikony i nazwy
+        xpBarTxt.innerHTML = `${getLang('ui_xp_icon')} ${game.xp} / ${game.xpNeeded}`;
     }
 
     // Panel bonusów
@@ -150,10 +154,11 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
     }
 
     // Ustawienie wersji w HTML (ZMIANA V0.88 - Nowa Nazwa)
-    const newTitle = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${uiData.VERSION}`;
+    // ZMIANA v0.90: Użyj i18n dla tytułu, ale zachowaj wersję
+    const newTitle = `${getLang('ui_player_name')} v${uiData.VERSION}`;
     docTitle.textContent = newTitle;
-    titleDiv.textContent = newTitle;
-
+    // (Tytuł w grze jest teraz tłumaczony przez eventManager)
+    
     updateUI(game, uiData.player, uiData.settings, null); 
     uiData.ctx.clearRect(0, 0, uiData.canvas.width, uiData.canvas.height);
     uiData.drawCallback(); 
@@ -199,9 +204,10 @@ export function startRun(game, resetAll, uiData) {
     console.log(`[EVENT] Pierwsze oblężenie o ${uiData.settings.currentSiegeInterval.toFixed(1)}s`);
     
     // Ustawienie wersji w HTML (ZMIANA V0.88 - Nowa Nazwa)
-    const newTitle = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${uiData.VERSION}`;
+    // ZMIANA v0.90: Użyj i18n dla tytułu, ale zachowaj wersję
+    const newTitle = `${getLang('ui_player_name')} v${uiData.VERSION}`;
     docTitle.textContent = newTitle;
-    titleDiv.textContent = newTitle;
+    // (Tytuł w grze jest teraz tłumaczony przez eventManager)
 
 
     initAudio();
@@ -363,7 +369,8 @@ export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
     resumeOverlay.style.display = 'flex';
     const id = setInterval(() => {
         t = Math.max(0, t - 0.05);
-        resumeText.textContent = `Wznawianie za: ${t.toFixed(2)} s`;
+        // ZMIANA v0.90: Użyj i18n
+        resumeText.textContent = `${getLang('ui_resume_text')} ${t.toFixed(2)} s`;
         if (t <= 0) {
             clearInterval(id);
             resumeOverlay.style.display = 'none';

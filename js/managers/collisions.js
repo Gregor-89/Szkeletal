@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.89d - Aktywacja Player Hit Flash)
+// COLLISIONS.JS (v0.90 - Implementacja i18n)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -8,7 +8,8 @@ import { devSettings } from '../services/dev.js';
 
 import { killEnemy } from './enemyManager.js';
 import { playSound } from '../services/audio.js';
-// POPRAWKA v0.72: USUNIĘTO PLAYER_CONFIG, PICKUP_CONFIG
+// NOWY IMPORT v0.90: Silnik i18n
+import { getLang } from '../services/i18n.js';
 // POPRAWKA v0.68: Import HAZARD_CONFIG
 import { HAZARD_CONFIG, COLLISION_CONFIG } from '../config/gameData.js'; // NOWY IMPORT COLLISION_CONFIG
 
@@ -47,7 +48,7 @@ for (let i = eBullets.length - 1; i >= 0; i--) {
         if (d < hitRadiusEB) {
             if (game.shield || devSettings.godMode) {
                 // POPRAWKA v0.62: Użyj puli hitText
-                addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#90CAF9', 'Tarcza');
+                addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#90CAF9', getLang('pickup_shield_name')); // ZMIANA v0.90
             } else {
                 game.health -= 5;
                 game.playerHitFlashT = 0.15; // NOWA LINIA v0.89d
@@ -176,7 +177,7 @@ for (let j = enemies.length - 1; j >= 0; j--) {
 
             if (game.shield || devSettings.godMode) {
                 // POPRAWKA v0.62: Użyj puli hitText
-                addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#90CAF9', 'Tarcza');
+                addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#90CAF9', getLang('pickup_shield_name')); // ZMIANA v0.90
             } else {
                 const dmg = (e.type === 'kamikaze' ? 8 : 5);
                 game.health -= dmg;
@@ -255,7 +256,7 @@ for (let i = chests.length - 1; i >= 0; i--) {
         game.shield = true;
         game.shieldT = 3;
         // POPRAWKA v0.62: Użyj puli hitText
-        addHitText(hitTextPool, hitTexts, player.x, player.y - 35, 0, '#90CAF9', 'Tarcza +3s');
+        addHitText(hitTextPool, hitTexts, player.x, player.y - 35, 0, '#90CAF9', getLang('pickup_chest_name')); // ZMIANA v0.90 (z "Tarcza +3s")
 
         chests.splice(i, 1);
         game.triggerChestOpen = true; // Ustawiamy flagę dla main.js
@@ -346,7 +347,7 @@ for (let i = hazards.length - 1; i >= 0; i--) {
         
         if (devSettings.godMode) {
             // Nadal pokazuj wizualny efekt
-            addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#00FF00', 'Hazard');
+            addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#00FF00', getLang('enemy_hazard_name')); // ZMIANA v0.90
             // Ale nie zadawaj obrażeń i nie spowalniaj
             continue;
         }
@@ -362,7 +363,7 @@ for (let i = hazards.length - 1; i >= 0; i--) {
                 addHitText(hitTextPool, hitTexts, player.x, player.y - 16, discreteDmg, '#ff0000');
             } else {
                 // Tarcza pochłania DoT, ale nadal pokazuje, że jesteś w Hazardzie
-                addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#90CAF9', 'Tarcza');
+                addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#90CAF9', getLang('pickup_shield_name')); // ZMIANA v0.90
             }
         }
     }
@@ -408,7 +409,6 @@ for (let i = hazards.length - 1; i >= 0; i--) {
         }
     }
 }
-
+}
 // LOG DIAGNOSTYCZNY
 console.log('[DEBUG-v0.79h] js/managers/collisions.js: Dodano zabezpieczenia (if !p) w pętlach pickups i chests.');
-}

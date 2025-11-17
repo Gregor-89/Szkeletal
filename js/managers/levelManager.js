@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v0.82b - FIX: Balans Pioruna i UI Statystyk)
+// LEVELMANAGER.JS (v0.90 - Implementacja i18n)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -9,6 +9,8 @@ import {
 } from '../config/gameData.js';
 import { perkPool } from '../config/perks.js';
 import { playSound } from '../services/audio.js';
+// NOWY IMPORT v0.90: Silnik i18n
+import { getLang } from '../services/i18n.js';
 
 // POPRAWKA v0.71: Import 3 podklas broni z nowego folderu
 import { AutoGun } from '../config/weapons/autoGun.js';
@@ -48,13 +50,15 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
     if (game.health < game.maxHealth) {
         const healedAmount = game.maxHealth - game.health;
         game.health = game.maxHealth;
-        addHitText(hitTextPool, hitTexts, player.x, player.y - 20, -healedAmount, '#4caf50', 'Odnowione Życie');
+        // ZMIANA v0.90: Użyj i18n
+        addHitText(hitTextPool, hitTexts, player.x, player.y - 20, -healedAmount, '#4caf50', getLang('ui_hp_name')); // "Sytość"
         playSound('LevelUp');
     }
 
     game.shield = true;
     game.shieldT = 3;
-    addHitText(hitTextPool, hitTexts, player.x, player.y - 35, 0, '#90CAF9', 'Tarcza +3s');
+    // ZMIANA v0.90: Użyj i18n
+    addHitText(hitTextPool, hitTexts, player.x, player.y - 35, 0, '#90CAF9', getLang('pickup_shield_name')); // "Tarcza LodoBoga"
 
     game.xpNeeded = Math.floor(game.xpNeeded * GAME_CONFIG.XP_GROWTH_FACTOR) + GAME_CONFIG.XP_GROWTH_ADD;
     
@@ -84,6 +88,7 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
 /**
  * Aktualizuje panel statystyk (przeniesione z ui.js).
  * POPRAWKA v0.82b: Zaktualizowano UI Pioruna dla 6 poziomów.
+ * POPRAWKA v0.90: Zaimplementowano i18n dla etykiet.
  */
 export function updateStatsUI(game, player, settings, weapons, targetElement = statsDisplay) {
     targetElement.innerHTML = '';
@@ -98,38 +103,38 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
     const chainLightning = weaponList.find(w => w instanceof ChainLightningWeapon); // NOWE
 
     const stats = [
-        { icon: '⭐', label: 'Poziom', value: game.level },
-        { icon: '❤️', label: 'Zdrowie', value: `${Math.floor(game.health)}/${game.maxHealth}` },
-        { icon: '👟', label: 'Prędkość gracza', value: player.speed.toFixed(2) }, // v0.82a
+        { icon: '⭐', label: getLang('ui_hud_level'), value: game.level },
+        { icon: '😋', label: getLang('ui_hud_hp_text'), value: `${Math.floor(game.health)}/${game.maxHealth}` }, // ZMIANA v0.90
+        { icon: '👟', label: getLang('perk_speed_name'), value: player.speed.toFixed(2) }, // v0.82a, v0.90
         
         // Statystyki Bicza (zawsze obecne)
-        { icon: '🪢', label: 'Bicz (Poziom)', value: `${whip ? whip.level : '1'} / ${PERK_CONFIG.whip?.max || 5}` },
-        { icon: '🪢', label: 'Bicz (Obr.)', value: `${whip ? whip.damage : '1'}` },
-        { icon: '🪢', label: 'Bicz (Liczba)', value: `${whip ? whip.count : '1'}` },
+        { icon: '🪢', label: `${getLang('perk_whip_name')} (Lvl)`, value: `${whip ? whip.level : '1'} / ${PERK_CONFIG.whip?.max || 5}` },
+        { icon: '🪢', label: `${getLang('perk_whip_name')} (Dmg)`, value: `${whip ? whip.damage : '1'}` },
+        { icon: '🪢', label: `${getLang('perk_whip_name')} (Count)`, value: `${whip ? whip.count : '1'}` },
         
         // Statystyki Orbitala (jeśli istnieje)
-        { icon: '🌀', label: 'Orbital', value: `${orbital ? orbital.level : '0'} / ${PERK_CONFIG.orbital?.max || 5}` },
+        { icon: '🌀', label: getLang('perk_orbital_name'), value: `${orbital ? orbital.level : '0'} / ${PERK_CONFIG.orbital?.max || 5}` },
         // Statystyki Novy (jeśli istnieje)
-        { icon: '💫', label: 'Nova', value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova?.max || 5}` },
+        { icon: '💫', label: getLang('perk_nova_name'), value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova?.max || 5}` },
         
         // NOWE Statystyki Pioruna (jeśli istnieje)
         ...(chainLightning ? [
             // POPRAWKA v0.82b: Użyj PERK_CONFIG do odczytania max 6
-            { icon: '⚡', label: 'Piorun (Poziom)', value: `${chainLightning.level} / ${PERK_CONFIG.chainLightning?.max || 6}` },
-            { icon: '⚡', label: 'Piorun (Obr.)', value: `${chainLightning.damage}` },
-            { icon: '⚡', label: 'Piorun (Cele)', value: `${chainLightning.targets}` },
+            { icon: '⚡', label: `${getLang('perk_chainLightning_name')} (Lvl)`, value: `${chainLightning.level} / ${PERK_CONFIG.chainLightning?.max || 6}` },
+            { icon: '⚡', label: `${getLang('perk_chainLightning_name')} (Dmg)`, value: `${chainLightning.damage}` },
+            { icon: '⚡', label: `${getLang('perk_chainLightning_name')} (Targets)`, value: `${chainLightning.targets}` },
         ] : []),
 
         // Statystyki AutoGuna (tylko jeśli istnieje)
         ...(autoGun ? [
-            { icon: '🔫', label: 'AutoGun', value: `Poziom ${autoGun.level}` },
-            { icon: '💥', label: 'AutoGun (Obr.)', value: `${autoGun.bulletDamage.toFixed(0)} / ${ (PERK_CONFIG.damage?.max || 6) + (WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE || 1)}` },
-            { icon: '⏩', label: 'AutoGun (Ostrzał)', value: `${(1000 / autoGun.fireRate).toFixed(2)}/s` }, // Używamy ⏩ dla szybkostrzelności
-            { icon: '🎯', label: 'AutoGun (Multi)', value: `${autoGun.multishot} / ${PERK_CONFIG.multishot?.max || 4}` },
-            { icon: '➡️', label: 'AutoGun (Przebicie)', value: `${autoGun.pierce} / ${PERK_CONFIG.pierce?.max || 4}` }
+            { icon: '🔫', label: getLang('perk_autogun_name'), value: `Level ${autoGun.level}` },
+            { icon: '💥', label: `${getLang('perk_damage_name')}`, value: `${autoGun.bulletDamage.toFixed(0)} / ${ (PERK_CONFIG.damage?.max || 6) + (WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE || 1)}` },
+            { icon: '⏩', label: `${getLang('perk_firerate_name')}`, value: `${(1000 / autoGun.fireRate).toFixed(2)}/s` }, // Używamy ⏩ dla szybkostrzelności
+            { icon: '🎯', label: `${getLang('perk_multishot_name')}`, value: `${autoGun.multishot} / ${PERK_CONFIG.multishot?.max || 4}` },
+            { icon: '➡️', label: `${getLang('perk_pierce_name')}`, value: `${autoGun.pierce} / ${PERK_CONFIG.pierce?.max || 4}` }
         ] : [
             // Pokaż slot na AutoGun, jeśli go nie ma
-            { icon: '🔫', label: 'AutoGun', value: `---` } // POPRAWKA v0.81e
+            { icon: '🔫', label: getLang('perk_autogun_name'), value: `---` } // POPRAWKA v0.81e
         ])
     ];
     
@@ -193,7 +198,7 @@ export function showPerks(perkLevels, player) {
     if (picks.length === 0) {
         console.log('[showPerks] Nie wybrano żadnych perków (wszystkie wymaksowane?). Pokazuję przycisk Max Level.');
         btnContinueMaxLevel.style.display = 'block';
-        perksDiv.innerHTML = '<p style="text-align:center; color:#aaa;">Osiągnięto maksymalny poziom wszystkich ulepszeń!</p>';
+        perksDiv.innerHTML = `<p style="text-align:center; color:#aaa;">${getLang('ui_levelup_max')}</p>`; // ZMIANA v0.90
     } else {
         console.log(`[showPerks] Pokazuję ${picks.length} perków do wyboru.`);
         btnContinueMaxLevel.style.display = 'none';
@@ -203,6 +208,7 @@ export function showPerks(perkLevels, player) {
             el.className = 'perk';
             const iconHTML = perk.emoji ? `<span class="picon-emoji">${perk.emoji}</span>` : `<span class="picon" style="background:${perk.color || '#999'}"></span>`;
             
+            // ZMIANA v0.90: perk.name i perk.desc są już przetłumaczone (pobrane z perks.js)
             el.innerHTML = `<span class="badge">Poziom ${lvl} » ${lvl + 1}</span><h4>${iconHTML}${perk.name}</h4><p>${perk.desc}</p>`;
             
             el.onclick = () => { 
@@ -264,6 +270,7 @@ export function pickChestReward(perkLevels, player) {
 /**
  * Logika otwierania skrzyni (przeniesione z ui.js).
  * POPRAWKA v0.81c: Przekazuje 'player' do pickChestReward.
+ * POPRAWKA v0.90: Implementuje i18n dla pustej skrzyni.
  */
 export function openChest(game, perkLevels, uiData, player) { // Dodano 'player'
     uiData.currentChestReward = pickChestReward(perkLevels, player); // Przekaż 'player'
@@ -288,10 +295,11 @@ export function openChest(game, perkLevels, uiData, player) { // Dodano 'player'
         </div>
       `;
     } else {
+        // ZMIANA v0.90: Użyj i18n
         chestRewardDisplay.innerHTML = `
         <div class="chest-reward-icon">😔</div>
-        <div class="chest-reward-name">Skrzynia pusta</div>
-        <div class="chest-reward-desc">Wszystkie ulepszenia są już wymaksowane!</div>
+        <div class="chest-reward-name">${getLang('ui_chest_empty_title')}</div>
+        <div class="chest-reward-desc">${getLang('ui_chest_empty_desc')}</div>
       `;
     }
 
