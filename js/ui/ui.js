@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.91 - Fix: Graphic Guide, Timers Position)
+// UI.JS (v0.91c - Fix: Complete Guide & Bonus Panel)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -38,61 +38,67 @@ function getIconTag(assetKey, cssClass = 'bar-icon') {
     return ''; 
 }
 
-// KOMPLETNY GENERATOR PRZEWODNIKA (WSZYSTKIE OBIEKTY)
+// KOMPLETNY GENERATOR PRZEWODNIKA (WSZYSTKIE OBIEKTY Z GRAFIKAMI)
 function generateGuide() {
     const guideContainer = document.getElementById('guideContent');
     if (!guideContainer) return;
 
-    // Definicja sekcji i elementów
+    // Definicja sekcji i elementów (Klucz Assetu -> Klucz Tłumaczenia)
+    // Teraz pobieramy opisy z i18n (getLang)
+    
     const guideData = [
         { header: "Bohater i Zasoby" },
-        { asset: 'player', title: 'Drakul', desc: 'Główny bohater. Przetrwaj jak najdłużej.' },
-        { asset: 'gem', title: 'Ziemniak (XP)', desc: 'Zbieraj je, aby awansować na kolejne poziomy.' },
-        { asset: 'chest', title: 'Skrzynia', desc: 'Zawiera potężne ulepszenia. Wypada z Elit.' },
+        { asset: 'player', nameKey: 'ui_player_name', descKey: 'ui_guide_intro' }, // Używamy intro jako opisu drakula
+        { asset: 'gem', nameKey: 'ui_gem_name', descKey: 'ui_gem_desc' },
+        { asset: 'chest', nameKey: 'pickup_chest_name', descKey: 'pickup_chest_desc' },
 
         { header: "Znajdźki (Pickupy)" },
-        { asset: 'pickup_heal', title: 'Leczenie', desc: 'Odnawia 30 punktów życia.' },
-        { asset: 'pickup_magnet', title: 'Magnes', desc: 'Przyciąga wszystkie leżące na ziemi Ziemniaki.' },
-        { asset: 'pickup_shield', title: 'Tarcza', desc: 'Daje tymczasową nieśmiertelność.' },
-        { asset: 'pickup_speed', title: 'Szybkość', desc: 'Tymczasowo zwiększa prędkość poruszania się.' },
-        { asset: 'pickup_bomb', title: 'Bomba', desc: 'Niszczy wszystkich widocznych wrogów.' },
-        { asset: 'pickup_freeze', title: 'Zamrożenie', desc: 'Zatrzymuje wrogów w miejscu.' },
+        { asset: 'pickup_heal', nameKey: 'pickup_heal_name', descKey: 'pickup_heal_desc' },
+        { asset: 'pickup_magnet', nameKey: 'pickup_magnet_name', descKey: 'pickup_magnet_desc' },
+        { asset: 'pickup_shield', nameKey: 'pickup_shield_name', descKey: 'pickup_shield_desc' },
+        { asset: 'pickup_speed', nameKey: 'pickup_speed_name', descKey: 'pickup_speed_desc' },
+        { asset: 'pickup_bomb', nameKey: 'pickup_bomb_name', descKey: 'pickup_bomb_desc' },
+        { asset: 'pickup_freeze', nameKey: 'pickup_freeze_name', descKey: 'pickup_freeze_desc' },
 
-        { header: "Wrogowie" },
-        { asset: 'enemy_standard', title: 'Fanatyk', desc: 'Podstawowy przeciwnik. Słaby, ale liczny.' },
-        { asset: 'enemy_horde', title: 'Horda', desc: 'Bardzo szybki, atakuje w grupach.' },
-        { asset: 'enemy_tank', title: 'Tank', desc: 'Powolny, ale bardzo wytrzymały.' },
-        { asset: 'enemy_aggressive', title: 'Agresor', desc: 'Szybko szarżuje na gracza.' },
-        { asset: 'enemy_ranged', title: 'Strzelec', desc: 'Rzuca butelkami z dystansu.' },
-        { asset: 'enemy_splitter', title: 'Podziałowiec', desc: 'Rozpada się na mniejsze po śmierci.' },
-        { asset: 'enemy_kamikaze', title: 'Kamikaze', desc: 'Wybucha przy zbliżeniu.' },
-        { asset: 'enemy_wall', title: 'Oblężnik', desc: 'Tworzy ściany blokujące ruch.' },
-        { asset: 'enemy_elite', title: 'Elita', desc: 'Boss. Bardzo silny, zostawia skrzynię.' },
+        { header: "Wrogowie i Zagrożenia" },
+        { asset: 'enemy_standard', nameKey: 'enemy_standard_name', descKey: 'enemy_standard_desc' },
+        { asset: 'enemy_horde', nameKey: 'enemy_horde_name', descKey: 'enemy_horde_desc' },
+        { asset: 'enemy_aggressive', nameKey: 'enemy_aggressive_name', descKey: 'enemy_aggressive_desc' },
+        { asset: 'enemy_kamikaze', nameKey: 'enemy_kamikaze_name', descKey: 'enemy_kamikaze_desc' },
+        { asset: 'enemy_splitter', nameKey: 'enemy_splitter_name', descKey: 'enemy_splitter_desc' },
+        { asset: 'enemy_tank', nameKey: 'enemy_tank_name', descKey: 'enemy_tank_desc' },
+        { asset: 'enemy_ranged', nameKey: 'enemy_ranged_name', descKey: 'enemy_ranged_desc' },
+        { asset: 'enemy_wall', nameKey: 'enemy_wall_name', descKey: 'enemy_wall_desc' },
+        { asset: 'enemy_elite', nameKey: 'enemy_elite_name', descKey: 'enemy_elite_desc' },
+        // Brak grafik dla Hazardów w assets.js (są rysowane proceduralnie), więc użyjemy ikony domyślnej lub pominiemy
+        // Możemy dodać proceduralne ikonki CSS, ale trzymajmy się grafik.
         
         { header: "Bronie i Perki" },
-        { asset: 'icon_whip', title: 'Bicz', desc: 'Atakuje w poziomie.' },
-        { asset: 'icon_autogun', title: 'AutoGun', desc: 'Automatycznie strzela do najbliższego wroga.' },
-        { asset: 'icon_orbital', title: 'Orbital', desc: 'Ziemniak krążący wokół gracza.' },
-        { asset: 'icon_nova', title: 'Nova', desc: 'Wybuch wokół gracza.' },
-        { asset: 'icon_lightning', title: 'Piorun', desc: 'Raźi losowych wrogów łańcuchem.' }
+        { asset: 'icon_whip', nameKey: 'perk_whip_name', descKey: 'perk_whip_desc' },
+        { asset: 'icon_autogun', nameKey: 'perk_autogun_name', descKey: 'perk_autogun_desc' },
+        { asset: 'icon_orbital', nameKey: 'perk_orbital_name', descKey: 'perk_orbital_desc' },
+        { asset: 'icon_nova', nameKey: 'perk_nova_name', descKey: 'perk_nova_desc' },
+        { asset: 'icon_lightning', nameKey: 'perk_chainLightning_name', descKey: 'perk_chainLightning_desc' }
     ];
 
-    let html = '<h4 style="color:#4caf50; margin-bottom:15px;">📖 Encyklopedia Szkeletal</h4>';
+    let html = `<h4 style="color:#4caf50; margin-bottom:15px;">📖 ${getLang('ui_guide_title')}</h4>`;
     
     guideData.forEach(item => {
         if (item.header) {
             html += `<div class="guide-section-title">${item.header}</div>`;
         } else {
-            // Generowanie wpisu z obrazkiem
             const imgTag = getIconTag(item.asset, 'guide-icon');
             const displayIcon = imgTag ? imgTag : '<span style="font-size:24px;">❓</span>';
             
+            const name = item.nameKey ? getLang(item.nameKey) : item.title; // Fallback
+            const desc = item.descKey ? getLang(item.descKey) : item.desc;
+
             html += `
                 <div class="guide-entry">
-                    <div style="width:40px; text-align:center; flex-shrink:0;">${displayIcon}</div>
-                    <div>
-                        <strong style="color:#fff;">${item.title}</strong><br>
-                        <span style="color:#bbb; font-size:13px;">${item.desc}</span>
+                    <div class="guide-icon-wrapper">${displayIcon}</div>
+                    <div class="guide-text-wrapper">
+                        <strong style="color:#fff;">${name}</strong><br>
+                        <span style="color:#bbb; font-size:13px;">${desc}</span>
                     </div>
                 </div>
             `;
@@ -103,35 +109,12 @@ function generateGuide() {
     guideContainer.innerHTML = html;
 }
 
-// Podmiana ikon w elementach statycznych (Dev Menu, Tabele)
-function updateStaticIcons() {
-    const headerMap = {
-        'scoresRankMenu': '#️⃣', 
-        'scoresScoreMenu': 'icon_hud_score',
-        'scoresLevelMenu': 'icon_hud_level',
-        'scoresTimeMenu': 'icon_hud_time',
-        'scoresRankGO': '#️⃣',
-        'scoresScoreGO': 'icon_hud_score',
-        'scoresLevelGO': 'icon_hud_level',
-        'scoresTimeGO': 'icon_hud_time'
-    };
-
-    for (const [id, assetKey] of Object.entries(headerMap)) {
-        const el = document.getElementById(id);
-        if (el) {
-            if (assetKey.startsWith('icon_')) {
-                // Pobieramy sam tekst bez starych obrazków/emoji
-                const cleanText = el.innerText.replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ: ]/g, '').trim();
-                el.innerHTML = getIconTag(assetKey, 'bar-icon') + ' ' + cleanText;
-            } 
-        }
-    }
-}
+// Eksportujemy funkcję generowania, aby eventManager mógł ją wywołać przy zmianie języka
+window.wrappedGenerateGuide = generateGuide;
 
 // Inicjalizacja z opóźnieniem (aby assets.js zdążyło załadować grafiki)
 setTimeout(() => {
     generateGuide();
-    updateStaticIcons();
 }, 600);
 
 
@@ -180,7 +163,10 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
 
     const healthPct = Math.max(0, Math.min(1, game.health / game.maxHealth));
     playerHPBarInner.style.width = (healthPct * 100).toFixed(1) + '%';
-    playerHPBarTxt.innerHTML = `${getIconTag('icon_hud_health')} ${Math.max(0, Math.floor(game.health))} / ${game.maxHealth}`;
+    
+    // Ikona w pasku HP
+    const hpIcon = getIconTag('icon_hud_health');
+    playerHPBarTxt.innerHTML = `${hpIcon} ${Math.max(0, Math.floor(game.health))} / ${game.maxHealth}`;
 
     if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
     if (hpBarOuterRef) { 
@@ -192,7 +178,9 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
     }
 
     if (xpBarTxt) {
-        xpBarTxt.innerHTML = `${getIconTag('icon_hud_xp')} ${game.xp} / ${game.xpNeeded}`;
+        // Ikona w pasku XP
+        const xpIcon = getIconTag('icon_hud_xp');
+        xpBarTxt.innerHTML = `${xpIcon} ${game.xp} / ${game.xpNeeded}`;
     }
 
     // --- PANEL BONUSÓW ---
@@ -237,9 +225,8 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
 
     docTitle.textContent = `${getLang('ui_player_name')} v${uiData.VERSION}`;
     
-    // Wymuszamy odświeżenie przewodnika przy otwarciu menu
+    // Generuj przewodnik ponownie przy otwieraniu menu, aby upewnić się, że grafiki są załadowane
     generateGuide();
-    updateStaticIcons();
     
     updateUI(game, uiData.player, uiData.settings, null); 
     uiData.ctx.clearRect(0, 0, uiData.canvas.width, uiData.canvas.height);

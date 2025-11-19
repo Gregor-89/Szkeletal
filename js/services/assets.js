@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.91 Fixes - Icons Path Verification)
+// ASSETS.JS (v0.91a - Fix: Ścieżka Chest)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
@@ -98,7 +98,8 @@ const assetDefinitions = {
   'pickup_freeze': 'pickups/freeze.png',
   
   'gem': 'pickups/gem_potato.png',
-  'chest': 'chest.png',
+  // POPRAWKA v0.91a: Zmieniono ścieżkę na 'pickups/chest.png'
+  'chest': 'pickups/chest.png',
   
   'bg_grass': 'bg_grass.png',
   
