@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v0.92I - Ikony statystyk Level, HP, Speed)
+// LEVELMANAGER.JS (v0.94 - Dodano statystykę Pickup Range)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -80,10 +80,11 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
             : fallbackEmoji;
     };
 
-    // Ikony Statystyk Ogólnych (NOWE v0.92I)
+    // Ikony Statystyk Ogólnych
     const iconLevel = getIcon('icon_level', '⭐');
     const iconHealth = getIcon('icon_health', '😋');
     const iconSpeed = getIcon('icon_speed', '👟');
+    const iconPickup = getIcon('icon_pickup_range', '🧲'); // NOWE v0.94
 
     // Ikony Broni
     const iconWhip = getIcon('icon_whip', '🪢');
@@ -99,10 +100,10 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
     const iconPierce = getIcon('icon_pierce', '➡️');
 
     const stats = [
-        // ZMIANA v0.92I: Użycie ikon zamiast emoji
         { icon: iconLevel, label: getLang('ui_hud_level'), value: game.level },
         { icon: iconHealth, label: getLang('ui_hud_hp_name'), value: `${Math.floor(game.health)}/${game.maxHealth}` },
-        { icon: iconSpeed, label: getLang('perk_speed_name'), value: player.speed.toFixed(2) },
+        { icon: iconSpeed, label: getLang('perk_speed_name'), value: player.speed.toFixed(0) }, // Zaokrąglono
+        { icon: iconPickup, label: getLang('perk_pickup_name'), value: game.pickupRange.toFixed(0) }, // NOWA STATYSTYKA
         
         { icon: iconWhip, label: `${getLang('perk_whip_name')} (Lvl)`, value: `${whip ? whip.level : '1'} / ${PERK_CONFIG.whip?.max || 5}` },
         { icon: iconWhip, label: `${getLang('perk_whip_name')} (Dmg)`, value: `${whip ? whip.damage : '1'}` },

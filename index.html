@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes" />
-<title>Szkeletal</title> 
+<title>Szkeletal Survivor v0.91</title> 
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,6 +13,7 @@
 
   <div id="gameContainer">
     <div id="title">Szkeletal</div>
+    
     <div id="playerHPBarOuter">
       <div id="playerHPBarInner"></div>
       <div id="playerHPBarTxt"></div>
@@ -21,44 +22,46 @@
       <div id="xpBarFill"></div>
       <div id="xpBarTxt"></div>
     </div>
+    
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     
     <div id="bonusPanel"></div>
+    
     <div id="gameInfo">
       <div class="stat">
-        <div class="stat-icon" style="background:#FFD700;" id="statIconScore">🎯</div>
-        <span id="statLabelScore">Wynik</span>: <span id="score">0</span>
+        <span class="stat-icon"><img src="img/icons/hud_score.png" class="stat-icon-img" alt="Score"></span>
+        <span id="score">0</span>
         <div class="stat-progress" id="scoreProgress" style="width:0%;"></div>
       </div>
       <div class="stat">
-        <div class="stat-icon" style="background:#4CAF50;" id="statIconLevel">⭐</div>
-        <span id="statLabelLevel">Poziom</span>: <span id="level">1</span>
+        <span class="stat-icon"><img src="img/icons/hud_level.png" class="stat-icon-img" alt="Lvl"></span>
+        <span id="level">1</span>
         <div class="stat-progress" id="levelProgress" style="width:0%;"></div>
       </div>
       <div class="stat">
-        <div class="stat-icon" style="background:#2196F3;" id="statIconXP">📈</div>
-        <span id="statLabelXP">XP</span>: <span id="xp">0</span>/<span id="xpNeeded">5</span>
+        <span class="stat-icon"><img src="img/icons/hud_xp.png" class="stat-icon-img" alt="XP"></span>
+        <span id="xp">0</span>/<span id="xpNeeded">5</span>
         <div class="stat-progress" id="xpProgress" style="width:0%;"></div>
       </div>
       <div class="stat">
-        <div class="stat-icon" style="background:#444;" id="statIconHealth">❤️</div>
-        <span id="statLabelHealth">Życia</span>: <span id="health">100</span>
+        <span class="stat-icon"><img src="img/icons/hud_health.png" class="stat-icon-img" alt="HP"></span>
+        <span id="health">100</span>
         <div class="stat-progress" id="healthProgress" style="width:100%;"></div>
       </div>
       <div class="stat" id="enemyStat">
-        <div class="stat-icon" style="background:#ff7043;" id="statIconEnemies">👾</div>
-        <span id="statLabelEnemies">Wrogowie</span>: <span id="enemyCount">0</span>/<span id="enemyLimit">3</span>
+        <span class="stat-icon"><img src="img/icons/hud_enemies.png" class="stat-icon-img" alt="Enemies"></span>
+        <span id="enemyCount">0</span>/<span id="enemyLimit">0</span>
         <div class="stat-progress" id="enemyProgress" style="width:0%;"></div>
       </div>
       <div class="stat">
-        <div class="stat-icon" style="background:#9C27B0;" id="statIconTime">⏱️</div>
-        <span id="statLabelTime">Czas</span>: <span id="time">0</span>
+        <span class="stat-icon"><img src="img/icons/hud_time.png" class="stat-icon-img" alt="Time"></span>
+        <span id="time">0</span>
         <div class="stat-progress" id="timeProgress" style="width:0%;"></div>
       </div>
     </div>
+    
     <div id="instructions">⌨️ Sterowanie: WASD/strzałki lub 🕹️ wirtualny joystick | 📊 Zbieraj XP, wybieraj perki | 👑 Pokonuj elity i otwieraj skrzynie | ⏸️ ESC - pauza</div>
 
-    
     <div id="menuOverlay" class="overlay" style="display:flex;">
       <div class="panel">
         <img id="menuLogo" src="img/logo.png" alt="Szkeletal Logo">
@@ -74,7 +77,6 @@
           <p style="margin-bottom:15px;" id="menuNewGamePrompt">Witaj w grze...</p>
           <button id="btnStart" class="btn" type="button" style="width:100%; font-size:18px; padding:15px;">▶️ Zacznij nową grę</button>
           <button id="btnContinue" class="btn btn-warning" type="button" style="width:100%; font-size:18px; padding:15px; display:none; margin-top:10px;">⏯️ Kontynuuj Grę</button>
-          
           <button id="btnReplayIntro" class="btn btn-secondary" type="button" onclick="wrappedDisplayIntro()" style="width:100%; font-size:14px; padding:10px; margin-top:10px;">🎥 Włącz Intro</button>
         
           <div class="scores-container" style="margin-top:20px;">
@@ -85,16 +87,15 @@
                 <thead>
                   <tr>
                     <th id="scoresRankMenu">#️⃣</th>
-                    <th id="scoresScoreMenu">🎯 Wynik</th>
-                    <th id="scoresLevelMenu">⭐ Poziom</th>
-                    <th id="scoresTimeMenu">⏱️ Czas</th>
+                    <th id="scoresScoreMenu"><img src="img/icons/hud_score.png" class="bar-icon"> Wynik</th>
+                    <th id="scoresLevelMenu"><img src="img/icons/hud_level.png" class="bar-icon"> Poziom</th>
+                    <th id="scoresTimeMenu"><img src="img/icons/hud_time.png" class="bar-icon"> Czas</th>
                   </tr>
                 </thead>
                 <tbody id="scoresBodyMenu"></tbody>
               </table>
             </div>
           </div>
-
         </div>
 
         <div id="tab-config" class="tab-content">
@@ -170,39 +171,39 @@
           <div class="dev-section">
             <h4>⚔️ Broń i Perki</h4>
             <div class="dev-control">
-              <label>🪢 Bicz poziom:</label>
+              <label><img src="img/icons/whip.jpg" class="bar-icon"> Bicz poziom:</label>
               <input type="number" id="devWhip" min="1" max="5" value="1">
             </div>
             <div class="dev-control">
-              <label>🔫 AutoGun poziom:</label>
+              <label><img src="img/icons/autogun.png" class="bar-icon"> AutoGun poziom:</label>
               <input type="number" id="devAutoGun" min="0" max="1" value="0">
             </div>
             <div class="dev-control">
-              <label>Obrażenia (AutoGun):</label>
+              <label><img src="img/icons/damage.png" class="bar-icon"> Obrażenia:</label>
               <input type="number" id="devDamage" min="1" max="999" value="1">
             </div>
             <div class="dev-control">
-              <label>Szybkostrzelność (AutoGun ms):</label>
+              <label><img src="img/icons/firerate.png" class="bar-icon"> Szybkostrzelność:</label>
               <input type="number" id="devFireRate" min="50" max="5000" value="650">
             </div>
             <div class="dev-control">
-              <label>Multishot (AutoGun):</label>
+              <label><img src="img/icons/multishot.png" class="bar-icon"> Multishot:</label>
               <input type="number" id="devMultishot" min="0" max="10" value="0">
             </div>
             <div class="dev-control">
-              <label>Pierce (AutoGun):</label>
+              <label><img src="img/icons/pierce.png" class="bar-icon"> Pierce:</label>
               <input type="number" id="devPierce" min="0" max="10" value="0">
             </div>
             <div class="dev-control">
-              <label>🌀 Orbital poziom:</label>
+              <label><img src="img/icons/orbital.jpg" class="bar-icon"> Orbital poziom:</label>
               <input type="number" id="devOrbital" min="0" max="5" value="0">
             </div>
             <div class="dev-control">
-              <label>💫 Nova poziom:</label>
+              <label><img src="img/icons/nova.png" class="bar-icon"> Nova poziom:</label>
               <input type="number" id="devNova" min="0" max="5" value="0">
             </div>
             <div class="dev-control">
-              <label>⚡ Piorun poziom:</label>
+              <label><img src="img/icons/lightning.png" class="bar-icon"> Piorun poziom:</label>
               <input type="number" id="devLightning" min="0" max="6" value="0">
             </div>
           </div>
@@ -269,9 +270,7 @@
         </div>
 
         <div id="tab-guide" class="tab-content">
-          <div id="guideContent">
-            </div>
-        </div>
+          <div id="guideContent"></div> </div>
       </div>
     </div>
 
@@ -335,9 +334,9 @@
       <div class="panel" style="text-align:center;">
         <h3 id="gameOverTitle">💀 GAME OVER</h3>
         <div style="margin:20px 0; font-size:18px;">
-          <p style="margin:8px 0;"><strong id="gameOverScoreLabel">🎯 Wynik:</strong> <span id="finalScore">0</span> punktów</p>
-          <p style="margin:8px 0;"><strong id="gameOverLevelLabel">⭐ Poziom:</strong> <span id="finalLevel">1</span></p>
-          <p style="margin:8px 0;"><strong id="gameOverTimeLabel">⏱️ Czas przetrwania:</strong> <span id="finalTime">0</span></p>
+          <p style="margin:8px 0;"><strong id="gameOverScoreLabel"><img src="img/icons/hud_score.png" class="bar-icon"> Wynik:</strong> <span id="finalScore">0</span> punktów</p>
+          <p style="margin:8px 0;"><strong id="gameOverLevelLabel"><img src="img/icons/hud_level.png" class="bar-icon"> Poziom:</strong> <span id="finalLevel">1</span></p>
+          <p style="margin:8px 0;"><strong id="gameOverTimeLabel"><img src="img/icons/hud_time.png" class="bar-icon"> Czas:</strong> <span id="finalTime">0</span></p>
         </div>
         <div class="scores-container">
           <button class="btn btn-danger btn-clear-scores" type="button" id="btnClearScoresGO">🗑️ Wyczyść</button>
@@ -347,9 +346,9 @@
               <thead>
                 <tr>
                   <th id="scoresRankGO">#️⃣</th>
-                  <th id="scoresScoreGO">🎯 Wynik</th>
-                  <th id="scoresLevelGO">⭐ Poziom</th>
-                  <th id="scoresTimeGO">⏱️ Czas</th>
+                  <th id="scoresScoreGO"><img src="img/icons/hud_score.png" class="bar-icon"> Wynik</th>
+                  <th id="scoresLevelGO"><img src="img/icons/hud_level.png" class="bar-icon"> Poziom</th>
+                  <th id="scoresTimeGO"><img src="img/icons/hud_time.png" class="bar-icon"> Czas</th>
                 </tr>
               </thead>
               <tbody id="scoresBodyGameOver"></tbody>

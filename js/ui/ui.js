@@ -1,54 +1,148 @@
 // ==============
-// UI.JS (v0.90 - Implementacja i18n)
+// UI.JS (v0.91 - Fix: Graphic Guide, Timers Position)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
-// Importy systemowe (pozostają)
 import { devSettings } from '../services/dev.js';
 import { initAudio, playSound } from '../services/audio.js';
-// POPRAWKA v0.77: UI_CONFIG jest teraz używane
 import { 
     GAME_CONFIG, WEAPON_CONFIG, PLAYER_CONFIG, PERK_CONFIG, UI_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG 
 } from '../config/gameData.js';
-// NOWY IMPORT v0.90: Silnik i18n
 import { getLang } from '../services/i18n.js';
-
-// NOWY IMPORT v0.76: Importujemy zmienną z ustawionym czasem startowym
+import { get as getAsset } from '../services/assets.js';
 import { devStartTime } from '../services/dev.js';
 
-// Krok 3: Import referencji DOM
 import {
     xpBarFill, playerHPBarInner, playerHPBarTxt, xpBarTxt, bonusPanel,
     statsDisplayPause, menuOverlay, btnContinue,
     levelUpOverlay, pauseOverlay, resumeOverlay, resumeText, 
     chestOverlay, gameOverOverlay, finalScore, finalLevel,
     finalTime, titleDiv, docTitle,
-    // NOWE REFERENCJE V0.86
     enemyCountSpan, enemyLimitSpan, enemyProgressDiv 
-    // POPRAWKA v0.77k: Fizycznie usunięto 'playerHPBarOuter' z tej listy
 } from './domElements.js';
 
-// Krok 5: Import Menedżera Wyników
 import {
     formatTime, saveScore, displayScores, attachClearScoresListeners
 } from '../services/scoreManager.js';
 
-// Krok 7: Import Menedżera Poziomów (tylko funkcje potrzebne w tym pliku)
 import { updateStatsUI } from '../managers/levelManager.js';
 
 
-// --- GŁÓWNA FUNKCJA AKTUALIZACJI UI (POZOSTAJE) ---
+// --- FUNKCJE POMOCNICZE ---
 
-// POPRAWKA v0.77j: Przechowuje referencję do paska HP (ładowaną leniwie)
+function getIconTag(assetKey, cssClass = 'bar-icon') {
+    const asset = getAsset(assetKey);
+    if (asset) {
+        return `<img src="${asset.src}" class="${cssClass}" alt="">`;
+    }
+    return ''; 
+}
+
+// KOMPLETNY GENERATOR PRZEWODNIKA (WSZYSTKIE OBIEKTY)
+function generateGuide() {
+    const guideContainer = document.getElementById('guideContent');
+    if (!guideContainer) return;
+
+    // Definicja sekcji i elementów
+    const guideData = [
+        { header: "Bohater i Zasoby" },
+        { asset: 'player', title: 'Drakul', desc: 'Główny bohater. Przetrwaj jak najdłużej.' },
+        { asset: 'gem', title: 'Ziemniak (XP)', desc: 'Zbieraj je, aby awansować na kolejne poziomy.' },
+        { asset: 'chest', title: 'Skrzynia', desc: 'Zawiera potężne ulepszenia. Wypada z Elit.' },
+
+        { header: "Znajdźki (Pickupy)" },
+        { asset: 'pickup_heal', title: 'Leczenie', desc: 'Odnawia 30 punktów życia.' },
+        { asset: 'pickup_magnet', title: 'Magnes', desc: 'Przyciąga wszystkie leżące na ziemi Ziemniaki.' },
+        { asset: 'pickup_shield', title: 'Tarcza', desc: 'Daje tymczasową nieśmiertelność.' },
+        { asset: 'pickup_speed', title: 'Szybkość', desc: 'Tymczasowo zwiększa prędkość poruszania się.' },
+        { asset: 'pickup_bomb', title: 'Bomba', desc: 'Niszczy wszystkich widocznych wrogów.' },
+        { asset: 'pickup_freeze', title: 'Zamrożenie', desc: 'Zatrzymuje wrogów w miejscu.' },
+
+        { header: "Wrogowie" },
+        { asset: 'enemy_standard', title: 'Fanatyk', desc: 'Podstawowy przeciwnik. Słaby, ale liczny.' },
+        { asset: 'enemy_horde', title: 'Horda', desc: 'Bardzo szybki, atakuje w grupach.' },
+        { asset: 'enemy_tank', title: 'Tank', desc: 'Powolny, ale bardzo wytrzymały.' },
+        { asset: 'enemy_aggressive', title: 'Agresor', desc: 'Szybko szarżuje na gracza.' },
+        { asset: 'enemy_ranged', title: 'Strzelec', desc: 'Rzuca butelkami z dystansu.' },
+        { asset: 'enemy_splitter', title: 'Podziałowiec', desc: 'Rozpada się na mniejsze po śmierci.' },
+        { asset: 'enemy_kamikaze', title: 'Kamikaze', desc: 'Wybucha przy zbliżeniu.' },
+        { asset: 'enemy_wall', title: 'Oblężnik', desc: 'Tworzy ściany blokujące ruch.' },
+        { asset: 'enemy_elite', title: 'Elita', desc: 'Boss. Bardzo silny, zostawia skrzynię.' },
+        
+        { header: "Bronie i Perki" },
+        { asset: 'icon_whip', title: 'Bicz', desc: 'Atakuje w poziomie.' },
+        { asset: 'icon_autogun', title: 'AutoGun', desc: 'Automatycznie strzela do najbliższego wroga.' },
+        { asset: 'icon_orbital', title: 'Orbital', desc: 'Ziemniak krążący wokół gracza.' },
+        { asset: 'icon_nova', title: 'Nova', desc: 'Wybuch wokół gracza.' },
+        { asset: 'icon_lightning', title: 'Piorun', desc: 'Raźi losowych wrogów łańcuchem.' }
+    ];
+
+    let html = '<h4 style="color:#4caf50; margin-bottom:15px;">📖 Encyklopedia Szkeletal</h4>';
+    
+    guideData.forEach(item => {
+        if (item.header) {
+            html += `<div class="guide-section-title">${item.header}</div>`;
+        } else {
+            // Generowanie wpisu z obrazkiem
+            const imgTag = getIconTag(item.asset, 'guide-icon');
+            const displayIcon = imgTag ? imgTag : '<span style="font-size:24px;">❓</span>';
+            
+            html += `
+                <div class="guide-entry">
+                    <div style="width:40px; text-align:center; flex-shrink:0;">${displayIcon}</div>
+                    <div>
+                        <strong style="color:#fff;">${item.title}</strong><br>
+                        <span style="color:#bbb; font-size:13px;">${item.desc}</span>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    
+    html += '<p style="margin-top:20px; color:#666; font-size:11px;">* Grafiki v0.91</p>';
+    guideContainer.innerHTML = html;
+}
+
+// Podmiana ikon w elementach statycznych (Dev Menu, Tabele)
+function updateStaticIcons() {
+    const headerMap = {
+        'scoresRankMenu': '#️⃣', 
+        'scoresScoreMenu': 'icon_hud_score',
+        'scoresLevelMenu': 'icon_hud_level',
+        'scoresTimeMenu': 'icon_hud_time',
+        'scoresRankGO': '#️⃣',
+        'scoresScoreGO': 'icon_hud_score',
+        'scoresLevelGO': 'icon_hud_level',
+        'scoresTimeGO': 'icon_hud_time'
+    };
+
+    for (const [id, assetKey] of Object.entries(headerMap)) {
+        const el = document.getElementById(id);
+        if (el) {
+            if (assetKey.startsWith('icon_')) {
+                // Pobieramy sam tekst bez starych obrazków/emoji
+                const cleanText = el.innerText.replace(/[^a-zA-Z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ: ]/g, '').trim();
+                el.innerHTML = getIconTag(assetKey, 'bar-icon') + ' ' + cleanText;
+            } 
+        }
+    }
+}
+
+// Inicjalizacja z opóźnieniem (aby assets.js zdążyło załadować grafiki)
+setTimeout(() => {
+    generateGuide();
+    updateStaticIcons();
+}, 600);
+
+
+// --- GŁÓWNA FUNKCJA AKTUALIZACJI UI ---
+
 let hpBarOuterRef = null;
 
-// NOWA FUNKCJA V0.86: Ograniczona aktualizacja licznika wrogów
 export function updateEnemyCounter(game, enemies) {
     if (!game.running || game.paused) return;
-    
-    // Obliczanie liczby wrogów (bez Oblężników)
     const nonWallEnemiesCount = enemies.filter(e => e.type !== 'wall').length;
-    const limit = game.dynamicEnemyLimit; // Użyj wstępnie obliczonego limitu z gameLogic
+    const limit = game.dynamicEnemyLimit;
     
     if (enemyCountSpan) enemyCountSpan.textContent = nonWallEnemiesCount;
     if (enemyLimitSpan) enemyLimitSpan.textContent = limit;
@@ -56,7 +150,7 @@ export function updateEnemyCounter(game, enemies) {
     if (enemyProgressDiv && limit > 0) {
         const enemyPct = Math.min(100, (nonWallEnemiesCount / limit) * 100);
         enemyProgressDiv.style.width = enemyPct.toFixed(1) + '%';
-        // ZMIANA KOLORU POSTĘPU W ZALEŻNOŚCI OD OBCIĄŻENIA
+        
         if (enemyPct > 85) {
              enemyProgressDiv.style.background = 'linear-gradient(90deg, #f44336, #e53935)';
         } else if (enemyPct > 50) {
@@ -69,15 +163,13 @@ export function updateEnemyCounter(game, enemies) {
 
 
 export function updateUI(game, player, settings, weapons, enemies = []) {
-    // Statystyki na górze (BEZ LICZNIKA WROGÓW)
     document.getElementById('score').textContent = game.score;
     document.getElementById('level').textContent = game.level;
     document.getElementById('xp').textContent = game.xp;
     document.getElementById('xpNeeded').textContent = game.xpNeeded;
     document.getElementById('health').textContent = Math.max(0, Math.floor(game.health));
-    document.getElementById('time').textContent = formatTime(Math.floor(game.time)); // Używa zaimportowanego formatTime
+    document.getElementById('time').textContent = formatTime(Math.floor(game.time));
 
-    // Paski postępu na górze
     const xpPct = Math.max(0, Math.min(1, game.xp / game.xpNeeded));
     xpBarFill.style.width = (xpPct * 100).toFixed(1) + '%';
     document.getElementById('xpProgress').style.width = (xpPct * 100).toFixed(1) + '%';
@@ -86,22 +178,12 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
     document.getElementById('scoreProgress').style.width = (Math.min(100, game.score / 50)) + '%';
     document.getElementById('timeProgress').style.width = (Math.min(100, game.time / 6)) + '%';
 
-    // Główny pasek HP
     const healthPct = Math.max(0, Math.min(1, game.health / game.maxHealth));
     playerHPBarInner.style.width = (healthPct * 100).toFixed(1) + '%';
-    // ZMIANA v0.90: Użyj i18n dla ikony i nazwy
-    playerHPBarTxt.innerHTML = `${getLang('ui_hp_icon')} ${Math.max(0, Math.floor(game.health))} / ${game.maxHealth}`;
+    playerHPBarTxt.innerHTML = `${getIconTag('icon_hud_health')} ${Math.max(0, Math.floor(game.health))} / ${game.maxHealth}`;
 
-    // POPRAWKA v0.77j: Bezpieczne pobieranie paska HP (lazy loading)
-    if (!hpBarOuterRef) {
-        hpBarOuterRef = document.getElementById('playerHPBarOuter');
-        if (hpBarOuterRef) {
-             console.log('[DEBUG-v0.77k] Pomyślnie znaleziono playerHPBarOuter.');
-        }
-    }
-
-    // NOWA LOGIKA v0.77: Pulsowanie paska HP przy niskim zdrowiu
-    if (hpBarOuterRef) { // Sprawdź, czy na pewno znaleziono
+    if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
+    if (hpBarOuterRef) { 
         if (healthPct <= UI_CONFIG.LOW_HEALTH_THRESHOLD && game.health > 0) {
             hpBarOuterRef.classList.add('low-health-pulse');
         } else {
@@ -110,22 +192,33 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
     }
 
     if (xpBarTxt) {
-        // ZMIANA v0.90: Użyj i18n dla ikony i nazwy
-        xpBarTxt.innerHTML = `${getLang('ui_xp_icon')} ${game.xp} / ${game.xpNeeded}`;
+        xpBarTxt.innerHTML = `${getIconTag('icon_hud_xp')} ${game.xp} / ${game.xpNeeded}`;
     }
 
-    // Panel bonusów
+    // --- PANEL BONUSÓW ---
     let bonusHTML = '';
-    // POPRAWKA v0.82a: Zmiana ikony 'speed'
-    const bonusMap = { magnet: '🧲', shield: '🛡️', speed: '👟', freeze: '❄️' };
-    if (game.magnetT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.magnet}</span><span class="bonus-txt">${Math.ceil(game.magnetT)}</span></div>`;
-    if (game.shieldT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.shield}</span><span class="bonus-txt">${Math.ceil(game.shieldT)}</span></div>`;
-    if (game.speedT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.speed}</span><span class="bonus-txt">${Math.ceil(game.speedT)}</span></div>`;
-    if (game.freezeT > 0) bonusHTML += `<div><span class="bonus-emoji">${bonusMap.freeze}</span><span class="bonus-txt">${Math.ceil(game.freezeT)}</span></div>`;
+    
+    const bonusAssets = { 
+        magnet: 'icon_hud_magnet', shield: 'icon_hud_shield', speed: 'icon_hud_speed', freeze: 'icon_hud_freeze' 
+    };
+    
+    const createBonusEntry = (type, time) => {
+        const asset = getAsset(bonusAssets[type]);
+        const iconHtml = asset 
+            ? `<img src="${asset.src}" class="bonus-icon-img">` 
+            : `<span class="bonus-emoji">❓</span>`;
+        return `<div class="bonus-entry">${iconHtml}<span class="bonus-txt">${Math.ceil(time)}s</span></div>`;
+    };
+
+    if (game.magnetT > 0) bonusHTML += createBonusEntry('magnet', game.magnetT);
+    if (game.shieldT > 0) bonusHTML += createBonusEntry('shield', game.shieldT);
+    if (game.speedT > 0) bonusHTML += createBonusEntry('speed', game.speedT);
+    if (game.freezeT > 0) bonusHTML += createBonusEntry('freeze', game.freezeT);
+    
     bonusPanel.innerHTML = bonusHTML;
 }
 
-// --- ZARZĄDZANIE STANEM GRY (MENU, PAUZA, RESET) (POZOSTAJE) ---
+// --- ZARZĄDZANIE STANEM GRY ---
 
 export function showMenu(game, resetAll, uiData, allowContinue = false) {
     if (!allowContinue) {
@@ -133,283 +226,128 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
         uiData.savedGameState = null;
     }
 
-    if (uiData.savedGameState && allowContinue) {
-        btnContinue.style.display = 'block';
-    } else {
-        btnContinue.style.display = 'none';
-    }
+    if (uiData.savedGameState && allowContinue) btnContinue.style.display = 'block';
+    else btnContinue.style.display = 'none';
 
     menuOverlay.style.display = 'flex';
-    game.inMenu = true;
-    game.paused = true;
-    game.running = false;
+    game.inMenu = true; game.paused = true; game.running = false;
 
-    if (uiData.animationFrameId !== null) {
-        cancelAnimationFrame(uiData.animationFrameId);
-        uiData.animationFrameId = null;
-    }
+    if (uiData.animationFrameId !== null) { cancelAnimationFrame(uiData.animationFrameId); uiData.animationFrameId = null; }
+    if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
 
-    if (uiData.animationFrameId === null) {
-        uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
-    }
-
-    // Ustawienie wersji w HTML (ZMIANA V0.88 - Nowa Nazwa)
-    // ZMIANA v0.90: Użyj i18n dla tytułu, ale zachowaj wersję
-    const newTitle = `${getLang('ui_player_name')} v${uiData.VERSION}`;
-    docTitle.textContent = newTitle;
-    // (Tytuł w grze jest teraz tłumaczony przez eventManager)
+    docTitle.textContent = `${getLang('ui_player_name')} v${uiData.VERSION}`;
+    
+    // Wymuszamy odświeżenie przewodnika przy otwarciu menu
+    generateGuide();
+    updateStaticIcons();
     
     updateUI(game, uiData.player, uiData.settings, null); 
     uiData.ctx.clearRect(0, 0, uiData.canvas.width, uiData.canvas.height);
     uiData.drawCallback(); 
     
-    // POPRAWKA v0.70: Wywołania funkcji z zaimportowanego scoreManager
     displayScores('scoresBodyMenu');
     attachClearScoresListeners();
 }
 
 export function startRun(game, resetAll, uiData) {
-    // KRYTYCZNE v0.76: Zapisujemy czas startu z dev.js przed resetem
     const startOffset = devStartTime;
-
     resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); 
     uiData.savedGameState = null;
     menuOverlay.style.display = 'none';
-    game.inMenu = false;
-    game.paused = false;
-    game.running = true;
+    game.inMenu = false; game.paused = false; game.running = true;
 
-    // NOWA LOGIKA v0.76: Ustawienie poprawnego czasu startowego
     const currentTime = performance.now();
-    
-    // Ustawienie game.time PO resetAll (które ustawia je na 0, jeśli nie załadowano presetu)
     game.time = startOffset; 
-
-    // Obliczenie startTime, aby game.time pokazywało startOffset
-    // startTime = currentTime - startOffset * 1000
     uiData.startTime = currentTime - startOffset * 1000;
     uiData.lastTime = currentTime;
 
     uiData.settings.lastElite = game.time;
-    uiData.settings.lastSiegeEvent = game.time; // Użycie nowego game.time jako punktu odniesienia
-    
-    // POPRAWKA v0.77c: Poprawna obsługa czasu startowego dla Oblężenia
-    // 'resetAll()' ustawiło 'currentSiegeInterval' na stałą wartość 150s.
-    
-    // Upewnij się, że czas startowy (jeśli użyto presetu) nie jest późniejszy niż pierwszy spawn
+    uiData.settings.lastSiegeEvent = game.time; 
     if (uiData.settings.currentSiegeInterval < startOffset) {
-        // Jeśli startujemy PO 150s, ustaw interwał na (startOffset + 10s), aby dać graczowi czas
         uiData.settings.currentSiegeInterval = startOffset + 10.0; 
     }
-    console.log(`[EVENT] Pierwsze oblężenie o ${uiData.settings.currentSiegeInterval.toFixed(1)}s`);
-    
-    // Ustawienie wersji w HTML (ZMIANA V0.88 - Nowa Nazwa)
-    // ZMIANA v0.90: Użyj i18n dla tytułu, ale zachowaj wersję
-    const newTitle = `${getLang('ui_player_name')} v${uiData.VERSION}`;
-    docTitle.textContent = newTitle;
-    // (Tytuł w grze jest teraz tłumaczony przez eventManager)
-
-
     initAudio();
-
-    if (uiData.animationFrameId === null) {
-        uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
-    }
+    if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
 }
 
-// POPRAWKA v0.65: Używa stałych z gameData.js
-// POPRAWKA v0.68b: Dodano uiData i camera do sygnatury (dla kompatybilności z wywołaniem w main.js)
 export function resetAll(canvas, settings, perkLevels, uiData, camera) {
-    if (uiData.animationFrameId !== null) {
-        cancelAnimationFrame(uiData.animationFrameId);
-        uiData.animationFrameId = null;
-    }
-
-    uiData.lastTime = 0;
-    uiData.startTime = 0;
-
+    if (uiData.animationFrameId !== null) { cancelAnimationFrame(uiData.animationFrameId); uiData.animationFrameId = null; }
+    uiData.lastTime = 0; uiData.startTime = 0;
     const game = uiData.game; 
     
-    // POPRAWKA v0.70: Usunięto błędny 'await import'
-    // Importy są teraz na górze pliku.
-    
     if (devSettings.presetLoaded === false) {
-        console.log("ResetAll: Wykonuję pełny reset statystyk.");
-        // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG i GAME_CONFIG
-        // KRYTYCZNA UWAGA: game.time jest resetowane do 0.
         game.score = 0; game.level = 1; game.health = PLAYER_CONFIG.INITIAL_HEALTH; game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH; game.time = 0; 
         game.xp = 0; game.xpNeeded = GAME_CONFIG.INITIAL_XP_NEEDED; game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
-        
-        Object.assign(settings, { 
-            spawn: GAME_CONFIG.INITIAL_SPAWN_RATE,
-            maxEnemies: GAME_CONFIG.MAX_ENEMIES,
-            eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL,
-            lastHazardSpawn: 0, 
-            lastSiegeEvent: 0, 
-            // POPRAWKA v0.77: Resetowanie interwału oblężenia (do stałej wartości startowej 150s)
-            currentSiegeInterval: SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME 
-        });
-        settings.lastFire = 0;
-        settings.lastElite = 0;
-
-        // NOWA LINIA V0.86: Resetowanie stanu ostrzeżeń
-        game.newEnemyWarningT = 0;
-        game.newEnemyWarningType = null;
-        game.seenEnemyTypes = ['standard'];
-        
-        // POPRAWKA V0.66: Użyj rozmiarów świata zamiast canvas.width/height
-        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; 
-        const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
+        Object.assign(settings, { spawn: GAME_CONFIG.INITIAL_SPAWN_RATE, maxEnemies: GAME_CONFIG.MAX_ENEMIES, eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL, lastHazardSpawn: 0, lastSiegeEvent: 0, currentSiegeInterval: SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME });
+        settings.lastFire = 0; settings.lastElite = 0;
+        game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.seenEnemyTypes = ['standard'];
+        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
         uiData.player.reset(worldWidth, worldHeight);
-        
-        for (let key in perkLevels) {
-            delete perkLevels[key];
-        }
+        for (let key in perkLevels) delete perkLevels[key];
     } else {
-        console.log("ResetAll: Pomijam reset statystyk (załadowano preset).");
-        // POPRAWKA v0.75: Tylko statystyki, które MUSZĄ być zresetowane
         game.score = 0; 
-        // game.time = 0; // NIE RESETUJ CZASU, jeśli preset jest załadowany
-        
-        // Level, XP, MaxHP/HP są zachowywane, ponieważ zostały ustawione przez Dev Menu.
-        
-        settings.lastFire = 0;
-        settings.lastElite = 0;
-        settings.lastHazardSpawn = 0; 
-        settings.lastSiegeEvent = 0; 
-        // POPRAWKA v0.77: Resetowanie interwału oblężenia (do stałej wartości startowej 150s)
+        settings.lastFire = 0; settings.lastElite = 0; settings.lastHazardSpawn = 0; settings.lastSiegeEvent = 0; 
         settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
-        
-        // NOWA LINIA V0.86: Resetowanie stanu ostrzeżeń (tylko timer)
-        game.newEnemyWarningT = 0;
-        game.newEnemyWarningType = null;
-        // game.seenEnemyTypes jest wypełniane przez dev.js w przypadku presetów.
-
+        game.newEnemyWarningT = 0; game.newEnemyWarningType = null;
         devSettings.presetLoaded = false;
-        
-        // POPRAWKA V0.67: Upewnij się, że gracz jest na środku świata po resecie presetów
-        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; 
-        const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
-        uiData.player.x = worldWidth / 2;
-        uiData.player.y = worldHeight / 2;
-        camera.offsetX = (worldWidth / 2) - (canvas.width / 2);
-        camera.offsetY = (worldHeight / 2) - (canvas.height / 2);
+        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
+        uiData.player.x = worldWidth / 2; uiData.player.y = worldHeight / 2;
+        camera.offsetX = (worldWidth / 2) - (canvas.width / 2); camera.offsetY = (worldHeight / 2) - (canvas.height / 2);
     }
 
-    // Te rzeczy resetujemy ZAWSZE
-    game.magnet = false; game.magnetT = 0;
-    game.shield = false; game.shieldT = 0; game.speedT = 0; game.freezeT = 0; game.shakeT = 0;
-    game.shakeMag = 0; game.manualPause = false; game.collisionSlowdown = 0;
-    game.dynamicEnemyLimit = GAME_CONFIG.INITIAL_MAX_ENEMIES; // NOWA LINIA V0.86: Reset limitu
-
-    // Czyszczenie tablic (te, które nie są pulami)
-    uiData.enemies.length = 0; 
-    uiData.chests.length = 0; 
-    uiData.pickups.length = 0; 
-    uiData.bombIndicators.length = 0;
-    uiData.hazards.length = 0; // POPRAWKA v0.68b: Reset Hazardów
-    
-    // NOWE v0.75: Resetowanie kolejki spawnów oblężnika
-    if (uiData.siegeSpawnQueue) {
-        uiData.siegeSpawnQueue.length = 0;
-    }
-
-    // POPRAWKA v0.62: Zwalnianie obiektów z puli
-    if (uiData.bulletsPool) {
-        uiData.bulletsPool.releaseAll();
-    }
-    if (uiData.eBulletsPool) {
-        uiData.eBulletsPool.releaseAll();
-    }
-    if (uiData.gemsPool) {
-        uiData.gemsPool.releaseAll();
-    }
-    if (uiData.particlePool) {
-        uiData.particlePool.releaseAll();
-    }
-    if (uiData.hitTextPool) {
-        uiData.hitTextPool.releaseAll();
-    }
-
+    game.magnet = false; game.magnetT = 0; game.shield = false; game.shieldT = 0; game.speedT = 0; game.freezeT = 0; game.shakeT = 0;
+    game.shakeMag = 0; game.manualPause = false; game.collisionSlowdown = 0; game.dynamicEnemyLimit = GAME_CONFIG.INITIAL_MAX_ENEMIES;
+    uiData.enemies.length = 0; uiData.chests.length = 0; uiData.pickups.length = 0; uiData.bombIndicators.length = 0; uiData.hazards.length = 0; 
+    if (uiData.siegeSpawnQueue) uiData.siegeSpawnQueue.length = 0;
+    if (uiData.bulletsPool) uiData.bulletsPool.releaseAll();
+    if (uiData.eBulletsPool) uiData.eBulletsPool.releaseAll();
+    if (uiData.gemsPool) uiData.gemsPool.releaseAll();
+    if (uiData.particlePool) uiData.particlePool.releaseAll();
+    if (uiData.hitTextPool) uiData.hitTextPool.releaseAll();
     xpBarFill.style.width = '0%';
     uiData.initStarsCallback();
     
-    // POPRAWKA v0.77j: Użyj bezpiecznego pobierania referencji
-    if (!hpBarOuterRef) {
-        hpBarOuterRef = document.getElementById('playerHPBarOuter');
-    }
-    if (hpBarOuterRef) {
-        hpBarOuterRef.classList.remove('low-health-pulse');
-    }
+    if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
+    if (hpBarOuterRef) hpBarOuterRef.classList.remove('low-health-pulse');
+    
+    bonusPanel.innerHTML = '';
 }
 
 export function pauseGame(game, settings, weapons, player) {
     if (game.paused || game.inMenu) return;
-    game.manualPause = true;
-    game.paused = true;
-    // POPRAWKA v0.81g: Przekaż 'weapons' (zamiast 'null') do UI statystyk
+    game.manualPause = true; game.paused = true;
     updateStatsUI(game, player, settings, weapons, statsDisplayPause);
     pauseOverlay.style.display = 'flex';
 }
 
-// POPRAWKA v0.65: Używa stałej z UI_CONFIG
 export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
     game.manualPause = false;
     pauseOverlay.style.display = 'none';
     levelUpOverlay.style.display = 'none'; 
-    chestOverlay.style.display = 'none'; // POPRAWKA v0.70: Ukryj również skrzynię
-
-    if (timerDuration <= 0) {
-        resumeOverlay.style.display = 'none';
-        game.paused = false;
-        return;
-    }
-
+    chestOverlay.style.display = 'none'; 
+    if (timerDuration <= 0) { resumeOverlay.style.display = 'none'; game.paused = false; return; }
     let t = timerDuration;
     resumeOverlay.style.display = 'flex';
     const id = setInterval(() => {
         t = Math.max(0, t - 0.05);
-        // ZMIANA v0.90: Użyj i18n
         resumeText.textContent = `${getLang('ui_resume_text')} ${t.toFixed(2)} s`;
-        if (t <= 0) {
-            clearInterval(id);
-            resumeOverlay.style.display = 'none';
-            game.paused = false;
-        }
+        if (t <= 0) { clearInterval(id); resumeOverlay.style.display = 'none'; game.paused = false; }
     }, 50);
 }
 
 export function gameOver(game, uiData) {
-    game.running = false;
-    game.paused = true;
-    uiData.savedGameState = null;
-    
+    game.running = false; game.paused = true; uiData.savedGameState = null;
     const finalTimeValue = Math.floor(game.time);
-    const currentRun = {
-        score: game.score,
-        level: game.level,
-        time: finalTimeValue
-    };
-    
+    const currentRun = { score: game.score, level: game.level, time: finalTimeValue };
     finalScore.textContent = currentRun.score;
     finalLevel.textContent = currentRun.level;
     finalTime.textContent = formatTime(currentRun.time); 
-    
-    // POPRAWKA v0.70: Wywołania funkcji z zaimportowanego scoreManager
     saveScore(currentRun);
     displayScores('scoresBodyGameOver', currentRun); 
     attachClearScoresListeners();
-    
     gameOverOverlay.style.display = 'flex';
+    if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
+    if (hpBarOuterRef) hpBarOuterRef.classList.remove('low-health-pulse');
     
-    // POPRAWKA v0.77j: Użyj bezpiecznego pobierania referencji
-    if (!hpBarOuterRef) {
-        hpBarOuterRef = document.getElementById('playerHPBarOuter');
-    }
-    if (hpBarOuterRef) {
-        hpBarOuterRef.classList.remove('low-health-pulse');
-    }
+    updateStaticIcons();
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.82a] js/ui/ui.js: Zmieniono ikonę bonusu Szybkości na "👟".');

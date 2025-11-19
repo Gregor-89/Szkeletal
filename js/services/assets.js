@@ -1,11 +1,9 @@
 // ==============
-// ASSETS.JS (v0.92H - Ikony HUD i Bonusów)
+// ASSETS.JS (v0.91 Fixes - Icons Path Verification)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
 const assets = new Map();
-let sounds = {};
-let audioContext = null;
 
 const basePath = 'img/';
 
@@ -40,6 +38,7 @@ async function loadAndRegister(key, src) {
 const assetDefinitions = {
   'player': 'drakul.png',
   
+  // Wrogowie
   'enemy_standard': 'enemies/dadgamer/dadgamer_idle.png',
   'enemy_horde': 'enemies/horde/horde_idle.png',
   'enemy_aggressive': 'enemies/aggressive/aggressive_idle.png',
@@ -56,7 +55,7 @@ const assetDefinitions = {
   'projectile_venom': 'projectiles/venom.png',
   'projectile_nova': 'projectiles/nova_shot.png',
   
-  // Ikony Perków (Menu Level Up / Statystyki)
+  // Ikony Perków (Bronie i Ulepszenia)
   'icon_orbital': 'icons/orbital.jpg',
   'icon_whip': 'icons/whip.jpg',
   'icon_autogun': 'icons/autogun.png',
@@ -68,12 +67,15 @@ const assetDefinitions = {
   'icon_multishot': 'icons/multishot.png',
   'icon_pierce': 'icons/pierce.png',
   
-  // Ikony Statystyk (Level Up Menu)
+  // Ikony Statystyk
   'icon_level': 'icons/level.png',
   'icon_health': 'icons/health.png',
   'icon_speed': 'icons/speed.png',
   
-  // NOWE ZASOBY v0.92H - Ikony HUD (Górny pasek, Bonusy, Tabele)
+  // IKONA ZASIĘGU (Specjalnie icons/magnet.png, nie pickups)
+  'icon_pickup_range': 'icons/magnet.png',
+  
+  // Ikony HUD
   'icon_hud_score': 'icons/hud_score.png',
   'icon_hud_level': 'icons/hud_level.png',
   'icon_hud_xp': 'icons/hud_xp.png',
@@ -81,11 +83,13 @@ const assetDefinitions = {
   'icon_hud_enemies': 'icons/hud_enemies.png',
   'icon_hud_time': 'icons/hud_time.png',
   
+  // Ikony Bonusów (Dla panelu po prawej)
   'icon_hud_speed': 'icons/hud_speed.png',
   'icon_hud_shield': 'icons/hud_shield.png',
   'icon_hud_magnet': 'icons/hud_magnet.png',
   'icon_hud_freeze': 'icons/hud_freeze.png',
   
+  // Pickupy (Leżące na ziemi)
   'pickup_heal': 'pickups/heal.png',
   'pickup_magnet': 'pickups/magnet.png',
   'pickup_shield': 'pickups/shield.png',

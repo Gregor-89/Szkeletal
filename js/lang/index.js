@@ -16,6 +16,6 @@ import { LANG_EN } from './english.js';
  * Wartość (np. LANG_PL) to obiekt z tłumaczeniami.
  */
 export const LANG_MAP = {
-  'Polski': LANG_PL,
-  'English': LANG_EN
+    'Polski': LANG_PL,
+    'English': LANG_EN
 };

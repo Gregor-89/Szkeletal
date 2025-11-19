@@ -1,24 +1,17 @@
 // ==============
-// PERKS.JS (v0.92I - Ikony Speed i Health)
+// PERKS.JS (v0.94 - Ikona Magnet Perk)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
-// POPRAWKA v0.71: Import 3 podklas broni z nowego folderu
 import { AutoGun } from './weapons/autoGun.js';
 import { OrbitalWeapon } from './weapons/orbitalWeapon.js';
 import { NovaWeapon } from './weapons/novaWeapon.js';
 import { WhipWeapon } from './weapons/whipWeapon.js';
-// NOWY IMPORT v0.82a
 import { ChainLightningWeapon } from './weapons/chainLightningWeapon.js';
 
-// POPRAWKA v0.65: Import nowej centralnej konfiguracji
 import { PERK_CONFIG } from './gameData.js';
-// NOWY IMPORT v0.90: Silnik i18n
 import { getLang } from '../services/i18n.js';
 
-/**
- * Definicja puli perków.
- */
 export const perkPool = [
     {
         id: 'firerate', 
@@ -84,7 +77,6 @@ export const perkPool = [
             }
         }
     },
-    // NOWY PERK v0.81b
     {
         id: 'autogun', 
         name: getLang('perk_autogun_name'), 
@@ -96,7 +88,6 @@ export const perkPool = [
             state.player.addWeapon(AutoGun, perk);
         }
     },
-    // NOWY PERK v0.81f
     {
         id: 'whip', 
         name: getLang('perk_whip_name'), 
@@ -130,7 +121,6 @@ export const perkPool = [
             state.player.addWeapon(NovaWeapon, perk);
         }
     },
-    // NOWA BROŃ v0.82a
     {
         id: 'chainLightning', 
         name: getLang('perk_chainLightning_name'), 
@@ -148,7 +138,7 @@ export const perkPool = [
         desc: getLang('perk_speed_desc'), 
         max: PERK_CONFIG.speed?.max || 4, 
         color:'#66bb6a', emoji:'👟', 
-        icon: 'icon_speed', // ZMIANA v0.92I
+        icon: 'icon_speed',
         apply: (state, perk) => { 
             state.player.speed *= PERK_CONFIG.speed.value; 
         }
@@ -159,6 +149,7 @@ export const perkPool = [
         desc: getLang('perk_pickup_desc'), 
         max: PERK_CONFIG.pickup?.max || 3, 
         color:'#b39ddb', emoji:'🧲',
+        icon: 'icon_pickup_range', // NOWE v0.94: Dodano ikonę
         apply: (state, perk) => { 
             state.game.pickupRange *= PERK_CONFIG.pickup.value; 
         }
@@ -169,7 +160,7 @@ export const perkPool = [
         desc: getLang('perk_health_desc'), 
         max: PERK_CONFIG.health?.max || 3, 
         color:'#e57373', emoji:'❤️',
-        icon: 'icon_health', // ZMIANA v0.92I
+        icon: 'icon_health',
         apply: (state, perk) => {
             const bonusHealth = PERK_CONFIG.health.value;
             state.game.maxHealth += bonusHealth;
