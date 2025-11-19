@@ -1,5 +1,5 @@
 // ==============
-// ELITEENEMY.JS (v0.83n - Ostateczna Naprawa Składni)
+// ELITEENEMY.JS (v0.91W - Finalny Fix Paska HP)
 // Lokalizacja: /js/entities/enemies/eliteEnemy.js
 // ==============
 
@@ -21,11 +21,15 @@ const CHARGE_SPEED_MULTIPLIER = 2.5;
  */
 export class EliteEnemy extends Enemy {
     
+    // NOWY KONSTRUKTOR (v0.91W)
     constructor(x, y, stats, hpScale) {
         super(x, y, stats, hpScale);
         this.specialAttackTimer = SPECIAL_ATTACK_COOLDOWN;
         this.chargeTimer = 0; // Czas trwania szarży
         this.isCharging = false;
+        
+        // NOWA LINIA v0.91W: Ustawienie skali wizualnej (1.5x bazowej wysokości 80px = 120px)
+        this.drawScale = 1.5; 
     }
     
     getOutlineColor() { 
@@ -42,10 +46,14 @@ export class EliteEnemy extends Enemy {
     }
 
     drawHealthBar(ctx) {
-        const w = 26, h = 4;
+        const w = 40, h = 6; // ZMIANA v0.91W: Większy pasek HP (40x6 zamiast 26x4)
         const frac = Math.max(0, this.hp / this.maxHp);
         const bx = this.x - w / 2;
-        const by = this.y - this.size / 2 - 8;
+        
+        // POPRAWIONA LINIA v0.91W: Ustawienie paska nad głową (120px sprite + 8px margines)
+        // by = y - (sprite_height / 2) - 8
+        // Sprite height jest 80 * 1.5 = 120px. Połowa wysokości to 60.
+        const by = this.y - 60 - 8; 
         
         ctx.fillStyle = '#300';
         ctx.fillRect(bx, by, w, h);
@@ -173,33 +181,35 @@ export class EliteEnemy extends Enemy {
                 vx = Math.cos(targetAngle) * currentSpeed;
                 vy = Math.sin(targetAngle) * currentSpeed;
                 isMoving = true;
+                
+                // NOWA LOGIKA v0.91T: Zapisz ostatni kierunek POZIOMY
+                if (Math.abs(vx) > 0.1) {
+                    this.facingDir = Math.sign(vx);
+                }
             }
 
             // Zastosuj dt do finalnego ruchu
-            this.x += (vx + this.separationX * 0.5) * dt;
-            this.y += (vy + this.separationY * 0.5) * dt;
+            this.x += (vx + this.separationX * 1.0) * dt;
+            this.y += (vy + this.separationY * 1.0) * dt;
         }
         
-        // Aktualizacja animacji (skopiowana z klasy bazowej Enemy.js)
-        const dtMs = dt * 1000;
-        if (isMoving) {
-            this.animationTimer += dtMs;
-            if (this.animationTimer >= this.animationSpeed) {
-                this.animationTimer = 0;
-                this.currentFrame = (this.currentFrame + 1) % this.frameCount;
-            }
-        } else {
-            this.currentFrame = 0;
-            this.animationTimer = 0;
+        // 4. Aktualizacja animacji (usunięta w klasie bazowej, ale tu musimy dodać obsługę mrugania)
+        // Usunięto starą logikę animacji, pozostawiono dekrementację hitFlashT
+        
+        // NOWA LINIA v0.91T: Dekrementacja hitFlashT
+        if (this.hitFlashT > 0) {
+            this.hitFlashT -= dt;
         }
     } 
     
     // NADPISANA METODA: Rysowanie paska HP (zgodnie z v0.71)
     drawHealthBar(ctx) {
-        const w = 26, h = 4;
+        const w = 40, h = 6; // ZMIANA v0.91W: Większy pasek HP
         const frac = Math.max(0, this.hp / this.maxHp);
         const bx = this.x - w / 2;
-        const by = this.y - this.size / 2 - 8;
+        
+        // ZMIANA v0.91W: Ustawienie paska nad głową (120px sprite + 8px margines)
+        const by = this.y - 60 - 8; 
         
         ctx.fillStyle = '#300';
         ctx.fillRect(bx, by, w, h);

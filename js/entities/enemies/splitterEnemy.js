@@ -1,5 +1,5 @@
 // ==============
-// SPLITTERENEMY.JS (v0.85a - Priorytetowy Ruch)
+// SPLITTERENEMY.JS (v0.91T - Fix migotania w nieskończoność)
 // Lokalizacja: /js/entities/enemies/splitterEnemy.js
 // ==============
 
@@ -20,7 +20,6 @@ export class SplitterEnemy extends Enemy {
   update(dt, player, game, state) {
     // Wywołaj bazową logikę, ale bez random offset.
     // Zastąpienie logiki bazowej (aby usunąć wężyk)
-    let isMoving = false;
     
     if (this.hitStun > 0) {
         this.hitStun -= dt;
@@ -38,25 +37,21 @@ export class SplitterEnemy extends Enemy {
             // NOWA LOGIKA V0.85A: PROSTE CELOWANIE (bez wężyka)
             vx = Math.cos(targetAngle) * currentSpeed;
             vy = Math.sin(targetAngle) * currentSpeed;
-            isMoving = true;
+            
+            // NOWA LOGIKA v0.91L: Zapisz ostatni kierunek POZIOMY
+            if (Math.abs(vx) > 0.1) {
+                this.facingDir = Math.sign(vx);
+            }
         }
 
-        // Zastosuj dt do finalnego ruchu
-        this.x += (vx + this.separationX * 0.5) * dt;
-        this.y += (vy + this.separationY * 0.5) * dt;
+        // POPRAWKA v0.91L: Zwiększono siłę separacji z 0.5 na 1.0
+        this.x += (vx + this.separationX * 1.0) * dt;
+        this.y += (vy + this.separationY * 1.0) * dt;
     }
     
-    // Aktualizacja animacji (skopiowana z klasy bazowej i NAPRAWIONA)
-    const dtMs = dt * 1000;
-    if (isMoving) {
-        this.animationTimer += dtMs;
-        if (this.animationTimer >= this.animationSpeed) {
-            this.animationTimer = 0;
-            this.currentFrame = (this.currentFrame + 1) % this.frameCount;
-        }
-    } else {
-        this.currentFrame = 0;
-        this.animationTimer = 0;
+    // NOWA LINIA v0.91T: Dekrementacja hitFlashT
+    if (this.hitFlashT > 0) {
+        this.hitFlashT -= dt;
     }
   }
 }

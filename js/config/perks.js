@@ -1,5 +1,5 @@
 // ==============
-// PERKS.JS (v0.90 - Implementacja i18n)
+// PERKS.JS (v0.92I - Ikony Speed i Health)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
@@ -22,11 +22,12 @@ import { getLang } from '../services/i18n.js';
 export const perkPool = [
     {
         id: 'firerate', 
-        name: getLang('perk_firerate_name'), // "Plujko Prędszy Jad"
-        desc: getLang('perk_firerate_desc'), // "Bo hejt trzeba dawkować szybko!..."
+        name: getLang('perk_firerate_name'), 
+        desc: getLang('perk_firerate_desc'), 
         max: PERK_CONFIG.firerate?.max || 6, 
-        color:'#90caf9', emoji:'⏩', // POPRAWKA v0.81e: Zmiana emoji
-        requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
+        color:'#90caf9', emoji:'⏩',
+        requiresWeapon: 'AutoGun', 
+        icon: 'icon_firerate', 
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
@@ -37,11 +38,12 @@ export const perkPool = [
     },
     {
         id: 'damage', 
-        name: getLang('perk_damage_name'), // "Plujko Bólu Jad"
-        desc: getLang('perk_damage_desc'), // "Obiektywne zwiększenie toksyczności..."
+        name: getLang('perk_damage_name'), 
+        desc: getLang('perk_damage_desc'), 
         max: PERK_CONFIG.damage?.max || 6, 
         color:'#ef5350', emoji:'💥',
-        requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
+        requiresWeapon: 'AutoGun', 
+        icon: 'icon_damage',
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
@@ -52,11 +54,12 @@ export const perkPool = [
     },
     {
         id: 'multishot', 
-        name: getLang('perk_multishot_name'), // "Plujko Multi Jad"
-        desc: getLang('perk_multishot_desc'), // "Wertykalna dywersyfikacja hejtu..."
+        name: getLang('perk_multishot_name'), 
+        desc: getLang('perk_multishot_desc'), 
         max: PERK_CONFIG.multishot?.max || 4, 
         color:'#ffca28', emoji:'🎯',
-        requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
+        requiresWeapon: 'AutoGun', 
+        icon: 'icon_multishot',
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
@@ -67,11 +70,12 @@ export const perkPool = [
     },
     {
         id: 'pierce', 
-        name: getLang('perk_pierce_name'), // "Plujko Dziurko Jad"
-        desc: getLang('perk_pierce_desc'), // "Twój jad jest tak żrący..."
+        name: getLang('perk_pierce_name'), 
+        desc: getLang('perk_pierce_desc'), 
         max: PERK_CONFIG.pierce?.max || 4, 
         color:'#ab47bc', emoji:'➡️',
-        requiresWeapon: 'AutoGun', // POPRAWKA v0.81c: Zmiana z klasy na string
+        requiresWeapon: 'AutoGun', 
+        icon: 'icon_pierce',
         apply: (state, perk) => { 
             const gun = state.player.getWeapon(AutoGun);
             if (gun) {
@@ -83,43 +87,45 @@ export const perkPool = [
     // NOWY PERK v0.81b
     {
         id: 'autogun', 
-        name: getLang('perk_autogun_name'), // "Plujko Jad"
-        desc: getLang('perk_autogun_desc'), // "Automatyczny oręż..."
+        name: getLang('perk_autogun_name'), 
+        desc: getLang('perk_autogun_desc'), 
         max: 1, 
         color:'#90caf9', emoji:'🔫',
+        icon: 'icon_autogun', 
         apply: (state, perk) => { 
-            // Ta funkcja tylko dodaje broń (level 1)
             state.player.addWeapon(AutoGun, perk);
         }
     },
-    // NOWY PERK v0.81f (Przywrócenie ulepszenia dla Bicza)
+    // NOWY PERK v0.81f
     {
         id: 'whip', 
-        name: getLang('perk_whip_name'), // "Tłuczek Hrabianki"
-        desc: getLang('perk_whip_desc'), // "Broń startowa. Tłucze horyzontalnie..."
+        name: getLang('perk_whip_name'), 
+        desc: getLang('perk_whip_desc'), 
         max: PERK_CONFIG.whip?.max || 5, 
         color:'#C8E6C9', emoji:'🪢',
+        icon: 'icon_whip', 
         apply: (state, perk) => { 
-            // Gracz już ma Bicz, więc addWeapon() wywoła upgrade()
             state.player.addWeapon(WhipWeapon, perk);
         }
     },
     {
         id: 'orbital', 
-        name: getLang('perk_orbital_name'), // "Orbitalne Ziemniaczki"
-        desc: getLang('perk_orbital_desc'), // "Krążące artefakty-ziemniaczki..."
+        name: getLang('perk_orbital_name'), 
+        desc: getLang('perk_orbital_desc'), 
         max: PERK_CONFIG.orbital?.max || 5, 
         color:'#80deea', emoji:'🌀',
+        icon: 'icon_orbital', 
         apply: (state, perk) => { 
             state.player.addWeapon(OrbitalWeapon, perk);
         }
     },
     {
         id: 'nova', 
-        name: getLang('perk_nova_name'), // "Eksplozja Mentalu"
-        desc: getLang('perk_nova_desc'), // "Cykliczna emanacja \"pato-lore\"..."
+        name: getLang('perk_nova_name'), 
+        desc: getLang('perk_nova_desc'), 
         max: PERK_CONFIG.nova?.max || 5, 
         color:'#ffd54f', emoji:'💫',
+        icon: 'icon_nova', 
         apply: (state, perk) => { 
             state.player.addWeapon(NovaWeapon, perk);
         }
@@ -127,28 +133,30 @@ export const perkPool = [
     // NOWA BROŃ v0.82a
     {
         id: 'chainLightning', 
-        name: getLang('perk_chainLightning_name'), // "Pierun Ludologa"
-        desc: getLang('perk_chainLightning_desc'), // "Automatyczny atak, razi najbliższego..."
-        max: PERK_CONFIG.chainLightning?.max || 6, // POPRAWKA v0.82b: Zwiększono max
+        name: getLang('perk_chainLightning_name'), 
+        desc: getLang('perk_chainLightning_desc'), 
+        max: PERK_CONFIG.chainLightning?.max || 6, 
         color:'#40C4FF', emoji:'⚡',
+        icon: 'icon_lightning', 
         apply: (state, perk) => { 
             state.player.addWeapon(ChainLightningWeapon, perk);
         }
     },
     {
         id: 'speed', 
-        name: getLang('perk_speed_name'), // "Chyżność Ucieczki"
-        desc: getLang('perk_speed_desc'), // "Nawet Hrabia musi czasem..."
+        name: getLang('perk_speed_name'), 
+        desc: getLang('perk_speed_desc'), 
         max: PERK_CONFIG.speed?.max || 4, 
-        color:'#66bb6a', emoji:'👟', // POPRAWKA v0.82a: Zmiana emoji
+        color:'#66bb6a', emoji:'👟', 
+        icon: 'icon_speed', // ZMIANA v0.92I
         apply: (state, perk) => { 
             state.player.speed *= PERK_CONFIG.speed.value; 
         }
     },
     {
         id: 'pickup', 
-        name: getLang('perk_pickup_name'), // "Zasięg Żerowania"
-        desc: getLang('perk_pickup_desc'), // "Im większy głód, tym dłuższe ręce..."
+        name: getLang('perk_pickup_name'), 
+        desc: getLang('perk_pickup_desc'), 
         max: PERK_CONFIG.pickup?.max || 3, 
         color:'#b39ddb', emoji:'🧲',
         apply: (state, perk) => { 
@@ -157,10 +165,11 @@ export const perkPool = [
     },
     {
         id: 'health', 
-        name: getLang('perk_health_name'), // "Poziom Sytości"
-        desc: getLang('perk_health_desc'), // "Większy żołądek na hejt..."
+        name: getLang('perk_health_name'), 
+        desc: getLang('perk_health_desc'), 
         max: PERK_CONFIG.health?.max || 3, 
         color:'#e57373', emoji:'❤️',
+        icon: 'icon_health', // ZMIANA v0.92I
         apply: (state, perk) => {
             const bonusHealth = PERK_CONFIG.health.value;
             state.game.maxHealth += bonusHealth;

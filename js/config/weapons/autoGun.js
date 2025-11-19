@@ -1,5 +1,5 @@
 // ==============
-// AUTOGUN.JS (v0.77v - FIX: Usunięcie spamu z konsoli)
+// AUTOGUN.JS (v0.92E - Przekazywanie sprite'a)
 // Lokalizacja: /js/config/weapons/autoGun.js
 // ==============
 
@@ -16,10 +16,8 @@ export class AutoGun extends Weapon {
   constructor(player) {
     super(player);
     
-    // POPRAWKA STABILNOŚCI: Dodanie defensywnego fallbacka do konfiguracji
     const config = WEAPON_CONFIG.AUTOGUN || {};
     
-    // POPRAWKA v0.65: Użyj wartości z WEAPON_CONFIG lub wartości domyślnych (500, 1, 864, 3)
     this.fireRate = config.BASE_FIRE_RATE || 500;
     this.bulletDamage = config.BASE_DAMAGE || 1;
     this.bulletSpeed = config.BASE_SPEED || 864;
@@ -27,15 +25,11 @@ export class AutoGun extends Weapon {
     
     this.multishot = 0;
     this.pierce = 0;
-    
-    // POPRAWKA V0.67: USUNIĘTO BUFOROWANIE CELU
   }
   
-  // Ta metoda jest teraz wywoływana przez perk.apply() w perks.js
   updateStats(perk) {
-    if (!perk) return; // Wywołane przez addWeapon, a nie przez apply
+    if (!perk) return;
     
-    // Zabezpieczenie przed brakiem konfiguracji perka
     const config = PERK_CONFIG[perk.id] || {};
     
     switch (perk.id) {
@@ -60,7 +54,6 @@ export class AutoGun extends Weapon {
     
     if (now - this.lastFire < this.fireRate / (game.hyper ? 1.2 : 1)) return;
     
-    // POPRAWKA V0.67: Wyszukiwanie najbliższego celu w KAŻDEJ klatce strzelania
     const { enemy: target } = findClosestEnemy(this.player, enemies);
     
     if (!target) return;
@@ -74,29 +67,38 @@ export class AutoGun extends Weapon {
     const count = 1 + this.multishot;
     const spread = Math.min(0.4, 0.12 * this.multishot);
     
-    // Prędkość jest już w px/s
     const finalSpeed = this.bulletSpeed * (game.hyper ? 1.15 : 1);
+    
+    // ZMIANA v0.92E: Pobranie konfiguracji sprite'a
+    const spriteKey = WEAPON_CONFIG.AUTOGUN.SPRITE || null;
+    const spriteScale = WEAPON_CONFIG.AUTOGUN.SPRITE_SCALE || 1.0;
     
     for (let i = 0; i < count; i++) {
       const off = spread * (i - (count - 1) / 2);
       
       const bullet = bulletsPool.get();
       if (bullet) {
+        // ZMIANA v0.92E: Przekazanie spriteKey i spriteScale do init
         bullet.init(
           this.player.x,
           this.player.y,
-          Math.cos(baseAng + off) * finalSpeed, // px/s
-          Math.sin(baseAng + off) * finalSpeed, // px/s
+          Math.cos(baseAng + off) * finalSpeed,
+          Math.sin(baseAng + off) * finalSpeed,
           this.bulletSize,
           this.bulletDamage,
           '#FFC107',
-          this.pierce
+          this.pierce,
+          Infinity, // life
+          0, // bounces
+          0, // curveDir
+          null, // animParams
+          null, // playerRef
+          0, // drawScale
+          spriteKey, // NOWY ARGUMENT
+          spriteScale // NOWY ARGUMENT
         );
       }
     }
-    
-    // POPRAWKA v0.77v: Zakomentowano spamujący log
-    // console.log('[DEBUG] js/config/weapon.js: AutoGun re-targeted instantly.');
   }
   
   toJSON() {

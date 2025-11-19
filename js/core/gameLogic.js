@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.89d - Hit Flash Timer i Usunięcie "śladu")
+// GAMELOGIC.JS (v0.91U - Implementacja śladu butelki)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -10,7 +10,7 @@ import { spawnHazard } from '../managers/effects.js';
 import { applyPickupSeparation, spawnConfetti } from './utils.js'; 
 import { checkCollisions } from '../managers/collisions.js';
 // POPRAWKA v0.78: Import GAME_CONFIG
-import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG, GAME_CONFIG } from '../config/gameData.js'; 
+import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG, GAME_CONFIG, WEAPON_CONFIG } from '../config/gameData.js'; // NOWY IMPORT WEAPON_CONFIG
 
 /**
  * Aktualizuje pozycję kamery, śledząc gracza i ograniczając ją do granic świata.
@@ -199,10 +199,41 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         bullets[i].update(dt);
     }
+    
     // Aktualizuj pociski wrogów (z puli)
     for (let i = eBullets.length - 1; i >= 0; i--) {
-        eBullets[i].update(dt);
+        const eb = eBullets[i];
+        eb.update(dt);
+        
+        // NOWA LOGIKA v0.91U: Ślad Butelki Menela
+        if (eb.type === 'bottle') {
+            const config = WEAPON_CONFIG.RANGED_ENEMY_BULLET;
+            // Dodajemy lastTrailTime do butelki przy inicjalizacji
+            if (eb.lastTrailTime === undefined) eb.lastTrailTime = 0; 
+            
+            eb.lastTrailTime += dt;
+            
+            if (eb.lastTrailTime >= config.TRAIL_INTERVAL) {
+                eb.lastTrailTime = 0;
+                
+                const p = particlePool.get();
+                if (p) {
+                    // init(x, y, vx, vy, life, color, gravity, friction, size)
+                    p.init(
+                        eb.x, eb.y,
+                        (Math.random() - 0.5) * config.TRAIL_SPEED,
+                        (Math.random() - 0.5) * config.TRAIL_SPEED,
+                        config.TRAIL_LIFE,
+                        config.TRAIL_COLOR,
+                        0, // gravity
+                        1.0, // friction
+                        2 // size
+                    );
+                }
+            }
+        }
     }
+    
     // Aktualizuj gemy (z puli)
     for (let i = gems.length - 1; i >= 0; i--) {
         gems[i].update(player, game, dt);

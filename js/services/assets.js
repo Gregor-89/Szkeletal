@@ -1,58 +1,35 @@
 // ==============
-// ASSETS.JS (v0.88g - Aktualizacja nazw Splash Screen)
+// ASSETS.JS (v0.92H - Ikony HUD i Bonusów)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
 const assets = new Map();
-let sounds = {}; // POPRAWKA v0.58: Przeniesiono z audio.js
-let audioContext = null; // POPRAWKA v0.58: Przeniesiono z audio.js
+let sounds = {};
+let audioContext = null;
 
-const basePath = 'img/'; // POPRAWKA v0.56: Ścieżka bazowa
+const basePath = 'img/';
 
-/**
- * Rejestruje zasób (obraz) w menedżerze.
- * @param {string} key - Klucz identyfikujący zasób (np. 'player')
- * @param {Image} asset - Załadowany obiekt obrazu
- */
 function register(key, asset) {
   console.log(`[Assets] Zarejestrowano zasób: ${key}`);
   assets.set(key, asset);
 }
 
-/**
- * Pobiera zasób (obraz) z menedżera.
- * @param {string} key - Klucz identyfikujący zasób
- * @returns {Image|null}
- */
 export function get(key) {
   return assets.get(key) || null;
 }
 
-/**
- * Ładuje pojedynczy obraz.
- * @param {string} src - Ścieżka do pliku obrazu
- * @returns {Promise<Image>}
- */
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = () => {
       console.warn(`[Assets] Nie można załadować: ${src}. Plik nie istnieje lub jest uszkodzony.`);
-      // Zamiast odrzucać (reject), rozwiązujemy (resolve) z nullem,
-      // aby Promise.all() nie zatrzymało się przy pierwszym błędzie.
       resolve(null);
     };
     img.src = src;
   });
 }
 
-/**
- * Ładuje obraz i rejestruje go pod kluczem.
- * @param {string} key - Klucz
- * @param {string} src - Ścieżka
- * @returns {Promise<void>}
- */
 async function loadAndRegister(key, src) {
   const img = await loadImage(src);
   if (img) {
@@ -60,26 +37,55 @@ async function loadAndRegister(key, src) {
   }
 }
 
-/**
- * Definicje zasobów (Assets Definitions)
- * Klucze muszą pasować do typów wrogów, pickupów itp.
- */
 const assetDefinitions = {
-  // Gracz
-  'player': 'drakul.png', // ZMIANA v0.89: Podmieniono na nowy plik gracza
+  'player': 'drakul.png',
   
-  // Wrogowie
-  'enemy_standard': 'enemies/standard.png',
-  'enemy_horde': 'enemies/horde.png',
-  'enemy_aggressive': 'enemies/aggressive.png',
-  'enemy_kamikaze': 'enemies/kamikaze.png',
-  'enemy_splitter': 'enemies/splitter.png',
-  'enemy_tank': 'enemies/tank.png',
-  'enemy_ranged': 'enemies/ranged.png',
-  'enemy_elite': 'enemies/elite.png',
-  'enemy_wall': 'enemies/wall.png', // POPRAWKA v0.69: Dodano sprite Oblężnika
+  'enemy_standard': 'enemies/dadgamer/dadgamer_idle.png',
+  'enemy_horde': 'enemies/horde/horde_idle.png',
+  'enemy_aggressive': 'enemies/aggressive/aggressive_idle.png',
+  'enemy_kamikaze': 'enemies/troll/troll_idle.png',
+  'enemy_splitter': 'enemies/splitter/splitter_idle.png',
+  'enemy_tank': 'enemies/tank/tank_idle.png',
+  'enemy_ranged': 'enemies/ranged/ranged_idle.png',
+  'enemy_elite': 'enemies/elite/elite_idle.png',
+  'enemy_wall': 'enemies/wall/wall_idle.png',
   
-  // Pickupy
+  'enemy_ranged_projectile': 'projectiles/bottle.png',
+  
+  'weapon_orbital_potato': 'weapons/orbital_potato.png',
+  'projectile_venom': 'projectiles/venom.png',
+  'projectile_nova': 'projectiles/nova_shot.png',
+  
+  // Ikony Perków (Menu Level Up / Statystyki)
+  'icon_orbital': 'icons/orbital.jpg',
+  'icon_whip': 'icons/whip.jpg',
+  'icon_autogun': 'icons/autogun.png',
+  'icon_nova': 'icons/nova.png',
+  'icon_lightning': 'icons/lightning.png',
+  
+  'icon_damage': 'icons/damage.png',
+  'icon_firerate': 'icons/firerate.png',
+  'icon_multishot': 'icons/multishot.png',
+  'icon_pierce': 'icons/pierce.png',
+  
+  // Ikony Statystyk (Level Up Menu)
+  'icon_level': 'icons/level.png',
+  'icon_health': 'icons/health.png',
+  'icon_speed': 'icons/speed.png',
+  
+  // NOWE ZASOBY v0.92H - Ikony HUD (Górny pasek, Bonusy, Tabele)
+  'icon_hud_score': 'icons/hud_score.png',
+  'icon_hud_level': 'icons/hud_level.png',
+  'icon_hud_xp': 'icons/hud_xp.png',
+  'icon_hud_health': 'icons/hud_health.png',
+  'icon_hud_enemies': 'icons/hud_enemies.png',
+  'icon_hud_time': 'icons/hud_time.png',
+  
+  'icon_hud_speed': 'icons/hud_speed.png',
+  'icon_hud_shield': 'icons/hud_shield.png',
+  'icon_hud_magnet': 'icons/hud_magnet.png',
+  'icon_hud_freeze': 'icons/hud_freeze.png',
+  
   'pickup_heal': 'pickups/heal.png',
   'pickup_magnet': 'pickups/magnet.png',
   'pickup_shield': 'pickups/shield.png',
@@ -87,47 +93,32 @@ const assetDefinitions = {
   'pickup_bomb': 'pickups/bomb.png',
   'pickup_freeze': 'pickups/freeze.png',
   
-  // Inne
-  'gem': 'gem.png',
+  'gem': 'pickups/gem_potato.png',
   'chest': 'chest.png',
   
-  // NOWY ZASÓB V0.89 (Tło)
   'bg_grass': 'bg_grass.png',
   
-  // NOWE ZASOBY V0.87A (Intro)
   'intro_1': 'intro/slide_1.png',
   'intro_2': 'intro/slide_2.png',
   'intro_3': 'intro/slide_3.png',
-  
-  // NOWE ZASOBY V0.88 (Splash Screen) - ZMIANA v0.88f
   'splash_dev': 'splash_dev.png',
   'splash_ratings': 'splash_ratings.png',
   'splash_logo': 'splash_logo.jpg',
   
-  // NOWY ZASÓB v0.79h (Efekty)
   'effect_whip': 'effects/whip_slash.png',
 };
 
-/**
- * Główna funkcja ładująca wszystkie zasoby (Obrazy).
- * @returns {Promise<void>}
- */
 export function loadAssets() {
   console.log('[Assets] Rozpoczynam ładowanie zasobów...');
   const promises = [];
   
   for (const [key, fileName] of Object.entries(assetDefinitions)) {
-    // Zakładamy, że basePath jest już zawarty w src, jeśli jest potrzebny
-    // W naszym przypadku (v0.56) ścieżka jest już w definicji
-    // const src = basePath + fileName; 
-    // Poprawka (v0.56b): basePath jest globalny, ale loadAndRegister go nie używa. Użyjmy go.
     const src = basePath + fileName;
     promises.push(loadAndRegister(key, src));
   }
   
-  // POPRAWKA v0.70 (FIX): Zwracamy rozwiązaną obietnicę (zamiast void), aby uniknąć błędu TypeError w .then() w main.js
   return Promise.all(promises).then(() => {
     console.log(`[Assets] Zakończono ładowanie. Załadowano ${assets.size} zasobów.`);
-    return true; // Zwróć cokolwiek, aby results[0] nie był undefined
+    return true;
   });
 }

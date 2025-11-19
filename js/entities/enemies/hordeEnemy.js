@@ -1,5 +1,5 @@
 // ==============
-// HORDEENEMY.JS (v0.85a - Agresywny Rój / Kohezyjne Otaczanie)
+// HORDEENEMY.JS (v0.91S - Fix migotania w nieskończoność)
 // Lokalizacja: /js/entities/enemies/hordeEnemy.js
 // ==============
 
@@ -10,14 +10,19 @@ import { Enemy } from '../enemy.js';
  * Wolniejszy, ale pojawia się w grupach, ma mniejszą separację i próbuje otaczać gracza.
  */
 export class HordeEnemy extends Enemy {
+  
+  // NOWY KONSTRUKTOR (v0.91k)
+  constructor(x, y, stats, hpScale) {
+    super(x, y, stats, hpScale);
+    // Nadpisz domyślną skalę (1.0) z klasy bazowej Enemy
+    this.drawScale = 0.75; // 75% bazowego rozmiaru (80px * 0.75 = 60px wysokości)
+  }
+  
   getSpeed(game, dist) {
     return super.getSpeed(game, dist) * 0.8;
   }
   
-  getSeparationRadius() {
-    // POPRAWKA v0.76f: Zwiększono 2x (z 16 na 32)
-    return 32;
-  }
+  // (v0.91d: Usunięto getSeparationRadius(), aby dziedziczyć this.size (teraz 39) z klasy bazowej)
   
   getOutlineColor() {
     return '#aed581';
@@ -28,7 +33,6 @@ export class HordeEnemy extends Enemy {
    * Sprawia, że wrogowie celują w losowy punkt wokół gracza.
    */
   update(dt, player, game, state) {
-    let isMoving = false;
     
     if (this.hitStun > 0) {
         this.hitStun -= dt;
@@ -36,9 +40,6 @@ export class HordeEnemy extends Enemy {
         // --- NOWA LOGIKA V0.85A: Kohezyjny Rój Atakujący ---
         const SWARM_RADIUS = 20; // Docelowy punkt 20px za graczem
         
-        // Target jest punktem offsetowym na małym okręgu wokół gracza (unikalnym dla każdego wroga)
-        // Kąt jest stabilny (tylko ID), co wymusza trwałą formację "pierścienia", 
-        // który jednocześnie wchodzi w kolizję z graczem (ze względu na SWARM_RADIUS).
         const targetAngleOffset = (this.id % 7) * (Math.PI * 2 / 7); // Stały kąt offsetu
         
         const targetX = player.x + Math.cos(targetAngleOffset) * SWARM_RADIUS;
@@ -56,28 +57,21 @@ export class HordeEnemy extends Enemy {
             const targetAngleToTarget = Math.atan2(dy, dx);
             vx = Math.cos(targetAngleToTarget) * currentSpeed;
             vy = Math.sin(targetAngleToTarget) * currentSpeed;
-            isMoving = true;
+
+            // NOWA LOGIKA v0.91d: Zapisz ostatni kierunek POZIOMY
+            if (Math.abs(vx) > 0.1) {
+                this.facingDir = Math.sign(vx);
+            }
         }
 
-        // POPRAWKA v0.64: Zastosuj dt do finalnego ruchu
-        this.x += (vx + this.separationX * 0.5) * dt;
-        this.y += (vy + this.separationY * 0.5) * dt;
+        // POPRAWKA v0.91d: Zwiększono siłę separacji z 0.5 na 1.0
+        this.x += (vx + this.separationX * 1.0) * dt;
+        this.y += (vy + this.separationY * 1.0) * dt;
     } 
     
-    // Aktualizacja animacji (skopiowana z klasy bazowej i naprawiona)
-    const dtMs = dt * 1000;
-    if (isMoving) {
-        this.animationTimer += dtMs;
-        if (this.animationTimer >= this.animationSpeed) {
-            this.animationTimer = 0;
-            this.currentFrame = (this.currentFrame + 1) % this.frameCount;
-        }
-    } else {
-        this.currentFrame = 0;
-        this.animationTimer = 0;
+    // NOWA LINIA v0.91S: Dekrementacja hitFlashT
+    if (this.hitFlashT > 0) {
+        this.hitFlashT -= dt;
     }
   }
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.76f] js/entities/enemies/hordeEnemy.js: Zwiększono separację (do 32).');

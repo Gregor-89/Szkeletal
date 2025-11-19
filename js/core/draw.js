@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.90c - FIX: Tłumaczenie ostrzeżeń HUD)
+// DRAW.JS (v0.91e - Sortowanie 'Y' dla perspektywy wrogów)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -140,7 +140,8 @@ export function draw(ctx, state, ui, fps) {
     ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
     // --- Definicje kadrowania (Culling) ---
-    const cullMargin = 50; // 50px marginesu poza ekranem
+    // POPRAWKA v0.91e: Zwiększono margines, aby uwzględnić wysokie sprite'y (np. 120px)
+    const cullMargin = 150; 
     const cullLeft = camera.offsetX - cullMargin;
     const cullRight = camera.offsetX + camera.viewWidth + cullMargin;
     const cullTop = camera.offsetY - cullMargin;
@@ -198,13 +199,35 @@ export function draw(ctx, state, ui, fps) {
     // Rysowanie gracza (delegowane do klasy)
     player.draw(ctx, game);
 
-    // Rysowanie wrogów (delegowane do klas)
+    // --- Rysowanie wrogów (delegowane do klas) ---
+    // NOWA LOGIKA v0.91e: Sortowanie wg osi Y, aby zachować perspektywę
+        
+    // 1. Odfiltruj wrogów, którzy są poza ekranem (culling)
+    const enemiesToDraw = [];
     for (const e of enemies) {
-        if (e.x < cullLeft || e.x > cullRight || e.y < cullTop || e.y > cullBottom) {
+        // Użyj this.size jako średnicy hitboxa (np. 52 lub 80)
+        // Musimy użyć większego marginesu niż hitbox (np. * 1.5), ponieważ sprite jest wyższy (80px)
+        const radius = (e.size / 2) * 1.5; // Użyj bufora 1.5x
+        
+        if (e.x + radius < cullLeft || // Całkowicie na lewo
+            e.x - radius > cullRight || // Całkowicie na prawo
+            e.y + radius < cullTop ||   // Całkowicie powyżej
+            e.y - radius > cullBottom)  // Całkowicie poniżej
+        {
             continue;
         }
+        enemiesToDraw.push(e);
+    }
+
+    // 2. Posortuj widocznych wrogów na podstawie ich pozycji Y (od najdalszego do najbliższego)
+    enemiesToDraw.sort((a, b) => a.y - b.y);
+
+    // 3. Narysuj posortowaną listę
+    for (const e of enemiesToDraw) {
         e.draw(ctx, game);
     }
+    // --- Koniec nowej logiki rysowania wrogów (v0.91e) ---
+
 
     // Rysowanie pocisków (delegowane do klas)
     for (const b of bullets) {

@@ -1,12 +1,12 @@
 // ==============
-// KAMIKAZEENEMY.JS (v0.85b - Nowy Kolor Obrysu)
+// KAMIKAZEENEMY.JS (v0.91S - Fix migotania w nieskończoność)
 // Lokalizacja: /js/entities/enemies/kamikazeEnemy.js
 // ==============
 
 import { Enemy } from '../enemy.js';
 import { addHitText } from '../../core/utils.js';
 import { playSound } from '../../services/audio.js';
-import { devSettings } from '../../services/dev.js'; // DODANO: Import devSettings
+import { devSettings } from '../../services/dev.js'; 
 
 // STAŁE DLA KAMIKAZE
 const DETONATION_RADIUS = 50;
@@ -18,6 +18,13 @@ const DETONATION_DAMAGE = 10;
  */
 export class KamikazeEnemy extends Enemy {
   
+  // NOWY KONSTRUKTOR (v0.91j)
+  constructor(x, y, stats, hpScale) {
+    super(x, y, stats, hpScale);
+    // Nadpisz domyślną skalę (1.0) z klasy bazowej Enemy
+    this.drawScale = 0.7; // 70% bazowego rozmiaru (80px * 0.7 = 56px wysokości)
+  }
+  
   // Zwiększam bazową prędkość, aby był szybszy nawet bez szarży
   getSpeed(game, dist) {
     let speed = super.getSpeed(game, dist); 
@@ -26,10 +33,7 @@ export class KamikazeEnemy extends Enemy {
     return speed;
   }
   
-  getSeparationRadius() {
-    // POPRAWKA v0.77s: Zwiększono 2x (z 24 na 48)
-    return 48;
-  }
+  // (v0.91i: Usunięto getSeparationRadius(), dziedziczy this.size (teraz 36) z klasy bazowej)
   
   getOutlineColor() {
     // NOWA LOGIKA V0.85B: Zmieniono kolor na bardziej wyróżniający (pomarańczowy dyniowy)
@@ -40,7 +44,6 @@ export class KamikazeEnemy extends Enemy {
    * Nadpisana metoda update dla dodania logiki detonacji i zygzaka.
    */
   update(dt, player, game, state) {
-    let isMoving = false;
     
     if (this.hitStun > 0) {
         this.hitStun -= dt;
@@ -101,29 +104,21 @@ export class KamikazeEnemy extends Enemy {
             // 5. Wektor ruchu jest kombinacją siły do celu i siły bocznej
             vx = Math.cos(angleToTarget) * currentSpeed + Math.cos(anglePerp) * sideForce;
             vy = Math.sin(angleToTarget) * currentSpeed + Math.sin(anglePerp) * sideForce;
-
-            isMoving = true;
+            
+            // NOWA LOGIKA v0.91i: Zapisz ostatni kierunek POZIOMY
+            if (Math.abs(vx) > 0.1) {
+                this.facingDir = Math.sign(vx);
+            }
         }
 
-        // POPRAWKA v0.64: Zastosuj dt do finalnego ruchu
-        this.x += (vx + this.separationX * 0.5) * dt;
-        this.y += (vy + this.separationY * 0.5) * dt;
+        // POPRAWKA v0.91i: Zwiększono siłę separacji z 0.5 na 1.0
+        this.x += (vx + this.separationX * 1.0) * dt;
+        this.y += (vy + this.separationY * 1.0) * dt;
     }
     
-    // Aktualizacja animacji (skopiowana z klasy bazowej i NAPRAWIONA)
-    const dtMs = dt * 1000;
-    if (isMoving) {
-        this.animationTimer += dtMs;
-        if (this.animationTimer >= this.animationSpeed) {
-            this.animationTimer = 0;
-            this.currentFrame = (this.currentFrame + 1) % this.frameCount;
-        }
-    } else {
-        this.currentFrame = 0;
-        this.animationTimer = 0;
+    // NOWA LINIA v0.91S: Dekrementacja hitFlashT
+    if (this.hitFlashT > 0) {
+        this.hitFlashT -= dt;
     }
   }
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77s] js/entities/enemies/kamikazeEnemy.js: Zwiększono separację (do 48).');

@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.90 - Implementacja i18n)
+// ENEMYMANAGER.JS (v0.91Z-Final - Finalny Fix Indykatora Oblężenia i kompletna logika)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -271,6 +271,7 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
 
 /**
  * NOWA FUNKCJA (v0.75): Dodaje wskaźniki ostrzegawcze Oblężenia.
+ * POPRAWKA v0.91Y-Final: Dostosowanie rozmiaru wskaźnika Oblężenia.
  */
 export function addSiegeIndicators(state) {
     const { bombIndicators, player } = state;
@@ -292,9 +293,10 @@ export function addSiegeIndicators(state) {
 
         // Dodaj wskaźnik (używa absolutnych współrzędnych)
         bombIndicators.push({
+            // ZMIANA v0.91Y-Final: Użyto finalnego mnożnika 0.6
+            maxRadius: ENEMY_STATS.wall.size * 0.6, // ZMNIEJSZONY MNOŻNIK (88px * 0.6 = 52.8px)
             x: x,
             y: y,
-            maxRadius: ENEMY_STATS.wall.size * 1.5, // Wskaż rozmiar zbliżony do wroga
             life: 0,
             maxLife: maxLife,
             isSiege: true 
@@ -516,6 +518,3 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
     enemies.splice(idx, 1);
     return enemyIdCounter;
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.83a] js/managers/enemyManager.js: Opóźniono spawn agresywnych wrogów (z 15/30/50/70/90/120s na 30/60/90/120/150/180s) i dodano odrzut dla dzieci Splittera.');

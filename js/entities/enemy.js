@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.89d - Białe Mignięcie HitStun)
+// ENEMY.JS (v0.91W - Usunięcie przestarzałej logiki animacji)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -22,46 +22,51 @@ export class Enemy {
         this.hp = Math.floor(stats.hp * hpScale);
         this.maxHp = this.hp;
         this.speed = stats.speed;
-        this.size = stats.size;
+        this.size = stats.size; // Mechaniczny hitbox (np. 52 dla 'standard')
         this.damage = stats.damage;
         this.color = stats.color;
 
         // Stan
         this.lastPlayerCollision = 0;
         this.hitStun = 0;
+        this.hitFlashT = 0; // NOWA LINIA v0.91R: Timer mrugania na biało
         this.rangedCooldown = 0;
         this.separationCooldown = Math.random() * 0.15;
         this.separationX = 0;
         this.separationY = 0;
         this.hazardSlowdownT = 0; // POPRAWKA v0.68a: Timer spowolnienia przez Hazard
         
-        // Stan animacji
+        // --- NOWA LOGIKA GRAFIKI (v0.91j) ---
         this.spriteSheet = getAsset('enemy_' + this.type); 
-        this.frameWidth = 32;     
-        this.frameHeight = 32;    
-        this.frameCount = 4;      
-        this.animationSpeed = 150;  
-        this.animationTimer = 0;
-        this.currentFrame = 0;
+        
+        this.spriteWidth = 32; // Domyślnie
+        this.spriteHeight = 32; // Domyślnie
+        if (this.spriteSheet) {
+            this.spriteWidth = this.spriteSheet.naturalWidth;
+            this.spriteHeight = this.spriteSheet.naturalHeight;
+        }
+        
+        // NOWA LINIA v0.91j: Mnożnik rozmiaru wizualnego. 1.0 = 100% (bazowe 80px wysokości)
+        this.drawScale = 1.0; 
+        
+        this.facingDir = 1; 
+
+        // (Usunięto starą logikę animacji)
     }
     
     /**
      * NOWA METODA (v0.75): Obsługa otrzymania obrażeń.
-     * Oddzielenie logiki obrażeń od logiki kolizji, aby umożliwić nadpisanie (np. przez WallEnemy).
-     * @param {number} damage - Ilość otrzymanych obrażeń
      */
     takeDamage(damage) {
         this.hp -= damage;
         this.hitStun = 0.15;
-        // UWAGA: Logika odrzutu (knockback) jest teraz zarządzana w collisions.js
+        this.hitFlashT = 0.15; // NOWA LINIA v0.91R: Ustaw timer mrugania
     }
 
     /**
      * Główna metoda aktualizacji. Domyślnie goni gracza.
-     * POPRAWKA v0.64: Zastosowano fizykę opartą na dt.
      */
     update(dt, player, game, state) {
-        let isMoving = false;
         
         if (this.hitStun > 0) {
             this.hitStun -= dt;
@@ -71,7 +76,6 @@ export class Enemy {
             const dist = Math.hypot(dx, dy);
             
             let vx = 0, vy = 0;
-            // currentSpeed jest już w px/s (przeskalowane w getSpeed())
             let currentSpeed = this.getSpeed(game, dist);
 
             if (dist > 0.1) {
@@ -79,32 +83,24 @@ export class Enemy {
                 const targetAngle = Math.atan2(dy, dx) + randomOffset;
                 vx = Math.cos(targetAngle) * currentSpeed;
                 vy = Math.sin(targetAngle) * currentSpeed;
-                isMoving = true;
+                
+                if (Math.abs(vx) > 0.1) {
+                    this.facingDir = Math.sign(vx);
+                }
             }
 
-            // POPRAWKA v0.64: Zastosuj dt do finalnego ruchu
-            // separationX i Y są teraz również w px/s (dzięki v0.64b)
-            this.x += (vx + this.separationX * 0.5) * dt;
-            this.y += (vy + this.separationY * 0.5) * dt;
+            // POPRAWKA v0.91b: Zwiększono siłę separacji z 0.5 na 1.0
+            this.x += (vx + this.separationX * 1.0) * dt;
+            this.y += (vy + this.separationY * 1.0) * dt;
         }
         
-        // Aktualizacja animacji
-        const dtMs = dt * 1000;
-        if (isMoving) {
-            this.animationTimer += dtMs;
-            if (this.animationTimer >= this.animationSpeed) {
-                this.animationTimer = 0;
-                this.currentFrame = (this.currentFrame + 1) % this.frameCount;
-            }
-        } else {
-            this.currentFrame = 0;
-            this.animationTimer = 0;
+        if (this.hitFlashT > 0) { // NOWA LINIA v0.91R: Dekrementacja timera mrugania
+            this.hitFlashT -= dt;
         }
     }
 
     /**
      * Oblicza separację od innych wrogów (wywoływane rzadziej z gameLogic)
-     * POPRAWKA v0.76f: Dodano logikę ignorowania dla Oblężnika
      */
     applySeparation(dt, enemies) {
         this.separationCooldown -= dt;
@@ -114,15 +110,11 @@ export class Enemy {
             this.separationX = 0; 
             this.separationY = 0;
             
-            const separationRadius = this.getSeparationRadius();
-            const multiplier = 144; // MUSI pasować do mnożnika prędkości z v0.64!
+            const multiplier = 144; 
             
             for (const other of enemies) {
                 if (this.id === other.id) continue;
                 
-                // POPRAWKA v0.76f: OCHRONA FORMACJI OBLĘŻNIKA
-                // Jeśli 'ten' wróg (this) jest Oblężnikiem, ignoruj siłę separacji
-                // od wszystkich wrogów, którzy NIE SĄ Oblężnikami.
                 if (this.type === 'wall' && other.type !== 'wall') {
                     continue;
                 }
@@ -131,11 +123,12 @@ export class Enemy {
                 const ody = this.y - other.y;
                 const d = Math.hypot(odx, ody);
                 
-                if (d < separationRadius && d > 0.1) {
-                    const force = (separationRadius - d) / separationRadius;
+                // POPRAWKA v0.91b: Użyj sumy promieni hitboxów (size/2)
+                const requiredDist = (this.size / 2) + (other.size / 2);
+                
+                if (d < requiredDist && d > 0.1) {
+                    const force = (requiredDist - d) / requiredDist; 
                     
-                    // POPRAWKA v0.64b: Skalujemy siłę (force) o ten sam mnożnik co prędkość,
-                    // aby obie siły działały w tej samej jednostce (px/s)
                     this.separationX += (odx / d) * force * multiplier;
                     this.separationY += (ody / d) * force * multiplier;
                 }
@@ -145,42 +138,54 @@ export class Enemy {
 
     /**
      * Główna metoda rysowania.
-     * POPRAWKA v0.69: Sygnatura draw NIE POTRZEBUJE 'player' (powrót do v0.68)
      */
     draw(ctx, game) {
         ctx.save();
         
-        // NOWA LOGIKA v0.89d: Zmiana mignięcia na biały filtr
-        if (this.hitStun > 0 && Math.floor(performance.now() / 50) % 2 === 0) {
+        // POPRAWKA v0.91R: Używamy hitFlashT zamiast hitStun do mrugania
+        if (this.hitFlashT > 0 && Math.floor(performance.now() / 50) % 2 === 0) {
             ctx.filter = 'grayscale(1) brightness(5)'; // Białe mignięcie
         }
 
-        if (game.freezeT > 0 || this.hazardSlowdownT > 0) { // Sprawdź, czy wróg jest spowolniony przez Freeze lub Hazard
-            // Rysowanie efektu spowolnienia (niebieski/zielony kontur)
+        // Spowolnienie
+        if (game.freezeT > 0 || this.hazardSlowdownT > 0) { 
             ctx.strokeStyle = (this.hazardSlowdownT > 0 && game.freezeT <= 0) ? '#00FF00' : '#29b6f6';
             ctx.lineWidth = 2;
             ctx.strokeRect(this.x - this.size / 2 - 2, this.y - this.size / 2 - 2, this.size + 4, this.size + 4);
         }
         
-        // Usunięto starą logikę globalAlpha (przeniesiona wyżej jako filtr)
-
+        // --- NOWA LOGIKA RYSOWANIA (v0.91j - Skalowanie z drawScale) ---
         if (this.spriteSheet) {
-            const sourceX = this.currentFrame * this.frameWidth;
-            const sourceY = 0;
-            const drawSize = this.size * 2.5; 
-
+            // Cel: 80px wysokości * mnożnik (np. 1.0 dla standard, 0.7 dla trolla)
+            const targetVisualHeight = 80 * this.drawScale; 
+            
+            // Oblicz proporcje (W / H)
+            const aspectRatio = this.spriteWidth / this.spriteHeight;
+            
+            const drawHeight = targetVisualHeight;
+            const drawWidth = targetVisualHeight * aspectRatio;
+            
+            ctx.save();
+            ctx.translate(this.x, this.y); 
+            
+            if (this.facingDir === -1) {
+                ctx.scale(-1, 1);
+            }
+            
+            ctx.imageSmoothingEnabled = false; 
+            
             ctx.drawImage(
                 this.spriteSheet,  
-                sourceX,           
-                sourceY,           
-                this.frameWidth,   
-                this.frameHeight,  
-                this.x - drawSize / 2, 
-                this.y - drawSize / 2, 
-                drawSize,          
-                drawSize           
+                -drawWidth / 2, // Wycentruj w poziomie
+                -drawHeight / 2, // Wycentruj w pionie
+                drawWidth,       
+                drawHeight       
             );
+            
+            ctx.restore(); 
+            
         } else {
+            // Fallback (stara logika kwadratu)
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
 
@@ -188,9 +193,10 @@ export class Enemy {
             ctx.lineWidth = 2;
             ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
+        // --- KONIEC LOGIKI RYSOWANIA (v0.91j) ---
 
-        ctx.filter = 'none'; // Zawsze resetuj filtr
-        ctx.globalAlpha = 1; // Upewnij się, że alpha jest 1
+        ctx.filter = 'none';
+        ctx.globalAlpha = 1;
 
         this.drawHealthBar(ctx);
 
@@ -200,16 +206,12 @@ export class Enemy {
     // --- Metody Pomocnicze (mogą być nadpisane) ---
 
     getSpeed(game, dist) {
-        // Oblicz redukcję prędkości wynikającą ze spowolnienia Hazardu
         const hazardSlowdown = this.hazardSlowdownT > 0 ? HAZARD_CONFIG.HAZARD_ENEMY_SLOWDOWN_MULTIPLIER : 1;
-        
-        // Zwraca prędkość w px/s
         return this.speed * (game.freezeT > 0 ? 0.25 : 1) * (1 - (this.hitStun || 0)) * hazardSlowdown;
     }
 
     getSeparationRadius() {
-        // POPRAWKA v0.77s: Zwiększono bazową separację 2x (z 40 na 80)
-        return 80; 
+        return this.size; 
     }
 
     getOutlineColor() {
@@ -220,10 +222,3 @@ export class Enemy {
         // Domyślnie nic nie rysuj
     }
 }
-
-// === KLASY SPECJALISTYCZNE (PRZENIESIONE DO /js/entities/enemies/ ) ===
-// (StandardEnemy, HordeEnemy, AggressiveEnemy, KamikazeEnemy, SplitterEnemy, TankEnemy, RangedEnemy, EliteEnemy, WallEnemy)
-// Zostały usunięte z tego pliku.
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77s] js/entities/enemy.js: Zwiększono bazową separację (do 80) i dodano logikę ignorowania dla Oblężnika.');

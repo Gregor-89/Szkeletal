@@ -1,5 +1,5 @@
 // ==============
-// NOVAWEAPON.JS (v0.73 - Uproszczenie Użycia PERK_CONFIG)
+// NOVAWEAPON.JS (v0.92E - Przekazywanie sprite'a)
 // Lokalizacja: /js/config/weapons/novaWeapon.js
 // ==============
 
@@ -46,27 +46,40 @@ export class NovaWeapon extends Weapon {
       this.timer = this.cooldown;
       
       const autoGun = this.player.getWeapon(AutoGun);
-      // POPRAWKA v0.65: Użyj wartości z WEAPON_CONFIG jako fallback
       const fallbackConfig = WEAPON_CONFIG.AUTOGUN || {};
       const dmg = autoGun ? autoGun.bulletDamage : (fallbackConfig.BASE_DAMAGE || 1);
       const pierce = autoGun ? autoGun.pierce : 0;
-      const speed = autoGun ? autoGun.bulletSpeed : (fallbackConfig.BASE_SPEED || 864); // Już w px/s
+      const speed = autoGun ? autoGun.bulletSpeed : (fallbackConfig.BASE_SPEED || 864);
       const size = autoGun ? autoGun.bulletSize : (fallbackConfig.BASE_SIZE || 3);
+      
+      // ZMIANA v0.92E: Pobranie konfiguracji sprite'a dla NOVY
+      // (Nova używa własnego sprite'a, zdefiniowanego w WEAPON_CONFIG.NOVA)
+      const spriteKey = WEAPON_CONFIG.NOVA.SPRITE || null;
+      const spriteScale = WEAPON_CONFIG.NOVA.SPRITE_SCALE || 2.0;
       
       for (let i = 0; i < this.bulletCount; i++) {
         const ang = (i / this.bulletCount) * Math.PI * 2;
         
         const bullet = bulletsPool.get();
         if (bullet) {
+          // ZMIANA v0.92E: Przekazanie spriteKey i spriteScale
           bullet.init(
             this.player.x,
             this.player.y,
-            Math.cos(ang) * speed, // px/s
-            Math.sin(ang) * speed, // px/s
+            Math.cos(ang) * speed,
+            Math.sin(ang) * speed,
             size,
             dmg,
             '#FFC107',
-            pierce
+            pierce,
+            Infinity,
+            0,
+            0,
+            null,
+            null,
+            0,
+            spriteKey, // NOWY ARGUMENT
+            spriteScale // NOWY ARGUMENT
           );
         }
       }

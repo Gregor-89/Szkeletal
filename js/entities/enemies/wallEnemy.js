@@ -1,5 +1,5 @@
 // ==============
-// WALLENEMY.JS (v0.77v - FIX: Naprawa błędu 'chests is not defined')
+// WALLENEMY.JS (v0.91A' - Zmniejszenie skali do 1.10 i Fix HP Bar)
 // Lokalizacja /js/entities/enemies/wallEnemy.js
 // ==============
 
@@ -14,6 +14,8 @@ import { killEnemy } from '../../managers/enemyManager.js';
  * Bardzo wolny i wytrzymały, pojawia się w Wydarzeniu Oblężenia.
  */
 export class WallEnemy extends Enemy {
+  
+  // NOWY KONSTRUKTOR (v0.91Y)
   constructor(x, y, stats, hpScale) {
     super(x, y, stats, hpScale);
     
@@ -25,6 +27,9 @@ export class WallEnemy extends Enemy {
     this.detonationT = this.initialLife + (Math.random() * WALL_DETONATION_CONFIG.WALL_DETONATION_TIME_VARIANCE);
     this.isDetonating = false;
     this.isAutoDead = false; 
+    
+    // NOWA LINIA v0.91A': Zmniejszenie skali wizualnej (1.10x bazowej wysokości 80px = 88px)
+    this.drawScale = 1.10; 
   }
   
   takeDamage(damage) {
@@ -38,7 +43,7 @@ export class WallEnemy extends Enemy {
   
   getSeparationRadius() {
     // POPRAWKA v0.76g: Przywrócenie oryginalnej wartości (z 60 na 30)
-    return 30; // Utrzymanie ciasnej formacji "ściany"
+    return 30; // Utrzymanie ciasnej formacji "ściany" (mimo dużego hitboxa 88px)
   }
 
   // NOWA METODA: Główna logika samodestrukcji
@@ -46,8 +51,8 @@ export class WallEnemy extends Enemy {
     // POPRAWKA v0.77v: Dodano 'chests' do listy
     const { game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators, hitTextPool, hitTexts, chests } = state;
     
-    const radius = WALL_DETONATION_CONFIG.WALL_DETONATION_RADIUS; // 400
-    const damage = WALL_DETONATION_CONFIG.WALL_DETONATION_DAMAGE; // 5
+    const radius = WALL_DETONATION_CONFIG.WALL_DETONATION_RADIUS; // 275
+    const damage = WALL_DETONATION_CONFIG.WALL_DETONATION_DAMAGE; // 15
     
     // NOWA LOGIKA v0.77: Zadawanie obrażeń wrogom i blokowanie dropów
     // Iterujemy wstecz, ponieważ killEnemy modyfikuje tablicę
@@ -70,11 +75,10 @@ export class WallEnemy extends Enemy {
     }
 
     // 1. Efekt Area Nuke (niszczy dropy i gemy w zasięgu)
-    // POPRAWKA v0.77: Użycie nowego, większego promienia (400)
     areaNuke(
         this.x,
         this.y,
-        radius, // Użyj nowego promienia 400
+        radius, // Użyj nowego promienia 275
         false, // onlyXP = false
         game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators,
         true // isWallNuke = true
@@ -101,6 +105,11 @@ export class WallEnemy extends Enemy {
             this.selfDestruct(state);
         }
     }
+    
+    // NOWA LINIA v0.91T: Dekrementacja hitFlashT
+    if (this.hitFlashT > 0) {
+        this.hitFlashT -= dt;
+    }
   }
 
   // NADPISANA METODA: Rysowanie z efektem ostrzegawczym
@@ -114,7 +123,8 @@ export class WallEnemy extends Enemy {
         
         // Zmniejszona alpha (0.1 - 0.5) i rozmiar (1.1x - 1.4x)
         const pulseAlpha = 0.1 + (pulseFactor * 0.4); 
-        const pulseSize = this.size * 1.1 + (pulseFactor * this.size * 0.3); 
+        // Baza to teraz this.size/2 = 44.
+        const pulseSize = this.size * 0.5 * 1.5 + (pulseFactor * this.size * 0.5 * 0.3); 
         
         ctx.globalAlpha = pulseAlpha;
         ctx.fillStyle = '#ff9800'; // Pomarańczowy ostrzegawczy
@@ -134,10 +144,13 @@ export class WallEnemy extends Enemy {
   drawHealthBar(ctx) {
       if (!this.showHealthBar) return;
       
-      const w = 26, h = 4;
+      const w = 40, h = 6; // Większy pasek HP
       const frac = Math.max(0, this.hp / this.maxHp);
       const bx = this.x - w / 2;
-      const by = this.y - this.size / 2 - 8;
+      
+      // ZMIANA v0.91A': Prawidłowe umiejscowienie paska nad sprite'em 88px
+      // Nowa połowa wysokości to 44px (88/2). Offset: 8px.
+      const by = this.y - 44 - 8; 
       
       ctx.fillStyle = '#300';
       ctx.fillRect(bx, by, w, h);
@@ -151,6 +164,3 @@ export class WallEnemy extends Enemy {
       ctx.strokeRect(bx, by, w, h);
   }
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77] js/entities/enemies/wallEnemy.js: Wdrożono obrażenia AOE, blokadę dropów i subtelniejszy wskaźnik.');

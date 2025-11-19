@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.82b - Balans Pioruna)
+// DEV.JS (v0.91R - Zwiększenie czasu presetów Min Bronie)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -114,7 +114,113 @@ function callStartRun() {
 }
 
 /**
- * Funkcja wywoływana z HTML (onclick) do zastosowania ustawień.
+ * NOWA FUNKCJA (v0.91O): Presety z minimalnymi broniami (Lvl 1) i późnym czasem gry.
+ */
+function devPresetMinimalWeapons() {
+    if (!gameState.game || !gameState.settings || !gameState.perkLevels || !gameState.player) {
+        alert('❌ BŁĄD DEV: Stan gry nie jest gotowy. Uruchom grę przynajmniej raz (aby zainicjować stan).');
+        return;
+    }
+    
+    const { game, settings, perkLevels, player } = gameState;
+
+    // --- Standard Preset Cleanup (duplikacja z applyDevPreset, aby wymusić reset) ---
+    const worldWidth = gameState.canvas.width * (gameState.camera.worldWidth / gameState.camera.viewWidth);
+    const worldHeight = gameState.canvas.height * (gameState.camera.worldHeight / gameState.camera.viewHeight);
+    player.reset(worldWidth, worldHeight);
+    
+    game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
+    game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH;
+    game.health = PLAYER_CONFIG.INITIAL_HEALTH;
+    
+    for (let key in perkLevels) {
+        delete perkLevels[key];
+    }
+    
+    game.level = 10; // Poziom gracza (dla skali HP wrogów)
+    game.time = 181; // ZMIANA v0.91R: Późny czas gry (181s = 3 min 1s)
+    devSettings.allowedEnemies = ['all'];
+    
+    game.xp = 0;
+    game.xpNeeded = calculateXpNeeded(game.level);
+    
+    const devTimeInput = document.getElementById('devTime');
+    if (devTimeInput) devTimeInput.value = game.time; 
+    devStartTime = game.time;
+    
+    // --- Manual Level 1 Application (Minimal Weapons) ---
+    
+    // 1. Whip (Zawsze istnieje na Lvl 1 po resecie)
+    const whip = player.getWeapon(WhipWeapon); 
+    if (whip) whip.level = 1;
+
+    // 2. Paszywne perki (Lvl 1)
+    ['speed', 'pickup', 'health'].forEach(perkId => {
+        const perk = perkPool.find(p => p.id === perkId);
+        if (perk && perk.max > 0) {
+            perk.apply(gameState, perk); 
+            perkLevels[perkId] = 1;
+        }
+    });
+
+    // 3. Dodanie i Lvl 1 dla wszystkich broni (i ich perków bazowych)
+    
+    // Autogun (Dodaj + 4 perki startowe)
+    const autogunPerk = perkPool.find(p => p.id === 'autogun');
+    if (autogunPerk) {
+        autogunPerk.apply(gameState, autogunPerk); 
+        perkLevels['autogun'] = 1;
+        
+        // Perki AutoGun Lvl 1
+        ['firerate', 'damage', 'multishot', 'pierce'].forEach(perkId => {
+             const perk = perkPool.find(p => p.id === perkId);
+             if (perk && perk.max > 0) {
+                perk.apply(gameState, perk); 
+                perkLevels[perkId] = 1;
+             }
+        });
+    }
+
+    // Orbital, Nova, Lightning (Lvl 1)
+    ['orbital', 'nova', 'chainLightning'].forEach(weaponId => {
+        const perk = perkPool.find(p => p.id === weaponId);
+        if (perk) {
+            perk.apply(gameState, perk); 
+            perkLevels[weaponId] = 1;
+        }
+    });
+    
+    // --- UI Update i Start ---
+    
+    // Zaktualizuj UI Dev Menu na wartości presetów
+    document.getElementById('devLevel').value = game.level;
+    document.getElementById('devHealth').value = game.health;
+    document.getElementById('devMaxHealth').value = game.maxHealth;
+    document.getElementById('devXP').value = game.xp;
+
+    // Ustaw UI broni
+    document.getElementById('devWhip').value = whip.level;
+    document.getElementById('devAutoGun').value = 1;
+    document.getElementById('devOrbital').value = 1;
+    document.getElementById('devNova').value = 1;
+    document.getElementById('devLightning').value = 1;
+
+    // Ustaw UI perków AutoGun
+    const autoGun = player.getWeapon(AutoGun);
+    if (autoGun) {
+        document.getElementById('devDamage').value = autoGun.bulletDamage;
+        document.getElementById('devFireRate').value = autoGun.fireRate;
+        document.getElementById('devMultishot').value = autoGun.multishot;
+        document.getElementById('devPierce').value = autoGun.pierce;
+    }
+
+    devSettings.presetLoaded = true;
+    callStartRun();
+}
+
+
+/**
+ * Funkcja wywołana z HTML (onclick) do zastosowania ustawień.
  */
 function applyDevSettings() {
     if (!gameState.game || !gameState.settings || !gameState.player) {
@@ -440,6 +546,8 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.devSpawnPickup = devSpawnPickup;
     window.devPresetAlmostMax = devPresetAlmostMax;
     window.devPresetMax = devPresetMax;
+    // NOWA LINIA v0.91O
+    window.devPresetMinimalWeapons = devPresetMinimalWeapons;
     
     console.log('[DEBUG-v0.76e] js/services/dev.js: Dev Tools zainicjalizowane z dwoma callbackami (loadConfig/startRun).');
 }

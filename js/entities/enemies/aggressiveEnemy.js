@@ -1,5 +1,5 @@
 // ==============
-// AGGRESSIVEENEMY.JS (v0.85a - Wydłużona Sygnalizacja)
+// AGGRESSIVEENEMY.JS (v0.91S - Fix migotania w nieskończoność)
 // Lokalizacja: /js/entities/enemies/aggressiveEnemy.js
 // ==============
 
@@ -91,10 +91,20 @@ export class AggressiveEnemy extends Enemy {
             vx = Math.cos(finalAngle) * currentSpeed;
             vy = Math.sin(finalAngle) * currentSpeed;
             isMoving = true;
+            
+            // NOWA LOGIKA v0.91h: Zapisz ostatni kierunek POZIOMY
+            if (Math.abs(vx) > 0.1) {
+                this.facingDir = Math.sign(vx);
+            }
         }
         
-        this.x += (vx + this.separationX * 0.5) * dt;
-        this.y += (vy + this.separationY * 0.5) * dt;
+        this.x += (vx + this.separationX * 1.0) * dt;
+        this.y += (vy + this.separationY * 1.0) * dt;
+    }
+    
+    // NOWA LINIA v0.91S: Dekrementacja hitFlashT
+    if (this.hitFlashT > 0) {
+        this.hitFlashT -= dt;
     }
     
     // Aktualizacja animacji (skopiowana z klasy bazowej i naprawiona)

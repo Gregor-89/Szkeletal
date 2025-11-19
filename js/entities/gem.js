@@ -1,29 +1,31 @@
 // ==============
-// GEM.JS (v0.76 - Milestone Balance: Dodano ograniczony czas życia gemów)
+// GEM.JS (v0.91g - Gibotanie i Poświata Ziemniaczka)
 // Lokalizacja: /js/entities/gem.js
 // ==============
 
 import { getRandomColor } from '../core/utils.js';
-// NOWY IMPORT v0.76: Konfiguracja czasu życia gemów
 import { GEM_CONFIG } from '../config/gameData.js';
+import { get as getAsset } from '../services/assets.js';
 
 export class Gem {
   constructor() {
-    // Właściwości zostaną ustawione przez .init()
     this.x = 0;
     this.y = 0;
-    this.r = 4;
+    this.r = 4; // Mechaniczny hitbox (promień)
     this.val = 1;
     this.color = '#4FC3F7';
     
     this.active = false;
     this.pool = null;
     
-    // NOWE (v0.76): Czas życia gemów
     this.life = 0;
     this.maxLife = GEM_CONFIG.BASE_LIFE;
     
-    this.hazardDecayT = 0; // Przemianowano z inHazardDecayT
+    this.hazardDecayT = 0;
+    
+    // --- NOWE WŁAŚCIWOŚCI (v0.91g) ---
+    this.initialY = 0; // Początkowa pozycja Y dla efektu gibotania
+    this.floatTimer = Math.random() * Math.PI * 2; // Losowy start dla asynchronicznego gibotania
   }
   
   /**
@@ -36,11 +38,14 @@ export class Gem {
     this.val = val || 1;
     this.color = color || getRandomColor();
     this.active = true;
-    this.hazardDecayT = 0; // Reset zaniku
+    this.hazardDecayT = 0;
     
-    // NOWE (v0.76): Ustawienie czasu życia
     this.life = GEM_CONFIG.BASE_LIFE;
     this.maxLife = GEM_CONFIG.BASE_LIFE;
+    
+    // --- NOWE (v0.91g) ---
+    this.initialY = y; // Zapisz początkową pozycję Y
+    this.floatTimer = Math.random() * Math.PI * 2; // Zresetuj timer
   }
   
   /**
@@ -51,7 +56,6 @@ export class Gem {
       this.pool.release(this);
     }
     this.active = false;
-    // Resetuj stan v0.76
     this.life = 0;
   }
   
@@ -63,7 +67,7 @@ export class Gem {
   }
   
   /**
-   * NOWA METODA (v0.76): Zwraca true, jeśli czas życia gema minął.
+   * Zwraca true, jeśli czas życia gema minął.
    */
   isDead() {
     return this.life <= 0;
@@ -74,12 +78,14 @@ export class Gem {
    * Dodano logikę czasu życia (v0.76).
    */
   update(player, game, dt) {
-    // 1. Logika czasu życia
     this.life -= dt;
     if (this.isDead()) {
       this.release();
-      return; // Zatrzymaj dalsze przetwarzanie, jeśli jest martwy
+      return;
     }
+    
+    // --- NOWE (v0.91g): Aktualizacja floatTimera ---
+    this.floatTimer += dt * 4; // Prędkość gibotania
     
     // 2. Logika przyciągania (przeniesiona z v0.68)
     const dx = player.x - this.x;
@@ -92,6 +98,8 @@ export class Gem {
       const spd = (game.magnet ? 8 : 2.5) * 60;
       this.x += (dx / d) * spd * dt;
       this.y += (dy / d) * spd * dt;
+      // --- NOWE (v0.91g): Resetuj initialY przy ruchu ---
+      this.initialY = this.y;
     }
   }
   
@@ -104,26 +112,47 @@ export class Gem {
     
     ctx.save();
     
-    // 1. Wizualne zanikanie (Hazard)
     let alpha = 1.0 - this.hazardDecayT;
     
-    // 2. NOWE (v0.76): Efekt migania przed zniknięciem (czas życia)
     const fadeTime = GEM_CONFIG.FADE_TIME;
     if (this.life < fadeTime) {
-      // Mnoży alfę przez efekt migania (0.3 lub 1.0)
       alpha *= (Math.floor(performance.now() / 150) % 2 === 0) ? 0.3 : 1;
     }
     
     ctx.globalAlpha = alpha;
     
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-    ctx.fill();
+    const sprite = getAsset('gem');
     
-    ctx.restore();
+    if (sprite) {
+      const targetVisualHeight = 20;
+      const aspectRatio = sprite.naturalWidth / sprite.naturalHeight;
+      const drawHeight = targetVisualHeight;
+      const drawWidth = targetVisualHeight * aspectRatio;
+      
+      // --- NOWE (v0.91g): Efekt gibotania ---
+      const floatOffset = Math.sin(this.floatTimer) * 2; // +/- 2px
+      
+      // --- NOWE (v0.91g): Efekt złotej poświaty ---
+      ctx.shadowColor = 'rgba(255, 215, 0, 0.7)'; // Złoty kolor
+      ctx.shadowBlur = 8; // Rozmycie
+      
+      ctx.imageSmoothingEnabled = false;
+      
+      ctx.drawImage(
+        sprite,
+        this.x - drawWidth / 2,
+        this.y - drawHeight / 2 + floatOffset, // Dodaj offset do Y
+        drawWidth,
+        drawHeight
+      );
+      
+    } else {
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    ctx.restore(); // Przywróć kontekst (wyłącz cień i globalAlpha)
   }
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.76] js/entities/gem.js: Zaimplementowano ograniczony czas życia (GEM_CONFIG).');

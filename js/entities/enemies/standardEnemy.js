@@ -1,5 +1,5 @@
 // ==============
-// STANDARDENEMY.JS (v0.85a - Agresywny Wężyk)
+// STANDARDENEMY.JS (v0.91S - Fix migotania w nieskończoność)
 // Lokalizacja: /js/entities/enemies/standardEnemy.js
 // ==============
 
@@ -19,7 +19,6 @@ export class StandardEnemy extends Enemy {
    * Nadpisana metoda update dla dodania unikania kierunkowego.
    */
   update(dt, player, game, state) {
-    let isMoving = false;
     
     if (this.hitStun > 0) {
         this.hitStun -= dt;
@@ -46,25 +45,20 @@ export class StandardEnemy extends Enemy {
             vx += Math.cos(targetAngleEvasion) * sideSpeed * Math.sin(game.time * 2.5 + this.id); // Zmniejszono częstotliwość z 5 na 2.5
             vy += Math.sin(targetAngleEvasion) * sideSpeed * Math.sin(game.time * 2.5 + this.id);
 
-            isMoving = true;
+            // NOWA LOGIKA v0.91a: Zapisz ostatni kierunek POZIOMY
+            if (Math.abs(vx) > 0.1) {
+                this.facingDir = Math.sign(vx);
+            }
         }
 
-        // POPRAWKA v0.64: Zastosuj dt do finalnego ruchu
-        this.x += (vx + this.separationX * 0.5) * dt;
-        this.y += (vy + this.separationY * 0.5) * dt;
+        // POPRAWKA v0.91b: Zastosuj dt do finalnego ruchu
+        this.x += (vx + this.separationX * 1.0) * dt;
+        this.y += (vy + this.separationY * 1.0) * dt;
     } 
     
-    // Aktualizacja animacji (skopiowana z klasy bazowej i naprawiona)
-    const dtMs = dt * 1000;
-    if (isMoving) {
-        this.animationTimer += dtMs;
-        if (this.animationTimer >= this.animationSpeed) { // Użycie this.animationSpeed
-            this.animationTimer = 0;
-            this.currentFrame = (this.currentFrame + 1) % this.frameCount; // Użycie this.frameCount
-        }
-    } else {
-        this.currentFrame = 0;
-        this.animationTimer = 0;
+    // NOWA LINIA v0.91S: Dekrementacja hitFlashT
+    if (this.hitFlashT > 0) {
+        this.hitFlashT -= dt;
     }
   }
 }

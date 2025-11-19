@@ -37,6 +37,15 @@ body { margin:0; background:#1a1a1a; color:#fff; font-family:Arial, sans-serif; 
   line-height:1; /* Zapobiega problemom z wysokością linii emoji */
 }
 
+/* ZMIANA v0.92B: Style dla obrazków w statystykach (HUD GŁÓWNY) */
+.stat-icon img.stat-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 3px;
+    display: block;
+}
+
 .overlay { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.7); z-index:50; }
 .panel { background:var(--ui-panel); border:2px solid #555; border-radius:10px; padding:18px; width:min(95vw, 760px); box-shadow:0 10px 30px rgba(0,0,0,.6); max-height:90vh; overflow-y:auto; }
 
@@ -102,52 +111,145 @@ body { margin:0; background:#1a1a1a; color:#fff; font-family:Arial, sans-serif; 
 .perk h4 { margin:0 0 6px 0; font-size:16px; display:flex; align-items:center; gap:6px; }
 .perk p { margin:0; font-size:13px; color:#ddd; }
 
+/* ZMIANA v0.92B: Nowe style dla perków z grafiką (perk-graphic) */
+.perk.perk-graphic {
+    display: flex;           /* Układ flexbox */
+    flex-direction: row;     /* Poziomy: obrazek - tekst */
+    padding: 0;              /* Usuwamy padding kontenera */
+    align-items: stretch;    /* Rozciągnij dzieci do wysokości */
+    overflow: hidden;        /* Przytnij */
+    min-height: 110px;       /* Zwiększona minimalna wysokość */
+}
+
+.perk-graphic .perk-img-wrapper {
+    width: 120px;            /* ZMIANA: Zwiększono z 90px na 120px */
+    flex-shrink: 0;          
+    background: #222;        
+    border-right: 1px solid #555; 
+    position: relative;
+}
+
+.perk-graphic .perk-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;       
+    display: block;          
+}
+
+.perk-graphic .perk-info {
+    padding: 12px;           
+    flex-grow: 1;            
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    position: relative;      
+    text-align: left;        
+}
+
+/* Dostosowanie badge'a */
+.perk-graphic .badge {
+    right: 8px;
+    top: 8px;
+    z-index: 5;
+}
+
+/* Dostosowanie nagłówka */
+.perk-graphic h4 {
+    margin-top: 16px; 
+    margin-bottom: 6px;
+}
+
+
+/* --- ZMIANA v0.92C-FIX-TABLET: Poprawa GRID dla statystyk --- */
 #statsDisplay, #statsDisplayPause {
   display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
-  gap:10px;
+  /* FIX: Zwiększono z 150px na 210px, aby wymusić 3 kolumny zamiast 4 na tablecie */
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); 
+  gap: 8px; 
   margin-top:12px;
   background:#1a1a1a;
   border-radius:8px;
   padding:12px;
   border:1px solid #444;
 }
+
 .stat-item {
   background:#2a2a2a;
-  padding:10px;
   border-radius:6px;
-  border-left:3px solid #4CAF50;
+  border-left:none;
+  border: 1px solid #444;
   display:flex;
-  align-items:center;
-  gap:10px;
+  align-items:stretch;
+  gap:0; 
+  padding: 0; 
+  overflow: hidden;
+  min-height: 50px;
 }
+
 .stat-item-icon {
-  width:32px;
-  height:32px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:20px;
+    width: 50px; 
+    background: #222;
+    border-right: 1px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 24px; 
+    overflow: hidden;
 }
+
+.stat-item-icon img, 
+.stat-item-icon .stat-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 0; 
+}
+
 .stat-item-content {
   flex:1;
+  padding: 6px 10px; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0; 
 }
+
 .stat-item-label {
-  font-size:11px;
+  font-size:10px; 
   color:#999;
   text-transform:uppercase;
   letter-spacing:0.5px;
+  margin-bottom: 2px;
+  white-space: nowrap; 
+  overflow: hidden;
+  text-overflow: ellipsis; 
 }
 .stat-item-value {
-  font-size:16px;
+  font-size:15px;
   font-weight:bold;
   color:#fff;
 }
+/* --- KONIEC FIXA --- */
+
 
 .chest-reward {
   text-align:center;
   margin:20px 0;
 }
+
+/* ZMIANA v0.92C: Styl dla obrazka w skrzyni */
+.chest-reward-img {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    margin: 0 auto 10px auto;
+    display: block;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5)); /* Złota poświata */
+    animation: chestPulse 1s ease-in-out infinite;
+}
+
 .chest-reward-icon {
   font-size:72px;
   margin-bottom:10px;
@@ -384,4 +486,4 @@ img.intro-image {
 }
 
 /* LOG DIAGNOSTYCZNY (w komentarzu CSS) */
-/* [DEBUG-v0.77h] style.css: Dodano z-index: 1 do #gameCanvas, aby naprawić błąd pulsowania HP. */
+/* [DEBUG-v0.77h] style.css: Dodano z-index: 1 do #gameCanvas, aby naprawić błąd pulsowania HP. */ 
