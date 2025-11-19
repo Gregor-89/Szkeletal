@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.90b - FIX: Inicjalizacja i18n)
+// MAIN.JS (v0.91i - FIX: Splash Double Skip & Ghost Clicks)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -375,7 +375,7 @@ function initMenuAndEvents() {
     }
 }
 
-// === START GRY (Logika V0.88g - Sekwencja Splash Screen + Debounce Fix) ===
+// === START GRY (Logika V0.91i - Splash Screen Fix) ===
 
 // 1. Zmienne stanu Splash
 let assetsLoaded = false;
@@ -391,7 +391,7 @@ const SPLASH_SEQUENCE = [
     'img/splash_ratings.png',
     'img/splash_logo.jpg'
 ];
-// ZMIANA V0.88g: Użycie niestandardowych czasów (zgodnie z życzeniem)
+// ZMIANA V0.88g: Użycie niestandardowych czasów
 const SPLASH_DURATIONS = [
     4000, // Czas dla 'splash_dev.png' (4 sekundy)
     15000, // Czas dla 'splash_ratings.png' (15 sekund)
@@ -452,11 +452,11 @@ function finishSplashSequence() {
     }, 1000); // Czas musi pasować do animacji CSS (1.0s)
 }
 
-// 4. Funkcja Pokaż Slajd (v0.88g - z blokadą)
+// 4. Funkcja Pokaż Slajd (v0.91i - FIX: Increased Lock Time)
 function showSplash(index) {
     if (!assetsLoaded || !splashSequenceActive) return;
 
-    splashAdvanceLocked = true; // Zablokuj natychmiast
+    splashAdvanceLocked = true; // Zablokuj na chwilę (debounce)
 
     // Reset animacji (wymuszenie reflow)
     splashImageEl.classList.remove('fade-in');
@@ -466,22 +466,32 @@ function showSplash(index) {
     splashImageEl.src = SPLASH_SEQUENCE[index];
     splashImageEl.classList.add('fade-in');
     
-    // Ustaw timer na automatyczne przejście (używa tablicy czasów)
-    const duration = SPLASH_DURATIONS[index] || 4000; // Użyj 4s jako fallback
+    // Ustaw timer na automatyczne przejście
+    const duration = SPLASH_DURATIONS[index] || 4000;
     splashTimer = setTimeout(advanceSplash, duration); 
     
-    // Odblokuj możliwość przejścia DOPIERO po zakończeniu animacji fade-in (1.2s)
+    // POPRAWKA v0.91i: Zwiększono blokadę z 100ms do 500ms
+    // To zapobiega podwójnemu skipowaniu przy szybkich kliknięciach lub "ghost events"
     setTimeout(() => {
         splashAdvanceLocked = false;
-    }, 1200); // Musi pasować do czasu animacji 'fadeIn' w style.css
+    }, 500); 
 }
 
-// 5. Funkcja Przejdź do Następnego (v0.88g - z blokadą)
-function advanceSplash() {
+// 5. Funkcja Przejdź do Następnego (v0.91i - FIX: Prevent Default)
+function advanceSplash(e) {
+    // POPRAWKA v0.91i: Obsługa zdarzenia 'e' i blokowanie duplikatów
+    if (e) {
+        if (e.type === 'keydown' && e.repeat) return; // Ignoruj trzymanie klawisza
+        // Zapobiegaj propagacji zdarzeń dotykowych w myszkowe (ghost clicks)
+        if ((e.type === 'touchstart' || e.type === 'mousedown') && e.preventDefault) {
+            e.preventDefault();
+        }
+    }
+
     // Sprawdź blokadę
     if (!splashSequenceActive || !assetsLoaded || splashAdvanceLocked) return;
     
-    splashAdvanceLocked = true; // Zablokuj dalsze kliknięcia
+    splashAdvanceLocked = true; // Zablokuj dalsze kliknięcia natychmiast
     
     clearTimeout(splashTimer);
     currentSplashIndex++;
@@ -498,10 +508,9 @@ function advanceSplash() {
 launchApp();
 
 // Dodaj listenery pominięcia (aktywne tylko podczas splash)
-// UWAGA: Te listenery zostaną usunięte w finishSplashSequence()
 window.addEventListener('keydown', advanceSplash);
 window.addEventListener('mousedown', advanceSplash);
-window.addEventListener('touchstart', advanceSplash);
+window.addEventListener('touchstart', advanceSplash, { passive: false }); // passive: false allows preventDefault
 
 
 // === Listenery (muszą być zdefiniowane globalnie dla initInput) ===
