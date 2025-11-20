@@ -1,35 +1,29 @@
 // ==============
-// WALLENEMY.JS (v0.91A' - Zmniejszenie skali do 1.10 i Fix HP Bar)
-// Lokalizacja /js/entities/enemies/wallEnemy.js
+// WALLENEMY.JS (v0.92 - Fix: Skala 1.0 dla dużego wroga)
+// Lokalizacja: /js/entities/enemies/wallEnemy.js
 // ==============
 
 import { Enemy } from '../enemy.js';
 import { WALL_DETONATION_CONFIG } from '../../config/gameData.js';
 import { areaNuke, addHitText } from '../../core/utils.js';
-// NOWY IMPORT v0.77: Potrzebujemy dostępu do killEnemy
 import { killEnemy } from '../../managers/enemyManager.js';
 
-/**
- * Wróg Oblężnik (Wall).
- * Bardzo wolny i wytrzymały, pojawia się w Wydarzeniu Oblężenia.
- */
 export class WallEnemy extends Enemy {
   
-  // NOWY KONSTRUKTOR (v0.91Y)
-  constructor(x, y, stats, hpScale) {
+  constructor(x, y, stats, hpScale = 1) {
     super(x, y, stats, hpScale);
     
-    // LOGIKA DYNAMICZNEGO HP BAR (v0.75)
-    this.showHealthBar = false; // Czy pasek HP ma być widoczny
-    
-    // LOGIKA AUTODESTRUKCJI (v0.75)
+    this.showHealthBar = false; 
     this.initialLife = WALL_DETONATION_CONFIG.WALL_DECAY_TIME;
     this.detonationT = this.initialLife + (Math.random() * WALL_DETONATION_CONFIG.WALL_DETONATION_TIME_VARIANCE);
     this.isDetonating = false;
     this.isAutoDead = false; 
     
-    // NOWA LINIA v0.91A': Zmniejszenie skali wizualnej (1.10x bazowej wysokości 80px = 88px)
-    this.drawScale = 1.10; 
+    // FIX: Ustawiamy skalę na 1.0, żeby nie był gigantem
+    this.visualScale = 1.0; 
+    
+    // Upewniamy się, że asset jest
+    this.assetKey = 'enemy_wall';
   }
   
   takeDamage(damage) {
@@ -38,62 +32,53 @@ export class WallEnemy extends Enemy {
   }
 
   getOutlineColor() {
-    return this.isDetonating ? '#FF4500' : '#90A4AE'; // Sygnalizacja kolorem
+    return this.isDetonating ? '#FF4500' : '#90A4AE'; 
   }
   
   getSeparationRadius() {
-    // POPRAWKA v0.76g: Przywrócenie oryginalnej wartości (z 60 na 30)
-    return 30; // Utrzymanie ciasnej formacji "ściany" (mimo dużego hitboxa 88px)
+    return 30; 
   }
 
-  // NOWA METODA: Główna logika samodestrukcji
   selfDestruct(state) {
-    // POPRAWKA v0.77v: Dodano 'chests' do listy
     const { game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators, hitTextPool, hitTexts, chests } = state;
     
-    const radius = WALL_DETONATION_CONFIG.WALL_DETONATION_RADIUS; // 275
-    const damage = WALL_DETONATION_CONFIG.WALL_DETONATION_DAMAGE; // 15
+    const radius = WALL_DETONATION_CONFIG.WALL_DETONATION_RADIUS; 
+    const damage = WALL_DETONATION_CONFIG.WALL_DETONATION_DAMAGE; 
     
-    // NOWA LOGIKA v0.77: Zadawanie obrażeń wrogom i blokowanie dropów
-    // Iterujemy wstecz, ponieważ killEnemy modyfikuje tablicę
     for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
-        // Nie rań samego siebie (chociaż i tak zaraz zniknie)
         if (e.id === this.id) continue; 
         
         const d = Math.hypot(this.x - e.x, this.y - e.y);
         
         if (d <= radius) {
             e.takeDamage(damage);
-            addHitText(hitTextPool, hitTexts, e.x, e.y, damage, '#ff9800'); // Pomarańczowy tekst
+            if (typeof addHitText === 'function') {
+                 addHitText(hitTextPool, hitTexts, e.x, e.y, damage, '#ff9800'); 
+            }
             
             if (e.hp <= 0) {
-                // Zabij wroga, ale BLOKUJ dropy (ostatni argument = true)
                 state.enemyIdCounter = killEnemy(j, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, false, true); 
             }
         }
     }
 
-    // 1. Efekt Area Nuke (niszczy dropy i gemy w zasięgu)
     areaNuke(
         this.x,
         this.y,
-        radius, // Użyj nowego promienia 275
-        false, // onlyXP = false
+        radius, 
+        false, 
         game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators,
-        true // isWallNuke = true
+        true 
     );
 
-    // 2. Ustawienie flagi do usunięcia przez gameLogic 
     this.isAutoDead = true; 
-    console.log(`[WallEnemy] Oblężnik ID:${this.id} detonuje i usuwa się z mapy.`);
+    console.log(`[WallEnemy] Oblężnik ID:${this.id} detonuje.`);
   }
 
-  // NADPISANA METODA: Logika timera i ruchu
   update(dt, player, game, state) {
-    super.update(dt, player, game, state); // Ruch, separacja, hitstun
+    super.update(dt, player, game, state); 
     
-    // Logika timera detonacji
     if (!this.isAutoDead) {
         this.detonationT -= dt;
 
@@ -106,51 +91,44 @@ export class WallEnemy extends Enemy {
         }
     }
     
-    // NOWA LINIA v0.91T: Dekrementacja hitFlashT
     if (this.hitFlashT > 0) {
         this.hitFlashT -= dt;
     }
   }
 
-  // NADPISANA METODA: Rysowanie z efektem ostrzegawczym
   draw(ctx, game) {
     ctx.save();
     
-    // ZBALANSOWANIE v0.77: Złagodzenie wskaźnika detonacji (subtelniejszy)
     if (this.isDetonating) {
         const timeElapsed = WALL_DETONATION_CONFIG.WALL_DETONATION_WARNING_TIME - this.detonationT;
-        const pulseFactor = (Math.sin(timeElapsed * 8) + 1) / 2; // (Zakres 0.0 - 1.0)
+        const pulseFactor = (Math.sin(timeElapsed * 8) + 1) / 2; 
         
-        // Zmniejszona alpha (0.1 - 0.5) i rozmiar (1.1x - 1.4x)
         const pulseAlpha = 0.1 + (pulseFactor * 0.4); 
-        // Baza to teraz this.size/2 = 44.
         const pulseSize = this.size * 0.5 * 1.5 + (pulseFactor * this.size * 0.5 * 0.3); 
         
         ctx.globalAlpha = pulseAlpha;
-        ctx.fillStyle = '#ff9800'; // Pomarańczowy ostrzegawczy
+        ctx.fillStyle = '#ff9800'; 
         ctx.beginPath();
         ctx.arc(this.x, this.y, pulseSize, 0, Math.PI * 2);
         ctx.fill();
         
-        ctx.globalAlpha = 1; // Reset alpha dla rysowania bazowego
+        ctx.globalAlpha = 1; 
     }
     
-    // Wywołanie rysowania z klasy bazowej
     super.draw(ctx, game);
     ctx.restore();
   }
   
-  // NADPISANA METODA: Rysowanie paska HP (tylko, jeśli trafiony)
   drawHealthBar(ctx) {
       if (!this.showHealthBar) return;
       
-      const w = 40, h = 6; // Większy pasek HP
+      const w = 40, h = 6; 
       const frac = Math.max(0, this.hp / this.maxHp);
-      const bx = this.x - w / 2;
       
-      // ZMIANA v0.91A': Prawidłowe umiejscowienie paska nad sprite'em 88px
-      // Nowa połowa wysokości to 44px (88/2). Offset: 8px.
-      const by = this.y - 44 - 8; 
+      // Pozycja względem 0,0 (bo draw ma translate)
+      const bx = -w / 2;
+      const spriteH = this.size * this.visualScale; // 88px
+      const by = -(spriteH / 2) - 8;
       
       ctx.fillStyle = '#300';
       ctx.fillRect(bx, by, w, h);

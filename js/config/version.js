@@ -1,10 +1,9 @@
 // ==============
-// VERSION.JS (v0.90 - Refaktoryzacja i18n)
+// VERSION.JS (v0.92 - Stable)
 // Lokalizacja: /js/config/version.js
 // ==============
 
-// Definiuje aktualną wersję gry
-export const VERSION = '0.91';
+export const VERSION = '0.92';
 
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.90] js/config/version.js: Ustawiono wersję na 0.90 (Refaktoryzacja i18n).');
+// Log diagnostyczny startu
+console.log(`[Szkeletal] Inicjalizacja wersji v${VERSION} (Animacje & Refactor Renderingu)`);

@@ -1,14 +1,11 @@
 // ==============
-// PLAYER.JS (v0.89c - Zwiększenie Hitboxa Gracza)
+// PLAYER.JS (v0.92a - Fix: Dokładny rozmiar 80px)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
-// POPRAWKA v0.71: Import 1 podklasy broni z nowego folderu
 import { AutoGun } from '../config/weapons/autoGun.js';
-// NOWY IMPORT v0.79 (teraz broń startowa)
 import { WhipWeapon } from '../config/weapons/whipWeapon.js'; 
 import { get as getAsset } from '../services/assets.js';
-// POPRAWKA v0.65: Import nowej centralnej konfiguracji
 import { PLAYER_CONFIG } from '../config/gameData.js';
 
 export class Player {
@@ -17,50 +14,34 @@ export class Player {
         this.x = startX;
         this.y = startY;
         
-        // POPRAWKA v0.89c: Zmiana hitboxa (średnicy kolizji)
-        // Stara wartość 40. Nowa wartość 80 pasuje do wizualnego rozmiaru
-        // sprite'a (drawScale 2.5 * 32px = 80px).
+        // Hitbox (średnica kolizji) - to jest fizyczna wielkość gracza
+        // W v0.91 wynikowy rozmiar obrazka wynosił 80px.
         this.size = 80; 
 
         // Statystyki
-        // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG
         this.speed = PLAYER_CONFIG.BASE_SPEED;
         this.color = '#4CAF50';
         
         this.weapons = [];
-        // POPRAWKA v0.81b: Zmiana broni startowej
         this.weapons.push(new WhipWeapon(this));
         
-        // POPRAWKA v0.68: Dodanie stanu dla Pól Zagrożenia
-        this.inHazard = false; // Nowy stan
+        this.inHazard = false; 
         
-        // --- NOWA LOGIKA GRAFIKI (v0.89) ---
-        this.spriteSheet = getAsset('player'); // Pobierz statyczny obrazek 'drakul.png'
+        // --- LOGIKA ANIMACJI v0.92 ---
+        this.spriteSheet = getAsset('player'); 
         
-        // REGULATOR ROZMIARU:
-        // Bazowy rozmiar pliku drakul.png to 32x32 (nawet jeśli plik jest większy, tak go traktujemy).
-        // 2.5 oznacza, że postać będzie miała ok. 80x80 pikseli (32 * 2.5).
-        this.drawScale = 2.5; 
+        // Konfiguracja Sprite Sheeta (4x4)
+        this.totalFrames = 16;
+        this.cols = 4;
+        this.rows = 4;
         
-        // (Stara logika animacji - zakomentowana na czas statycznego obrazka)
-        // this.frameWidth = 32;     // Placeholder: szerokość jednej klatki
-        // this.frameHeight = 32;    // Placeholder: wysokość jednej klatki
-        
-        // Definicje animacji
-        // this.animations = {
-        //     'idle': { row: 0, frameCount: 4, animationSpeed: 200 }, // Placeholder: 4 klatki, 200ms/klatkę
-        //     'walk': { row: 1, frameCount: 4, animationSpeed: 150 }  // Placeholder: 4 klatki, 150ms/klatkę
-        // };
-        // this.currentState = 'idle'; // Domyślny stan
-        
-        // this.animationTimer = 0;
-        // this.currentFrame = 0;
-        // --- Koniec logiki grafiki ---
+        // Stan animacji
+        this.currentFrameIndex = 0; 
+        this.animTimer = 0;
+        this.baseAnimSpeed = 0.04; 
         
         this.isMoving = false;
-        
-        // NOWE v0.80a: Śledzenie ostatniego kierunku *poziomego* (1 = prawo, -1 = lewo)
-        this.facingDir = 1;
+        this.facingDir = 1; // 1 = Prawo, -1 = Lewo
     }
 
     /**
@@ -69,24 +50,18 @@ export class Player {
     reset(canvasWidth, canvasHeight) {
         this.x = canvasWidth / 2;
         this.y = canvasHeight / 2;
-        // POPRAWKA v0.65: Użyj wartości z PLAYER_CONFIG
         this.speed = PLAYER_CONFIG.BASE_SPEED;
         
         this.weapons = [];
-        // POPRAWKA v0.81b: Zmiana broni startowej
         this.weapons.push(new WhipWeapon(this));
         
-        // POPRAWKA v0.68: Resetowanie stanu dla Pól Zagrożenia
         this.inHazard = false;
         
-        // Reset animacji (dla logiki v0.89)
-        // this.animationTimer = 0;
-        // this.currentFrame = 0;
+        // Reset animacji
         this.isMoving = false;
-        // this.currentState = 'idle';
-        
-        // NOWE v0.80a: Reset śledzenia kierunku
         this.facingDir = 1;
+        this.currentFrameIndex = 0;
+        this.animTimer = 0;
     }
 
     /**
@@ -98,26 +73,26 @@ export class Player {
         const hazardSlowdown = this.inHazard ? 0.5 : 1;
         
         const speedMul = (game.speedT > 0 ? 1.4 : 1) * (1 - (game.collisionSlowdown || 0)) * hazardSlowdown;
-        const currentSpeed = this.speed * speedMul;
-        const maxSpeed = this.speed * 1.3 * speedMul;
+        const currentMaxSpeed = this.speed * 1.3 * speedMul; 
+        const currentSpeedFactor = this.speed * speedMul; 
 
         // Input z joysticka
         if (Math.abs(jVec.x) > 0.1 || Math.abs(jVec.y) > 0.1) {
-            vx += jVec.x * currentSpeed;
-            vy += jVec.y * currentSpeed;
+            vx += jVec.x * currentSpeedFactor;
+            vy += jVec.y * currentSpeedFactor;
         }
         
         // Input z klawiatury
-        if (keys['w'] || keys['arrowup']) vy -= currentSpeed;
-        if (keys['s'] || keys['arrowdown']) vy += currentSpeed;
-        if (keys['a'] || keys['arrowleft']) vx -= currentSpeed;
-        if (keys['d'] || keys['arrowright']) vx += currentSpeed;
+        if (keys['w'] || keys['arrowup']) vy -= currentSpeedFactor;
+        if (keys['s'] || keys['arrowdown']) vy += currentSpeedFactor;
+        if (keys['a'] || keys['arrowleft']) vx -= currentSpeedFactor;
+        if (keys['d'] || keys['arrowright']) vx += currentSpeedFactor;
 
         // Normalizacja prędkości
         const sp = Math.hypot(vx, vy);
-        if (sp > maxSpeed) {
-            vx = (vx / sp) * maxSpeed;
-            vy = (vy / sp) * maxSpeed;
+        if (sp > currentMaxSpeed) {
+            vx = (vx / sp) * currentMaxSpeed;
+            vy = (vy / sp) * currentMaxSpeed;
         }
 
         this.x += vx * dt;
@@ -125,45 +100,32 @@ export class Player {
         
         this.isMoving = (Math.abs(vx) > 0 || Math.abs(vy) > 0);
         
-        // NOWE v0.80a: Zapisz ostatni kierunek POZIOMY
-        // Aktualizuj tylko, jeśli ruch poziomy jest wystarczająco duży,
-        // aby uniknąć zmiany kierunku przy ruchu pionowym lub dryfowaniu joysticka.
+        // Zapisz ostatni kierunek POZIOMY (dla odbicia lustrzanego)
         if (Math.abs(vx) > 0.1) {
             this.facingDir = Math.sign(vx);
         }
 
-        // (Stara logika animacji - zakomentowana na czas statycznego obrazka v0.89)
-        // const oldState = this.currentState;
-        // this.currentState = this.isMoving ? 'walk' : 'idle';
-        
-        // if (oldState !== this.currentState) {
-        //     this.animationTimer = 0;
-        //     this.currentFrame = 0;
-        // }
-        
-        // const dtMs = dt * 1000; 
-        // const currentAnim = this.animations[this.currentState];
-        
-        // this.animationTimer += dtMs;
-        // if (this.animationTimer >= currentAnim.animationSpeed) {
-        //     this.animationTimer = 0;
-        //     this.currentFrame = (this.currentFrame + 1) % currentAnim.frameCount;
-        // }
-        // --- Koniec logiki animacji ---
+        // --- AKTUALIZACJA ANIMACJI v0.92 ---
+        if (this.isMoving) {
+            const speedRatio = sp / PLAYER_CONFIG.BASE_SPEED;
+            this.animTimer += dt * speedRatio;
+            
+            if (this.animTimer >= this.baseAnimSpeed) {
+                this.animTimer = 0;
+                this.currentFrameIndex = (this.currentFrameIndex + 1) % this.totalFrames;
+            }
+        } else {
+            this.currentFrameIndex = 0;
+            this.animTimer = 0;
+        }
 
         return this.isMoving;
     }
     
-    /**
-     * Znajduje broń danego typu w ekwipunku gracza.
-     */
     getWeapon(weaponClass) {
         return this.weapons.find(w => w instanceof weaponClass) || null;
     }
 
-    /**
-     * Dodaje nową broń lub ulepsza istniejącą.
-     */
     addWeapon(weaponClass, perk) {
         let existing = this.getWeapon(weaponClass);
         if (existing) {
@@ -177,69 +139,88 @@ export class Player {
      * Rysuje gracza i jego pasek HP na canvasie.
      */
     draw(ctx, game) {
-        
-        // --- NOWA LOGIKA RYSOWANIA (v0.89) ---
+        if (!this.spriteSheet) {
+             this.spriteSheet = getAsset('player');
+        }
+
+        // Zmienna pomocnicza do ustalenia, gdzie jest góra grafiki (dla paska HP)
+        // Domyślnie: połowa hitboxa
+        let visualTopOffset = this.size / 2;
+
         if (this.spriteSheet) {
-            // Bazowy rozmiar obrazka (umowny 32x32) pomnożony przez regulator
-            const drawSize = 32 * this.drawScale; 
+            // 1. Obliczanie wymiarów klatki ŹRÓDŁOWEJ
+            const sheetW = this.spriteSheet.naturalWidth;
+            const sheetH = this.spriteSheet.naturalHeight;
             
+            const frameW = sheetW / this.cols;
+            const frameH = sheetH / this.rows;
+            
+            // 2. Obliczanie pozycji klatki
+            const col = this.currentFrameIndex % this.cols;
+            const row = Math.floor(this.currentFrameIndex / this.cols);
+            const sx = col * frameW;
+            const sy = row * frameH;
+
+            // 3. Obliczanie wymiarów DOCELOWYCH (na ekranie) - FIX v0.92a
+            // Ustawiamy visualScale na 1.0, aby grafika miała dokładnie rozmiar hitboxa (80px).
+            // Dzięki temu rozmiar jest identyczny jak w v0.91.
+            const visualScale = 1.0; 
+            
+            // Zachowujemy proporcje klatki źródłowej (na wypadek gdyby nie była idealnym kwadratem)
+            const ratio = frameW / frameH; 
+            
+            // Height = 80px * 1.0 = 80px
+            const destH = this.size * visualScale; 
+            const destW = destH * ratio; 
+            
+            visualTopOffset = destH / 2; 
+
             ctx.save();
-            ctx.translate(this.x, this.y); // Przesuń kontekst na pozycję gracza
+            ctx.translate(this.x, this.y); 
             
-            // Odbicie lustrzane, jeśli gracz idzie w lewo
-            // Obrazek domyślnie patrzy w prawo (this.facingDir = 1)
             if (this.facingDir === -1) {
                 ctx.scale(-1, 1);
             }
             
-            // NOWA LOGIKA v0.89d: Mignięcie gracza po trafieniu
             if (game.playerHitFlashT > 0 && Math.floor(performance.now() / 50) % 2 === 0) {
-                // Miganie na "biało" (użyjemy filtra)
                 ctx.filter = 'grayscale(1) brightness(5)';
             }
             
-            // Wyłączenie wygładzania obrazu (dla pixel artu)
             ctx.imageSmoothingEnabled = false; 
             
+            // RYSOWANIE KLATKI
             ctx.drawImage(
                 this.spriteSheet, 
-                -drawSize / 2, // Rysuj wycentrowane na (0,0)
-                -drawSize / 2, // Rysuj wycentrowane na (0,0)
-                drawSize,          
-                drawSize           
+                sx, sy, frameW, frameH, // Źródło
+                -destW / 2, -destH / 2, // Cel (centrowanie względem x,y)
+                destW, destH            // Wymuszony rozmiar
             );
             
-            ctx.filter = 'none'; // Zawsze resetuj filtr
-            ctx.restore(); // Przywróć kontekst (usuń scale i translate)
+            ctx.filter = 'none'; 
+            ctx.restore(); 
             
         } else {
-            // Fallback (stara logika kwadratu)
+            // Fallback
             ctx.fillStyle = this.color;
             ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
-        // --- KONIEC LOGIKI RYSOWANIA (v0.89) ---
         
+        // Rysowanie efektów
         if (this.inHazard) {
-            // POPRAWKA v0.89d: Zwiększenie promienia efektu hazardu
-            const hazardPulse = 50 + 3 * Math.sin(performance.now() / 80); // Było 22
-            ctx.strokeStyle = '#00FF00'; // Zielony kontur
+            const hazardPulse = 50 + 3 * Math.sin(performance.now() / 80); 
+            ctx.strokeStyle = '#00FF00'; 
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(this.x, this.y, hazardPulse, 0, Math.PI * 2);
             ctx.stroke();
         }
 
-        // Rysowanie małego paska HP nad graczem
         const hpBarW = 64;
         const hpBarH = 6;
         const hpBarX = this.x - hpBarW / 2;
         
-        // POPRAWKA v0.89b: Oblicz górną krawędź wizualną (sprite'a lub hitboxa)
-        const visualTopOffset = (this.spriteSheet ? (32 * this.drawScale) / 2 : this.size / 2);
-        const hpBarY = this.y - visualTopOffset - 12; // 12px nad wizualną górą
+        // Pasek HP
+        const hpBarY = this.y - visualTopOffset - 12; 
         
         const healthPct = Math.max(0, Math.min(1, game.health / game.maxHealth));
 
@@ -258,8 +239,7 @@ export class Player {
         ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
 
         if (game.shield) {
-            // POPRAWKA v0.89d: Zwiększenie promienia tarczy
-            const pulse = 50 + 3 * Math.sin(performance.now() / 100); // Było 22
+            const pulse = 50 + 3 * Math.sin(performance.now() / 100); 
             ctx.strokeStyle = '#90CAF9';
             ctx.lineWidth = 2;
             ctx.beginPath();

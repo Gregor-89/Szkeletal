@@ -4,6 +4,49 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ---
 
+## [v0.92] - 2025-11-20
+### Dodano (Animacje & Grafika)
+- **System Animacji:** Wdrożono obsługę spritesheetów (klatek animacji) w silniku renderowania (`Enemy.js`, `Player.js`).
+- **Player:** Dodano w pełni animowaną postać Gracza (4x4 sprite sheet) z dynamiczną prędkością odtwarzania zależną od ruchu.
+- **StandardEnemy (DadGamer):** Dodano animację biegu (4x4 sprite sheet).
+- **Skalowanie Wizualne (`visualScale`):** Wprowadzono system oddzielający wielkość hitboxa (fizyka) od wielkości wyświetlanej grafiki. Pozwala to na zachowanie czytelności rozgrywki przy różnorodnych grafikach.
+
+### Zmieniono / Usprawniono
+- **Refaktoryzacja `Enemy.js`:** Klasa bazowa wrogów obsługuje teraz uniwersalne rysowanie animacji oraz pasków zdrowia.
+- **Health Bars:** Zestandaryzowano i naprawiono wyświetlanie pasków zdrowia dla Bossów (Elite) i Tanków.
+- **Balans Wizualny:** Dostosowano rozmiary kluczowych wrogów (Wall, Tank, Elite) do nowego systemu, aby zachować proporcje z v0.91.
+
+### Naprawiono
+- **Crash Gry:** Naprawiono błąd krytyczny `drawHealthBar is not a function`, który powodował zawieszanie się gry przy pojawieniu się Tanka.
+- **Nieśmiertelność:** Naprawiono błąd w konstruktorach wrogów, który powodował błędne obliczanie HP (NaN).
+- **Importy:** Poprawiono błędne importy statystyk (`ENEMY_STATS` vs `ENEMY_CONFIG`) w plikach wrogów.
+
+---
+
+## [v0.91] - Kompletna Szata Graficzna i Stabilizacja UI
+* **Grafika (Assets):** Wymieniono wszystkie pozostałe "zastępcze" grafiki (emoji, kształty) na profesjonalne assety rastrowe.
+    * Dodano dedykowane ikony dla **wszystkich typów wrogów** (Standard, Horda, Tank, Ranged, Elite, Kamikaze, Splitter, Wall).
+    * Dodano grafiki dla **wszystkich Pickupów** (Leczenie, Magnes, Bomba, Tarcza, Szybkość, Zamrożenie) oraz **Skrzyni**.
+    * Dodano grafiki dla **broni** (Pociski, Wybuchy Nova, Butelki wrogów).
+* **UI / HUD (Desktop & Tablet):**
+    * Zaimplementowano **responsywne skalowanie HUD-a** na tabletach (ikony 28px, jeden rząd, brak ucinania).
+    * Ujednolicono wygląd pasków Zdrowia i XP (wysokość 12px, identyczne ramki, poprawione wypełnianie rogów).
+    * Przeniesiono **Panel Bonusów** (ikony aktywnych efektów) pod licznik FPS, aby nie zasłaniał rozgrywki.
+    * Wszystkie statystyki w menu (Score, HP, Lvl) mają teraz dedykowane ikony graficzne zamiast tekstu.
+* **VFX (Poświaty/Glow):**
+    * Zaimplementowano system **dynamicznej poświaty (Glow)** dla wszystkich pickupów.
+    * Dodano **Białą Poświatę** dla Talerza Hrabianki (Leczenie) i **Czerwoną** dla Łakomstwa (Magnes), zgodnie z balansem kolorystycznym.
+    * Skrzynia (LudoBox) ma teraz unikalną, **złotą poświatę** i animację pulsowania.
+* **UX (Splash Screen):**
+    * Dodano **blokadę (debounce)** przy pomijaniu ekranów startowych (500ms), aby zapobiec przypadkowemu pominięciu kilku slajdów na raz (tzw. "ghost clicks" na mobile).
+    * Umożliwiono pomijanie slajdów **w trakcie trwania animacji** wejścia (fade-in).
+* **Przewodnik (Guide):**
+    * Całkowicie przebudowano generator Przewodnika w grze. Teraz wyświetla on **listę obiektów wraz z ich grafikami** i opisami pobieranymi dynamicznie z systemu tłumaczeń (i18n).
+* **Fix (i18n):** Naprawiono problem znikających ikon w nagłówkach tabel i menu przy zmianie języka (ikony są teraz wstrzykiwane dynamicznie obok przetłumaczonego tekstu).
+* **Fix (Techniczny):** Usunięto cykliczną zależność w `chest.js`, która powodowała błędy inicjalizacji przy ładowaniu gry.
+* 
+---
+
 ## [v0.90] - Globalna Refaktoryzacja Lokalizacji (i18n) i Re-skin
 * **Refaktoryzacja (i18n):** Zaimplementowano globalny system lokalizacji.
     * Utworzono silnik `i18n.js` zarządzający językiem i obsługujący **fallback do języka polskiego** (wzorcowego).

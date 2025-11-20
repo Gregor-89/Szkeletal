@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.91a - Fix: Ścieżka Chest)
+// ASSETS.JS (v0.92 - Pełna lista + Animacje)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
@@ -36,10 +36,13 @@ async function loadAndRegister(key, src) {
 }
 
 const assetDefinitions = {
-  'player': 'drakul.png',
+  // ZMIANA v0.92: Spritesheet gracza (4x4)
+  'player': 'player/drakul_spritesheet.png',
   
   // Wrogowie
-  'enemy_standard': 'enemies/dadgamer/dadgamer_idle.png',
+  // ZMIANA v0.92: Spritesheet DadGamera (4x4)
+  'enemy_standard': 'enemies/dadgamer/dadgamer_spritesheet.png',
+  
   'enemy_horde': 'enemies/horde/horde_idle.png',
   'enemy_aggressive': 'enemies/aggressive/aggressive_idle.png',
   'enemy_kamikaze': 'enemies/troll/troll_idle.png',
@@ -72,7 +75,7 @@ const assetDefinitions = {
   'icon_health': 'icons/health.png',
   'icon_speed': 'icons/speed.png',
   
-  // IKONA ZASIĘGU (Specjalnie icons/magnet.png, nie pickups)
+  // IKONA ZASIĘGU
   'icon_pickup_range': 'icons/magnet.png',
   
   // Ikony HUD
@@ -83,13 +86,13 @@ const assetDefinitions = {
   'icon_hud_enemies': 'icons/hud_enemies.png',
   'icon_hud_time': 'icons/hud_time.png',
   
-  // Ikony Bonusów (Dla panelu po prawej)
+  // Ikony Bonusów
   'icon_hud_speed': 'icons/hud_speed.png',
   'icon_hud_shield': 'icons/hud_shield.png',
   'icon_hud_magnet': 'icons/hud_magnet.png',
   'icon_hud_freeze': 'icons/hud_freeze.png',
   
-  // Pickupy (Leżące na ziemi)
+  // Pickupy
   'pickup_heal': 'pickups/heal.png',
   'pickup_magnet': 'pickups/magnet.png',
   'pickup_shield': 'pickups/shield.png',
@@ -98,7 +101,6 @@ const assetDefinitions = {
   'pickup_freeze': 'pickups/freeze.png',
   
   'gem': 'pickups/gem_potato.png',
-  // POPRAWKA v0.91a: Zmieniono ścieżkę na 'pickups/chest.png'
   'chest': 'pickups/chest.png',
   
   'bg_grass': 'bg_grass.png',
