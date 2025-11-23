@@ -1,57 +1,48 @@
 // ==============
-// DEV.JS (v0.91R - Zwiększenie czasu presetów Min Bronie)
+// DEV.JS (v0.93 - FIX: AutoGun in Presets & Correct Event Timing)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
 import { findFreeSpotForPickup } from '../core/utils.js';
 import { perkPool } from '../config/perks.js';
-import { PLAYER_CONFIG, GAME_CONFIG, WEAPON_CONFIG } from '../config/gameData.js';
+import { PLAYER_CONFIG, GAME_CONFIG, WEAPON_CONFIG, SIEGE_EVENT_CONFIG } from '../config/gameData.js';
 
-// POPRAWKA v0.71: Import 3 podklas broni z nowego folderu
+// Importy broni
 import { AutoGun } from '../config/weapons/autoGun.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
 import { WhipWeapon } from '../config/weapons/whipWeapon.js';
-// NOWY IMPORT v0.82a
 import { ChainLightningWeapon } from '../config/weapons/chainLightningWeapon.js';
 
-// POPRAWKA v0.74: Import mapy z managera efektów
 import { PICKUP_CLASS_MAP } from '../managers/effects.js';
-// POPRAWKA v0.77v: Usunięto 'btnConfirmNo' z importu, aby uniknąć błędu stałej
-import { confirmOverlay, confirmText, btnConfirmYes } from '../ui/domElements.js'; // NOWY IMPORT
+import { confirmOverlay, confirmText, btnConfirmYes } from '../ui/domElements.js';
 
 /**
  * Eksportowana zmienna przechowująca docelowy czas startu.
- * Zostanie użyta w ui.js do skorygowania timera.
  */
 export let devStartTime = 0;
 
-/**
- * NOWA FUNKCJA (v0.76d): Resetuje czas startowy dewelopera.
- * Musi być wywoływana przez eventManager przy starcie nowej gry.
- */
 export function resetDevTime() {
     devStartTime = 0;
 }
 
-
 /**
- * Eksportowane ustawienia deweloperskie.
+ * Ustawienia Dev
  */
 export const devSettings = {
     godMode: false,
     allowedEnemies: ['all'],
     allowedPickups: ['all'],
-    presetLoaded: false
+    presetLoaded: false,
+    forcedSpawnRate: null, 
+    forcedMaxEnemies: null
 };
 
-// Wewnętrzna referencja do stanu gry i funkcji startu
+// Referencje
 let gameState = {};
-// POPRAWKA v0.76e: Rozdzielenie callbacków
 let loadConfigCallback = () => {};
 let startRunCallback = () => {};
 
-// Funkcja obliczająca XP potrzebne na dany poziom
 function calculateXpNeeded(level) {
     let xp = GAME_CONFIG.INITIAL_XP_NEEDED || 5;
     for (let i = 1; i < level; i++) {
@@ -60,71 +51,147 @@ function calculateXpNeeded(level) {
     return xp;
 }
 
-// NOWA FUNKCJA v0.75: Pokazuje prosty modal z wiadomością
 function showDevConfirmModal(text) {
-    // POPRAWKA v0.77v: Pobierz btnConfirmNo jako zmienną lokalną 'let'
     let btnConfirmNo = document.getElementById('btnConfirmNo');
-    
     if (!confirmOverlay || !confirmText || !btnConfirmYes || !btnConfirmNo) return;
     
-    // Tymczasowe ustawienie modala na wiadomość potwierdzającą
     confirmText.textContent = text;
     confirmOverlay.style.display = 'flex';
-    
     btnConfirmYes.style.display = 'none';
     
-    // Klonowanie przycisku "No", aby usunąć stare listenery
     let newBtnNo = btnConfirmNo.cloneNode(true);
     newBtnNo.textContent = 'OK';
     btnConfirmNo.parentNode.replaceChild(newBtnNo, btnConfirmNo);
-    btnConfirmNo = newBtnNo; // Aktualizacja referencji (teraz działa, bo to 'let')
+    btnConfirmNo = newBtnNo; 
     
-    // Ustawienie timera na automatyczne zniknięcie po 1.5s
     const timerId = setTimeout(() => {
         confirmOverlay.style.display = 'none';
         btnConfirmYes.style.display = 'inline-block';
         btnConfirmNo.textContent = 'Anuluj';
     }, 1500);
     
-    // Zabezpieczenie przed kliknięciem, które czyści timer
     btnConfirmNo.onclick = () => {
         clearTimeout(timerId);
         confirmOverlay.style.display = 'none';
         btnConfirmYes.style.display = 'inline-block';
-        // Musimy znaleźć oryginalny przycisk "No" w DOM, aby przywrócić mu tekst
         let originalBtnNo = document.getElementById('btnConfirmNo');
         if (originalBtnNo) originalBtnNo.textContent = 'Anuluj';
     };
 }
 
-
-/**
- * Funkcja wywołująca start gry
- * POPRAWKA v0.76e: Musi teraz wywołać oba callbacki
- */
 function callStartRun() {
-    if (gameState.game.inMenu || !gameState.game.running) {
-        // 1. Wczytaj konfigurację UI (np. etykiety pickupów)
+    if (startRunCallback) {
         loadConfigCallback();
-        // 2. Uruchom grę (co wywoła resetAll)
         startRunCallback();
     } else {
-        console.warn("[DEV] Nie można uruchomić gry automatycznie (gra już działa).");
+        console.warn("[DEV] Brak callbacka startRunCallback.");
     }
 }
 
 /**
- * NOWA FUNKCJA (v0.91O): Presety z minimalnymi broniami (Lvl 1) i późnym czasem gry.
+ * NOWA FUNKCJA (v0.93): Szybki test konkretnego wroga z POPRAWNĄ ZMIANĄ CZASU
+ */
+function devPresetEnemy(enemyType) {
+    console.log(`[Dev] Uruchamianie testu jednostki: ${enemyType.toUpperCase()}`);
+
+    // 1. Zmanipuluj select w HTML
+    const enemySelect = document.getElementById('devEnemyType');
+    if (enemySelect) {
+        for (let i = 0; i < enemySelect.options.length; i++) {
+            enemySelect.options[i].selected = false;
+        }
+        for (let i = 0; i < enemySelect.options.length; i++) {
+            if (enemySelect.options[i].value === enemyType) {
+                enemySelect.options[i].selected = true;
+                break;
+            }
+        }
+    }
+
+    // 2. Ustal czas startu
+    const ENEMY_UNLOCK_TIMES = {
+        'standard': 0,
+        'horde': 30,
+        'aggressive': 60,
+        'kamikaze': 90,
+        'splitter': 120,
+        'tank': 180,
+        'ranged': 210, 
+        'elite': 0, 
+        'wall': SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME // 150s
+    };
+    
+    const requiredTime = ENEMY_UNLOCK_TIMES[enemyType] || 0;
+    const jumpTime = Math.max(4.1, requiredTime + 1);
+
+    // 3. Ustawienia UI
+    document.getElementById('devSpawnRate').value = "0.03"; 
+    document.getElementById('devMaxEnemies').value = "100"; 
+    const timeInput = document.getElementById('devTime');
+    if (timeInput) timeInput.value = jumpTime;
+
+    // 4. Aplikuj ustawienia
+    applyDevSettings(); 
+    devStartTime = jumpTime;
+
+    // 5. Oznacz wroga jako "widzianego"
+    if (gameState && gameState.game) {
+        if (!gameState.game.seenEnemyTypes.includes(enemyType)) {
+            gameState.game.seenEnemyTypes.push(enemyType);
+        }
+    }
+
+    // 6. Restart Gry
+    callStartRun();
+
+    // 7. FIX PO RESECIE: Wymuś broń i zablokuj niechciane eventy
+    setTimeout(() => {
+        if (gameState && gameState.game && gameState.settings) {
+            
+            // A. WYMUSZENIE AUTOGUNA (FIX: "Tylko Bicz")
+            // Musimy dodać broń ręcznie, bo resetAll czyści ekwipunek
+            let autoGun = gameState.player.getWeapon(AutoGun);
+            if (!autoGun) {
+                const autogunPerk = perkPool.find(p => p.id === 'autogun');
+                if (autogunPerk) {
+                    autogunPerk.apply(gameState, autogunPerk); 
+                    // Ustawienie lvl 1 dla pewności
+                    gameState.perkLevels['autogun'] = 1; 
+                    console.log('[Dev] AutoGun wymuszony po resecie.');
+                }
+            }
+
+            // B. BLOKADA EVENTÓW (FIX: "Pojawiający się Oblężnik")
+            
+            // Obsługa OBLĘŻENIA
+            if (enemyType === 'wall') {
+                gameState.settings.lastSiegeEvent = -999999; // Wymuś natychmiastowy spawn
+            } else {
+                // Przesuń licznik ostatniego eventu w przyszłość (o 10000s)
+                // Dzięki temu warunek (czas_gry - lastSiege > interval) będzie fałszywy
+                gameState.settings.lastSiegeEvent = jumpTime + 10000;
+            }
+
+            // Obsługa ELITY
+            if (enemyType === 'elite') {
+                gameState.settings.lastElite = -999999; 
+            } else {
+                gameState.settings.lastElite = jumpTime + 10000;
+            }
+            
+            console.log(`[Dev] Test wroga ${enemyType} aktywny. Czas: ${jumpTime}s. Eventy zablokowane.`);
+        }
+    }, 200);
+}
+
+/**
+ * Presety z minimalnymi broniami.
  */
 function devPresetMinimalWeapons() {
-    if (!gameState.game || !gameState.settings || !gameState.perkLevels || !gameState.player) {
-        alert('❌ BŁĄD DEV: Stan gry nie jest gotowy. Uruchom grę przynajmniej raz (aby zainicjować stan).');
-        return;
-    }
+    if (!gameState.game || !gameState.settings || !gameState.player) return;
     
     const { game, settings, perkLevels, player } = gameState;
 
-    // --- Standard Preset Cleanup (duplikacja z applyDevPreset, aby wymusić reset) ---
     const worldWidth = gameState.canvas.width * (gameState.camera.worldWidth / gameState.camera.viewWidth);
     const worldHeight = gameState.canvas.height * (gameState.camera.worldHeight / gameState.camera.viewHeight);
     player.reset(worldWidth, worldHeight);
@@ -133,12 +200,10 @@ function devPresetMinimalWeapons() {
     game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH;
     game.health = PLAYER_CONFIG.INITIAL_HEALTH;
     
-    for (let key in perkLevels) {
-        delete perkLevels[key];
-    }
+    for (let key in perkLevels) delete perkLevels[key];
     
-    game.level = 10; // Poziom gracza (dla skali HP wrogów)
-    game.time = 181; // ZMIANA v0.91R: Późny czas gry (181s = 3 min 1s)
+    game.level = 10; 
+    game.time = 181; 
     devSettings.allowedEnemies = ['all'];
     
     game.xp = 0;
@@ -148,13 +213,9 @@ function devPresetMinimalWeapons() {
     if (devTimeInput) devTimeInput.value = game.time; 
     devStartTime = game.time;
     
-    // --- Manual Level 1 Application (Minimal Weapons) ---
-    
-    // 1. Whip (Zawsze istnieje na Lvl 1 po resecie)
     const whip = player.getWeapon(WhipWeapon); 
     if (whip) whip.level = 1;
 
-    // 2. Paszywne perki (Lvl 1)
     ['speed', 'pickup', 'health'].forEach(perkId => {
         const perk = perkPool.find(p => p.id === perkId);
         if (perk && perk.max > 0) {
@@ -163,15 +224,10 @@ function devPresetMinimalWeapons() {
         }
     });
 
-    // 3. Dodanie i Lvl 1 dla wszystkich broni (i ich perków bazowych)
-    
-    // Autogun (Dodaj + 4 perki startowe)
     const autogunPerk = perkPool.find(p => p.id === 'autogun');
     if (autogunPerk) {
         autogunPerk.apply(gameState, autogunPerk); 
         perkLevels['autogun'] = 1;
-        
-        // Perki AutoGun Lvl 1
         ['firerate', 'damage', 'multishot', 'pierce'].forEach(perkId => {
              const perk = perkPool.find(p => p.id === perkId);
              if (perk && perk.max > 0) {
@@ -181,7 +237,6 @@ function devPresetMinimalWeapons() {
         });
     }
 
-    // Orbital, Nova, Lightning (Lvl 1)
     ['orbital', 'nova', 'chainLightning'].forEach(weaponId => {
         const perk = perkPool.find(p => p.id === weaponId);
         if (perk) {
@@ -190,22 +245,16 @@ function devPresetMinimalWeapons() {
         }
     });
     
-    // --- UI Update i Start ---
-    
-    // Zaktualizuj UI Dev Menu na wartości presetów
     document.getElementById('devLevel').value = game.level;
     document.getElementById('devHealth').value = game.health;
     document.getElementById('devMaxHealth').value = game.maxHealth;
     document.getElementById('devXP').value = game.xp;
-
-    // Ustaw UI broni
     document.getElementById('devWhip').value = whip.level;
     document.getElementById('devAutoGun').value = 1;
     document.getElementById('devOrbital').value = 1;
     document.getElementById('devNova').value = 1;
     document.getElementById('devLightning').value = 1;
 
-    // Ustaw UI perków AutoGun
     const autoGun = player.getWeapon(AutoGun);
     if (autoGun) {
         document.getElementById('devDamage').value = autoGun.bulletDamage;
@@ -219,87 +268,61 @@ function devPresetMinimalWeapons() {
 }
 
 
-/**
- * Funkcja wywołana z HTML (onclick) do zastosowania ustawień.
- */
 function applyDevSettings() {
-    if (!gameState.game || !gameState.settings || !gameState.player) {
-        console.error("DEV ERROR: Stan gry nie został zainicjowany w module DEV.");
-        return;
-    }
+    if (!gameState.game || !gameState.settings || !gameState.player) return;
     
     const { game, settings, player, perkLevels } = gameState;
     
-    // --- LOGIKA CZASU (Zawsze Ustawiana) ---
     const devTimeInput = document.getElementById('devTime');
     if (devTimeInput) {
-        devStartTime = parseInt(devTimeInput.value) || 0;
-        // Jeśli gra już działa/jest w pauzie, ustawiamy czas natychmiast (i timery)
+        devStartTime = parseFloat(devTimeInput.value) || 0;
         if (!game.inMenu || game.manualPause) {
             game.time = devStartTime;
-            settings.lastElite = game.time;
-            settings.lastSiegeEvent = game.time;
+            settings.lastElite = game.time; 
+            settings.lastSiegeEvent = game.time; 
         }
     }
     
-    // POPRAWKA v0.75: Ustawienie HP/Max HP/Level/XP jest UNCONDITIONAL
     game.health = parseInt(document.getElementById('devHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
     game.maxHealth = parseInt(document.getElementById('devMaxHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
     game.level = parseInt(document.getElementById('devLevel').value) || 1;
     game.xp = parseInt(document.getElementById('devXP').value) || 0;
     
-    // POPRAWKA v0.75: Ustawienie flagi, by zablokować pełny reset w resetAll()
     devSettings.presetLoaded = true;
     
     if (!game.inMenu || game.manualPause) {
-        // Obliczenia zależne od poziomu
         game.xpNeeded = calculateXpNeeded(game.level);
         
-        // --- LOGIKA BRONI (v0.81f) ---
-        
-        // 1. BICZ (Zawsze istnieje)
         const whip = player.getWeapon(WhipWeapon);
         const whipLevel = parseInt(document.getElementById('devWhip').value) || 1;
         if (whip && whip.level !== whipLevel) {
-            whip.level = 1; // Reset
+            whip.level = 1; 
             const whipPerk = perkPool.find(p => p.id === 'whip');
-            for(let i = 1; i < whipLevel; i++) {
-                whip.upgrade(whipPerk); // Ulepszaj poziom po poziomie
-            }
+            for(let i = 1; i < whipLevel; i++) whip.upgrade(whipPerk);
             perkLevels['whip'] = whipLevel - 1;
         }
 
-        // 2. AUTOGUN (Opcjonalny)
         let autoGun = player.getWeapon(AutoGun);
-        const autoGunLevel = parseInt(document.getElementById('devAutoGun').value) || 0; // 0 lub 1
+        const autoGunLevel = parseInt(document.getElementById('devAutoGun').value) || 0; 
         
         if (autoGunLevel === 0 && autoGun) {
-            // Usuń AutoGun
             player.weapons = player.weapons.filter(w => !(w instanceof AutoGun));
             autoGun = null;
-            delete perkLevels['autogun'];
-            delete perkLevels['damage'];
-            delete perkLevels['firerate'];
-            delete perkLevels['multishot'];
-            delete perkLevels['pierce'];
+            delete perkLevels['autogun']; delete perkLevels['damage']; delete perkLevels['firerate']; delete perkLevels['multishot']; delete perkLevels['pierce'];
         } else if (autoGunLevel === 1 && !autoGun) {
-            // Dodaj AutoGun
             const autogunPerk = perkPool.find(p => p.id === 'autogun');
             autogunPerk.apply(gameState, autogunPerk);
-            autoGun = player.getWeapon(AutoGun); // Pobierz nową instancję
+            autoGun = player.getWeapon(AutoGun); 
             perkLevels['autogun'] = 1;
         }
 
-        // Ustaw statystyki AutoGuna (jeśli istnieje)
         if (autoGun) {
             autoGun.bulletDamage = parseInt(document.getElementById('devDamage').value) || (WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE || 1);
             autoGun.fireRate = parseInt(document.getElementById('devFireRate').value) || (WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE || 650);
             autoGun.multishot = parseInt(document.getElementById('devMultishot').value) || 0;
             autoGun.pierce = parseInt(document.getElementById('devPierce').value) || 0;
-            // Uwaga: Nie przeliczamy perkLevels wstecz z tych wartości
         }
 
-        // 3. INNE BRONIE (Orbital, Nova, Piorun)
         const orbital = player.getWeapon(OrbitalWeapon);
         const orbitalLevel = parseInt(document.getElementById('devOrbital').value) || 0;
         if (orbitalLevel === 0 && orbital) {
@@ -330,7 +353,6 @@ function applyDevSettings() {
             perkLevels['nova'] = novaLevel;
         }
         
-        // POPRAWKA v0.82b: Zwiększono max do 6
         const lightning = player.getWeapon(ChainLightningWeapon);
         const lightningLevel = parseInt(document.getElementById('devLightning').value) || 0;
          if (lightningLevel === 0 && lightning) {
@@ -341,11 +363,9 @@ function applyDevSettings() {
             for(let i=0; i<lightningLevel; i++) perk.apply(gameState, perk);
             perkLevels['chainLightning'] = lightningLevel;
         } else if (lightning && lightning.level !== lightningLevel) {
-            lightning.level = 1; // Reset
+            lightning.level = 1; 
             const perk = perkPool.find(p => p.id === 'chainLightning');
-            for(let i = 1; i < lightningLevel; i++) { // Ulepszaj poziom po poziomie
-                lightning.upgrade(perk);
-            }
+            for(let i = 1; i < lightningLevel; i++) lightning.upgrade(perk);
             perkLevels['chainLightning'] = lightningLevel - 1;
         }
     }
@@ -364,15 +384,8 @@ function applyDevSettings() {
     console.log('✅ Ustawienia Dev zastosowane!');
 }
 
-/**
- * Funkcja wywoływana z HTML (onclick) do spawnowania pickupów.
- */
 function devSpawnPickup(type) {
-    if (!gameState.game || !gameState.pickups || !gameState.player) {
-        console.error("DEV ERROR: Stan gry nie został zainicjowany w module DEV.");
-        return;
-    }
-    
+    if (!gameState.game || !gameState.pickups || !gameState.player) return;
     const { game, pickups, player } = gameState;
     
     if (!game.running || game.paused) {
@@ -389,16 +402,8 @@ function devSpawnPickup(type) {
     }
 }
 
-/**
- * Funkcja pomocnicza do stosowania presetów
- * POPRAWKA v0.81f: Zaktualizowano logikę dla Bicza (bazowy) i AutoGuna (opcjonalny).
- */
 function applyDevPreset(level, perkLevelOffset = 0) {
-    if (!gameState.game || !gameState.settings || !gameState.perkLevels || !gameState.player) {
-        alert('❌ BŁĄD DEV: Stan gry nie jest gotowy. Uruchom grę przynajmniej raz (aby zainicjować stan).');
-        return;
-    }
-    
+    if (!gameState.game || !gameState.settings || !gameState.player) return;
     const { game, settings, perkLevels, player } = gameState;
     
     Object.assign(settings, { 
@@ -417,76 +422,51 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH;
     game.health = PLAYER_CONFIG.INITIAL_HEALTH;
     
-    for (let key in perkLevels) {
-        delete perkLevels[key];
-    }
+    for (let key in perkLevels) delete perkLevels[key];
     
     game.level = level;
-    game.time = 121; // Ustawienie czasu na potrzeby presetu (może zostać nadpisane przez devTime)
+    game.time = 121; 
     devSettings.allowedEnemies = ['all'];
     
     game.xp = 0;
     game.xpNeeded = calculateXpNeeded(game.level);
     
-    // --- Nowa logika presetów v0.81f ---
-    
-    // 1. BICZ (Bazowy)
-    const whip = player.getWeapon(WhipWeapon); // Ma Lvl 1 po resecie
+    const whip = player.getWeapon(WhipWeapon); 
     const whipPerk = perkPool.find(p => p.id === 'whip');
     const targetWhipLevel = Math.max(1, (whipPerk.max || 5) - perkLevelOffset);
     if (targetWhipLevel > 1) {
-        for(let i = 1; i < targetWhipLevel; i++) { // Zaczynamy od 1, bo Lvl 1 już jest
-            whip.upgrade(whipPerk);
-        }
-        perkLevels['whip'] = targetWhipLevel - 1; // (Lvl 5 -> 4 ulepszenia)
+        for(let i = 1; i < targetWhipLevel; i++) whip.upgrade(whipPerk);
+        perkLevels['whip'] = targetWhipLevel - 1; 
     }
 
-    // 2. AUTOGUN (Opcjonalny)
     let autoGun = null;
     const autogunPerk = perkPool.find(p => p.id === 'autogun');
     if (autogunPerk) {
-        autogunPerk.apply(gameState, autogunPerk); // Dodaje AutoGun (Lvl 1)
+        autogunPerk.apply(gameState, autogunPerk); 
         perkLevels['autogun'] = 1;
-        autoGun = player.getWeapon(AutoGun); // Pobierz instancję
+        autoGun = player.getWeapon(AutoGun); 
     }
     
-    // Ulepsz AutoGun (jeśli istnieje)
     if (autoGun) {
         const perksToApply = ['damage', 'firerate', 'multishot', 'pierce'];
         perksToApply.forEach(perkId => {
             const perk = perkPool.find(p => p.id === perkId);
             const targetLevel = Math.max(0, perk.max - perkLevelOffset);
-            for (let i = 0; i < targetLevel; i++) {
-                perk.apply(gameState, perk);
-            }
+            for (let i = 0; i < targetLevel; i++) perk.apply(gameState, perk);
             perkLevels[perkId] = targetLevel;
         });
     }
     
-    // 3. INNE BRONIE (Orbital, Nova, Piorun)
     perkPool.forEach(perk => {
-        if (['orbital', 'nova', 'chainLightning'].includes(perk.id)) { // POPRAWKA v0.82a
+        if (['orbital', 'nova', 'chainLightning', 'speed', 'pickup', 'health'].includes(perk.id)) {
              const targetLevel = Math.max(0, perk.max - perkLevelOffset);
              if (targetLevel > 0) {
                  perkLevels[perk.id] = targetLevel;
-                 for (let i = 0; i < targetLevel; i++) {
-                     perk.apply(gameState, perk);
-                 }
-             }
-        } else if (['speed', 'pickup', 'health'].includes(perk.id)) {
-            // Statystyki pasywne (bez zmian)
-            const targetLevel = Math.max(0, perk.max - perkLevelOffset);
-             if (targetLevel > 0) {
-                 perkLevels[perk.id] = targetLevel;
-                 for (let i = 0; i < targetLevel; i++) {
-                     perk.apply(gameState, perk);
-                 }
+                 for (let i = 0; i < targetLevel; i++) perk.apply(gameState, perk);
              }
         }
     });
-    // --- Koniec nowej logiki ---
     
-    // Zaktualizuj UI Dev Menu, aby pasowało do presetu
     document.getElementById('devLevel').value = game.level;
     document.getElementById('devHealth').value = game.health;
     document.getElementById('devMaxHealth').value = game.maxHealth;
@@ -496,7 +476,6 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     if (devTimeInput) devTimeInput.value = game.time; 
     devStartTime = game.time;
     
-    // Zaktualizuj UI Broni
     document.getElementById('devWhip').value = whip.level;
     document.getElementById('devAutoGun').value = autoGun ? 1 : 0;
     
@@ -514,13 +493,12 @@ function applyDevPreset(level, perkLevelOffset = 0) {
     
     const orbital = player.getWeapon(OrbitalWeapon);
     const nova = player.getWeapon(NovaWeapon);
-    const lightning = player.getWeapon(ChainLightningWeapon); // NOWE v0.82a
+    const lightning = player.getWeapon(ChainLightningWeapon); 
     document.getElementById('devOrbital').value = orbital ? orbital.level : 0;
     document.getElementById('devNova').value = nova ? nova.level : 0;
-    document.getElementById('devLightning').value = lightning ? lightning.level : 0; // NOWE v0.82a
+    document.getElementById('devLightning').value = lightning ? lightning.level : 0; 
     
     devSettings.presetLoaded = true;
-    
     callStartRun();
 }
 
@@ -532,11 +510,6 @@ function devPresetMax() {
     applyDevPreset(10, 0);
 }
 
-
-/**
- * Inicjalizuje moduł dev, przekazując referencje do stanu gry.
- * POPRAWKA v0.76e: Przyjmuje dwa callbacki
- */
 export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     gameState = stateRef;
     loadConfigCallback = loadConfigFn;
@@ -546,8 +519,8 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.devSpawnPickup = devSpawnPickup;
     window.devPresetAlmostMax = devPresetAlmostMax;
     window.devPresetMax = devPresetMax;
-    // NOWA LINIA v0.91O
     window.devPresetMinimalWeapons = devPresetMinimalWeapons;
+    window.devPresetEnemy = devPresetEnemy; 
     
-    console.log('[DEBUG-v0.76e] js/services/dev.js: Dev Tools zainicjalizowane z dwoma callbackami (loadConfig/startRun).');
+    console.log('[DEBUG-v0.93] js/services/dev.js: Dev Tools zainicjalizowane.');
 }

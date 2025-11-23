@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.91c - Fix: Complete Guide & Bonus Panel)
+// UI.JS (v0.93 - FIX: Pełny Tytuł Gry)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -43,12 +43,9 @@ function generateGuide() {
     const guideContainer = document.getElementById('guideContent');
     if (!guideContainer) return;
 
-    // Definicja sekcji i elementów (Klucz Assetu -> Klucz Tłumaczenia)
-    // Teraz pobieramy opisy z i18n (getLang)
-    
     const guideData = [
         { header: "Bohater i Zasoby" },
-        { asset: 'player', nameKey: 'ui_player_name', descKey: 'ui_guide_intro' }, // Używamy intro jako opisu drakula
+        { asset: 'player', nameKey: 'ui_player_name', descKey: 'ui_guide_intro' },
         { asset: 'gem', nameKey: 'ui_gem_name', descKey: 'ui_gem_desc' },
         { asset: 'chest', nameKey: 'pickup_chest_name', descKey: 'pickup_chest_desc' },
 
@@ -70,8 +67,6 @@ function generateGuide() {
         { asset: 'enemy_ranged', nameKey: 'enemy_ranged_name', descKey: 'enemy_ranged_desc' },
         { asset: 'enemy_wall', nameKey: 'enemy_wall_name', descKey: 'enemy_wall_desc' },
         { asset: 'enemy_elite', nameKey: 'enemy_elite_name', descKey: 'enemy_elite_desc' },
-        // Brak grafik dla Hazardów w assets.js (są rysowane proceduralnie), więc użyjemy ikony domyślnej lub pominiemy
-        // Możemy dodać proceduralne ikonki CSS, ale trzymajmy się grafik.
         
         { header: "Bronie i Perki" },
         { asset: 'icon_whip', nameKey: 'perk_whip_name', descKey: 'perk_whip_desc' },
@@ -90,7 +85,7 @@ function generateGuide() {
             const imgTag = getIconTag(item.asset, 'guide-icon');
             const displayIcon = imgTag ? imgTag : '<span style="font-size:24px;">❓</span>';
             
-            const name = item.nameKey ? getLang(item.nameKey) : item.title; // Fallback
+            const name = item.nameKey ? getLang(item.nameKey) : item.title;
             const desc = item.descKey ? getLang(item.descKey) : item.desc;
 
             html += `
@@ -105,14 +100,12 @@ function generateGuide() {
         }
     });
     
-    html += '<p style="margin-top:20px; color:#666; font-size:11px;">* Grafiki v0.91</p>';
+    html += '<p style="margin-top:20px; color:#666; font-size:11px;">* Grafiki v0.92</p>';
     guideContainer.innerHTML = html;
 }
 
-// Eksportujemy funkcję generowania, aby eventManager mógł ją wywołać przy zmianie języka
 window.wrappedGenerateGuide = generateGuide;
 
-// Inicjalizacja z opóźnieniem (aby assets.js zdążyło załadować grafiki)
 setTimeout(() => {
     generateGuide();
 }, 600);
@@ -164,7 +157,6 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
     const healthPct = Math.max(0, Math.min(1, game.health / game.maxHealth));
     playerHPBarInner.style.width = (healthPct * 100).toFixed(1) + '%';
     
-    // Ikona w pasku HP
     const hpIcon = getIconTag('icon_hud_health');
     playerHPBarTxt.innerHTML = `${hpIcon} ${Math.max(0, Math.floor(game.health))} / ${game.maxHealth}`;
 
@@ -178,12 +170,10 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
     }
 
     if (xpBarTxt) {
-        // Ikona w pasku XP
         const xpIcon = getIconTag('icon_hud_xp');
         xpBarTxt.innerHTML = `${xpIcon} ${game.xp} / ${game.xpNeeded}`;
     }
 
-    // --- PANEL BONUSÓW ---
     let bonusHTML = '';
     
     const bonusAssets = { 
@@ -223,9 +213,11 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
     if (uiData.animationFrameId !== null) { cancelAnimationFrame(uiData.animationFrameId); uiData.animationFrameId = null; }
     if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
 
-    docTitle.textContent = `${getLang('ui_player_name')} v${uiData.VERSION}`;
+    // ZMIANA v0.93: Użycie pełnego tytułu gry (ui_game_title) zamiast imienia gracza
+    // Fallback na "Szkeletal" jeśli tłumaczenie nie jest gotowe
+    const gameTitle = getLang('ui_game_title') || "Szkeletal";
+    docTitle.textContent = `${gameTitle} v${uiData.VERSION}`;
     
-    // Generuj przewodnik ponownie przy otwieraniu menu, aby upewnić się, że grafiki są załadowane
     generateGuide();
     
     updateUI(game, uiData.player, uiData.settings, null); 

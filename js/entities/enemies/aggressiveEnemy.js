@@ -1,98 +1,128 @@
 // ==============
-// AGGRESSIVEENEMY.JS (v0.91S - Fix migotania w nieskończoność)
+// AGGRESSIVEENEMY.JS (v0.93 - FIX: Wolniejsza Animacja i Szarża)
 // Lokalizacja: /js/entities/enemies/aggressiveEnemy.js
 // ==============
 
 import { Enemy } from '../enemy.js';
 
 /**
- * Wróg Agresywny.
- * Przyspiesza po krótkiej sygnalizacji, gdy jest blisko gracza.
+ * Wróg Agresywny (Prowokator).
+ * 1. Podchodzi wolno (skrada się).
+ * 2. Zatrzymuje się i MIGA NA CZERWONO (Sygnalizacja).
+ * 3. Szarżuje.
  */
 export class AggressiveEnemy extends Enemy {
   
   constructor(x, y, stats, hpScale) {
     super(x, y, stats, hpScale);
-    this.isCharging = false;
+    
+    // Skala wizualna (3.0 = ~90px)
+    this.visualScale = 3.0;
+
+    // Zmienne logiczne
+    this.isSignaling = false; 
     this.chargeTimer = 0.0;
-    this.chargeDuration = 0.4; // Zwiększono z 0.2s do 0.4s
-    this.chargeSpeedBonus = 2.0; // Mnożnik po sygnalizacji
+    this.chargeDuration = 0.4; 
+    
+    // KOREKTA PRĘDKOŚCI: Zmniejszono z 2.2 na 2.0 (jeszcze odrobinę wolniej)
+    this.chargeSpeedBonus = 2.0; 
+    
+    this.cooldownTimer = 0; 
   }
   
   getSpeed(game, dist) {
     let speed = super.getSpeed(game, dist);
     
-    // Jeśli się sygnalizuje (pauzuje), jest zatrzymany
-    if (this.isCharging) {
+    // 1. FAZA SYGNALIZACJI: STOP
+    if (this.isSignaling) {
         return 0;
     }
     
-    // Jeśli JEST w zasięgu (dist < 220) i NIE JEST w trakcie sygnalizacji
-    // to automatycznie oznacza, że szarżuje, więc dostaje bonus.
-    if (dist < 220) {
-        speed *= this.chargeSpeedBonus; // 2.0x prędkości
+    // 2. FAZA SZARŻY: SZYBKO
+    if (this.cooldownTimer > 0) {
+        speed *= this.chargeSpeedBonus;
+    } 
+    // 3. FAZA NORMALNA: WOLNO (SKRADANIE)
+    else {
+        speed *= 0.5; 
     }
     
     return speed;
   }
   
   getOutlineColor() {
-    // NOWA LOGIKA V0.83: Sygnalizacja szarży kolorem
-    if (this.isCharging) {
-        return '#f44336'; // Czerwona ramka podczas ładowania
+    if (this.isSignaling || this.cooldownTimer > 0) {
+        return '#f44336'; 
     }
     return '#42a5f5';
   }
+
+  /**
+   * Efekt migania przed atakiem.
+   */
+  draw(ctx, game) {
+      ctx.save();
+      
+      if (this.isSignaling) {
+          if (Math.floor(game.time * 15) % 2 === 0) {
+              ctx.filter = 'sepia(1) saturate(100) hue-rotate(-50deg)'; 
+          }
+      }
+      
+      super.draw(ctx, game);
+      
+      ctx.restore();
+  }
   
   update(dt, player, game, state) {
-    let isMoving = false;
-    
+    if (this.isDead) return;
+
+    // Obsługa Timerów
+    if (this.hitStun > 0) this.hitStun -= dt;
+    if (this.hitFlashT > 0) this.hitFlashT -= dt;
+    if (this.frozenTimer > 0) {
+        this.frozenTimer -= dt;
+        return;
+    }
+
+    // Logika Ruchu i Szarży
     if (this.hitStun > 0) {
-        this.hitStun -= dt;
+        this.isSignaling = false; 
     } else {
         const dx = player.x - this.x;
         const dy = player.y - this.y;
         const dist = Math.hypot(dx, dy);
         
-        // --- LOGIKA SZARŻY ---
+        // --- MASZYNA STANÓW SZARŻY ---
         
-        // 1. Wróg jest w zasięgu ataku
-        if (dist < 220) {
-            if (!this.isCharging && this.chargeTimer <= 0) {
-                // Warunek: Wejście w zasięg. Ustaw Sygnalizację/Pauzę.
-                this.isCharging = true;
+        if (dist < 220) { 
+            if (!this.isSignaling && this.cooldownTimer <= 0) {
+                this.isSignaling = true;
                 this.chargeTimer = this.chargeDuration;
                 
-            } else if (this.isCharging) {
-                // Warunek: Faza Sygnalizacji/Pauzy
+            } else if (this.isSignaling) {
                 this.chargeTimer -= dt;
-                
                 if (this.chargeTimer <= 0) {
-                    // Koniec Pauzy. Rozpocznij Szarżę.
-                    this.isCharging = false;
-                    this.chargeTimer = 1.5; // Ustaw cooldown na szybkie ponowienie szarży
+                    this.isSignaling = false;
+                    this.cooldownTimer = 1.5; 
                 }
+            } else {
+                this.cooldownTimer -= dt;
             }
         } else {
-            // Poza zasięgiem - normalny ruch
-            this.isCharging = false;
-            if (this.chargeTimer > 0) this.chargeTimer -= dt; // Czekaj na reset cooldownu
+            this.isSignaling = false;
+            if (this.cooldownTimer > 0) this.cooldownTimer -= dt;
         }
         
+        // --- FIZYKA RUCHU ---
         let vx = 0, vy = 0;
         let currentSpeed = this.getSpeed(game, dist); 
 
-        // Ruch tylko jeśli prędkość > 0 (pozwala na zatrzymanie podczas isCharging)
         if (dist > 0.1 && currentSpeed > 0) { 
             const targetAngle = Math.atan2(dy, dx);
-            // POPRAWKA: Usunięto randomOffset (jest w klasie bazowej, ale AggressiveEnemy go nie używa)
-            const finalAngle = targetAngle; // AggressiveEnemy zawsze celuje prosto (chyba że ma hitstun)
+            vx = Math.cos(targetAngle) * currentSpeed;
+            vy = Math.sin(targetAngle) * currentSpeed;
             
-            vx = Math.cos(finalAngle) * currentSpeed;
-            vy = Math.sin(finalAngle) * currentSpeed;
-            isMoving = true;
-            
-            // NOWA LOGIKA v0.91h: Zapisz ostatni kierunek POZIOMY
             if (Math.abs(vx) > 0.1) {
                 this.facingDir = Math.sign(vx);
             }
@@ -102,22 +132,38 @@ export class AggressiveEnemy extends Enemy {
         this.y += (vy + this.separationY * 1.0) * dt;
     }
     
-    // NOWA LINIA v0.91S: Dekrementacja hitFlashT
-    if (this.hitFlashT > 0) {
-        this.hitFlashT -= dt;
+    // Knockback
+    if (Math.abs(this.knockback.x) > 0.1 || Math.abs(this.knockback.y) > 0.1) {
+        this.x += this.knockback.x * dt;
+        this.y += this.knockback.y * dt;
+        this.knockback.x *= 0.9;
+        this.knockback.y *= 0.9;
     }
     
-    // Aktualizacja animacji (skopiowana z klasy bazowej i naprawiona)
-    const dtMs = dt * 1000;
-    if (isMoving) {
-        this.animationTimer += dtMs;
-        if (this.animationTimer >= this.animationSpeed) {
-            this.animationTimer = 0;
-            this.currentFrame = (this.currentFrame + 1) % this.frameCount;
+    // --- RĘCZNA ANIMACJA (KOREKTA PRĘDKOŚCI) ---
+    if (this.totalFrames > 1) {
+        let animSpeedMult = 1.0;
+        
+        if (this.isSignaling) {
+            // Podczas ostrzegania (stoi) - zatrzymaj animację
+            animSpeedMult = 0;
+        } 
+        else if (this.cooldownTimer > 0) {
+            // Podczas SZARŻY (biegnie szybko) - lekko przyspiesz
+            // (Było 2.5, teraz 1.3 - o połowę wolniej niż wcześniej)
+            animSpeedMult = 1.3; 
+        } 
+        else {
+            // Podczas SKRADANIA (biegnie wolno) - zwolnij
+            // (Było 1.0, teraz 0.6 - pasuje do speed * 0.5)
+            animSpeedMult = 0.6;
         }
-    } else {
-        this.currentFrame = 0;
-        this.animationTimer = 0;
+        
+        this.animTimer += dt * animSpeedMult;
+        if (this.animTimer >= this.frameTime) {
+            this.animTimer = 0;
+            this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+        }
     }
   }
 }

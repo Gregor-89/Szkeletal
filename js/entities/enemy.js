@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.92 - FIX: Skala 1.54x + HealthBar)
+// ENEMY.JS (v0.93 - Auto-Sprite Detection)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -34,19 +34,36 @@ export class Enemy {
         this.separationY = 0;
         this.hazardSlowdownT = 0; 
 
-        this.assetKey = stats.assetKey || ('enemy_' + this.type);
-        this.sprite = getAsset(this.assetKey);
+        // --- SYSTEM AUTOMATYCZNEGO WYKRYWANIA SPRITE'ÓW (v0.93) ---
+        
+        const idleKey = stats.assetKey || ('enemy_' + this.type);
+        const spriteSheetKey = idleKey + '_spritesheet';
+        
+        // Sprawdź, czy mamy załadowany spritesheet dla tego typu wroga
+        const spriteSheet = getAsset(spriteSheetKey);
+        
+        if (spriteSheet) {
+            // ZNALEZIONO ANIMACJĘ: Użyj spritesheeta i ustaw parametry 4x4
+            this.sprite = spriteSheet;
+            this.cols = 4;
+            this.rows = 4;
+            this.totalFrames = 16;
+            this.frameTime = 0.1; // Standardowa prędkość animacji
+            // console.log(`[Enemy] ${this.type}: Używam spritesheeta.`);
+        } else {
+            // BRAK ANIMACJI: Użyj grafiki idle (statycznej)
+            this.sprite = getAsset(idleKey);
+            this.cols = 1;
+            this.rows = 1;
+            this.totalFrames = 1;
+            // console.log(`[Enemy] ${this.type}: Używam idle.`);
+        }
 
-        this.totalFrames = 1;
-        this.cols = 1;
-        this.rows = 1;
         this.currentFrame = 0;
         this.animTimer = 0;
-        this.frameTime = 0.1;
-        
         this.facingDir = 1;
         
-        // FIX: Skala 1.54x dla zwykłych wrogów (żeby mieli ~80px)
+        // Domyślna skala wizualna (może być nadpisana w podklasie)
         this.visualScale = 1.54;
     }
 
@@ -90,6 +107,7 @@ export class Enemy {
             this.y += (vy + this.separationY * 1.0) * dt;
         }
         
+        // Aktualizacja Animacji (tylko jeśli ma więcej niż 1 klatkę)
         if (this.totalFrames > 1) {
             this.animTimer += dt;
             if (this.animTimer >= this.frameTime) {
@@ -134,7 +152,8 @@ export class Enemy {
 
     draw(ctx, game) {
         if (!this.sprite) {
-            this.sprite = getAsset(this.assetKey);
+            const key = this.stats.assetKey || ('enemy_' + this.type);
+            this.sprite = getAsset(key);
         }
 
         ctx.save();

@@ -1,11 +1,11 @@
 // ==============
-// WALLENEMY.JS (v0.92 - Fix: Skala 1.0 dla dużego wroga)
+// WALLENEMY.JS (v0.93 - FIX: Radius, Flashing & Size)
 // Lokalizacja: /js/entities/enemies/wallEnemy.js
 // ==============
 
 import { Enemy } from '../enemy.js';
 import { WALL_DETONATION_CONFIG } from '../../config/gameData.js';
-import { areaNuke, addHitText } from '../../core/utils.js';
+import { areaNuke, addHitText, addBombIndicator } from '../../core/utils.js';
 import { killEnemy } from '../../managers/enemyManager.js';
 
 export class WallEnemy extends Enemy {
@@ -13,17 +13,20 @@ export class WallEnemy extends Enemy {
   constructor(x, y, stats, hpScale = 1) {
     super(x, y, stats, hpScale);
     
+    // Logika Detonacji
     this.showHealthBar = false; 
     this.initialLife = WALL_DETONATION_CONFIG.WALL_DECAY_TIME;
     this.detonationT = this.initialLife + (Math.random() * WALL_DETONATION_CONFIG.WALL_DETONATION_TIME_VARIANCE);
     this.isDetonating = false;
     this.isAutoDead = false; 
-    
-    // FIX: Ustawiamy skalę na 1.0, żeby nie był gigantem
-    this.visualScale = 1.0; 
-    
-    // Upewniamy się, że asset jest
     this.assetKey = 'enemy_wall';
+
+    // Logika Wyglądu
+    // ZMIANA: Zmniejszono o 10% (z 2.9 na 2.6)
+    this.visualScale = 2.6;
+    
+    this.baseSpeed = (stats.speed || 20) * 0.5; 
+    this.mass = 1000; 
   }
   
   takeDamage(damage) {
@@ -32,11 +35,11 @@ export class WallEnemy extends Enemy {
   }
 
   getOutlineColor() {
-    return this.isDetonating ? '#FF4500' : '#90A4AE'; 
+    return this.isDetonating ? '#FF0000' : '#8e24aa'; 
   }
   
-  getSeparationRadius() {
-    return 30; 
+  applyKnockback(kx, ky) {
+      // Brak reakcji
   }
 
   selfDestruct(state) {
@@ -45,6 +48,10 @@ export class WallEnemy extends Enemy {
     const radius = WALL_DETONATION_CONFIG.WALL_DETONATION_RADIUS; 
     const damage = WALL_DETONATION_CONFIG.WALL_DETONATION_DAMAGE; 
     
+    // 1. Wizualizacja fali (Bomba) - Zasięg teraz 400 (wg gameData)
+    addBombIndicator(bombIndicators, this.x, this.y, radius, 0.5);
+
+    // 2. Zadawanie obrażeń
     for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
         if (e.id === this.id) continue; 
@@ -56,13 +63,13 @@ export class WallEnemy extends Enemy {
             if (typeof addHitText === 'function') {
                  addHitText(hitTextPool, hitTexts, e.x, e.y, damage, '#ff9800'); 
             }
-            
             if (e.hp <= 0) {
                 state.enemyIdCounter = killEnemy(j, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, false, true); 
             }
         }
     }
 
+    // 3. Efekt cząsteczkowy (AreaNuke)
     areaNuke(
         this.x,
         this.y,
@@ -77,45 +84,72 @@ export class WallEnemy extends Enemy {
   }
 
   update(dt, player, game, state) {
-    super.update(dt, player, game, state); 
-    
-    if (!this.isAutoDead) {
-        this.detonationT -= dt;
+    if (this.isAutoDead) return; 
 
-        if (this.detonationT <= WALL_DETONATION_CONFIG.WALL_DETONATION_WARNING_TIME && !this.isDetonating) {
-            this.isDetonating = true;
-        }
+    this.detonationT -= dt;
 
-        if (this.detonationT <= 0) {
-            this.selfDestruct(state);
-        }
+    if (this.detonationT <= WALL_DETONATION_CONFIG.WALL_DETONATION_WARNING_TIME && !this.isDetonating) {
+        this.isDetonating = true;
     }
+
+    if (this.detonationT <= 0) {
+        this.selfDestruct(state);
+        this.die(); 
+        return;
+    }
+
+    if (this.hitFlashT > 0) this.hitFlashT -= dt;
+    if (this.frozenTimer > 0) {
+        this.frozenTimer -= dt;
+        return;
+    }
+
+    // Ruch
+    const dx = player.x - this.x;
+    const dy = player.y - this.y;
+    const dist = Math.hypot(dx, dy);
     
-    if (this.hitFlashT > 0) {
-        this.hitFlashT -= dt;
+    if (dist > 40) {
+        const angle = Math.atan2(dy, dx);
+        let speed = this.baseSpeed;
+        if (game.freezeT > 0) speed *= 0.5;
+        
+        this.x += Math.cos(angle) * speed * dt;
+        this.y += Math.sin(angle) * speed * dt;
+        
+        if (Math.abs(dx) > 10) this.facingDir = Math.sign(dx);
+    }
+
+    // Animacja
+    if (this.totalFrames > 1) {
+        this.animTimer += dt;
+        if (this.animTimer >= this.frameTime) {
+            this.animTimer = 0;
+            this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+        }
     }
   }
 
   draw(ctx, game) {
     ctx.save();
     
+    // ZMIANA: Powolne miganie (1 Hz) przyspieszające pod koniec
     if (this.isDetonating) {
-        const timeElapsed = WALL_DETONATION_CONFIG.WALL_DETONATION_WARNING_TIME - this.detonationT;
-        const pulseFactor = (Math.sin(timeElapsed * 8) + 1) / 2; 
+        const timeLeft = Math.max(0, this.detonationT);
+        const warnTime = WALL_DETONATION_CONFIG.WALL_DETONATION_WARNING_TIME; // 6.0s
         
-        const pulseAlpha = 0.1 + (pulseFactor * 0.4); 
-        const pulseSize = this.size * 0.5 * 1.5 + (pulseFactor * this.size * 0.5 * 0.3); 
+        // Zaczyna od 1 Hz, rośnie w miarę jak timeLeft maleje
+        const frequency = 1 + (warnTime - timeLeft) * 3.5; 
         
-        ctx.globalAlpha = pulseAlpha;
-        ctx.fillStyle = '#ff9800'; 
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, pulseSize, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.globalAlpha = 1; 
+        if (Math.floor(game.time * frequency) % 2 === 0) {
+            ctx.filter = 'grayscale(1) sepia(1) saturate(10) hue-rotate(-50deg)'; 
+        }
     }
     
     super.draw(ctx, game);
+    
+    this.drawHealthBar(ctx);
+    
     ctx.restore();
   }
   
@@ -125,20 +159,23 @@ export class WallEnemy extends Enemy {
       const w = 40, h = 6; 
       const frac = Math.max(0, this.hp / this.maxHp);
       
-      // Pozycja względem 0,0 (bo draw ma translate)
       const bx = -w / 2;
-      const spriteH = this.size * this.visualScale; // 88px
+      const spriteH = this.size * this.visualScale; 
       const by = -(spriteH / 2) - 8;
       
       ctx.fillStyle = '#300';
       ctx.fillRect(bx, by, w, h);
+      
       let hpColor;
       if (frac > 0.6) hpColor = '#0f0';
       else if (frac > 0.3) hpColor = '#ff0';
       else hpColor = '#f00';
+      
       ctx.fillStyle = hpColor;
       ctx.fillRect(bx, by, w * frac, h);
+      
       ctx.strokeStyle = '#111';
+      ctx.lineWidth = 1;
       ctx.strokeRect(bx, by, w, h);
   }
 }

@@ -3,8 +3,23 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes" />
-<title>Szkeletal Survivor v0.91</title> 
+<title>Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v0.93</title> 
 <link rel="stylesheet" href="style.css">
+<style>
+  .dev-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+  .dev-grid button {
+    padding: 8px 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
 </head>
 <body>
   <div id="splashOverlay">
@@ -139,7 +154,26 @@
         </div>
 
         <div id="tab-dev" class="tab-content">
-          <p style="color:#f44336; margin-bottom:15px;"><strong>⚠️ Uwaga:</strong> To menu jest przeznaczone do testowania. Ustawienia mogą zepsuć balans gry.</p>
+          <p style="color:#f44336; margin-bottom:15px; font-size: 13px;"><strong>⚠️ Uwaga:</strong> To menu służy do testów. Może zepsuć balans.</p>
+          
+          <div class="dev-section">
+            <h4>🧪 Szybkie Testy Jednostek (v0.93)</h4>
+            <p style="font-size:12px; margin-bottom:5px;">Kliknij, aby zresetować grę i spawnować TYLKO ten typ:</p>
+            <div class="dev-grid">
+                <button class="btn btn-warning" onclick="devPresetEnemy('standard')">DadGamer</button>
+                <button class="btn btn-warning" onclick="devPresetEnemy('horde')">Horda</button>
+                <button class="btn btn-warning" onclick="devPresetEnemy('ranged')">Menel</button>
+                
+                <button class="btn btn-warning" onclick="devPresetEnemy('tank')">Szkielet</button>
+                <button class="btn btn-warning" onclick="devPresetEnemy('splitter')">Wykop</button>
+                <button class="btn btn-warning" onclick="devPresetEnemy('kamikaze')">Troll</button>
+                
+                <button class="btn btn-warning" onclick="devPresetEnemy('aggressive')">Prowokator</button>
+                <button class="btn btn-warning" onclick="devPresetEnemy('wall')">Oblężnik</button>
+                <button class="btn btn-danger" onclick="devPresetEnemy('elite')">ELITA (BOSS)</button>
+            </div>
+          </div>
+
           <div class="dev-section">
             <h4>🎮 Stan Gracza</h4>
             <div class="dev-control">

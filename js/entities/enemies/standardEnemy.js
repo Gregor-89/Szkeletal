@@ -1,5 +1,5 @@
 // ==============
-// STANDARDENEMY.JS (v0.92 - FIX: Rozmiar 1.54x)
+// STANDARDENEMY.JS (v0.93 - Cleanup: Użycie automatyki Enemy.js)
 // Lokalizacja: /js/entities/enemies/standardEnemy.js
 // ==============
 
@@ -7,20 +7,16 @@ import { Enemy } from '../enemy.js';
 import { ENEMY_STATS } from '../../config/gameData.js';
 
 export class StandardEnemy extends Enemy {
-    // Konstruktor z poprawną sygnaturą (naprawia nieśmiertelność)
+    // Konstruktor
     constructor(x, y, stats, hpScale = 1) {
         super(x, y, stats, hpScale);
         
-        // --- KONFIGURACJA ANIMACJI (4x4) ---
-        this.cols = 4;
-        this.rows = 4;
-        this.totalFrames = 16;
-        this.frameTime = 0.08;
+        // USUNIĘTO: Ręczna konfiguracja animacji (cols, rows, totalFrames).
+        // Teraz zajmuje się tym automatycznie klasa bazowa Enemy w oparciu o dostępność spritesheeta.
         
-        // POPRAWKA ROZMIARU:
-        // Wcześniej było 1.0, co dawało 80px (przy bazie 80px w Enemy.js).
-        // Reszta wrogów ma domyślnie 1.54 (~123px).
-        // Ustawiamy 1.54, aby DadGamer dorównał wielkością innym wrogom.
+        this.frameTime = 0.08; // Opcjonalnie: DadGamer może mieć customową prędkość
+        
+        // POPRAWKA ROZMIARU (z v0.92):
         this.visualScale = 1.54;
     }
 
@@ -76,7 +72,7 @@ export class StandardEnemy extends Enemy {
             this.y += (vy + this.separationY * 1.0) * dt;
         } 
         
-        // Aktualizacja Animacji
+        // Aktualizacja Animacji (używa logiki z Enemy.js)
         if (this.totalFrames > 1) {
             this.animTimer += dt;
             if (this.animTimer >= this.frameTime) {

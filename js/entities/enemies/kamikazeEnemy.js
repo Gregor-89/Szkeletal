@@ -1,5 +1,5 @@
 // ==============
-// KAMIKAZEENEMY.JS (v0.91S - Fix migotania w nieskończoność)
+// KAMIKAZEENEMY.JS (v0.93 - FIX: Animacja i Skala)
 // Lokalizacja: /js/entities/enemies/kamikazeEnemy.js
 // ==============
 
@@ -13,31 +13,29 @@ const DETONATION_RADIUS = 50;
 const DETONATION_DAMAGE = 10;
 
 /**
- * Wróg Kamikaze.
+ * Wróg Kamikaze (Troll).
  * Znacznie przyspiesza, gdy jest bardzo blisko gracza i detonuje w jego pobliżu.
  */
 export class KamikazeEnemy extends Enemy {
   
-  // NOWY KONSTRUKTOR (v0.91j)
+  // KONSTRUKTOR (v0.93 - VisualScale)
   constructor(x, y, stats, hpScale) {
     super(x, y, stats, hpScale);
-    // Nadpisz domyślną skalę (1.0) z klasy bazowej Enemy
-    this.drawScale = 0.7; // 70% bazowego rozmiaru (80px * 0.7 = 56px wysokości)
+    
+    // ZMIANA v0.93: Zastąpiono drawScale przez visualScale.
+    // Hitbox: 36px. VisualScale: 1.6 -> Wynik ~57px (Mały, ale widoczny)
+    this.visualScale = 1.6; 
   }
   
   // Zwiększam bazową prędkość, aby był szybszy nawet bez szarży
   getSpeed(game, dist) {
     let speed = super.getSpeed(game, dist); 
-    // Zostawiam tylko logikę szarży.
     if (dist < 140) speed *= 2.0; // +100% prędkości przy szarży
     return speed;
   }
   
-  // (v0.91i: Usunięto getSeparationRadius(), dziedziczy this.size (teraz 36) z klasy bazowej)
-  
   getOutlineColor() {
-    // NOWA LOGIKA V0.85B: Zmieniono kolor na bardziej wyróżniający (pomarańczowy dyniowy)
-    return '#ff7043'; // Poprzednio: '#ffee58' (jasny żółty)
+    return '#ff7043'; 
   }
   
   /**
@@ -80,45 +78,48 @@ export class KamikazeEnemy extends Enemy {
         let currentSpeed = this.getSpeed(game, dist);
 
         if (dist > 0.1) {
-            // NOWA LOGIKA V0.85A: Zygzak z predykcją (celowanie 150px przed graczem)
-            const PREDICT_DIST = 150; // Celuj 150px przed graczem
-            const SINUSOID_MAGNITUDE = 0.8; // Siła sinusa (0.8x prędkości)
-            const SINUSOID_FREQUENCY = 5.0; // Częstotliwość
+            // LOGIKA ZYGZAKA (v0.85A)
+            const PREDICT_DIST = 150; 
+            const SINUSOID_MAGNITUDE = 0.8; 
+            const SINUSOID_FREQUENCY = 5.0; 
             
-            // 1. Ustal kąt do gracza (podstawowy kierunek)
             const angleToPlayer = Math.atan2(dy, dx);
             
-            // 2. Ustal punkt docelowy z lekką predykcją (w kierunku ostatniego ruchu gracza)
             const predictedTargetX = player.x + Math.cos(angleToPlayer) * PREDICT_DIST;
             const predictedTargetY = player.y + Math.sin(angleToPlayer) * PREDICT_DIST;
 
-            // 3. Oblicz nowy kąt do *przewidywanego celu*
             const pDx = predictedTargetX - this.x;
             const pDy = predictedTargetY - this.y;
             const angleToTarget = Math.atan2(pDy, pDx);
             
-            // 4. Dodaj stałą siłę boczną do kąta celu, oscylującą w czasie
             const anglePerp = angleToTarget + Math.PI / 2;
             const sideForce = currentSpeed * SINUSOID_MAGNITUDE * Math.sin(game.time * SINUSOID_FREQUENCY);
 
-            // 5. Wektor ruchu jest kombinacją siły do celu i siły bocznej
             vx = Math.cos(angleToTarget) * currentSpeed + Math.cos(anglePerp) * sideForce;
             vy = Math.sin(angleToTarget) * currentSpeed + Math.sin(anglePerp) * sideForce;
             
-            // NOWA LOGIKA v0.91i: Zapisz ostatni kierunek POZIOMY
             if (Math.abs(vx) > 0.1) {
                 this.facingDir = Math.sign(vx);
             }
         }
 
-        // POPRAWKA v0.91i: Zwiększono siłę separacji z 0.5 na 1.0
         this.x += (vx + this.separationX * 1.0) * dt;
         this.y += (vy + this.separationY * 1.0) * dt;
     }
     
-    // NOWA LINIA v0.91S: Dekrementacja hitFlashT
     if (this.hitFlashT > 0) {
         this.hitFlashT -= dt;
+    }
+
+    // --- FIX V0.93: RĘCZNA AKTUALIZACJA ANIMACJI ---
+    // Ponieważ nadpisaliśmy metodę update, musimy tu dodać ten blok kodu,
+    // inaczej spritesheet utknie na 1 klatce.
+    if (this.totalFrames > 1) {
+        this.animTimer += dt;
+        if (this.animTimer >= this.frameTime) {
+            this.animTimer = 0;
+            this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+        }
     }
   }
 }
