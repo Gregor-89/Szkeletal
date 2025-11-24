@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v0.94 - Dodano statystykę Pickup Range)
+// LEVELMANAGER.JS (v0.93 - FIX: Safe Stats Update)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -12,6 +12,7 @@ import { playSound } from '../services/audio.js';
 import { getLang } from '../services/i18n.js';
 import { get as getAsset } from '../services/assets.js';
 
+// Importy Broni
 import { AutoGun } from '../config/weapons/autoGun.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
@@ -62,6 +63,7 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
 }
 
 export function updateStatsUI(game, player, settings, weapons, targetElement = statsDisplay) {
+    if (!targetElement) return;
     targetElement.innerHTML = '';
     
     const weaponList = weapons || [];
@@ -72,7 +74,6 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
     const nova = weaponList.find(w => w instanceof NovaWeapon);
     const chainLightning = weaponList.find(w => w instanceof ChainLightningWeapon);
 
-    // Funkcja pomocnicza do ikon
     const getIcon = (assetKey, fallbackEmoji) => {
         const asset = getAsset(assetKey);
         return asset 
@@ -80,51 +81,44 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
             : fallbackEmoji;
     };
 
-    // Ikony Statystyk Ogólnych
+    // Ikony
     const iconLevel = getIcon('icon_level', '⭐');
     const iconHealth = getIcon('icon_health', '😋');
     const iconSpeed = getIcon('icon_speed', '👟');
-    const iconPickup = getIcon('icon_pickup_range', '🧲'); // NOWE v0.94
-
-    // Ikony Broni
+    const iconPickup = getIcon('icon_pickup_range', '🧲');
     const iconWhip = getIcon('icon_whip', '🪢');
     const iconOrbital = getIcon('icon_orbital', '🌀');
     const iconNova = getIcon('icon_nova', '💫');
     const iconLightning = getIcon('icon_lightning', '⚡');
     const iconAutoGun = getIcon('icon_autogun', '🔫');
-
-    // Ikony Statystyk AutoGuna
     const iconDamage = getIcon('icon_damage', '💥');
     const iconFirerate = getIcon('icon_firerate', '⏩');
     const iconMultishot = getIcon('icon_multishot', '🎯');
     const iconPierce = getIcon('icon_pierce', '➡️');
 
+    // FIX: Bezpieczne pobieranie pickupRange
+    const pickupVal = (game.pickupRange || PLAYER_CONFIG.INITIAL_PICKUP_RANGE).toFixed(0);
+
     const stats = [
         { icon: iconLevel, label: getLang('ui_hud_level'), value: game.level },
         { icon: iconHealth, label: getLang('ui_hud_hp_name'), value: `${Math.floor(game.health)}/${game.maxHealth}` },
-        { icon: iconSpeed, label: getLang('perk_speed_name'), value: player.speed.toFixed(0) }, // Zaokrąglono
-        { icon: iconPickup, label: getLang('perk_pickup_name'), value: game.pickupRange.toFixed(0) }, // NOWA STATYSTYKA
+        { icon: iconSpeed, label: getLang('perk_speed_name'), value: player.speedMultiplier.toFixed(2) + 'x' }, 
+        { icon: iconPickup, label: getLang('perk_pickup_name'), value: pickupVal },
         
         { icon: iconWhip, label: `${getLang('perk_whip_name')} (Lvl)`, value: `${whip ? whip.level : '1'} / ${PERK_CONFIG.whip?.max || 5}` },
         { icon: iconWhip, label: `${getLang('perk_whip_name')} (Dmg)`, value: `${whip ? whip.damage : '1'}` },
-        { icon: iconWhip, label: `${getLang('perk_whip_name')} (Count)`, value: `${whip ? whip.count : '1'}` },
         
         { icon: iconOrbital, label: getLang('perk_orbital_name'), value: `${orbital ? orbital.level : '0'} / ${PERK_CONFIG.orbital?.max || 5}` },
-        
         { icon: iconNova, label: getLang('perk_nova_name'), value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova?.max || 5}` },
         
         ...(chainLightning ? [
             { icon: iconLightning, label: `${getLang('perk_chainLightning_name')} (Lvl)`, value: `${chainLightning.level} / ${PERK_CONFIG.chainLightning?.max || 6}` },
-            { icon: iconLightning, label: `${getLang('perk_chainLightning_name')} (Dmg)`, value: `${chainLightning.damage}` },
-            { icon: iconLightning, label: `${getLang('perk_chainLightning_name')} (Targets)`, value: `${chainLightning.targets}` },
         ] : []),
 
         ...(autoGun ? [
             { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: `Level ${autoGun.level}` },
-            { icon: iconDamage, label: `${getLang('perk_damage_name')}`, value: `${autoGun.bulletDamage.toFixed(0)} / ${ (PERK_CONFIG.damage?.max || 6) + (WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE || 1)}` },
+            { icon: iconDamage, label: `${getLang('perk_damage_name')}`, value: `${autoGun.bulletDamage.toFixed(0)}` },
             { icon: iconFirerate, label: `${getLang('perk_firerate_name')}`, value: `${(1000 / autoGun.fireRate).toFixed(2)}/s` },
-            { icon: iconMultishot, label: `${getLang('perk_multishot_name')}`, value: `${autoGun.multishot} / ${PERK_CONFIG.multishot?.max || 4}` },
-            { icon: iconPierce, label: `${getLang('perk_pierce_name')}`, value: `${autoGun.pierce} / ${PERK_CONFIG.pierce?.max || 4}` }
         ] : [
             { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: `---` }
         ])

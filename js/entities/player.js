@@ -1,25 +1,20 @@
 // ==============
-// PLAYER.JS (v0.92a - Fix: Dokładny rozmiar 80px)
+// PLAYER.JS (v1.02 - FIX: Knockback & Physics)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
-import { AutoGun } from '../config/weapons/autoGun.js';
 import { WhipWeapon } from '../config/weapons/whipWeapon.js'; 
 import { get as getAsset } from '../services/assets.js';
-import { PLAYER_CONFIG } from '../config/gameData.js';
+import { PLAYER_CONFIG, HAZARD_CONFIG } from '../config/gameData.js';
 
 export class Player {
     constructor(startX, startY) {
-        // Pozycja i rozmiar
         this.x = startX;
         this.y = startY;
-        
-        // Hitbox (średnica kolizji) - to jest fizyczna wielkość gracza
-        // W v0.91 wynikowy rozmiar obrazka wynosił 80px.
-        this.size = 80; 
+        this.size = 80; // Wizualny rozmiar (hitbox jest mniejszy)
 
-        // Statystyki
-        this.speed = PLAYER_CONFIG.BASE_SPEED;
+        this.baseSpeed = PLAYER_CONFIG.BASE_SPEED;
+        this.speedMultiplier = 1.0;
         this.color = '#4CAF50';
         
         this.weapons = [];
@@ -27,101 +22,121 @@ export class Player {
         
         this.inHazard = false; 
         
-        // --- LOGIKA ANIMACJI v0.92 ---
-        this.spriteSheet = getAsset('player'); 
+        // Fizyka
+        this.knockback = { x: 0, y: 0 }; // NOWOŚĆ: Wektor odrzutu
         
-        // Konfiguracja Sprite Sheeta (4x4)
+        // Animacja
+        this.spriteSheet = null; 
         this.totalFrames = 16;
         this.cols = 4;
         this.rows = 4;
-        
-        // Stan animacji
         this.currentFrameIndex = 0; 
         this.animTimer = 0;
         this.baseAnimSpeed = 0.04; 
         
         this.isMoving = false;
-        this.facingDir = 1; // 1 = Prawo, -1 = Lewo
+        this.facingDir = 1; 
     }
 
-    /**
-     * Resetuje gracza do stanu początkowego.
-     */
     reset(canvasWidth, canvasHeight) {
         this.x = canvasWidth / 2;
         this.y = canvasHeight / 2;
-        this.speed = PLAYER_CONFIG.BASE_SPEED;
+        this.speedMultiplier = 1.0;
         
         this.weapons = [];
         this.weapons.push(new WhipWeapon(this));
         
         this.inHazard = false;
-        
-        // Reset animacji
         this.isMoving = false;
         this.facingDir = 1;
         this.currentFrameIndex = 0;
         this.animTimer = 0;
+        this.knockback = { x: 0, y: 0 };
+    }
+    
+    // NOWA METODA: Aplikacja odrzutu
+    applyKnockback(kx, ky) {
+        this.knockback.x += kx;
+        this.knockback.y += ky;
     }
 
-    /**
-     * Aktualizuje ruch i animację gracza.
-     */
-    update(dt, game, keys, jVec, camera) {
+    update(dt, game, keys, jVec, camera) { 
+        // 1. Obsługa Knockbacku (Zanikanie)
+        if (Math.abs(this.knockback.x) > 0.1 || Math.abs(this.knockback.y) > 0.1) {
+            this.x += this.knockback.x * dt;
+            this.y += this.knockback.y * dt;
+            this.knockback.x *= 0.9; // Tarcie
+            this.knockback.y *= 0.9;
+        }
+
         let vx = 0, vy = 0;
         
-        const hazardSlowdown = this.inHazard ? 0.5 : 1;
-        
-        const speedMul = (game.speedT > 0 ? 1.4 : 1) * (1 - (game.collisionSlowdown || 0)) * hazardSlowdown;
-        const currentMaxSpeed = this.speed * 1.3 * speedMul; 
-        const currentSpeedFactor = this.speed * speedMul; 
+        // 2. Obliczanie prędkości
+        const hazardSlowdown = game.playerInHazard ? HAZARD_CONFIG.SLOWDOWN_MULTIPLIER : 1;
+        const wallSlowdown = (1 - (game.collisionSlowdown || 0));
+        const pickupBonus = (game.speedT > 0 ? 1.4 : 1);
 
-        // Input z joysticka
+        const speedMul = pickupBonus * wallSlowdown * hazardSlowdown * this.speedMultiplier;
+        const currentMaxSpeed = this.baseSpeed * 1.3 * speedMul; 
+        const currentSpeedFactor = this.baseSpeed * speedMul; 
+
+        // 3. Input
         if (Math.abs(jVec.x) > 0.1 || Math.abs(jVec.y) > 0.1) {
             vx += jVec.x * currentSpeedFactor;
             vy += jVec.y * currentSpeedFactor;
         }
         
-        // Input z klawiatury
         if (keys['w'] || keys['arrowup']) vy -= currentSpeedFactor;
         if (keys['s'] || keys['arrowdown']) vy += currentSpeedFactor;
         if (keys['a'] || keys['arrowleft']) vx -= currentSpeedFactor;
         if (keys['d'] || keys['arrowright']) vx += currentSpeedFactor;
 
-        // Normalizacja prędkości
         const sp = Math.hypot(vx, vy);
         if (sp > currentMaxSpeed) {
             vx = (vx / sp) * currentMaxSpeed;
             vy = (vy / sp) * currentMaxSpeed;
         }
 
+        // Aplikacja ruchu
         this.x += vx * dt;
         this.y += vy * dt;
         
         this.isMoving = (Math.abs(vx) > 0 || Math.abs(vy) > 0);
         
-        // Zapisz ostatni kierunek POZIOMY (dla odbicia lustrzanego)
         if (Math.abs(vx) > 0.1) {
             this.facingDir = Math.sign(vx);
         }
 
-        // --- AKTUALIZACJA ANIMACJI v0.92 ---
-        if (this.isMoving) {
-            const speedRatio = sp / PLAYER_CONFIG.BASE_SPEED;
-            this.animTimer += dt * speedRatio;
-            
-            if (this.animTimer >= this.baseAnimSpeed) {
-                this.animTimer = 0;
-                this.currentFrameIndex = (this.currentFrameIndex + 1) % this.totalFrames;
-            }
-        } else {
-            this.currentFrameIndex = 0;
-            this.animTimer = 0;
+        if (game.collisionSlowdown > 0) {
+            game.collisionSlowdown -= dt * 2.0;
+            if (game.collisionSlowdown < 0) game.collisionSlowdown = 0;
         }
 
+        // 4. Animacja
+        this.updateAnimation(dt);
+        
         return this.isMoving;
     }
-    
+
+    updateAnimation(dt) {
+        if (!this.spriteSheet) {
+            this.spriteSheet = getAsset('player');
+        }
+        
+        if (this.isMoving) {
+            const sp = Math.hypot(this.knockback.x, this.knockback.y); // Uwzględnij knockback w animacji? Nie, tylko input.
+            // Ale szybkość animacji zależna od ruchu
+            this.animTimer += dt;
+            if (this.animTimer > 0.1) {
+                this.frameX = (this.frameX + 1) % 4; 
+                this.animTimer = 0;
+            }
+        } else {
+            this.frameX = 0; 
+            this.animTimer = 0;
+        }
+    }
+
     getWeapon(weaponClass) {
         return this.weapons.find(w => w instanceof weaponClass) || null;
     }
@@ -135,46 +150,28 @@ export class Player {
         }
     }
 
-    /**
-     * Rysuje gracza i jego pasek HP na canvasie.
-     */
     draw(ctx, game) {
         if (!this.spriteSheet) {
              this.spriteSheet = getAsset('player');
         }
 
-        // Zmienna pomocnicza do ustalenia, gdzie jest góra grafiki (dla paska HP)
-        // Domyślnie: połowa hitboxa
         let visualTopOffset = this.size / 2;
 
         if (this.spriteSheet) {
-            // 1. Obliczanie wymiarów klatki ŹRÓDŁOWEJ
             const sheetW = this.spriteSheet.naturalWidth;
             const sheetH = this.spriteSheet.naturalHeight;
-            
             const frameW = sheetW / this.cols;
             const frameH = sheetH / this.rows;
             
-            // 2. Obliczanie pozycji klatki
             const col = this.currentFrameIndex % this.cols;
             const row = Math.floor(this.currentFrameIndex / this.cols);
             const sx = col * frameW;
             const sy = row * frameH;
 
-            // 3. Obliczanie wymiarów DOCELOWYCH (na ekranie) - FIX v0.92a
-            // Ustawiamy visualScale na 1.0, aby grafika miała dokładnie rozmiar hitboxa (80px).
-            // Dzięki temu rozmiar jest identyczny jak w v0.91.
-            const visualScale = 1.0; 
+            // Rysujemy 48x64 (fizycznie), co jest mniejsze niż 80px size w configu?
+            // Ustalmy spójność. Jeśli size=80, to obrazek powinien być podobny.
+            // Ale w poprzedniej wersji rysowaliśmy na sztywno wymiary.
             
-            // Zachowujemy proporcje klatki źródłowej (na wypadek gdyby nie była idealnym kwadratem)
-            const ratio = frameW / frameH; 
-            
-            // Height = 80px * 1.0 = 80px
-            const destH = this.size * visualScale; 
-            const destW = destH * ratio; 
-            
-            visualTopOffset = destH / 2; 
-
             ctx.save();
             ctx.translate(this.x, this.y); 
             
@@ -188,25 +185,27 @@ export class Player {
             
             ctx.imageSmoothingEnabled = false; 
             
-            // RYSOWANIE KLATKI
+            // Wymiary rysowania
+            const drawW = 60; 
+            const drawH = 80;
+            visualTopOffset = drawH / 2;
+
             ctx.drawImage(
                 this.spriteSheet, 
-                sx, sy, frameW, frameH, // Źródło
-                -destW / 2, -destH / 2, // Cel (centrowanie względem x,y)
-                destW, destH            // Wymuszony rozmiar
+                this.frameX * frameW, 0, frameW, frameH, 
+                -drawW/2, -drawH/2 - 10, 
+                drawW, drawH            
             );
             
             ctx.filter = 'none'; 
             ctx.restore(); 
             
         } else {
-            // Fallback
             ctx.fillStyle = this.color;
-            ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+            ctx.fillRect(this.x - 10, this.y - 10, 20, 20);
         }
         
-        // Rysowanie efektów
-        if (this.inHazard) {
+        if (game.playerInHazard) {
             const hazardPulse = 50 + 3 * Math.sin(performance.now() / 80); 
             ctx.strokeStyle = '#00FF00'; 
             ctx.lineWidth = 2;
@@ -215,11 +214,10 @@ export class Player {
             ctx.stroke();
         }
 
+        // Pasek HP
         const hpBarW = 64;
         const hpBarH = 6;
         const hpBarX = this.x - hpBarW / 2;
-        
-        // Pasek HP
         const hpBarY = this.y - visualTopOffset - 12; 
         
         const healthPct = Math.max(0, Math.min(1, game.health / game.maxHealth));
@@ -247,8 +245,9 @@ export class Player {
             ctx.stroke();
         }
         
-        for (const weapon of this.weapons) {
-            weapon.draw(ctx);
+        // Rysowanie broni (bicz, orbity itp.)
+        for (const w of this.weapons) {
+            w.draw(ctx);
         }
     }
 }

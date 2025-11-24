@@ -1,5 +1,5 @@
 // ==============
-// HORDEENEMY.JS (v0.93 - FIX: Poprawa rozmiaru na 1.6x)
+// HORDEENEMY.JS (v0.99 - FIX: Obsługa Zamrożenia)
 // Lokalizacja: /js/entities/enemies/hordeEnemy.js
 // ==============
 
@@ -7,17 +7,17 @@ import { Enemy } from '../enemy.js';
 
 /**
  * Wróg typu Horda.
- * Wolniejszy, ale pojawia się w grupach, ma mniejszą separację i próbuje otaczać gracza.
  */
 export class HordeEnemy extends Enemy {
   
-  // KONSTRUKTOR (v0.93 Fix Rozmiaru)
   constructor(x, y, stats, hpScale) {
     super(x, y, stats, hpScale);
-    
-    // POPRAWKA: Zmniejszono z 1.9 na 1.6.
-    // Przy hitboxie 39px daje to teraz wysokość ok. 62px (oryginalnie mieli ~60px).
     this.visualScale = 1.6; 
+  }
+  
+  // Horda ma być "zbitą kupą".
+  getSeparationRadius() {
+      return this.size * 0.5; 
   }
   
   getSpeed(game, dist) {
@@ -28,19 +28,21 @@ export class HordeEnemy extends Enemy {
     return '#aed581';
   }
   
-  /**
-   * Nadpisana metoda update dla dodania logiki Roju (Swarming).
-   */
   update(dt, player, game, state) {
-    
+    // FIX v0.99: Obsługa timerów statusów (Wcześniej brakowało!)
+    if (this.frozenTimer > 0) {
+        this.frozenTimer -= dt;
+        return; // Jeśli zamrożony, nie ruszaj się i nie animuj
+    }
+    if (this.hazardSlowdownT > 0) {
+        this.hazardSlowdownT -= dt;
+    }
+
     if (this.hitStun > 0) {
         this.hitStun -= dt;
     } else {
-        // --- LOGIKA KOHEZYJNEGO ROJU (Zachowana z v0.85A) ---
         const SWARM_RADIUS = 20; 
-        
         const targetAngleOffset = (this.id % 7) * (Math.PI * 2 / 7); 
-        
         const targetX = player.x + Math.cos(targetAngleOffset) * SWARM_RADIUS;
         const targetY = player.y + Math.sin(targetAngleOffset) * SWARM_RADIUS;
         
@@ -69,7 +71,6 @@ export class HordeEnemy extends Enemy {
         this.hitFlashT -= dt;
     }
     
-    // Aktualizacja Animacji
     if (this.totalFrames > 1) {
         this.animTimer += dt;
         if (this.animTimer >= this.frameTime) {
@@ -78,4 +79,4 @@ export class HordeEnemy extends Enemy {
         }
     }
   }
-}
+}       

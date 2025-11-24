@@ -1,166 +1,101 @@
 // ==============
-// EFFECTS.JS (v0.86h - DEFINITYWNY FIX: Zapobieganie nakładaniu się Hazardów)
+// EFFECTS.JS (v0.99 - FIX: Complete & Optimized)
 // Lokalizacja: /js/managers/effects.js
 // ==============
 
 import { limitedShake, addBombIndicator, findFreeSpotForPickup } from '../core/utils.js';
 import { devSettings } from '../services/dev.js';
-// POPRAWKA v0.65: Import nowej centralnej konfiguracji
-import { EFFECTS_CONFIG, HAZARD_CONFIG } from '../config/gameData.js'; // POPRAWKA v0.68: Import HAZARD_CONFIG
-import { Hazard } from '../entities/hazard.js'; // POPRAWKA v0.68: Import nowej klasy Hazard
+import { EFFECTS_CONFIG, HAZARD_CONFIG } from '../config/gameData.js';
+import { Hazard } from '../entities/hazard.js';
 
-// POPRAWKA v0.71: Import 6 podklas pickupów z nowego folderu
 import { HealPickup } from '../entities/pickups/healPickup.js';
 import { MagnetPickup } from '../entities/pickups/magnetPickup.js';
 import { ShieldPickup } from '../entities/pickups/shieldPickup.js';
 import { SpeedPickup } from '../entities/pickups/speedPickup.js';
 import { BombPickup } from '../entities/pickups/bombPickup.js';
 import { FreezePickup } from '../entities/pickups/freezePickup.js';
+import { Chest } from '../entities/chest.js';
 
-
-// Mapa dla klas pickupów (działa bez zmian)
 export const PICKUP_CLASS_MAP = {
     heal: HealPickup,
     magnet: MagnetPickup,
     shield: ShieldPickup,
     speed: SpeedPickup,
     bomb: BombPickup,
-    freeze: FreezePickup
+    freeze: FreezePickup,
+    chest: Chest
 };
 
-// NOWA LINIA V0.84: Max. promień, aby zarezerwować miejsce dla Mega Hazardu
-const MAX_HAZARD_SEPARATION_RADIUS = HAZARD_CONFIG.SIZE * HAZARD_CONFIG.MEGA_HAZARD_MAX_MULTIPLIER;
-// NOWA LINIA V0.86G: Bufor bezpieczeństwa, aby zapobiec nakładaniu się (5px)
-const MIN_SEPARATION_BUFFER = 5;
+const MIN_SEPARATION_BUFFER = 20;
 
-
-/**
- * NOWA Funkcja (v0.83t): Znajduje miejsce dla nowego Hazardu, unikając kolizji z istniejącymi.
- * Dodatkowo próbuje utrzymać pozycję poza ekranem, ale w pobliżu gracza.
- */
-function findHazardSpawnSpot(player, camera, hazards) {
-    const maxAttempts = 12; // Zwiększona liczba prób
-    const spawnMargin = 50; // Margines poza ekranem (w px)
-    
-    // Granice świata
+function findHazardSpawnSpot(player, camera, hazards, hazardRadius) {
+    const maxAttempts = 20;
     const worldWidth = camera.worldWidth;
     const worldHeight = camera.worldHeight;
+    const viewMargin = 100;
+    const viewLeft = camera.offsetX - viewMargin;
+    const viewRight = camera.offsetX + camera.viewWidth + viewMargin;
+    const viewTop = camera.offsetY - viewMargin;
+    const viewBottom = camera.offsetY + camera.viewHeight + viewMargin;
     
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        let x, y;
+        let x = viewLeft + Math.random() * (viewRight - viewLeft);
+        let y = viewTop + Math.random() * (viewBottom - viewTop);
         
-        // --- Krok 1: Wstępne określenie punktu spawnu (Poza ekranem) ---
-        const viewLeft = camera.offsetX;
-        const viewRight = camera.offsetX + camera.viewWidth;
-        const viewTop = camera.offsetY;
-        const viewBottom = camera.offsetY + camera.viewHeight;
+        x = Math.max(hazardRadius, Math.min(worldWidth - hazardRadius, x));
+        y = Math.max(hazardRadius, Math.min(worldHeight - hazardRadius, y));
         
-        // Określenie, z której krawędzi ma nastąpić spawn
-        const edge = Math.random();
-        if (edge < 0.25) { // Spawnowanie z Góry
-            x = viewLeft + Math.random() * camera.viewWidth;
-            y = viewTop - spawnMargin;
-        } else if (edge < 0.5) { // Spawnowanie z Dołu
-            x = viewLeft + Math.random() * camera.viewWidth;
-            y = viewBottom + spawnMargin;
-        } else if (edge < 0.75) { // Spawnowanie z Lewej
-            x = viewLeft - spawnMargin;
-            y = viewTop + Math.random() * camera.viewHeight;
-        } else { // Spawnowanie z Prawej
-            x = viewRight + spawnMargin;
-            y = viewTop + Math.random() * camera.viewHeight;
-        }
+        const distToPlayer = Math.hypot(x - player.x, y - player.y);
+        const safePlayerDist = HAZARD_CONFIG.MIN_DIST_FROM_PLAYER + hazardRadius;
         
-        // Ograniczenie pozycji do granic świata
-        x = Math.max(0, Math.min(worldWidth, x));
-        y = Math.max(0, Math.min(worldHeight, y));
+        if (distToPlayer < safePlayerDist) continue;
         
-        // --- Krok 2: Sprawdzenie kolizji z istniejącymi Hazardami ---
-        let isClear = true;
-        for (const existingHazard of hazards) {
-            const dx = x - existingHazard.x;
-            const dy = y - existingHazard.y;
+        let isOverlapping = false;
+        for (const h of hazards) {
+            const dx = x - h.x;
+            const dy = y - h.y;
             const dist = Math.hypot(dx, dy);
-            
-            // Wymagana odległość to: MAX_RAD_NOWEGO_HAZARDU + RZECZYWISTY_RAD_ISTNIEJACEGO_HAZARDU + BUFOR
-            // Używamy MAX_HAZARD_SEPARATION_RADIUS jako gwarancji, że jeśli nowy Hazard okaże się Mega, będzie miał miejsce.
-            const requiredSeparation = MAX_HAZARD_SEPARATION_RADIUS + existingHazard.r + MIN_SEPARATION_BUFFER;
-            
-            if (dist < requiredSeparation) {
-                isClear = false;
+            const minSeparation = hazardRadius + h.r + MIN_SEPARATION_BUFFER;
+            if (dist < minSeparation) {
+                isOverlapping = true;
                 break;
             }
         }
         
-        // --- Krok 3: Sprawdzenie minimalnej odległości od gracza (jeśli jest zbyt blisko) ---
-        const distToPlayer = Math.hypot(x - player.x, y - player.y);
-        if (distToPlayer < HAZARD_CONFIG.MIN_DIST_FROM_PLAYER) {
-            isClear = false; // Odrzuć, jeśli jest zbyt blisko gracza
-        }
+        if (isOverlapping) continue;
         
-        if (isClear) {
-            return { x, y };
-        }
+        return { x, y };
     }
-    
-    // Jeśli po wielu próbach nie znaleziono idealnego miejsca, wróć do ostatniego losowego
-    console.warn('[HazardManager] Nie znaleziono idealnego miejsca dla Hazardu po ' + maxAttempts + ' próbach. Użycie ostatniej losowej pozycji.');
-    return {
-        x: player.x + (Math.random() * 800 - 400),
-        y: player.y + (Math.random() * 600 - 300)
-    };
+    return null;
 }
 
-
-/**
- * POPRAWKA v0.68: Spawnuje jedno Pole Zagrożenia.
- */
 export function spawnHazard(hazards, player, camera) {
-    if (hazards.length >= HAZARD_CONFIG.MAX_HAZARDS) {
-        return; // Osiągnięto limit
-    }
+    if (hazards.length >= HAZARD_CONFIG.MAX_HAZARDS) return;
     
-    // POPRAWKA v0.83t: Użyj nowej, zaawansowanej funkcji sprawdzającej kolizje
-    const pos = findHazardSpawnSpot(player, camera, hazards);
-    
-    // --- Logika Mega Hazardu ---
     const isMega = Math.random() < HAZARD_CONFIG.MEGA_HAZARD_PROBABILITY;
     let scale = 1;
-    
     if (isMega) {
         const minScale = HAZARD_CONFIG.MEGA_HAZARD_BASE_MULTIPLIER;
         const maxScale = HAZARD_CONFIG.MEGA_HAZARD_MAX_MULTIPLIER;
-        // Losowa skala w zdefiniowanym zakresie
         scale = minScale + Math.random() * (maxScale - minScale);
     }
     
+    const radius = HAZARD_CONFIG.SIZE * scale;
+    const pos = findHazardSpawnSpot(player, camera, hazards, radius);
+    
+    if (!pos) return;
+    
     const newHazard = new Hazard(pos.x, pos.y, isMega, scale);
     hazards.push(newHazard);
-    
-    // Usunięto log, aby nie spamować konsoli przy każdym spawnie
-    // console.log(`[DEBUG] js/managers/effects.js: Spawn Hazard (Mega: ${isMega ? 'Tak' : 'Nie'}, Scale: ${scale.toFixed(2)}) w pozycji`, pos);
 }
 
-
-/**
- * NOWA FUNKCJA V0.67: Aktualizuje cząsteczki (konfetti) niezależnie od pauzy.
- */
 export function updateParticles(dt, particles) {
     for (let i = particles.length - 1; i >= 0; i--) {
         particles[i].update(dt);
     }
 }
 
-
-/**
- * Pętla aktualizująca wszystkie efekty wizualne (cząsteczki, teksty).
- * POPRAWKA v0.62e: Aktualizuje już tylko wskaźniki bomb.
- * POPRAWKA V0.67: Usuwa particles z sygnatury (jest w osobnej funkcji), ale jej to nie obchodzi.
- */
 export function updateVisualEffects(dt, hitTexts_deprecated, confettis_deprecated, bombIndicators) {
-    // Pętle for hitTexts i confettis zostały usunięte (przeniesione do gameLogic.js)
-    
-    // Aktualizuj wskaźniki bomb (nadal zwykła tablica)
     for (let i = bombIndicators.length - 1; i >= 0; i--) {
         const b = bombIndicators[i];
         b.life += dt;
@@ -168,5 +103,4 @@ export function updateVisualEffects(dt, hitTexts_deprecated, confettis_deprecate
             bombIndicators.splice(i, 1);
         }
     }
-    // Log diagnostyczny usunięty, aby zapobiec spamowi.
 }

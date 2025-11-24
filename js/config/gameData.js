@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.93 - FIX: Wall Final Tuning & Variance)
+// GAMEDATA.JS (v0.99 - FIX: Absolutnie Pełny Plik)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -42,23 +42,22 @@ export const SIEGE_EVENT_CONFIG = {
 
 // --- Konfiguracja Autodestrukcji Oblężnika (Wall) ---
 export const WALL_DETONATION_CONFIG = {
-  // ZMIANA: Skrócono czas życia o 7s (z 67.5 na 60.5)
+  // Wydłużony czas życia (+33%)
   WALL_DECAY_TIME: 60.5,
-  
+  // Wydłużony czas ostrzegania (2x)
   WALL_DETONATION_WARNING_TIME: 6.0,
-  
-  // ZMIANA: Wydłużono widełki czasowe dwukrotnie (z 6.0 na 12.0)
+  // Zwiększone widełki czasowe (2x)
   WALL_DETONATION_TIME_VARIANCE: 12.0,
-  
-  // ZMIANA: Zmniejszono zasięg wybuchu o kolejne 25% (z 400 na 300)
+  // Zmniejszony zasięg wybuchu (-50%)
   WALL_DETONATION_RADIUS: 300,
-  
   WALL_DETONATION_DAMAGE: 15
 };
 
 // --- Konfiguracja Zagrożeń (Hazards) ---
 export const HAZARD_CONFIG = {
-  SPAWN_INTERVAL: 6.0,
+  // Częstotliwość spawnu (rzadziej: co 12s)
+  SPAWN_INTERVAL: 12.0,
+  
   MIN_DIST_FROM_PLAYER: 150,
   MAX_HAZARDS: 200,
   SIZE: 60,
@@ -68,11 +67,14 @@ export const HAZARD_CONFIG = {
   SLOWDOWN_MULTIPLIER: 0.5,
   HAZARD_ENEMY_SLOWDOWN_MULTIPLIER: 0.7,
   HAZARD_ENEMY_DAMAGE_PER_SECOND: 0.4,
+  
+  // Mega Hazard
   MEGA_HAZARD_PROBABILITY: 0.20,
   MEGA_HAZARD_BASE_MULTIPLIER: 4.0,
   MEGA_HAZARD_MAX_MULTIPLIER: 8.0,
   MEGA_HAZARD_PLAYER_DAMAGE_MULTIPLIER: 0.6,
   MEGA_HAZARD_ENEMY_DAMAGE_MULTIPLIER: 1.0,
+  
   HAZARD_PICKUP_DECAY_RATE: 0.067,
   HAZARD_CHEST_DECAY_RATE: 0.067,
 };
@@ -209,10 +211,10 @@ export const ENEMY_STATS = {
   ranged: { type: 'ranged', hp: 4, speed: 120, size: 52, damage: 5, color: '#00BCD4', score: 15, xp: 1, drops: BASE_DROP_RATES, attackRange: 300, attackCooldown: 1.8, projectileSpeed: WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED, projectileDamage: WEAPON_CONFIG.RANGED_ENEMY_BULLET.DAMAGE },
   elite: { type: 'elite', hp: 48, speed: 130, size: 120, damage: 5, color: '#9C27B0', score: 80, xp: 1, drops: {} },
   
-  // WALL (HP 39)
+  // WALL (Statsy V0.99)
   wall: {
     type: 'wall',
-    hp: 39,
+    hp: 39, // Zwiększone HP
     speed: 20,
     size: 88,
     damage: 15,

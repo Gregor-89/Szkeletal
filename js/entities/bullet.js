@@ -1,109 +1,95 @@
 // ==============
-// BULLET.JS (v0.92F - Wersja kompletna: Sprite'y gracza i butelka wroga)
+// BULLET.JS (v0.97b - FIX: Przywrócenie isOffScreen)
 // Lokalizacja: /js/entities/bullet.js
 // ==============
 
-import { get as getAsset } from '../services/assets.js'; 
-import { WEAPON_CONFIG } from '../config/gameData.js'; 
+import { get as getAsset } from '../services/assets.js';
 
-/**
- * Klasa bazowa dla wszystkich pocisków.
- */
-class Bullet {
-  constructor() {
-    this.x = 0;
-    this.y = 0;
-    this.vx = 0;
-    this.vy = 0;
-    this.size = 0;
-    this.damage = 0;
-    this.color = '#fff';
-    
-    this.active = false; 
-    this.pool = null; 
-    
-    this.life = Infinity;
-    this.maxLife = Infinity;
+// Klasa bazowa Bullet
+export class Bullet {
+    constructor() {
+        this.active = false;
+        this.x = 0; this.y = 0;
+        this.vx = 0; this.vy = 0;
+        this.size = 0;
+        this.damage = 0;
+        this.color = '#fff';
+        this.isEnemy = false; 
+        this.type = 'default'; 
+        this.pool = null;
+        this.life = Infinity;
+        this.maxLife = Infinity;
+    }
 
-    this.type = 'default';
-    this.rotation = 0; 
-    this.rotSpeed = 0; 
-  }
-  
-  init(x, y, vx, vy, size, damage, color, life = Infinity, type = 'default', rotation = 0) {
-    this.x = x;
-    this.y = y;
-    this.vx = vx; 
-    this.vy = vy; 
-    this.size = size;
-    this.damage = damage;
-    this.color = color;
-    this.active = true;
-    
-    this.life = life;
-    this.maxLife = life;
+    init(x, y, vx, vy, size, damage, color, life = Infinity, type = 'default') {
+        this.active = true;
+        this.x = x; this.y = y;
+        this.vx = vx; this.vy = vy;
+        this.size = size;
+        this.damage = damage;
+        this.color = color;
+        this.life = life;
+        this.maxLife = life;
+        this.type = type; 
+    }
 
-    this.type = type;
-    this.rotation = rotation;
-    this.rotSpeed = 0; 
-  }
-  
-  release() {
-    if (this.pool) {
-      this.pool.release(this);
+    // PRZYWRÓCONA METODA (v0.97b)
+    isOffScreen(camera) {
+        const margin = 50;
+        const viewLeft = camera.offsetX;
+        const viewRight = camera.offsetX + camera.viewWidth;
+        const viewTop = camera.offsetY;
+        const viewBottom = camera.offsetY + camera.viewHeight;
+        
+        return (
+          this.x < viewLeft - margin ||
+          this.x > viewRight + margin ||
+          this.y < viewTop - margin ||
+          this.y > viewBottom + margin
+        );
     }
-    this.active = false; 
-    this.life = Infinity; 
-  }
-  
-  update(dt) {
-    this.x += this.vx * dt; 
-    this.y += this.vy * dt; 
-    
-    this.rotation += this.rotSpeed * dt;
-    
-    if (this.life !== Infinity) {
-      this.life -= dt;
-      if (this.life <= 0) {
-        this.release();
-      }
+
+    release() {
+        if (this.pool) {
+            this.pool.release(this);
+        }
+        this.active = false; 
+        this.life = Infinity; 
     }
-  }
-  
-  draw(ctx) {
-    if (this.maxLife !== Infinity && this.life < 0.25) {
-      ctx.globalAlpha = Math.max(0, this.life / 0.25);
+
+    update(dt) {
+        if (!this.active) return;
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        
+        if (this.life !== Infinity) {
+            this.life -= dt;
+            if (this.life <= 0) {
+                this.release();
+            }
+        }
     }
-    
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fill();
-    
-    if (this.maxLife !== Infinity) {
-      ctx.globalAlpha = 1;
+
+    draw(ctx) {
+        if (!this.active) return;
+        
+        if (this.maxLife !== Infinity && this.life < 0.25) {
+            ctx.globalAlpha = Math.max(0, this.life / 0.25);
+        }
+        
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        
+        ctx.globalAlpha = 1;
     }
-  }
-  
-  isOffScreen(camera) {
-    const margin = 50;
-    const viewLeft = camera.offsetX;
-    const viewRight = camera.offsetX + camera.viewWidth;
-    const viewTop = camera.offsetY;
-    const viewBottom = camera.offsetY + camera.viewHeight;
-    
-    return (
-      this.x < viewLeft - margin ||
-      this.x > viewRight + margin ||
-      this.y < viewTop - margin ||
-      this.y > viewBottom + margin
-    );
-  }
 }
 
-/**
- * Klasa dla pocisków gracza.
- */
+// Klasa Pocisku Gracza
 export class PlayerBullet extends Bullet {
   constructor() {
     super(); 
@@ -121,14 +107,12 @@ export class PlayerBullet extends Bullet {
     this.offsetY = 0;
     
     this.drawScale = 0;
-    
-    // Sprite'y
     this.spriteKey = null;
     this.spriteScale = 1.0;
   }
   
   init(x, y, vx, vy, size, damage, color, pierce, life = Infinity, bouncesLeft = 0, curveDir = 0, animParams = null, playerRef = null, drawScale = 0, spriteKey = null, spriteScale = 1.0) {
-    super.init(x, y, vx, vy, size, damage, color, life, 'player', 0); 
+    super.init(x, y, vx, vy, size, damage, color, life, 'player');
     
     this.pierce = pierce;
     this.bouncesLeft = bouncesLeft;
@@ -146,22 +130,20 @@ export class PlayerBullet extends Bullet {
     }
     
     this.drawScale = drawScale;
-    
-    // Inicjalizacja sprite'a
     this.spriteKey = spriteKey;
     this.spriteScale = spriteScale;
     
-    // Jeśli mamy sprite, ustaw rotację zgodnie z wektorem ruchu
     if (this.spriteKey && (Math.abs(vx) > 0 || Math.abs(vy) > 0)) {
         this.rotation = Math.atan2(vy, vx);
+    } else {
+        this.rotation = 0;
     }
   }
   
   release() {
-    super.release(); 
+    super.release();
     this.playerRef = null; 
-    this.offsetX = 0;
-    this.offsetY = 0;
+    this.offsetX = 0; this.offsetY = 0;
     this.animParams = null; 
     this.drawScale = 0; 
     this.spriteKey = null; 
@@ -180,10 +162,24 @@ export class PlayerBullet extends Bullet {
             }
         }
     } else {
-        super.update(dt);
-        if (!this.active) return; 
+        // Wywołaj bazowy update (ruch liniowy) tylko jeśli nie jest przyczepiony do gracza
+        // Ale uwaga: super.update() robi też obsługę życia.
+        // Musimy to rozdzielić lub powtórzyć logikę.
+        // W v0.92 było tak:
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        
+        if (this.life !== Infinity) {
+            this.life -= dt;
+            if (this.life <= 0) {
+                this.release();
+                return;
+            }
+        }
     }
     
+    if (!this.active) return;
+
     if (this.animParams) {
       this.animTimer += dt * 1000; 
       if (this.animTimer >= this.animParams.animSpeed) {
@@ -197,7 +193,8 @@ export class PlayerBullet extends Bullet {
   }
   
   draw(ctx) {
-    // 1. Animacja Bicza (priorytet)
+    if (!this.active) return;
+
     if (this.animParams && this.playerRef) {
       const ap = this.animParams;
       const sprite = ap.spriteSheet;
@@ -230,7 +227,6 @@ export class PlayerBullet extends Bullet {
       return;
     }
 
-    // 2. Sprite Pocisku (Venom / Nova)
     if (this.spriteKey) {
         const sprite = getAsset(this.spriteKey);
         if (sprite) {
@@ -238,10 +234,8 @@ export class PlayerBullet extends Bullet {
             ctx.translate(this.x, this.y);
             ctx.rotate(this.rotation);
             
-            // Bazujemy na 'size' jako promieniu
             const drawSize = this.size * 2 * this.spriteScale;
             const aspect = sprite.naturalWidth / sprite.naturalHeight;
-            
             let w = drawSize;
             let h = drawSize / aspect;
             if (aspect > 1) { h = w / aspect; } else { w = h * aspect; }
@@ -253,7 +247,6 @@ export class PlayerBullet extends Bullet {
         }
     }
 
-    // 3. Fallback (Kółko)
     ctx.globalAlpha = 1; 
     ctx.fillStyle = this.color;
     ctx.beginPath();
@@ -262,44 +255,96 @@ export class PlayerBullet extends Bullet {
   }
 }
 
-/**
- * Klasa dla pocisków wroga.
- */
+// --- KLASA POCISKU WROGA ---
 export class EnemyBullet extends Bullet {
-  static bottleSprite = null; 
-  static bottleConfig = WEAPON_CONFIG.RANGED_ENEMY_BULLET;
+    static bottleSprite = null;
 
-  constructor() {
-    super(); 
-  }
-  
-  init(x, y, vx, vy, size, damage, color, life = Infinity, type = 'default', rotation = 0) {
-    super.init(x, y, vx, vy, size, damage, color, life, type, rotation);
-    
-    if (this.type === 'bottle') {
-      this.rotSpeed = (Math.random() > 0.5 ? 1 : -1) * 15; 
-      if (!EnemyBullet.bottleSprite) {
-          EnemyBullet.bottleSprite = getAsset('enemy_ranged_projectile');
-      }
+    constructor() {
+        super();
+        this.isEnemy = true;
+        this.rotation = 0;
+        this.rotSpeed = 0;
     }
-  }
 
-  draw(ctx) {
-    if (this.type === 'bottle' && EnemyBullet.bottleSprite) {
-        ctx.save();
-        ctx.shadowColor = 'rgba(0, 255, 255, 0.95)'; 
-        ctx.shadowBlur = 12; 
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
-        ctx.imageSmoothingEnabled = false;
+    init(x, y, vx, vy, size, damage, color, life = Infinity, type = 'default', rotation = 0) {
+        // Wywołaj init z klasy bazowej
+        super.init(x, y, vx, vy, size, damage, color, life, type);
         
-        const drawWidth = EnemyBullet.bottleConfig.SPRITE_WIDTH * 0.5; 
-        const drawHeight = EnemyBullet.bottleConfig.SPRITE_HEIGHT * 0.5; 
-
-        ctx.drawImage(EnemyBullet.bottleSprite, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
-        ctx.restore(); 
-    } else {
-        super.draw(ctx);
+        // Specyficzne dla EnemyBullet
+        if (this.type === 'bottle') {
+            this.rotSpeed = (Math.random() > 0.5 ? 1 : -1) * 15; 
+            this.rotation = rotation || Math.random() * Math.PI * 2;
+        } else {
+            this.rotSpeed = 0;
+            this.rotation = rotation;
+        }
     }
-  }
+
+    update(dt) {
+        super.update(dt);
+        if (!this.active) return;
+
+        if (this.type === 'bottle') {
+            this.rotation += this.rotSpeed * dt;
+        }
+    }
+
+    // Nowa metoda draw obsługująca grafiki (Boss + Bottle)
+    draw(ctx) {
+        if (!this.active) return;
+        
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // 1. Sprawdź, czy mamy asset graficzny
+        let asset = null;
+        
+        if (this.type === 'bottle') {
+            if (!EnemyBullet.bottleSprite) EnemyBullet.bottleSprite = getAsset('enemy_ranged_projectile');
+            asset = EnemyBullet.bottleSprite;
+        } else {
+            // Dla bossa: this.color przechowuje klucz assetu (np. 'boss_proj_1')
+            asset = getAsset(this.color);
+        }
+
+        if (asset) {
+            // --- RYSOWANIE GRAFIKI ---
+            ctx.shadowColor = 'rgba(0, 255, 255, 0.2)'; 
+            ctx.shadowBlur = 4; 
+            
+            if (this.rotation !== 0) ctx.rotate(this.rotation);
+            
+            let drawWidth = this.size * 2;
+            let drawHeight = this.size * 2;
+
+            if (this.type === 'bottle') {
+                drawWidth = 22 * 0.5; 
+                drawHeight = 64 * 0.5;
+            } else {
+                // Skalowanie dymków
+                drawWidth = this.size * 2.0;
+                drawHeight = this.size * 2.0;
+            }
+
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(
+                asset, 
+                -drawWidth / 2, 
+                -drawHeight / 2, 
+                drawWidth,      
+                drawHeight       
+            );
+
+        } else {
+            // --- FALLBACK (Kółko) ---
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = 4;
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.restore();
+    }
 }

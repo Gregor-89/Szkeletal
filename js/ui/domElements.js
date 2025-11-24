@@ -1,57 +1,76 @@
 // ==============
-// DOMELEMENTS.JS (v0.87b - Aktualizacja Intro DOM)
+// DOMELEMENTS.JS (v1.01 - FIX: Added confirmText)
 // Lokalizacja: /js/ui/domElements.js
 // ==============
 
-// Ten plik eksportuje stałe referencje do elementów DOM,
-// aby odchudzić główny plik ui.js i umożliwić
-// innym modułom (np. scoreManager) dostęp do tych samych elementów.
-
-export const xpBarFill = document.getElementById('xpBarFill');
-export const playerHPBarInner = document.getElementById('playerHPBarInner');
-export const playerHPBarTxt = document.getElementById('playerHPBarTxt');
-// POPRAWKA v0.77j: Usunięto eksport 'playerHPBarOuter', ponieważ ładował się jako null
-// export const playerHPBarOuter = document.getElementById('playerHPBarOuter');
-export const xpBarTxt = document.getElementById('xpBarTxt');
-export const bonusPanel = document.getElementById('bonusPanel');
-export const statsDisplay = document.getElementById('statsDisplay');
-export const statsDisplayPause = document.getElementById('statsDisplayPause');
+// Ekrany i Overlaye
+export const splashOverlay = document.getElementById('splashOverlay');
 export const menuOverlay = document.getElementById('menuOverlay');
-export const btnContinue = document.getElementById('btnContinue');
 export const levelUpOverlay = document.getElementById('levelUpOverlay');
-export const perksDiv = document.getElementById('perks');
-export const btnContinueMaxLevel = document.getElementById('btnContinueMaxLevel');
 export const pauseOverlay = document.getElementById('pauseOverlay');
 export const resumeOverlay = document.getElementById('resumeOverlay');
-export const resumeText = document.getElementById('resumeText');
 export const chestOverlay = document.getElementById('chestOverlay');
-export const chestButton = document.getElementById('chestButton');
-export const chestRewardDisplay = document.getElementById('chestRewardDisplay');
 export const gameOverOverlay = document.getElementById('gameOverOverlay');
-export const finalScore = document.getElementById('finalScore');
-export const finalLevel = document.getElementById('finalLevel');
-export const finalTime = document.getElementById('finalTime');
-export const titleDiv = document.getElementById('title');
-export const docTitle = document.querySelector('title');
+export const introOverlay = document.getElementById('introOverlay');
+export const confirmOverlay = document.getElementById('confirmOverlay');
 
-// NOWE REFERENCJE V0.86
+// HUD i Paski
+export const playerHPBarOuter = document.getElementById('playerHPBarOuter');
+export const playerHPBarInner = document.getElementById('playerHPBarInner');
+export const playerHPBarTxt = document.getElementById('playerHPBarTxt');
+
+export const xpBarOuter = document.getElementById('xpBarOuter');
+export const xpBarFill = document.getElementById('xpBarFill');
+export const xpBarTxt = document.getElementById('xpBarTxt');
+
+export const bonusPanel = document.getElementById('bonusPanel');
+export const gameInfo = document.getElementById('gameInfo');
 export const enemyCountSpan = document.getElementById('enemyCount');
 export const enemyLimitSpan = document.getElementById('enemyLimit');
 export const enemyProgressDiv = document.getElementById('enemyProgress');
 
-// NOWE REFERENCJE V0.87B (Intro)
-export const introOverlay = document.getElementById('introOverlay');
-export const introImage = document.getElementById('introImage');
-// export const introText = document.getElementById('introText'); // Usunięto
-export const btnIntroNext = document.getElementById('btnIntroNext');
+// Statystyki (Menu Pauzy i Level Up)
+export const statsDisplay = document.getElementById('statsDisplay');
+export const statsDisplayPause = document.getElementById('statsDisplayPause');
+
+// Kontenery
+export const perksDiv = document.getElementById('perks');
+export const chestRewardDisplay = document.getElementById('chestRewardDisplay');
+export const scoresBodyMenu = document.getElementById('scoresBodyMenu');
+export const scoresBodyGameOver = document.getElementById('scoresBodyGameOver');
+export const guideContent = document.getElementById('guideContent');
+
+// Przyciski
+export const btnStart = document.getElementById('btnStart');
+export const btnContinue = document.getElementById('btnContinue');
+export const btnReplayIntro = document.getElementById('btnReplayIntro');
+export const btnPauseMenu = document.getElementById('btnPauseMenu');
+export const btnResume = document.getElementById('btnResume');
+export const btnContinueMaxLevel = document.getElementById('btnContinueMaxLevel');
+export const chestButton = document.getElementById('chestButton');
+export const btnRetry = document.getElementById('btnRetry');
+export const btnMenu = document.getElementById('btnMenu');
+export const btnIntroPrev = document.getElementById('btnIntroPrev');
 export const btnIntroSkip = document.getElementById('btnIntroSkip');
-export const btnIntroPrev = document.getElementById('btnIntroPrev'); // Dodano
-
-
-export const confirmOverlay = document.getElementById('confirmOverlay');
-export const confirmText = document.getElementById('confirmText');
+export const btnIntroNext = document.getElementById('btnIntroNext');
 export const btnConfirmYes = document.getElementById('btnConfirmYes');
 export const btnConfirmNo = document.getElementById('btnConfirmNo');
+export const btnClearScoresMenu = document.getElementById('btnClearScoresMenu');
+export const btnClearScoresGO = document.getElementById('btnClearScoresGO');
 
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.77j] js/ui/domElements.js: Usunięto eksport playerHPBarOuter.');
+// Inne Elementy Tekstowe
+export const resumeText = document.getElementById('resumeText');
+export const finalScore = document.getElementById('finalScore');
+export const finalLevel = document.getElementById('finalLevel');
+export const finalTime = document.getElementById('finalTime');
+export const titleDiv = document.getElementById('title');
+export const docTitle = document.title;
+export const introImage = document.getElementById('introImage');
+
+// FIX: Brakujący eksport (dla dev.js)
+export const confirmText = document.getElementById('confirmText');
+
+// Joystick
+export const joystickZone = document.getElementById('joystickZone');
+export const joystickBase = document.getElementById('joystickBase');
+export const joystick = document.getElementById('joystick');

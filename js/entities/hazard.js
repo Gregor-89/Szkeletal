@@ -1,141 +1,181 @@
 // ==============
-// HAZARD.JS (v0.68 - Użycie rozdzielonych multiplerów dla Damage Over Time)
+// HAZARD.JS (v0.99d - FIX: Missing isDead function)
 // Lokalizacja: /js/entities/hazard.js
 // ==============
 
-// POPRAWKA v0.68: Import nowej centralnej konfiguracji dla parametrów
 import { HAZARD_CONFIG } from '../config/gameData.js';
+import { get as getAsset } from '../services/assets.js';
 
-/**
- * Klasa dla statycznego Pola Zagrożenia (np. Kwaśna Plama).
- * Jest to stały element na mapie, który zadaje obrażenia i spowalnia gracza.
- */
 export class Hazard {
-  // POPRAWKA v0.68: Dodano isMega i scale
-  constructor(x, y, isMega = false, scale = 1) {
+  constructor(x, y, isMega = false, scale = 1.0) {
     this.x = x;
     this.y = y;
-    
-    // POPRAWKA v0.68: Rozmiar skalowany
-    this.scale = scale;
-    this.r = HAZARD_CONFIG.SIZE * scale; // Promień kolizji i rysowania
-    this.pulsePhase = Math.random() * Math.PI * 2;
-    
-    // POPRAWKA v0.68: Flaga Mega Hazard
     this.isMega = isMega;
+    this.scale = scale;
     
-    // --- NOWA LOGIKA V0.68 (Fine Tuning) ---
-    // Pobranie multiplerów obrażeń z gameData.js
-    const playerDmgMult = this.isMega ?
-      HAZARD_CONFIG.MEGA_HAZARD_PLAYER_DAMAGE_MULTIPLIER :
-      1;
-    const enemyDmgMult = this.isMega ?
-      HAZARD_CONFIG.MEGA_HAZARD_ENEMY_DAMAGE_MULTIPLIER :
-      1;
+    // Promień logiczny
+    this.r = HAZARD_CONFIG.SIZE * scale;
     
-    // Obrażenia obliczane są dynamicznie na podstawie skali i multiplerów
-    // Gracz: DPS / 5 * Skala * Multipler Mega Gracza
-    this.playerDmgPerHit = (HAZARD_CONFIG.DAMAGE_PER_SECOND / 5) * this.scale * playerDmgMult;
-    // Wróg: DPS / 5 * Skala * Multipler Mega Wroga (teraz ustawione na 1.0, zgodnie z wymaganiem)
-    this.enemyDmgPerHit = (HAZARD_CONFIG.HAZARD_ENEMY_DAMAGE_PER_SECOND / 5) * this.scale * enemyDmgMult;
+    // Czas życia
+    this.maxLife = HAZARD_CONFIG.HAZARD_LIFE * (isMega ? 1.5 : 1.0);
+    this.life = this.maxLife;
+    this.fadeInT = 0;
     
-    // POPRAWKA v0.68a: Właściwości Decay i Warning
-    this.life = HAZARD_CONFIG.HAZARD_LIFE;
-    this.maxLife = HAZARD_CONFIG.HAZARD_LIFE;
-    this.activeTime = 0; // Czas od spawnu
+    // Obrażenia (używane w collisions.js)
+    this.damage = HAZARD_CONFIG.DAMAGE_PER_SECOND;
+    this.enemyDamage = HAZARD_CONFIG.HAZARD_ENEMY_DAMAGE_PER_SECOND;
+    
+    if (isMega) {
+      this.damage *= HAZARD_CONFIG.MEGA_HAZARD_PLAYER_DAMAGE_MULTIPLIER;
+      this.enemyDamage *= HAZARD_CONFIG.MEGA_HAZARD_ENEMY_DAMAGE_MULTIPLIER;
+    }
+    
+    // --- KSZTAŁT KAŁUŻY (Blobs) ---
+    this.blobs = [];
+    const blobCount = isMega ? 12 : 7;
+    
+    this.blobs.push({ dx: 0, dy: 0, r: this.r * 0.6 }); // Środek
+    
+    for (let i = 0; i < blobCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * (this.r * 0.5);
+      const subR = (this.r * 0.3) + Math.random() * (this.r * 0.4);
+      
+      this.blobs.push({
+        dx: Math.cos(angle) * dist,
+        dy: Math.sin(angle) * dist,
+        r: subR
+      });
+    }
+    
+    // Bąbelki
+    this.bubbles = [];
+    this.bubbleTimer = 0;
+    
+    this.pattern = null;
+    this.textureKey = 'hazard_sewage';
   }
   
-  /**
-   * Zwraca true, jeśli Hazard jest w pełni aktywny (po fazie ostrzegawczej).
-   */
-  isActive() {
-    return this.activeTime >= HAZARD_CONFIG.HAZARD_WARNING_TIME;
-  }
-  
-  /**
-   * Zwraca true, jeśli Hazard powinien zostać usunięty.
-   */
+  // NAPRAWIONO: Dodano brakującą metodę
   isDead() {
     return this.life <= 0;
   }
   
-  /**
-   * Aktualizuje stan zagrożenia (pulsowanie, czas życia, czas aktywny).
-   * @param {number} dt - Delta time
-   */
   update(dt) {
-    this.pulsePhase += dt * 3;
+    this.life -= dt;
+    if (this.fadeInT < 1.0) this.fadeInT += dt * 2.0;
     
-    // Logika Decay
-    if (this.isActive()) {
-      this.life -= dt;
+    // Bąbelki
+    this.bubbleTimer -= dt;
+    if (this.bubbleTimer <= 0) {
+      this.spawnBubble();
+      this.bubbleTimer = 0.1 + Math.random() * 0.3;
     }
     
-    // Logika Warning
-    this.activeTime += dt;
+    for (let i = this.bubbles.length - 1; i >= 0; i--) {
+      const b = this.bubbles[i];
+      b.life -= dt;
+      b.size += dt * 2;
+      if (b.life <= 0) this.bubbles.splice(i, 1);
+    }
   }
   
-  /**
-   * Rysuje pole zagrożenia na canvasie.
-   * @param {CanvasRenderingContext2D} ctx 
-   */
-  draw(ctx) {
+  spawnBubble() {
+    const blob = this.blobs[Math.floor(Math.random() * this.blobs.length)];
+    const angle = Math.random() * Math.PI * 2;
+    const dist = Math.random() * (blob.r * 0.8);
+    
+    this.bubbles.push({
+      x: blob.dx + Math.cos(angle) * dist,
+      y: blob.dy + Math.sin(angle) * dist,
+      size: 1,
+      life: 0.5 + Math.random() * 0.5,
+      maxLife: 1.0
+    });
+  }
+  
+  draw(ctx, game) {
     ctx.save();
+    ctx.translate(this.x, this.y);
     
-    const pulseScale = 1 + 0.05 * Math.sin(this.pulsePhase);
-    const radius = this.r * pulseScale;
-    
-    // Logika wizualnego ostrzeżenia i zanikania
     let alpha = 1;
-    let color = this.isMega ? 'rgba(150, 0, 150, 0.6)' : 'rgba(0, 150, 0, 0.6)'; // MEGA: Fioletowy, Standard: Zielony
-    let shadowColor = this.isMega ? 'rgba(255, 0, 255, 0.8)' : 'rgba(0, 255, 0, 0.4)'; // Cień
-    
-    if (!this.isActive()) {
-      // Faza ostrzegawcza (czerwony/żółty pulsujący pierścień)
-      const colorFactor = Math.sin(this.activeTime * 12);
-      
-      alpha = 0.5 + 0.5 * Math.sin(this.activeTime * 8); // Migotanie
-      color = `rgba(255, 100, 0, ${0.4 + 0.3 * colorFactor})`;
-      shadowColor = `rgba(255, 0, 0, ${0.4 + 0.4 * colorFactor})`;
-      
-      ctx.setLineDash([10, 5]);
-    } else if (this.life < 10) {
-      // Faza zanikania (Decay)
-      alpha = Math.max(0, this.life / 10);
-    }
-    
+    if (this.fadeInT < 1) alpha = this.fadeInT;
+    else if (this.life < 1.0) alpha = this.life;
     ctx.globalAlpha = alpha;
     
-    // 1. Rysowanie cienia (glow)
-    ctx.shadowBlur = 25;
-    ctx.shadowColor = shadowColor;
+    // Tekstura
+    if (!this.pattern) {
+      const img = getAsset(this.textureKey);
+      if (img) {
+        this.pattern = ctx.createPattern(img, 'repeat');
+      }
+    }
     
-    // 2. Rysowanie samej plamy (Acid Pool)
-    ctx.fillStyle = color;
+    // --- RYSOWANIE 1: OBRYS (Tło) ---
     ctx.beginPath();
-    ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
+    const borderSize = 4;
+    for (const b of this.blobs) {
+      ctx.moveTo(b.dx + b.r + borderSize, b.dy);
+      ctx.arc(b.dx, b.dy, b.r + borderSize, 0, Math.PI * 2);
+    }
+    ctx.fillStyle = 'rgba(100, 255, 100, 0.4)';
     ctx.fill();
     
-    // 3. Wewnętrzny, jaśniejszy pierścień (efekt "gotowania")
-    const innerColor = this.isMega ? 'rgba(200, 0, 200, 0.4)' : 'rgba(0, 200, 0, 0.4)';
-    ctx.fillStyle = this.isActive() ? innerColor : 'rgba(0, 0, 0, 0.0)';
+    // --- RYSOWANIE 2: ŚRODEK (Tekstura) ---
     ctx.beginPath();
-    ctx.arc(this.x, this.y, radius * 0.7, 0, Math.PI * 2);
-    ctx.fill();
+    for (const b of this.blobs) {
+      ctx.moveTo(b.dx + b.r, b.dy);
+      ctx.arc(b.dx, b.dy, b.r, 0, Math.PI * 2);
+    }
     
-    // 4. Usuwamy cień przed rysowaniem konturu
+    if (this.pattern) {
+      const matrix = new DOMMatrix();
+      matrix.translateSelf(this.x, this.y);
+      matrix.scaleSelf(0.5, 0.5);
+      this.pattern.setTransform(matrix);
+      
+      ctx.fillStyle = this.pattern;
+    } else {
+      ctx.fillStyle = this.isMega ? '#5d4037' : '#4e342e';
+    }
+    
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 15;
+    ctx.fill();
     ctx.shadowBlur = 0;
     
-    // Użyj jaśniejszego konturu dla Mega Hazardu
-    ctx.strokeStyle = this.isActive() ? (this.isMega ? 'rgba(255, 0, 255, 0.8)' : 'rgba(0, 255, 0, 0.8)') : 'rgba(255, 165, 0, 0.8)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
-    ctx.stroke();
-    
-    // Reset dashed line po fazie ostrzegawczej
-    ctx.setLineDash([]);
+    // Bąbelki
+    for (const b of this.bubbles) {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(60, 100, 60, 0.6)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(200, 255, 200, 0.5)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.arc(b.x - b.size * 0.3, b.y - b.size * 0.3, b.size * 0.2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.fill();
+    }
     
     ctx.restore();
+  }
+  
+  checkCollision(entityX, entityY, entityRadius) {
+    const dist = Math.hypot(entityX - this.x, entityY - this.y);
+    if (dist > this.r + entityRadius + 20) return false;
+    
+    const localX = entityX - this.x;
+    const localY = entityY - this.y;
+    
+    for (const blob of this.blobs) {
+      const d = Math.hypot(localX - blob.dx, localY - blob.dy);
+      if (d < blob.r + entityRadius) {
+        return true;
+      }
+    }
+    return false;
   }
 }

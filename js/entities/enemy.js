@@ -1,10 +1,10 @@
 // ==============
-// ENEMY.JS (v0.93 - Auto-Sprite Detection)
+// ENEMY.JS (v0.98 - FIX: Inteligentna Separacja Wizualna)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
 import { colorForEnemy } from '../core/utils.js';
-import { WEAPON_CONFIG, HAZARD_CONFIG } from '../config/gameData.js';
+import { HAZARD_CONFIG } from '../config/gameData.js';
 import { get as getAsset } from '../services/assets.js';
 
 export class Enemy {
@@ -34,36 +34,28 @@ export class Enemy {
         this.separationY = 0;
         this.hazardSlowdownT = 0; 
 
-        // --- SYSTEM AUTOMATYCZNEGO WYKRYWANIA SPRITE'ÓW (v0.93) ---
-        
+        // --- SYSTEM AUTOMATYCZNEGO WYKRYWANIA SPRITE'ÓW ---
         const idleKey = stats.assetKey || ('enemy_' + this.type);
         const spriteSheetKey = idleKey + '_spritesheet';
-        
-        // Sprawdź, czy mamy załadowany spritesheet dla tego typu wroga
         const spriteSheet = getAsset(spriteSheetKey);
         
         if (spriteSheet) {
-            // ZNALEZIONO ANIMACJĘ: Użyj spritesheeta i ustaw parametry 4x4
             this.sprite = spriteSheet;
             this.cols = 4;
             this.rows = 4;
             this.totalFrames = 16;
-            this.frameTime = 0.1; // Standardowa prędkość animacji
-            // console.log(`[Enemy] ${this.type}: Używam spritesheeta.`);
+            this.frameTime = 0.1; 
         } else {
-            // BRAK ANIMACJI: Użyj grafiki idle (statycznej)
             this.sprite = getAsset(idleKey);
             this.cols = 1;
             this.rows = 1;
             this.totalFrames = 1;
-            // console.log(`[Enemy] ${this.type}: Używam idle.`);
         }
 
         this.currentFrame = 0;
         this.animTimer = 0;
         this.facingDir = 1;
         
-        // Domyślna skala wizualna (może być nadpisana w podklasie)
         this.visualScale = 1.54;
     }
 
@@ -107,7 +99,6 @@ export class Enemy {
             this.y += (vy + this.separationY * 1.0) * dt;
         }
         
-        // Aktualizacja Animacji (tylko jeśli ma więcej niż 1 klatkę)
         if (this.totalFrames > 1) {
             this.animTimer += dt;
             if (this.animTimer >= this.frameTime) {
@@ -115,6 +106,15 @@ export class Enemy {
                 this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
             }
         }
+    }
+
+    /**
+     * NOWA METODA: Oblicza promień separacji.
+     * Domyślnie bazuje na visualScale, aby duże sprite'y nie wchodziły na siebie.
+     * Mnożnik 0.5 oznacza "stykamy się krawędziami grafiki".
+     */
+    getSeparationRadius() {
+        return (this.size * this.visualScale) * 0.5;
     }
 
     applySeparation(dt, enemies) {
@@ -125,6 +125,9 @@ export class Enemy {
             this.separationY = 0;
             const multiplier = 144; 
             
+            // Cache promienia dla 'this' (optymalizacja)
+            const myRadius = this.getSeparationRadius();
+
             for (const other of enemies) {
                 if (this.id === other.id) continue;
                 if (other.isDead) continue;
@@ -134,7 +137,8 @@ export class Enemy {
                 const ody = this.y - other.y;
                 const d = Math.hypot(odx, ody);
                 
-                const requiredDist = (this.size / 2) + (other.size / 2);
+                // NOWA LOGIKA: Suma promieni separacji (wizualnych)
+                const requiredDist = myRadius + other.getSeparationRadius();
                 
                 if (d < requiredDist && d > 0.1) {
                     const force = (requiredDist - d) / requiredDist; 
@@ -179,7 +183,6 @@ export class Enemy {
             const sx = col * frameW;
             const sy = row * frameH;
 
-            // Obliczanie wymiarów - tutaj używamy visualScale
             const destH = this.size * this.visualScale;
             const aspectRatio = frameW / frameH;
             const destW = destH * aspectRatio;

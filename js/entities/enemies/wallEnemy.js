@@ -1,5 +1,5 @@
 // ==============
-// WALLENEMY.JS (v0.93 - FIX: Radius, Flashing & Size)
+// WALLENEMY.JS (v0.98 - FIX: Szczelny Mur)
 // Lokalizacja: /js/entities/enemies/wallEnemy.js
 // ==============
 
@@ -13,7 +13,6 @@ export class WallEnemy extends Enemy {
   constructor(x, y, stats, hpScale = 1) {
     super(x, y, stats, hpScale);
     
-    // Logika Detonacji
     this.showHealthBar = false; 
     this.initialLife = WALL_DETONATION_CONFIG.WALL_DECAY_TIME;
     this.detonationT = this.initialLife + (Math.random() * WALL_DETONATION_CONFIG.WALL_DETONATION_TIME_VARIANCE);
@@ -21,12 +20,15 @@ export class WallEnemy extends Enemy {
     this.isAutoDead = false; 
     this.assetKey = 'enemy_wall';
 
-    // Logika Wyglądu
-    // ZMIANA: Zmniejszono o 10% (z 2.9 na 2.6)
-    this.visualScale = 2.6;
-    
+    this.visualScale = 2.9;
     this.baseSpeed = (stats.speed || 20) * 0.5; 
     this.mass = 1000; 
+  }
+  
+  // NADPISANIE SEPARACJI:
+  // Mur ma tworzyć szczelną barierę. Pozwalamy na duże nakładanie się grafik (ignorujemy visualScale).
+  getSeparationRadius() {
+      return this.size * 0.5; 
   }
   
   takeDamage(damage) {
@@ -48,10 +50,8 @@ export class WallEnemy extends Enemy {
     const radius = WALL_DETONATION_CONFIG.WALL_DETONATION_RADIUS; 
     const damage = WALL_DETONATION_CONFIG.WALL_DETONATION_DAMAGE; 
     
-    // 1. Wizualizacja fali (Bomba) - Zasięg teraz 400 (wg gameData)
     addBombIndicator(bombIndicators, this.x, this.y, radius, 0.5);
 
-    // 2. Zadawanie obrażeń
     for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
         if (e.id === this.id) continue; 
@@ -69,7 +69,6 @@ export class WallEnemy extends Enemy {
         }
     }
 
-    // 3. Efekt cząsteczkowy (AreaNuke)
     areaNuke(
         this.x,
         this.y,
@@ -104,7 +103,6 @@ export class WallEnemy extends Enemy {
         return;
     }
 
-    // Ruch
     const dx = player.x - this.x;
     const dy = player.y - this.y;
     const dist = Math.hypot(dx, dy);
@@ -120,7 +118,6 @@ export class WallEnemy extends Enemy {
         if (Math.abs(dx) > 10) this.facingDir = Math.sign(dx);
     }
 
-    // Animacja
     if (this.totalFrames > 1) {
         this.animTimer += dt;
         if (this.animTimer >= this.frameTime) {
@@ -133,12 +130,9 @@ export class WallEnemy extends Enemy {
   draw(ctx, game) {
     ctx.save();
     
-    // ZMIANA: Powolne miganie (1 Hz) przyspieszające pod koniec
     if (this.isDetonating) {
         const timeLeft = Math.max(0, this.detonationT);
-        const warnTime = WALL_DETONATION_CONFIG.WALL_DETONATION_WARNING_TIME; // 6.0s
-        
-        // Zaczyna od 1 Hz, rośnie w miarę jak timeLeft maleje
+        const warnTime = WALL_DETONATION_CONFIG.WALL_DETONATION_WARNING_TIME; 
         const frequency = 1 + (warnTime - timeLeft) * 3.5; 
         
         if (Math.floor(game.time * frequency) % 2 === 0) {
@@ -155,6 +149,9 @@ export class WallEnemy extends Enemy {
   
   drawHealthBar(ctx) {
       if (!this.showHealthBar) return;
+      
+      ctx.save();
+      if (this.facingDir === -1) ctx.scale(-1, 1);
       
       const w = 40, h = 6; 
       const frac = Math.max(0, this.hp / this.maxHp);
@@ -177,5 +174,7 @@ export class WallEnemy extends Enemy {
       ctx.strokeStyle = '#111';
       ctx.lineWidth = 1;
       ctx.strokeRect(bx, by, w, h);
+      
+      ctx.restore();
   }
 }

@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.93 - Menel: Walk & Attack Sprites)
+// ASSETS.JS (v0.98 - COMPLETE)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
@@ -21,6 +21,7 @@ function loadImage(src) {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = () => {
+      // Cicha porażka jest oczekiwana dla brakujących spritesheetów
       resolve(null);
     };
     img.src = src;
@@ -45,7 +46,7 @@ const assetDefinitions = {
   'enemy_kamikaze': 'enemies/troll/troll_idle.png',
   'enemy_splitter': 'enemies/splitter/splitter_idle.png',
   'enemy_tank': 'enemies/tank/tank_idle.png',
-  'enemy_ranged': 'enemies/ranged/ranged_idle.png', // Fallback
+  'enemy_ranged': 'enemies/ranged/ranged_idle.png',
   'enemy_elite': 'enemies/elite/elite_idle.png',
   'enemy_wall': 'enemies/wall/wall_idle.png',
   
@@ -59,16 +60,26 @@ const assetDefinitions = {
   'enemy_elite_spritesheet': 'enemies/elite/elite_spritesheet.png',
   'enemy_wall_spritesheet': 'enemies/wall/wall_spritesheet.png',
   
-  // --- MENEL (RANGED) - NOWY SYSTEM 2 SPRITEÓW ---
-  // Uwaga: Te nazwy plików musisz nadać swoim obrazkom!
+  // --- MENEL (RANGED) - SYSTEM 2 SPRITEÓW ---
   'enemy_ranged_walk': 'enemies/ranged/ranged_walk.png',
   'enemy_ranged_attack': 'enemies/ranged/ranged_attack.png',
+  
+  // --- HAZARDY ---
+  'hazard_sewage': 'hazards/hazard_sewage.png',
   
   // --- POCISKI I BRONIE ---
   'enemy_ranged_projectile': 'projectiles/bottle.png',
   'weapon_orbital_potato': 'weapons/orbital_potato.png',
   'projectile_venom': 'projectiles/venom.png',
   'projectile_nova': 'projectiles/nova_shot.png',
+  
+  // --- POCISKI BOSSA (KOMENTARZE) ---
+  'boss_proj_1': 'projectiles/boss_comment_1.png',
+  'boss_proj_2': 'projectiles/boss_comment_2.png',
+  'boss_proj_3': 'projectiles/boss_comment_3.png',
+  'boss_proj_4': 'projectiles/boss_comment_4.png',
+  'boss_proj_5': 'projectiles/boss_comment_5.png',
+  'boss_proj_6': 'projectiles/boss_comment_6.png',
   
   // --- IKONY PERKÓW ---
   'icon_orbital': 'icons/orbital.jpg',

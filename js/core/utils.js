@@ -1,15 +1,25 @@
 // ==============
-// UTILS.JS (v0.90 - Implementacja i18n)
+// UTILS.JS (v0.99 - FIX: Przywrócono checkCircleCollision)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
-// POPRAWKA v0.65: Import nowej centralnej konfiguracji
-// POPRAWKA v0.76: Import GEM_CONFIG
 import { EFFECTS_CONFIG, WALL_DETONATION_CONFIG, GEM_CONFIG } from '../config/gameData.js';
 import { devSettings } from '../services/dev.js'; 
-import { PICKUP_CLASS_MAP } from '../managers/effects.js'; // Mapa klas pickupów
-// NOWY IMPORT v0.90: Silnik i18n
+import { PICKUP_CLASS_MAP } from '../managers/effects.js'; 
 import { getLang } from '../services/i18n.js';
+
+// --- FIZYKA I KOLIZJE ---
+
+/**
+ * Sprawdza kolizję dwóch okręgów.
+ * (Tej funkcji brakowało, co powodowało błąd w collisions.js)
+ */
+export function checkCircleCollision(x1, y1, r1, x2, y2, r2) {
+    const dx = x1 - x2;
+    const dy = y1 - y2;
+    const distance = Math.hypot(dx, dy);
+    return distance < (r1 + r2);
+}
 
 // --- EFEKTY WIZUALNE ---
 
@@ -17,9 +27,7 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
     const now = performance.now() / 1000;
     let merged = false;
 
-    // Funkcja pomocnicza formatująca obrażenia (utrzymanie ułamkowych wartości)
     function formatDamage(value) {
-        // Jeśli wartość nie jest całkowita lub jest bardzo mała (np. 0.4), formatuj z jednym miejscem po przecinku.
         if (value !== Math.floor(value) || value < 1) {
             return value.toFixed(1);
         }
@@ -27,7 +35,6 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
     }
     
     if (damage > 0 && overrideText === null) {
-        // Ta pętla nadal działa, ponieważ 'hitTexts' to 'activeItems'
         for (let i = hitTexts.length - 1; i >= 0; i--) {
             const ht = hitTexts[i];
             if (ht.overrideText === null) {
@@ -36,11 +43,9 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
 
                 if (dist < 25 && timeDiff < 0.15) {
                     ht.damage += damage;
-                    // Użyj nowej funkcji formatującej
                     ht.text = '-' + formatDamage(ht.damage); 
-                    // POPRAWKA v0.62e: Zmiana czasu życia na sekundy
-                    ht.life = 0.66; // Było 40 klatek
-                    ht.vy = -0.8 * 60; // Prędkość na sekundę
+                    ht.life = 0.66; 
+                    ht.vy = -0.8 * 60; 
                     ht.spawnTime = now;
                     merged = true;
                     break;
@@ -50,16 +55,11 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
     }
 
     if (!merged) {
-        // POPRAWKA v0.62: Użyj puli obiektów zamiast .push()
         const ht = hitTextPool.get();
         if (ht) {
-            // Użyj nowej funkcji formatującej
             const dmgText = (damage >= 0 ? '-' + formatDamage(damage) : '+' + formatDamage(Math.abs(damage)));
             const text = overrideText !== null ? overrideText : dmgText;
-            
-            // POPRAWKA v0.62e: Zmiana czasu życia na sekundy i prędkości
-            ht.init(x, y - 10, text, color, 0.66, -0.6 * 60); // (life, vy)
-            
+            ht.init(x, y - 10, text, color, 0.66, -0.6 * 60); 
             ht.spawnTime = now;
             ht.overrideText = overrideText;
             ht.damage = damage;
@@ -67,11 +67,8 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
     }
 }
 
-// POPRAWKA v0.67: Logika Konfetti używa teraz poprawnych przeliczonych parametrów i starego, bardziej 'lekkiego' efektu.
 export function spawnConfetti(particlePool, cx, cy) {
     const cols = ['#ff5252', '#ffca28', '#66bb6a', '#42a5f5', '#ab47bc', '#e91e63', '#9c27b0', '#00bcd4'];
-    
-    // Pobierz konfigurację konfetti, używając fallbacka
     const c = EFFECTS_CONFIG.CONFETTI || {};
     
     const numParticles = c.CONFETTI_COUNT || 80;
@@ -86,30 +83,25 @@ export function spawnConfetti(particlePool, cx, cy) {
     for (let i = 0; i < numParticles; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = initialSpeedMin + Math.random() * (initialSpeedMax - initialSpeedMin);
-        const life = maxLife * (0.7 + Math.random() * 0.3); // Czas życia w SEKUNDACH
+        const life = maxLife * (0.7 + Math.random() * 0.3); 
 
-        // POPRAWKA v0.62: Użyj puli obiektów zamiast .push()
         const p = particlePool.get();
         if (p) {
-            // init(x, y, vx, vy, life, color, gravity, friction, size, rotSpeed)
             p.init(
                 cx, cy,
-                Math.cos(angle) * speed, // vx (px/s)
-                Math.sin(angle) * speed + initialUpVelocity, // vy (px/s)
-                life, // s
+                Math.cos(angle) * speed, 
+                Math.sin(angle) * speed + initialUpVelocity, 
+                life, 
                 cols[Math.floor(Math.random() * cols.length)],
-                gravityPerSecond, // px/s^2 (Bardzo mała grawitacja dla starszego, 'lekkiego' efektu)
-                frictionPerSecond, // % zaniku na sekundę
-                // POPRAWKA V0.67: Rozmiar cząsteczek z oryginalnego kodu (2.5 - 5px)
-                2.5 + Math.random() * 2.5, // size 
-                (Math.random() - 0.5) * rotationSpeed // rad/s
+                gravityPerSecond, 
+                frictionPerSecond, 
+                2.5 + Math.random() * 2.5, 
+                (Math.random() - 0.5) * rotationSpeed 
             );
         }
     }
 }
 
-// POPRAWKA v0.65: Czas życia pobierany z EFFECTS_CONFIG
-// POPRAWKA v0.75: Zmieniono aby być bardziej elastycznym na typy wskaźników
 export function addBombIndicator(bombIndicators, cx, cy, radius, maxLife = EFFECTS_CONFIG.BOMB_INDICATOR_LIFE, color = 'rgba(255, 255, 255, 0.9)', shadow = 'rgba(255, 152, 0, 0.7)') {
     bombIndicators.push({
         x: cx,
@@ -129,20 +121,10 @@ export function limitedShake(game, settings, mag, ms) {
     if (game.shakeT < ms) game.shakeT = ms;
 }
 
-/**
- * NOWA FUNKCJA (v0.72): Logika bomby: niszczy wrogów i tworzy efekty w danym promieniu.
- * PRZENIESIONA Z effects.js
- * POPRAWKA v0.76a: Dodano argument 'isWallNuke'
- */
 export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gemsPool, pickups, particlePool, bombIndicators, isWallNuke = false) {
-    
-    // Pobierz konfigurację efektów bomby
     const c = EFFECTS_CONFIG;
-    
-    // POPRAWKA v0.76a: Użyj jawnego argumentu zamiast porównywania promienia
     const isWallDetonation = isWallNuke;
     
-    // Logika cząsteczek (Area Nuke)
     const particleColor = isWallDetonation ? '#607D8B' : ['#ff6b00', '#ff9500', '#ffbb00', '#fff59d'][Math.floor(Math.random() * 4)];
     const particleCount = isWallDetonation ? 20 : c.NUKE_PARTICLE_COUNT;
 
@@ -150,27 +132,21 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
         const angle = (i / particleCount) * Math.PI * 2;
         const dist = Math.random() * r;
         
-        // POPRAWKA v0.62: Użyj puli cząsteczek
         const p = particlePool.get();
         if (p) {
-            // init(x, y, vx, vy, life, color, gravity, friction, size)
             p.init(
                 cx + Math.cos(angle) * dist,
                 cy + Math.sin(angle) * dist,
-                (Math.random() * 2 - 1) * c.NUKE_PARTICLE_SPEED * (isWallDetonation ? 0.5 : 1), // vx (px/s)
-                (Math.random() * 2 - 1) * c.NUKE_PARTICLE_SPEED * (isWallDetonation ? 0.5 : 1), // vy (px/s)
-                c.NUKE_PARTICLE_LIFE * (isWallDetonation ? 0.3 : 1), // life (s)
-                particleColor, // color
-                0, // gravity
-                (1.0 - 0.98) // friction (0.02)
+                (Math.random() * 2 - 1) * c.NUKE_PARTICLE_SPEED * (isWallDetonation ? 0.5 : 1), 
+                (Math.random() * 2 - 1) * c.NUKE_PARTICLE_SPEED * (isWallDetonation ? 0.5 : 1), 
+                c.NUKE_PARTICLE_LIFE * (isWallDetonation ? 0.3 : 1), 
+                particleColor, 
+                0, 
+                (1.0 - 0.98) 
             );
         }
     }
     
-    // Logika kolizji z dropami (gemy i pickupy)
-    
-    // 1. Gemy (tylko w zasięgu)
-    // Zwalniamy gemy ręcznie, zamiast niszczyć je przy kolizji z wrogiem
     for (let i = gemsPool.activeItems.length - 1; i >= 0; i--) {
         const g = gemsPool.activeItems[i];
         const d = Math.hypot(cx - g.x, cy - g.y);
@@ -179,7 +155,6 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
         }
     }
 
-    // 2. Pickupy
     for (let j = pickups.length - 1; j >= 0; j--) {
         const p = pickups[j];
         const d = Math.hypot(cx - p.x, cy - p.y);
@@ -188,18 +163,13 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
         }
     }
     
-    // 3. Wrogowie
     for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
         const d = Math.hypot(cx - e.x, cy - e.y);
         
         if (d <= r) {
-            
-            // POPRAWKA v0.76a: Detonacja Oblężnika ignoruje wrogów (nie zadaje obrażeń)
-            // Ta logika jest poprawna (zostanie zaktualizowana w v0.77 w wallEnemy.js)
             if (isWallDetonation) continue; 
             
-            // Logika Dropu XP (tylko dla standardowej Bomby)
             const gem = gemsPool.get();
             if (gem) {
                 gem.init(
@@ -211,18 +181,13 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
                 );
             }
             
-            // Logika usuwania wrogów i liczenia punktów (tylko dla standardowej Bomby)
             game.score += (e.type === 'elite') ? 80 : (e.type === 'tank' ? 20 : 10);
 
             if (!onlyXP) {
                 function maybe(type, prob) {
                     if (!devSettings.allowedPickups.includes('all') && !devSettings.allowedPickups.includes(type)) return;
                     
-                    // KRYTYCZNY FIX v0.75: Zapewnienie, że PICKUP_CLASS_MAP jest zdefiniowany
-                    if (!PICKUP_CLASS_MAP) {
-                         console.error("[areaNuke] PICKUP_CLASS_MAP is undefined, cannot spawn drops.");
-                         return;
-                    }
+                    if (!PICKUP_CLASS_MAP) return;
                     
                     if (Math.random() < prob) {
                         const pos = findFreeSpotForPickup(pickups, e.x, e.y);
@@ -240,22 +205,18 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
                 maybe('freeze', 0.01);
             }
             
-            // Usuwanie wroga (tylko jeśli to standardowa bomba)
             enemies.splice(j, 1);
         }
     }
     
     limitedShake(game, settings, 10, 180);
-    // Używamy domyślnych wartości (dla Bomby)
     if (!isWallDetonation) {
         addBombIndicator(bombIndicators, cx, cy, r);
     }
 }
 
+// --- POMOCNIKI DANYCH ---
 
-// --- POMOCNIKI RYSOWANIA I DANYCH (PRZYWRÓCONE FRAGMENTY) ---
-
-// PRZYWRÓCONA FUNKCJA - NAPRAWIA BŁĄD 'getRandomColor'
 export function getRandomColor() {
     const letters = '0123456789ABCDEF';
     let color = '#';
@@ -290,15 +251,12 @@ export function getPickupEmoji(type) {
     if (type === 'heal') return '❤️';
     if (type === 'magnet') return '🧲';
     if (type === 'shield') return '🛡️';
-    if (type === 'speed') return '👟'; // POPRAWKA v0.82a
+    if (type === 'speed') return '👟'; 
     if (type === 'bomb') return '💣';
     if (type === 'freeze') return '❄️';
     return '💎';
 }
 
-/**
- * ZMIANA v0.90: Ta funkcja pobiera teraz nazwy z silnika i18n.
- */
 export function getPickupLabel(type) {
     if (type === 'heal') return getLang('pickup_heal_name');
     if (type === 'magnet') return getLang('pickup_magnet_name');
@@ -306,14 +264,11 @@ export function getPickupLabel(type) {
     if (type === 'speed') return getLang('pickup_speed_name');
     if (type === 'bomb') return getLang('pickup_bomb_name');
     if (type === 'freeze') return getLang('pickup_freeze_name');
-    if (type === 'chest') return getLang('pickup_chest_name'); // Dodano dla LudoBox
+    if (type === 'chest') return getLang('pickup_chest_name'); 
     return 'Bonus';
 }
 
-// --- POMOCNIKI OBLICZEŃ ---
-
 export function hpScale(game) {
-    // ZMIANA V0.86F: Wzrost HP z 12% na 10%
     return 1 + 0.10 * (game.level - 1) + game.time / 90;
 }
 
