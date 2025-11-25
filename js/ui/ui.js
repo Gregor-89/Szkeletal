@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.93a - FIX: Pause Menu Priority)
+// UI.JS (v0.94 - FIX: Preset Persistence & Full Guide)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -36,6 +36,7 @@ function getIconTag(assetKey, cssClass = 'bar-icon') {
     return ''; 
 }
 
+// FIX: Pełna wersja funkcji Guide (z v0.93)
 function generateGuide() {
     const guideContainer = document.getElementById('guideContent');
     if (!guideContainer) return;
@@ -161,6 +162,7 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
 // --- ZARZĄDZANIE STANEM GRY ---
 
 export function showMenu(game, resetAll, uiData, allowContinue = false) {
+    // FIX: Resetujemy presetLoaded tylko przy powrocie do Menu
     devSettings.presetLoaded = false; 
 
     if (!allowContinue) {
@@ -211,11 +213,13 @@ export function startRun(game, resetAll, uiData) {
     if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
 }
 
+// FIX: Ulepszona logika resetu (obsługa presetów)
 export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     if (uiData.animationFrameId !== null) { cancelAnimationFrame(uiData.animationFrameId); uiData.animationFrameId = null; }
     uiData.lastTime = 0; uiData.startTime = 0;
     const game = uiData.game; 
     
+    // SCENARIUSZ NORMALNY (Brak aktywnego presetu)
     if (devSettings.presetLoaded === false) {
         game.score = 0; game.level = 1; game.health = PLAYER_CONFIG.INITIAL_HEALTH; game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH; game.time = 0; 
         game.xp = 0; game.xpNeeded = GAME_CONFIG.INITIAL_XP_NEEDED; game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
@@ -227,12 +231,20 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         uiData.player.reset(worldWidth, worldHeight);
         
         for (let key in perkLevels) delete perkLevels[key];
-    } else {
+    } 
+    // SCENARIUSZ PRESETU (np. Retry po teście bossa)
+    else {
         game.score = 0; 
-        settings.lastFire = 0; settings.lastElite = 0; settings.lastHazardSpawn = 0; settings.lastSiegeEvent = 0; 
+        settings.lastFire = 0; 
+        // Resetujemy liczniki eventów, ale dev.js może je zaraz nadpisać (to jest OK)
+        settings.lastElite = 0; 
+        settings.lastHazardSpawn = 0; 
+        settings.lastSiegeEvent = 0; 
         settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
         game.newEnemyWarningT = 0; game.newEnemyWarningType = null;
-        devSettings.presetLoaded = false; 
+        
+        // FIX: NIE resetujemy devSettings.presetLoaded tutaj.
+        // Robimy to tylko przy wyjściu do Menu.
         
         const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
         uiData.player.x = worldWidth / 2; uiData.player.y = worldHeight / 2;
@@ -258,28 +270,18 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     bonusPanel.innerHTML = '';
 }
 
-// ZMIANA: Funkcja Pause Game z priorytetem wyświetlania
 export function pauseGame(game, settings, weapons, player) {
     if (game.paused || game.inMenu) return;
-    
-    // 1. Ustaw stan
     game.manualPause = true; 
     game.paused = true;
-    
-    // 2. Najpierw pokaż overlay (żeby było widać menu nawet jak statsy padną)
     pauseOverlay.style.display = 'flex';
-    
-    // 3. Ukryj overlay wznowienia (dla pewności)
     resumeOverlay.style.display = 'none';
-
-    // 4. Próbuj zaktualizować statystyki (w bloku try-catch)
     try {
         if (statsDisplayPause) {
             updateStatsUI(game, player, settings, weapons, statsDisplayPause);
         }
     } catch (e) {
         console.error("[UI] Błąd przy aktualizacji statystyk w pauzie:", e);
-        // Nie przerywamy funkcji, menu i tak już jest widoczne
     }
 }
 

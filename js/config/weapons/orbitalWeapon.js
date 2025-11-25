@@ -1,51 +1,41 @@
 // ==============
-// ORBITALWEAPON.JS (v0.91AA - Implementacja sprite'a Ziemniaczka i poświaty)
+// ORBITALWEAPON.JS (v0.94i - FIX: Independent Collision Logic)
 // Lokalizacja: /js/config/weapons/orbitalWeapon.js
 // ==============
 
 import { Weapon } from '../weapon.js';
 import { killEnemy } from '../../managers/enemyManager.js';
 import { addHitText } from '../../core/utils.js';
-// NOWY IMPORT v0.91AA
 import { get as getAsset } from '../../services/assets.js';
-// POPRAWKA v0.65: Zmieniono import na centralną konfigurację
 import { PERK_CONFIG } from '../gameData.js';
+import { playSound } from '../../services/audio.js'; // FIX: Import audio
 
-// STAŁE DLA TYPU ORBITALA
-const ORBITAL_BASE_SIZE = 15; // Wizualny rozmiar (np. 15px promienia)
+const ORBITAL_BASE_SIZE = 15;
 const ORBITAL_COLOR = '#80DEEA';
-const ORBITAL_GLOW_COLOR = 'rgba(255, 215, 0, 0.9)'; // Złoty kolor poświaty
+const ORBITAL_GLOW_COLOR = 'rgba(255, 215, 0, 0.9)';
 
-/**
- * OrbitalWeapon: Broń pasywna.
- */
 export class OrbitalWeapon extends Weapon {
   constructor(player) {
     super(player);
-    this.items = []; // Tablica prostych obiektów {angle, ox, oy}
-    this.angle = 0; // Kąt obrotu całej formacji
+    this.items = [];
+    this.angle = 0;
     this.radius = 0;
     this.damage = 0;
     this.speed = 0;
     this.collisionTimer = 0;
     
-    this.orbitalConfig = PERK_CONFIG.orbital; // Cache dla configu
-    
-    // NOWA LINIA v0.91AA: Pobranie sprite'a
+    this.orbitalConfig = PERK_CONFIG.orbital;
     this.sprite = getAsset('weapon_orbital_potato');
     
-    this.updateStats(); // Uruchomienie, aby zainicjować this.items
+    this.updateStats();
   }
   
-  // POPRAWKA v0.73: Skalowanie pobierane z PERK_CONFIG
   updateStats() {
     this.damage = this.orbitalConfig.calculateDamage(this.level);
-    this.radius = this.orbitalConfig.calculateRadius(this.level); // Używa formuły zwiększonej o 50%
+    this.radius = this.orbitalConfig.calculateRadius(this.level);
     this.speed = this.orbitalConfig.calculateSpeed(this.level);
     
-    // Ta logika jest poprawna - dodaje nowy orbital
     while (this.items.length < this.level) {
-      // Nadanie orbitalowi losowego kąta (dla asynchronicznego wyglądu)
       this.items.push({ angle: Math.random() * Math.PI * 2, ox: 0, oy: 0 });
     }
     while (this.items.length > this.level) {
@@ -66,59 +56,61 @@ export class OrbitalWeapon extends Weapon {
       it.oy = this.player.y + Math.sin(ang) * this.radius;
     }
     
-    // 2. Obsługa Kolizji (tylko co 0.05s)
+    // 2. Obsługa Kolizji (FIX: Niezależna pętla kolizji dla orbitali)
+    // Orbitale nie są w tablicy 'bullets', więc collisions.js ich nie widzi.
+    // Musimy obsłużyć to tutaj.
+    
     this.collisionTimer -= dt;
     if (this.collisionTimer > 0) return;
-    
-    this.collisionTimer = 0.05;
+    this.collisionTimer = 0.05; // Sprawdzaj co 50ms (optymalizacja)
     
     for (let i = 0; i < this.items.length; i++) {
       const it = this.items[i];
       for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
-        // Używamy promienia orbitala do wstępnego culling
+        if (!e || e.isDead) continue;
+        
+        // Wstępny culling
         if (Math.abs(it.ox - e.x) > e.size + ORBITAL_BASE_SIZE || Math.abs(it.oy - e.y) > e.size + ORBITAL_BASE_SIZE) {
           continue;
         }
         
         const d = Math.hypot(it.ox - e.x, it.oy - e.y);
-        if (d < ORBITAL_BASE_SIZE + e.size * 0.5) { // Precyzyjna kolizja
+        if (d < ORBITAL_BASE_SIZE + e.size * 0.5) {
           
           const dmg = this.damage;
-          e.takeDamage(dmg); // Używamy takeDamage() dla poprawnego mrugania
+          e.takeDamage(dmg);
+          
+          // FIX: Dźwięk trafienia
+          playSound('Hit');
+          
+          // FIX: Knockback (Orbital odpycha od gracza)
+          if (e.type !== 'wall' && e.type !== 'tank') {
+            const angle = Math.atan2(e.y - this.player.y, e.x - this.player.x);
+            const kbForce = (dmg + 10) * 6; // Mocne uderzenie
+            e.applyKnockback(Math.cos(angle) * kbForce, Math.sin(angle) * kbForce);
+          }
           
           // Efekty wizualne
           const p = particlePool.get();
           if (p) {
-            p.init(
-              e.x, e.y,
-              (Math.random() - 0.5) * 1 * 60, // vx (px/s)
-              (Math.random() - 0.5) * 1 * 60, // vy (px/s)
-              0.16, // life (s)
-              '#ff0000'
-            );
+            p.init(e.x, e.y, (Math.random() - 0.5) * 60, (Math.random() - 0.5) * 60, 0.16, '#80DEEA');
           }
           
           addHitText(hitTextPool, hitTexts, e.x, e.y, dmg, ORBITAL_COLOR);
           
           if (e.hp <= 0) {
-            state.enemyIdCounter = killEnemy(j, e, game, settings, enemies, particlePool, gemsPool, pickups, chests, true);
+            state.enemyIdCounter = killEnemy(j, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, true);
           }
         }
       }
     }
   }
   
-  /**
-   * ZMIANA v0.91AA: Rysuje sprite Orbitalnego Ziemniaczka z poświatą.
-   */
   draw(ctx) {
     if (!this.sprite) {
-      // Fallback na stare kółko, jeśli sprite nie załadowany
       for (const it of this.items) {
         ctx.save();
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = ORBITAL_COLOR;
         ctx.fillStyle = ORBITAL_COLOR;
         ctx.beginPath();
         ctx.arc(it.ox, it.oy, ORBITAL_BASE_SIZE, 0, Math.PI * 2);
@@ -128,34 +120,22 @@ export class OrbitalWeapon extends Weapon {
       return;
     }
     
-    const drawSize = ORBITAL_BASE_SIZE * 2; // Np. 30px średnicy
+    const drawSize = ORBITAL_BASE_SIZE * 2;
     
     for (let i = 0; i < this.items.length; i++) {
       const it = this.items[i];
-      
       ctx.save();
       
-      // 1. Złota, mieniąca się poświata (shimmering glow)
-      // Pulsowanie jasności cienia
       const glowPulse = 5 + 3 * Math.sin(performance.now() / 150 + it.angle);
       ctx.shadowBlur = glowPulse;
       ctx.shadowColor = ORBITAL_GLOW_COLOR;
       
-      // 2. Transformacja i rysowanie
       ctx.translate(it.ox, it.oy);
-      
-      // Rotacja sprite'a (używamy kąta orbitala)
       const rotationAngle = this.angle + i * (Math.PI * 2 / this.items.length) + (it.angle * 0.1);
       ctx.rotate(rotationAngle);
       
-      ctx.imageSmoothingEnabled = false; // Pixel art
-      
-      ctx.drawImage(this.sprite,
-        -drawSize / 2, // x
-        -drawSize / 2, // y
-        drawSize,
-        drawSize
-      );
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(this.sprite, -drawSize / 2, -drawSize / 2, drawSize, drawSize);
       
       ctx.restore();
     }

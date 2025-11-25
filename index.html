@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes" />
-<title>Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v0.93</title> 
+<title>Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v0.94</title> 
 <link rel="stylesheet" href="style.css">
 <style>
   .dev-grid {
@@ -27,7 +27,7 @@
   </div>
 
   <div id="gameContainer">
-    <div id="title">Szkeletal</div>
+    <div id="title">Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula</div>
     
     <div id="playerHPBarOuter">
       <div id="playerHPBarInner"></div>
@@ -142,12 +142,7 @@
           <div class="row" style="margin-bottom:12px;">
             <label class="option"><input type="checkbox" id="chkPickupLabels" checked> <span id="configLabels">🏷️ Pokazuj podpisy pickupów</span></label>
           </div>
-          <div class="row" style="margin-bottom:12px;">
-            <div style="width:100%;" id="configStyleTitle">Styl pickupów:</div>
-            <label class="option"><input type="radio" name="pickupstyle" value="circle"> <span id="configStyleCircle">🔵 Kolorowe kółka</span></label>
-            <label class="option"><input type="radio" name="pickupstyle" value="emoji" checked> <span id="configStyleEmoji">😀 Emoji</span></label>
-          </div>
-
+          
           <h4 style="margin-top:16px;" id="configTitleLang">Język</h4>
           <div class="row" style="margin-bottom:12px;" id="lang-selector-container">
             </div>
@@ -199,6 +194,10 @@
             <div class="dev-control">
               <label>Nieśmiertelność:</label>
               <input type="checkbox" id="devGodMode">
+            </div>
+            <div class="dev-control">
+              <label>Pokaż Hitboxy:</label>
+              <input type="checkbox" id="devDebugHitboxes">
             </div>
           </div>
           

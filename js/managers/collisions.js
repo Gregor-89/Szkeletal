@@ -1,13 +1,14 @@
 // ==============
-// COLLISIONS.JS (v1.02 - FIX: Player Knockback & Pickup Range)
+// COLLISIONS.JS (v0.94g - FIX: Physics & Wall Logic)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
-import { checkCircleCollision, addHitText } from '../core/utils.js';
+import { checkCircleCollision, addHitText, limitedShake } from '../core/utils.js';
 import { killEnemy } from './enemyManager.js';
 import { playSound } from '../services/audio.js';
 import { devSettings } from '../services/dev.js';
 import { COLLISION_CONFIG, HAZARD_CONFIG } from '../config/gameData.js'; 
+import { getLang } from '../services/i18n.js';
 
 export function checkCollisions(state) {
     const { 
@@ -17,33 +18,66 @@ export function checkCollisions(state) {
     } = state;
 
     game.playerInHazard = false;
+    game.collisionSlowdown = 0;
 
     // 1. KOLIZJA GRACZ - WROGOWIE
-    if (!game.shield && !devSettings.godMode) {
-        for (const enemy of enemies) {
-            if (enemy.isDead) continue;
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+        if (!enemy || enemy.isDead) continue;
+        
+        // Hitbox gracza (zmniejszony dla lżejszego przeciskania się)
+        // Używamy 0.4 size dla kolizji fizycznej
+        if (checkCircleCollision(player.x, player.y, player.size * 0.4, enemy.x, enemy.y, enemy.size * 0.4)) {
             
-            // Hitbox gracza: player.size / 2. Wroga: enemy.size / 2.
-            if (checkCircleCollision(player.x, player.y, player.size / 2, enemy.x, enemy.y, enemy.size / 2)) {
+            const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+
+            // A. Gracz otrzymuje obrażenia
+            if (!game.shield && !devSettings.godMode) {
+                const now = performance.now();
+                if (!enemy.lastPlayerCollision || now - enemy.lastPlayerCollision > 500) {
+                     enemy.lastPlayerCollision = now;
+                     
+                     const dmg = (enemy.type === 'kamikaze' ? 15 : enemy.damage);
+                     game.health -= dmg;
+                     game.playerHitFlashT = 0.15; 
+                     addHitText(hitTextPool, hitTexts, player.x, player.y - 20, dmg, '#FF0000');
+                     playSound('PlayerHurt');
+                     limitedShake(game, settings, 5, 100);
+                     
+                     if (enemy.type === 'kamikaze') {
+                         enemy.takeDamage(9999, 'suicide');
+                         // Efekt wybuchu
+                         for(let k=0; k<10; k++) {
+                             const p = particlePool.get();
+                             if(p) p.init(enemy.x, enemy.y, Math.random()*200-100, Math.random()*200-100, 0.5, '#FF4400');
+                         }
+                     }
+                }
                 
-                game.health -= enemy.damage;
-                game.playerHitFlashT = 0.1; 
-                playSound('PlayerHurt');
-                
-                // ODRZUT WZAJEMNY (FIX)
-                const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-                
-                // Odrzuć wroga
-                enemy.applyKnockback(-Math.cos(angle) * 100, -Math.sin(angle) * 100);
-                
-                // Odrzuć gracza (NOWOŚĆ)
-                // Siła odrzutu dla gracza (np. 200px/s)
-                player.applyKnockback(Math.cos(angle) * 200, Math.sin(angle) * 200);
-            }
-            
-            if (enemy.type === 'wall') {
-                if (checkCircleCollision(player.x, player.y, player.size / 2, enemy.x, enemy.y, enemy.size / 2)) {
-                    game.collisionSlowdown = COLLISION_CONFIG.WALL_COLLISION_SLOWDOWN; 
+                // FIZYKA KOLIZJI (FIX Issue 1 & 3)
+                if (enemy.type === 'wall') {
+                    // Twarda ściana: Gracz odbija się mocno, ściana stoi w miejscu
+                    game.collisionSlowdown = COLLISION_CONFIG.WALL_COLLISION_SLOWDOWN || 0.75;
+                    player.x += Math.cos(angle) * 5; // Odbicie gracza
+                    player.y += Math.sin(angle) * 5;
+                    // Mur NIE zmienia pozycji
+                } else {
+                    // Zwykły wróg: Gracz lekko odepchnięty (przeciskanie), wróg odepchnięty
+                    game.collisionSlowdown = 0.1; // Mniejsze spowolnienie
+                    player.x += Math.cos(angle) * 2; // FIX: Zmniejszono z 8 do 2 (można się przecisnąć)
+                    player.y += Math.sin(angle) * 2;
+                    
+                    // Wróg odpychany przez gracza
+                    enemy.x -= Math.cos(angle) * 3;
+                    enemy.y -= Math.sin(angle) * 3;
+                }
+            } 
+            // B. Gracz ma tarczę (Taranowanie)
+            else if (game.shield || devSettings.godMode) {
+                if (enemy.type !== 'wall') {
+                    // Odepchnij wroga mocno
+                    enemy.x -= Math.cos(angle) * 10;
+                    enemy.y -= Math.sin(angle) * 10;
                 }
             }
         }
@@ -52,6 +86,7 @@ export function checkCollisions(state) {
     // 2. POCISKI GRACZA
     for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
+        if (!b) continue;
         if (typeof b.isOffScreen === 'function' && b.isOffScreen(state.camera)) {
             b.release();
             continue;
@@ -60,25 +95,36 @@ export function checkCollisions(state) {
         let hitEnemy = false;
         for (let j = enemies.length - 1; j >= 0; j--) {
             const e = enemies[j];
-            if (e.isDead) continue; 
+            if (!e || e.isDead) continue; 
             if (b.lastEnemyHitId === e.id && b.pierce > 0) continue; 
 
-            if (checkCircleCollision(b.x, b.y, b.size, e.x, e.y, e.size / 2)) {
+            // Kolizja pocisku
+            if (checkCircleCollision(b.x, b.y, b.size, e.x, e.y, e.size * 0.6)) {
                 hitEnemy = true;
                 const isDead = e.takeDamage(b.damage, 'player');
                 addHitText(hitTextPool, hitTexts, e.x, e.y, b.damage);
                 
-                const angle = Math.atan2(e.y - b.y, e.x - b.x);
-                const kbForce = (b.damage + 20) * 3; 
-                e.applyKnockback(Math.cos(angle) * kbForce, Math.sin(angle) * kbForce);
+                // FIX: Dźwięk trafienia (musi być obsłużony w audio.js)
+                playSound('Hit');
+
+                // FIX Issue 4: Knockback od broni
+                if (e.type !== 'wall' && e.type !== 'tank') {
+                    const angle = Math.atan2(e.y - b.y, e.x - b.x);
+                    
+                    // Orbital ma potężny knockback
+                    const isOrbital = (b.type === 'orbital');
+                    const kbMultiplier = isOrbital ? 3.0 : 1.0;
+                    
+                    // Aplikuj siłę
+                    const kbForce = (b.damage + 20) * 8 * kbMultiplier; // Zwiększono mnożnik siły
+                    e.applyKnockback(Math.cos(angle) * kbForce, Math.sin(angle) * kbForce);
+                }
                 
                 const p = particlePool.get();
                 if (p) p.init(b.x, b.y, Math.random()*100-50, Math.random()*100-50, 0.2, b.color, 0, 0.9, 3);
 
                 if (isDead) {
-                    state.enemyIdCounter = killEnemy(j, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests);
-                } else {
-                    playSound('Hit');
+                    state.enemyIdCounter = killEnemy(j, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, b.type === 'orbital');
                 }
 
                 if (b.pierce > 0) {
@@ -104,6 +150,8 @@ export function checkCollisions(state) {
     if (!game.shield && !devSettings.godMode) {
         for (let i = eBullets.length - 1; i >= 0; i--) {
             const eb = eBullets[i];
+            if (!eb) continue;
+            
             if (typeof eb.isOffScreen === 'function' && eb.isOffScreen(state.camera)) {
                 eb.release(); 
                 continue;
@@ -111,40 +159,43 @@ export function checkCollisions(state) {
             if (checkCircleCollision(eb.x, eb.y, eb.size, player.x, player.y, player.size / 2)) {
                 game.health -= eb.damage;
                 game.playerHitFlashT = 0.1;
+                addHitText(hitTextPool, hitTexts, player.x, player.y, eb.damage, '#FF0000');
                 playSound('PlayerHurt');
                 eb.release(); 
             }
         }
     }
 
-    // 3. PICKUPY / GEMY (FIX: Zmniejszony zasięg zbierania)
-    
-    // Fizyczny promień gracza do zbierania (mniejszy niż wizualny size=80)
-    const collectionRadius = 25; 
+    // 3. PICKUPY / GEMY
+    const collectionRadius = 35;
 
     for (let i = gems.length - 1; i >= 0; i--) {
         const g = gems[i];
-        if (g.delay > 0) continue; 
+        if (!g || g.delay > 0) continue; 
+        
+        if (g.isDecayedByHazard && g.isDecayedByHazard()) { g.release(); continue; }
+
         const dist = Math.hypot(player.x - g.x, player.y - g.y);
         
-        // Magnes (Daleki zasięg)
         if (dist < game.pickupRange + (game.magnet ? 150 : 0)) g.magnetized = true;
         
-        // Zbieranie (Bliski zasięg - FIX)
         if (dist < collectionRadius + g.r) {
             game.xp += g.val * (game.level >= 20 ? 1.2 : 1); 
-            playSound('Gem');
+            playSound('XPPickup');
             g.release(); 
         }
     }
 
     for (let i = pickups.length - 1; i >= 0; i--) {
         const p = pickups[i];
+        if (!p) continue;
+        
+        if (p.isDecayed && p.isDecayed()) { pickups.splice(i, 1); continue; }
+
         const dist = Math.hypot(player.x - p.x, player.y - p.y);
         
         if (dist < game.pickupRange + (game.magnet ? 150 : 0)) p.isMagnetized = true; 
         
-        // Zbieranie (Bliski zasięg - FIX)
         if (dist < collectionRadius + 10) {
             p.applyEffect(state); 
             playSound('Pickup');
@@ -156,9 +207,11 @@ export function checkCollisions(state) {
     
     for (let i = chests.length - 1; i >= 0; i--) {
         const c = chests[i];
+        if (!c) continue;
+        if (c.isDecayed && c.isDecayed()) { chests.splice(i, 1); continue; }
+        
         const dist = Math.hypot(player.x - c.x, player.y - c.y);
         
-        // Skrzynie też wymagają podejścia
         if (dist < collectionRadius + 20) {
             chests.splice(i, 1);
             game.triggerChestOpen = true; 
@@ -170,29 +223,35 @@ export function checkCollisions(state) {
     game.hazardTicker -= state.dt;
 
     for (const h of hazards) {
+        if (!h || !h.isActive()) continue;
+
         if (h.checkCollision(player.x, player.y, player.size * 0.4)) {
             game.playerInHazard = true;
             if (!game.shield && !devSettings.godMode && game.hazardTicker <= 0) {
                 const chunkDamage = h.damage * 0.5; 
                 game.health -= chunkDamage;
                 game.playerHitFlashT = 0.15;
+                addHitText(hitTextPool, hitTexts, player.x, player.y - 10, chunkDamage, '#00AA00');
                 playSound('PlayerHurt');
                 game.hazardTicker = 0.5; 
             }
         }
     }
 
-    // 5. HAZARDY - WROGOWIE
+    // 5. HAZARDY - WROGOWIE (FIX Issue 5)
     for (const h of hazards) {
+        if (!h || !h.isActive()) continue; // Ignoruj nieaktywne
+
         for (const e of enemies) {
+            if (!e) continue;
             if (e.type !== 'elite' && e.type !== 'wall') { 
                 if (h.checkCollision(e.x, e.y, e.size * 0.4)) {
+                    
+                    // FIX: Resetuj/ustaw timer spowolnienia na wrogu
+                    e.hazardSlowdownT = 0.2; // 0.2s spowolnienia (odświeżane co klatkę w bagnie)
+                    
                     if (!e.hazardTicker) e.hazardTicker = Math.random() * 0.5; 
                     e.hazardTicker -= state.dt;
-                    
-                    // --- FIX: Zmniejszanie Timera Spowolnienia u Wrogów ---
-                    // To jest robione w enemy.js, ale tutaj INICJUJEMY spowolnienie
-                    e.hazardSlowdownT = 0.2; 
                     
                     if (e.hazardTicker <= 0) {
                         const chunkDamage = h.enemyDamage * 0.5;

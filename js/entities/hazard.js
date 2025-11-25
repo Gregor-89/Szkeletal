@@ -1,5 +1,5 @@
 // ==============
-// HAZARD.JS (v0.99d - FIX: Missing isDead function)
+// HAZARD.JS (v0.94d - FIX: Texture Scale)
 // Lokalizacja: /js/entities/hazard.js
 // ==============
 
@@ -13,15 +13,15 @@ export class Hazard {
     this.isMega = isMega;
     this.scale = scale;
     
-    // Promień logiczny
     this.r = HAZARD_CONFIG.SIZE * scale;
     
-    // Czas życia
     this.maxLife = HAZARD_CONFIG.HAZARD_LIFE * (isMega ? 1.5 : 1.0);
     this.life = this.maxLife;
+    
+    this.activeTime = 0;
+    this.warningTime = HAZARD_CONFIG.HAZARD_WARNING_TIME || 1.5;
     this.fadeInT = 0;
     
-    // Obrażenia (używane w collisions.js)
     this.damage = HAZARD_CONFIG.DAMAGE_PER_SECOND;
     this.enemyDamage = HAZARD_CONFIG.HAZARD_ENEMY_DAMAGE_PER_SECOND;
     
@@ -48,34 +48,42 @@ export class Hazard {
       });
     }
     
-    // Bąbelki
     this.bubbles = [];
     this.bubbleTimer = 0;
     
     this.pattern = null;
     this.textureKey = 'hazard_sewage';
+    
+    this.pulsePhase = Math.random() * Math.PI * 2;
   }
   
-  // NAPRAWIONO: Dodano brakującą metodę
+  isActive() {
+    return this.activeTime >= this.warningTime;
+  }
+  
   isDead() {
     return this.life <= 0;
   }
   
   update(dt) {
-    this.life -= dt;
-    if (this.fadeInT < 1.0) this.fadeInT += dt * 2.0;
+    this.activeTime += dt;
+    this.pulsePhase += dt * 5;
     
-    // Bąbelki
-    this.bubbleTimer -= dt;
-    if (this.bubbleTimer <= 0) {
-      this.spawnBubble();
-      this.bubbleTimer = 0.1 + Math.random() * 0.3;
+    if (this.isActive()) {
+      this.life -= dt;
+      if (this.fadeInT < 1.0) this.fadeInT += dt * 2.0;
+      
+      this.bubbleTimer -= dt;
+      if (this.bubbleTimer <= 0) {
+        this.spawnBubble();
+        this.bubbleTimer = 0.1 + Math.random() * 0.2;
+      }
     }
     
     for (let i = this.bubbles.length - 1; i >= 0; i--) {
       const b = this.bubbles[i];
       b.life -= dt;
-      b.size += dt * 2;
+      b.size += dt * 5;
       if (b.life <= 0) this.bubbles.splice(i, 1);
     }
   }
@@ -88,9 +96,9 @@ export class Hazard {
     this.bubbles.push({
       x: blob.dx + Math.cos(angle) * dist,
       y: blob.dy + Math.sin(angle) * dist,
-      size: 1,
-      life: 0.5 + Math.random() * 0.5,
-      maxLife: 1.0
+      size: 2 + Math.random() * 3,
+      life: 0.6 + Math.random() * 0.6,
+      maxLife: 1.2
     });
   }
   
@@ -98,72 +106,91 @@ export class Hazard {
     ctx.save();
     ctx.translate(this.x, this.y);
     
-    let alpha = 1;
-    if (this.fadeInT < 1) alpha = this.fadeInT;
-    else if (this.life < 1.0) alpha = this.life;
-    ctx.globalAlpha = alpha;
-    
-    // Tekstura
-    if (!this.pattern) {
-      const img = getAsset(this.textureKey);
-      if (img) {
-        this.pattern = ctx.createPattern(img, 'repeat');
-      }
-    }
-    
-    // --- RYSOWANIE 1: OBRYS (Tło) ---
-    ctx.beginPath();
-    const borderSize = 4;
-    for (const b of this.blobs) {
-      ctx.moveTo(b.dx + b.r + borderSize, b.dy);
-      ctx.arc(b.dx, b.dy, b.r + borderSize, 0, Math.PI * 2);
-    }
-    ctx.fillStyle = 'rgba(100, 255, 100, 0.4)';
-    ctx.fill();
-    
-    // --- RYSOWANIE 2: ŚRODEK (Tekstura) ---
-    ctx.beginPath();
-    for (const b of this.blobs) {
-      ctx.moveTo(b.dx + b.r, b.dy);
-      ctx.arc(b.dx, b.dy, b.r, 0, Math.PI * 2);
-    }
-    
-    if (this.pattern) {
-      const matrix = new DOMMatrix();
-      matrix.translateSelf(this.x, this.y);
-      matrix.scaleSelf(0.5, 0.5);
-      this.pattern.setTransform(matrix);
+    // FAZA 1: OSTRZEŻENIE
+    if (!this.isActive()) {
+      const factor = (Math.sin(this.pulsePhase) + 1) / 2;
+      const alpha = 0.3 + 0.4 * factor;
+      const color = this.isMega ? `rgba(255, 0, 255, ${alpha})` : `rgba(255, 50, 50, ${alpha})`;
       
-      ctx.fillStyle = this.pattern;
-    } else {
-      ctx.fillStyle = this.isMega ? '#5d4037' : '#4e342e';
-    }
-    
-    ctx.shadowColor = '#000';
-    ctx.shadowBlur = 15;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    
-    // Bąbelki
-    for (const b of this.bubbles) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 10]);
+      
       ctx.beginPath();
-      ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(60, 100, 60, 0.6)';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(200, 255, 200, 0.5)';
-      ctx.lineWidth = 1;
+      ctx.arc(0, 0, this.r, 0, Math.PI * 2);
       ctx.stroke();
+    }
+    // FAZA 2: AKTYWNA PLAMA
+    else {
+      let alpha = 1;
+      if (this.fadeInT < 1) alpha = this.fadeInT;
+      else if (this.life < 1.0) alpha = this.life;
+      ctx.globalAlpha = alpha;
       
+      if (!this.pattern) {
+        const img = getAsset(this.textureKey);
+        if (img) {
+          this.pattern = ctx.createPattern(img, 'repeat');
+        }
+      }
+      
+      // OBRYS
       ctx.beginPath();
-      ctx.arc(b.x - b.size * 0.3, b.y - b.size * 0.3, b.size * 0.2, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      const borderSize = 4;
+      for (const b of this.blobs) {
+        ctx.moveTo(b.dx + b.r + borderSize, b.dy);
+        ctx.arc(b.dx, b.dy, b.r + borderSize, 0, Math.PI * 2);
+      }
+      ctx.fillStyle = 'rgba(80, 200, 80, 0.5)';
       ctx.fill();
+      
+      // ŚRODEK (Tekstura)
+      ctx.beginPath();
+      for (const b of this.blobs) {
+        ctx.moveTo(b.dx + b.r, b.dy);
+        ctx.arc(b.dx, b.dy, b.r, 0, Math.PI * 2);
+      }
+      
+      if (this.pattern) {
+        const matrix = new DOMMatrix();
+        matrix.translateSelf(this.x, this.y);
+        // FIX: Zmiana skali tekstury na 0.15 (gęstsza)
+        matrix.scaleSelf(0.15, 0.15);
+        this.pattern.setTransform(matrix);
+        ctx.fillStyle = this.pattern;
+      } else {
+        ctx.fillStyle = this.isMega ? '#5d4037' : '#4e342e';
+      }
+      
+      ctx.shadowColor = '#000';
+      ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      
+      // Bąbelki
+      for (const b of this.bubbles) {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(40, 80, 40, 0.8)';
+        ctx.fill();
+        
+        ctx.strokeStyle = 'rgba(200, 255, 200, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.arc(b.x - b.size * 0.3, b.y - b.size * 0.3, b.size * 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fill();
+      }
     }
     
     ctx.restore();
   }
   
   checkCollision(entityX, entityY, entityRadius) {
+    if (!this.isActive()) return false;
+    
     const dist = Math.hypot(entityX - this.x, entityY - this.y);
     if (dist > this.r + entityRadius + 20) return false;
     

@@ -1,5 +1,5 @@
 // ==============
-// DOMELEMENTS.JS (v1.01 - FIX: Added confirmText)
+// DOMELEMENTS.JS (v1.02 - FIX: All Elements Exported)
 // Lokalizacja: /js/ui/domElements.js
 // ==============
 
@@ -31,7 +31,7 @@ export const enemyProgressDiv = document.getElementById('enemyProgress');
 
 // Statystyki (Menu Pauzy i Level Up)
 export const statsDisplay = document.getElementById('statsDisplay');
-export const statsDisplayPause = document.getElementById('statsDisplayPause');
+export const statsDisplayPause = document.getElementById('statsDisplayPause'); // FIX: Dodano
 
 // Kontenery
 export const perksDiv = document.getElementById('perks');
@@ -67,7 +67,7 @@ export const titleDiv = document.getElementById('title');
 export const docTitle = document.title;
 export const introImage = document.getElementById('introImage');
 
-// FIX: Brakujący eksport (dla dev.js)
+// FIX: Element potwierdzenia dla dev.js
 export const confirmText = document.getElementById('confirmText');
 
 // Joystick

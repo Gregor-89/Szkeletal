@@ -1,170 +1,224 @@
 // ==============
-// PERKS.JS (v0.94 - Ikona Magnet Perk)
+// PERKS.JS (v0.94k - FIX: AutoGun Apply Logic)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
-import { AutoGun } from './weapons/autoGun.js';
-import { OrbitalWeapon } from './weapons/orbitalWeapon.js';
-import { NovaWeapon } from './weapons/novaWeapon.js';
-import { WhipWeapon } from './weapons/whipWeapon.js';
-import { ChainLightningWeapon } from './weapons/chainLightningWeapon.js';
-
-import { PERK_CONFIG } from './gameData.js';
-import { getLang } from '../services/i18n.js';
-
 export const perkPool = [
-    {
-        id: 'firerate', 
-        name: getLang('perk_firerate_name'), 
-        desc: getLang('perk_firerate_desc'), 
-        max: PERK_CONFIG.firerate?.max || 6, 
-        color:'#90caf9', emoji:'⏩',
-        requiresWeapon: 'AutoGun', 
-        icon: 'icon_firerate', 
-        apply: (state, perk) => { 
-            const gun = state.player.getWeapon(AutoGun);
-            if (gun) {
-                gun.fireRate *= PERK_CONFIG.firerate.value;
-                gun.upgrade(perk); 
-            }
-        }
-    },
-    {
-        id: 'damage', 
-        name: getLang('perk_damage_name'), 
-        desc: getLang('perk_damage_desc'), 
-        max: PERK_CONFIG.damage?.max || 6, 
-        color:'#ef5350', emoji:'💥',
-        requiresWeapon: 'AutoGun', 
-        icon: 'icon_damage',
-        apply: (state, perk) => { 
-            const gun = state.player.getWeapon(AutoGun);
-            if (gun) {
-                gun.bulletDamage += PERK_CONFIG.damage.value;
-                gun.upgrade(perk);
-            }
-        }
-    },
-    {
-        id: 'multishot', 
-        name: getLang('perk_multishot_name'), 
-        desc: getLang('perk_multishot_desc'), 
-        max: PERK_CONFIG.multishot?.max || 4, 
-        color:'#ffca28', emoji:'🎯',
-        requiresWeapon: 'AutoGun', 
-        icon: 'icon_multishot',
-        apply: (state, perk) => { 
-            const gun = state.player.getWeapon(AutoGun);
-            if (gun) {
-                gun.multishot += PERK_CONFIG.multishot.value;
-                gun.upgrade(perk);
-            }
-        }
-    },
-    {
-        id: 'pierce', 
-        name: getLang('perk_pierce_name'), 
-        desc: getLang('perk_pierce_desc'), 
-        max: PERK_CONFIG.pierce?.max || 4, 
-        color:'#ab47bc', emoji:'➡️',
-        requiresWeapon: 'AutoGun', 
-        icon: 'icon_pierce',
-        apply: (state, perk) => { 
-            const gun = state.player.getWeapon(AutoGun);
-            if (gun) {
-                gun.pierce += PERK_CONFIG.pierce.value;
-                gun.upgrade(perk);
-            }
-        }
-    },
-    {
-        id: 'autogun', 
-        name: getLang('perk_autogun_name'), 
-        desc: getLang('perk_autogun_desc'), 
-        max: 1, 
-        color:'#90caf9', emoji:'🔫',
-        icon: 'icon_autogun', 
-        apply: (state, perk) => { 
-            state.player.addWeapon(AutoGun, perk);
-        }
-    },
-    {
-        id: 'whip', 
-        name: getLang('perk_whip_name'), 
-        desc: getLang('perk_whip_desc'), 
-        max: PERK_CONFIG.whip?.max || 5, 
-        color:'#C8E6C9', emoji:'🪢',
-        icon: 'icon_whip', 
-        apply: (state, perk) => { 
-            state.player.addWeapon(WhipWeapon, perk);
-        }
-    },
-    {
-        id: 'orbital', 
-        name: getLang('perk_orbital_name'), 
-        desc: getLang('perk_orbital_desc'), 
-        max: PERK_CONFIG.orbital?.max || 5, 
-        color:'#80deea', emoji:'🌀',
-        icon: 'icon_orbital', 
-        apply: (state, perk) => { 
-            state.player.addWeapon(OrbitalWeapon, perk);
-        }
-    },
-    {
-        id: 'nova', 
-        name: getLang('perk_nova_name'), 
-        desc: getLang('perk_nova_desc'), 
-        max: PERK_CONFIG.nova?.max || 5, 
-        color:'#ffd54f', emoji:'💫',
-        icon: 'icon_nova', 
-        apply: (state, perk) => { 
-            state.player.addWeapon(NovaWeapon, perk);
-        }
-    },
-    {
-        id: 'chainLightning', 
-        name: getLang('perk_chainLightning_name'), 
-        desc: getLang('perk_chainLightning_desc'), 
-        max: PERK_CONFIG.chainLightning?.max || 6, 
-        color:'#40C4FF', emoji:'⚡',
-        icon: 'icon_lightning', 
-        apply: (state, perk) => { 
-            state.player.addWeapon(ChainLightningWeapon, perk);
-        }
-    },
-    {
-        id: 'speed', 
-        name: getLang('perk_speed_name'), 
-        desc: getLang('perk_speed_desc'), 
-        max: PERK_CONFIG.speed?.max || 4, 
-        color:'#66bb6a', emoji:'👟', 
-        icon: 'icon_speed',
-        apply: (state, perk) => { 
-            state.player.speed *= PERK_CONFIG.speed.value; 
-        }
-    },
-    {
-        id: 'pickup', 
-        name: getLang('perk_pickup_name'), 
-        desc: getLang('perk_pickup_desc'), 
-        max: PERK_CONFIG.pickup?.max || 3, 
-        color:'#b39ddb', emoji:'🧲',
-        icon: 'icon_pickup_range', // NOWE v0.94: Dodano ikonę
-        apply: (state, perk) => { 
-            state.game.pickupRange *= PERK_CONFIG.pickup.value; 
-        }
-    },
-    {
-        id: 'health', 
-        name: getLang('perk_health_name'), 
-        desc: getLang('perk_health_desc'), 
-        max: PERK_CONFIG.health?.max || 3, 
-        color:'#e57373', emoji:'❤️',
-        icon: 'icon_health',
-        apply: (state, perk) => {
-            const bonusHealth = PERK_CONFIG.health.value;
-            state.game.maxHealth += bonusHealth;
-            state.game.health = Math.min(state.game.maxHealth, state.game.health + bonusHealth);
-        }
+  {
+    id: 'autogun',
+    type: 'weapon',
+    name: 'perk_autogun_name',
+    desc: 'perk_autogun_desc',
+    icon: 'icon_autogun',
+    emoji: '🔫',
+    color: '#FFF',
+    // FIX: Usunięto placeholder, dodano logikę dodawania broni
+    apply: (state, perk) => {
+       import('../config/weapons/autoGun.js').then(module => {
+           const AutoGun = module.AutoGun;
+           let w = state.player.getWeapon(AutoGun);
+           if (!w) {
+               w = new AutoGun(state.player);
+               state.player.weapons.push(w);
+           }
+       });
     }
+  },
+  {
+    id: 'firerate',
+    type: 'stat',
+    name: 'perk_firerate_name',
+    desc: 'perk_firerate_desc',
+    icon: 'icon_firerate',
+    emoji: '⏩',
+    color: '#FFFF00',
+    value: 0.85,
+    max: 6,
+    apply: (state, perk) => {
+       state.player.weapons.forEach(w => {
+           if(w.fireRate) w.fireRate *= perk.value;
+           if(w.cooldown) w.cooldown *= perk.value;
+       });
+    }
+  },
+  {
+    id: 'damage',
+    type: 'stat',
+    name: 'perk_damage_name',
+    desc: 'perk_damage_desc',
+    icon: 'icon_damage',
+    emoji: '💥',
+    color: '#FF0000',
+    value: 1,
+    max: 6,
+    apply: (state, perk) => {
+       state.player.weapons.forEach(w => {
+           if(w.bulletDamage !== undefined) w.bulletDamage += perk.value;
+           if(w.damage !== undefined) w.damage += perk.value;
+       });
+    }
+  },
+  {
+    id: 'multishot',
+    type: 'stat',
+    name: 'perk_multishot_name',
+    desc: 'perk_multishot_desc',
+    icon: 'icon_multishot',
+    emoji: '🎯',
+    color: '#00FFFF',
+    value: 1,
+    max: 4,
+    requiresWeapon: 'AutoGun',
+    apply: (state, perk) => {
+       const w = state.player.weapons.find(x => x.id === 'autogun');
+       if(w) w.multishot += perk.value;
+    }
+  },
+  {
+    id: 'pierce',
+    type: 'stat',
+    name: 'perk_pierce_name',
+    desc: 'perk_pierce_desc',
+    icon: 'icon_pierce',
+    emoji: '➡️',
+    color: '#FF00FF',
+    value: 1,
+    max: 4,
+    requiresWeapon: 'AutoGun',
+    apply: (state, perk) => {
+       const w = state.player.weapons.find(x => x.id === 'autogun');
+       if(w) w.pierce += perk.value;
+    }
+  },
+  {
+    id: 'orbital',
+    type: 'weapon',
+    name: 'perk_orbital_name', 
+    desc: 'perk_orbital_desc',
+    icon: 'icon_orbital',
+    emoji: '🌀',
+    color: '#CDDC39',
+    max: 5,
+    apply: (state, perk) => {
+       import('../config/weapons/orbitalWeapon.js').then(module => {
+           const OrbitalWeapon = module.OrbitalWeapon;
+           let w = state.player.getWeapon(OrbitalWeapon);
+           if(!w) {
+               w = new OrbitalWeapon(state.player);
+               state.player.weapons.push(w);
+           } else {
+               w.upgrade(perk);
+           }
+       });
+    }
+  },
+  {
+    id: 'nova',
+    type: 'weapon',
+    name: 'perk_nova_name', 
+    desc: 'perk_nova_desc',
+    icon: 'icon_nova',
+    emoji: '💫',
+    color: '#FF5722',
+    max: 5,
+    apply: (state, perk) => {
+       import('../config/weapons/novaWeapon.js').then(module => {
+           const NovaWeapon = module.NovaWeapon;
+           let w = state.player.getWeapon(NovaWeapon);
+           if(!w) {
+               w = new NovaWeapon(state.player);
+               state.player.weapons.push(w);
+           } else {
+               w.upgrade(perk);
+           }
+       });
+    }
+  },
+  {
+    id: 'whip',
+    type: 'weapon',
+    name: 'perk_whip_name', 
+    desc: 'perk_whip_desc',
+    icon: 'icon_whip',
+    emoji: '🪢',
+    color: '#795548',
+    max: 5,
+    apply: (state, perk) => {
+       import('../config/weapons/whipWeapon.js').then(module => {
+           const WhipWeapon = module.WhipWeapon;
+           let w = state.player.getWeapon(WhipWeapon);
+           if(!w) {
+               w = new WhipWeapon(state.player);
+               state.player.weapons.push(w);
+           } else {
+               w.upgrade(perk);
+           }
+       });
+    }
+  },
+  {
+    id: 'chainLightning',
+    type: 'weapon',
+    name: 'perk_chainLightning_name', 
+    desc: 'perk_chainLightning_desc',
+    icon: 'icon_lightning',
+    emoji: '⚡',
+    color: '#448AFF',
+    max: 6,
+    apply: (state, perk) => {
+       import('../config/weapons/chainLightningWeapon.js').then(module => {
+           const ChainLightningWeapon = module.ChainLightningWeapon;
+           let w = state.player.getWeapon(ChainLightningWeapon);
+           if(!w) {
+               w = new ChainLightningWeapon(state.player);
+               state.player.weapons.push(w);
+           } else {
+               w.upgrade(perk);
+           }
+       });
+    }
+  },
+  {
+    id: 'speed',
+    type: 'stat',
+    name: 'perk_speed_name', 
+    desc: 'perk_speed_desc',
+    icon: 'icon_speed',
+    emoji: '👟',
+    color: '#00E676',
+    value: 1.10,
+    max: 4,
+    apply: (state, perk) => {
+       state.player.speedMultiplier *= perk.value;
+    }
+  },
+  {
+    id: 'pickup',
+    type: 'stat',
+    name: 'perk_pickup_name', 
+    desc: 'perk_pickup_desc',
+    icon: 'icon_pickup_range', 
+    emoji: '🧲',
+    color: '#9C27B0',
+    value: 1.40,
+    max: 3,
+    apply: (state, perk) => {
+       state.game.pickupRange *= perk.value;
+    }
+  },
+  {
+    id: 'health',
+    type: 'stat',
+    name: 'perk_health_name', 
+    desc: 'perk_health_desc',
+    icon: 'icon_health',
+    emoji: '❤️',
+    color: '#E91E63',
+    value: 20,
+    max: 3,
+    apply: (state, perk) => {
+       state.game.maxHealth += perk.value;
+       state.game.health = Math.min(state.game.maxHealth, state.game.health + perk.value);
+    }
+  }
 ];

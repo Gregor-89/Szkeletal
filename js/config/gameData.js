@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.99 - FIX: Absolutnie Pełny Plik)
+// GAMEDATA.JS (v0.94f - FIX: Units Unification & Full Restoration)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -23,7 +23,8 @@ export const GAME_CONFIG = {
   SPAWN_GRACE_PERIOD: 4.0,
   INITIAL_SPAWN_RATE: 0.008,
   MAX_ENEMIES: 400,
-  ELITE_SPAWN_INTERVAL: 144000,
+  // FIX: Zmieniono na 144 sekundy (z 144000 ms), aby pasowało do gameLogic.js
+  ELITE_SPAWN_INTERVAL: 144,
   INITIAL_MAX_ENEMIES: 3,
   ENEMY_LIMIT_GROWTH_PER_MINUTE: 20,
   INITIAL_XP_NEEDED: 5,
@@ -42,22 +43,16 @@ export const SIEGE_EVENT_CONFIG = {
 
 // --- Konfiguracja Autodestrukcji Oblężnika (Wall) ---
 export const WALL_DETONATION_CONFIG = {
-  // Wydłużony czas życia (+33%)
   WALL_DECAY_TIME: 60.5,
-  // Wydłużony czas ostrzegania (2x)
   WALL_DETONATION_WARNING_TIME: 6.0,
-  // Zwiększone widełki czasowe (2x)
   WALL_DETONATION_TIME_VARIANCE: 12.0,
-  // Zmniejszony zasięg wybuchu (-50%)
   WALL_DETONATION_RADIUS: 300,
   WALL_DETONATION_DAMAGE: 15
 };
 
 // --- Konfiguracja Zagrożeń (Hazards) ---
 export const HAZARD_CONFIG = {
-  // Częstotliwość spawnu (rzadziej: co 12s)
   SPAWN_INTERVAL: 12.0,
-  
   MIN_DIST_FROM_PLAYER: 150,
   MAX_HAZARDS: 200,
   SIZE: 60,
@@ -68,7 +63,6 @@ export const HAZARD_CONFIG = {
   HAZARD_ENEMY_SLOWDOWN_MULTIPLIER: 0.7,
   HAZARD_ENEMY_DAMAGE_PER_SECOND: 0.4,
   
-  // Mega Hazard
   MEGA_HAZARD_PROBABILITY: 0.20,
   MEGA_HAZARD_BASE_MULTIPLIER: 4.0,
   MEGA_HAZARD_MAX_MULTIPLIER: 8.0,

@@ -1,115 +1,153 @@
-<p style="color:#f44336; margin-bottom:15px;"><strong>⚠️ Uwaga:</strong> To menu jest przeznaczone do testowania. Ustawienia mogą zepsuć balans gry.</p>
-<div class="dev-section">
-  <h4>🎮 Stan Gracza</h4>
-  <div class="dev-control">
-    <label>Poziom gracza:</label>
-    <input type="number" id="devLevel" min="1" max="100" value="1">
+<div id="tab-dev" class="tab-content">
+  <p style="color:#f44336; margin-bottom:15px; font-size: 13px;"><strong>⚠️ Uwaga:</strong> To menu służy do testów. Może zepsuć balans.</p>
+  
+  <div class="dev-section">
+    <h4>🧪 Szybkie Testy Jednostek (v0.93)</h4>
+    <p style="font-size:12px; margin-bottom:5px;">Kliknij, aby zresetować grę i spawnować TYLKO ten typ:</p>
+    <div class="dev-grid">
+      <button class="btn btn-warning" onclick="devPresetEnemy('standard')">DadGamer</button>
+      <button class="btn btn-warning" onclick="devPresetEnemy('horde')">Horda</button>
+      <button class="btn btn-warning" onclick="devPresetEnemy('ranged')">Menel</button>
+      
+      <button class="btn btn-warning" onclick="devPresetEnemy('tank')">Szkielet</button>
+      <button class="btn btn-warning" onclick="devPresetEnemy('splitter')">Wykop</button>
+      <button class="btn btn-warning" onclick="devPresetEnemy('kamikaze')">Troll</button>
+      
+      <button class="btn btn-warning" onclick="devPresetEnemy('aggressive')">Prowokator</button>
+      <button class="btn btn-warning" onclick="devPresetEnemy('wall')">Oblężnik</button>
+      <button class="btn btn-danger" onclick="devPresetEnemy('elite')">ELITA (BOSS)</button>
+    </div>
   </div>
-  <div class="dev-control">
-    <label>Życie (HP):</label>
-    <input type="number" id="devHealth" min="1" max="9999" value="100">
+  
+  <div class="dev-section">
+    <h4>🎮 Stan Gracza</h4>
+    <div class="dev-control">
+      <label>Poziom gracza:</label>
+      <input type="number" id="devLevel" min="1" max="100" value="1">
+    </div>
+    <div class="dev-control">
+      <label>Życie (HP):</label>
+      <input type="number" id="devHealth" min="1" max="9999" value="100">
+    </div>
+    <div class="dev-control">
+      <label>Max HP:</label>
+      <input type="number" id="devMaxHealth" min="1" max="9999" value="100">
+    </div>
+    <div class="dev-control">
+      <label>XP:</label>
+      <input type="number" id="devXP" min="0" max="9999" value="0">
+    </div>
+    <div class="dev-control">
+      <label>Czas Gry (s):</label>
+      <input type="number" id="devTime" min="0" max="999" value="0">
+    </div>
+    <div class="dev-control">
+      <label>Nieśmiertelność (God Mode):</label>
+      <input type="checkbox" id="devGodMode">
+    </div>
+    <div class="dev-control">
+      <label>Pokaż Hitboxy:</label>
+      <input type="checkbox" id="devDebugHitboxes">
+    </div>
   </div>
-  <div class="dev-control">
-    <label>Max HP:</label>
-    <input type="number" id="devMaxHealth" min="1" max="9999" value="100">
+  
+  <div class="dev-section">
+    <h4>⚔️ Broń i Perki</h4>
+    <div class="dev-control">
+      <label><img src="img/icons/whip.jpg" class="bar-icon"> Bicz poziom:</label>
+      <input type="number" id="devWhip" min="1" max="5" value="1">
+    </div>
+    <div class="dev-control">
+      <label><img src="img/icons/autogun.png" class="bar-icon"> AutoGun poziom:</label>
+      <input type="number" id="devAutoGun" min="0" max="1" value="0">
+    </div>
+    <div class="dev-control">
+      <label><img src="img/icons/damage.png" class="bar-icon"> Obrażenia:</label>
+      <input type="number" id="devDamage" min="1" max="999" value="1">
+    </div>
+    <div class="dev-control">
+      <label><img src="img/icons/firerate.png" class="bar-icon"> Szybkostrzelność:</label>
+      <input type="number" id="devFireRate" min="50" max="5000" value="650">
+    </div>
+    <div class="dev-control">
+      <label><img src="img/icons/multishot.png" class="bar-icon"> Multishot:</label>
+      <input type="number" id="devMultishot" min="0" max="10" value="0">
+    </div>
+    <div class="dev-control">
+      <label><img src="img/icons/pierce.png" class="bar-icon"> Pierce:</label>
+      <input type="number" id="devPierce" min="0" max="10" value="0">
+    </div>
+    <div class="dev-control">
+      <label><img src="img/icons/orbital.jpg" class="bar-icon"> Orbital poziom:</label>
+      <input type="number" id="devOrbital" min="0" max="5" value="0">
+    </div>
+    <div class="dev-control">
+      <label><img src="img/icons/nova.png" class="bar-icon"> Nova poziom:</label>
+      <input type="number" id="devNova" min="0" max="5" value="0">
+    </div>
+    <div class="dev-control">
+      <label><img src="img/icons/lightning.png" class="bar-icon"> Piorun poziom:</label>
+      <input type="number" id="devLightning" min="0" max="6" value="0">
+    </div>
   </div>
-  <div class="dev-control">
-    <label>XP:</label>
-    <input type="number" id="devXP" min="0" max="9999" value="0">
+  
+  <div class="dev-section">
+    <h4>👾 Spawning Przeciwników</h4>
+    <div class="dev-control">
+      <label>Dozwoleni wrogowie:</label>
+      <select id="devEnemyType" multiple style="height:120px;">
+        <option value="all" selected>Wszyscy</option>
+        <option value="standard">Standard</option>
+        <option value="horde">Horda</option>
+        <option value="aggressive">Agresywni</option>
+        <option value="kamikaze">Kamikaze</option>
+        <option value="splitter">Splitter</option>
+        <option value="tank">Tank</option>
+        <option value="ranged">Ranged</option>
+        <option value="wall">Oblężnik (Wall)</option>
+        <option value="elite">Elite</option>
+      </select>
+    </div>
+    <div class="dev-control">
+      <label>Spawn rate:</label>
+      <input type="number" id="devSpawnRate" min="0" max="1" step="0.01" value="0.008">
+    </div>
+    <div class="dev-control">
+      <label>Max wrogów:</label>
+      <input type="number" id="devMaxEnemies" min="0" max="500" value="300">
+    </div>
   </div>
-  <div class="dev-control">
-    <label>Czas Gry (s):</label>
-    <input type="number" id="devTime" min="0" max="999" value="0">
+  
+  <div class="dev-section">
+    <h4>💎 Pickupy</h4>
+    <div class="dev-control">
+      <label>Dropowane pickupy:</label>
+      <select id="devPickupType" multiple style="height:100px;">
+        <option value="all" selected>Wszystkie</option>
+        <option value="heal">Leczenie</option>
+        <option value="magnet">Magnes</option>
+        <option value="shield">Tarcza</option>
+        <option value="speed">Szybkość</option>
+        <option value="bomb">Bomba</option>
+        <option value="freeze">Zamrożenie</option>
+      </select>
+    </div>
+    <div class="dev-control">
+      <label>Spawn natychmiast:</label>
+      <button class="btn" onclick="devSpawnPickup('heal')">❤️ HP</button>
+      <button class="btn" onclick="devSpawnPickup('bomb')">💣 Bomba</button>
+      <button class="btn" onclick="devSpawnPickup('magnet')">🧲 Magnes</button>
+    </div>
   </div>
-  <div class="dev-control">
-    <label>Nieśmiertelność:</label>
-    <input type="checkbox" id="devGodMode">
+  
+  <div class="dev-section">
+    <h4>🚀 Scenariusze Testowe</h4>
+    <div class="dev-control" style="justify-content: space-around;">
+      <button class="btn btn-secondary" onclick="devPresetMinimalWeapons()">Test: Min Bronie / Max Czas</button>
+      <button class="btn btn-warning" onclick="devPresetAlmostMax()">Test: Prawie Max</button>
+      <button class="btn btn-danger" onclick="devPresetMax()">Test: Max Staty</button>
+    </div>
   </div>
+  
+  <button class="btn" onclick="applyDevSettings()" style="width:100%; margin-top:10px;">✅ Zastosuj Ustawienia Dev</button>
 </div>
-
-<div class="dev-section">
-  <h4>⚔️ Broń i Perki</h4>
-  <div class="dev-control">
-    <label>Obrażenia:</label>
-    <input type="number" id="devDamage" min="1" max="999" value="1">
-  </div>
-  <div class="dev-control">
-    <label>Szybkostrzelność (ms):</label>
-    <input type="number" id="devFireRate" min="50" max="5000" value="500">
-  </div>
-  <div class="dev-control">
-    <label>Multishot:</label>
-    <input type="number" id="devMultishot" min="0" max="10" value="0">
-  </div>
-  <div class="dev-control">
-    <label>Pierce:</label>
-    <input type="number" id="devPierce" min="0" max="10" value="0">
-  </div>
-  <div class="dev-control">
-    <label>Orbital poziom:</label>
-    <input type="number" id="devOrbital" min="0" max="5" value="0">
-  </div>
-  <div class="dev-control">
-    <label>Nova poziom:</label>
-    <input type="number" id="devNova" min="0" max="5" value="0">
-  </div>
-</div>
-
-<div class="dev-section">
-  <h4>👾 Spawning Przeciwników</h4>
-  <div class="dev-control">
-    <label>Dozwoleni wrogowie:</label>
-    <select id="devEnemyType" multiple style="height:120px;">
-      <option value="all" selected>Wszyscy</option>
-      <option value="standard">Standard</option>
-      <option value="horde">Horda</option>
-      <option value="aggressive">Agresywni</option>
-      <option value="kamikaze">Kamikaze</option>
-      <option value="splitter">Splitter</option>
-      <option value="tank">Tank</option>
-      <option value="ranged">Ranged</option>
-      <option value="wall">Oblężnik (Wall)</option>
-      <option value="elite">Elite</option>
-    </select>
-  </div>
-  <div class="dev-control">
-    <label>Spawn rate:</label>
-    <input type="number" id="devSpawnRate" min="0" max="1" step="0.01" value="0.02">
-  </div>
-  <div class="dev-control">
-    <label>Max wrogów:</label>
-    <input type="number" id="devMaxEnemies" min="0" max="500" value="300">
-  </div>
-</div>
-
-<div class="dev-section">
-  <h4>💎 Pickupy</h4>
-  <div class="dev-control">
-    <label>Dozwolone pickupy:</label>
-    <select id="devPickupType" multiple style="height:100px;">
-      <option value="all" selected>Wszystkie</option>
-      <option value="heal">Leczenie</option>
-      <option value="magnet">Magnes</option>
-      <option value="shield">Tarcza</option>
-      <option value="speed">Szybkość</option>
-      <option value="bomb">Bomba</option>
-      <option value="freeze">Zamrożenie</option>
-    </select>
-  </div>
-  <div class="dev-control">
-    <label>Spawn natychmiast:</label>
-    <button class="btn" onclick="devSpawnPickup('heal')">❤️ HP</button>
-    <button class="btn" onclick="devSpawnPickup('bomb')">💣 Bomba</button>
-    <button class="btn" onclick="devSpawnPickup('magnet')">🧲 Magnes</button>
-  </div>
-</div>
-
-<div class="dev-section">
-  <h4>🚀 Scenariusze Testowe</h4>
-  <div class="dev-control" style="justify-content: space-around;">
-    <button class="btn btn-warning" onclick="devPresetAlmostMax()">Test: Prawie Max</button>
-    <button class="btn btn-danger" onclick="devPresetMax()">Test: Max Staty</button>
-  </div>
-</div>
-
-<button class="btn" onclick="applyDevSettings()" style="width:100%; margin-top:10px;">✅ Zastosuj Ustawienia Dev</button>

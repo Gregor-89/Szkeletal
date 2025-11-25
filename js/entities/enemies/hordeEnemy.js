@@ -1,12 +1,12 @@
 // ==============
-// HORDEENEMY.JS (v0.99 - FIX: Obsługa Zamrożenia)
+// HORDEENEMY.JS (v0.94l - FIX: Restore Knockback)
 // Lokalizacja: /js/entities/enemies/hordeEnemy.js
 // ==============
 
 import { Enemy } from '../enemy.js';
 
 /**
- * Wróg typu Horda.
+ * Wróg typu Horda (Maciek z czatu).
  */
 export class HordeEnemy extends Enemy {
   
@@ -15,7 +15,6 @@ export class HordeEnemy extends Enemy {
     this.visualScale = 1.6; 
   }
   
-  // Horda ma być "zbitą kupą".
   getSeparationRadius() {
       return this.size * 0.5; 
   }
@@ -29,18 +28,28 @@ export class HordeEnemy extends Enemy {
   }
   
   update(dt, player, game, state) {
-    // FIX v0.99: Obsługa timerów statusów (Wcześniej brakowało!)
+    // Statusy
     if (this.frozenTimer > 0) {
         this.frozenTimer -= dt;
-        return; // Jeśli zamrożony, nie ruszaj się i nie animuj
+        return; 
     }
     if (this.hazardSlowdownT > 0) {
         this.hazardSlowdownT -= dt;
     }
 
-    if (this.hitStun > 0) {
+    // FIX: Przywrócenie logiki knockbacku (skopiowane z Enemy.js)
+    if (Math.abs(this.knockback.x) > 0.1 || Math.abs(this.knockback.y) > 0.1) {
+        this.x += this.knockback.x * dt;
+        this.y += this.knockback.y * dt;
+        // Wygaszanie pędu
+        this.knockback.x *= 0.9;
+        this.knockback.y *= 0.9;
+    } 
+    // Normalny ruch tylko gdy nie ma knockbacku i hitstuna
+    else if (this.hitStun > 0) {
         this.hitStun -= dt;
     } else {
+        // Logika Roju
         const SWARM_RADIUS = 20; 
         const targetAngleOffset = (this.id % 7) * (Math.PI * 2 / 7); 
         const targetX = player.x + Math.cos(targetAngleOffset) * SWARM_RADIUS;
@@ -79,4 +88,4 @@ export class HordeEnemy extends Enemy {
         }
     }
   }
-}       
+}

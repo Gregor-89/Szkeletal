@@ -1,28 +1,21 @@
 // ==============
-// POLISH.JS (v0.90c - FIX: Dodanie brakujących kluczy Tytułu i HUD)
+// POLISH.JS (v0.94f - FIX: Full Restoration & Missing Keys)
 // Lokalizacja: /js/lang/polish.js
 // ==============
-
-// Ten plik zawiera wszystkie tłumaczenia dla języka polskiego.
-// Jest to plik "wzorcowy" (fallback) dla innych języków.
-// Klucze są oparte na placeholderach, a wartości na dokumencie GDD v0.9.
 
 export const LANG_PL = {
   
   // === 1. Podstawowe Mechaniki (GDD) ===
-  // POPRAWKA v0.90c: Dodano tytuł gry
   ui_game_title: "Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula",
   ui_player_name: "Drakul",
   
-  // (Klucz GDD)
   ui_hp_name: "Sytość",
   ui_hp_desc: "Ataki hejterów redukują Wskaźnik Sytości. Spadek do zera implikuje egzystencjalną porażkę.",
-  ui_hp_icon: "😋", // (Nabrzmiały brzuszek)
+  ui_hp_icon: "😋",
   
-  // (Klucz GDD)
   ui_xp_name: "Wertykalność",
   ui_xp_desc: "Akwizycja \"Ziemniaczków\" jest kluczowa dla progresji Wertykalności.",
-  ui_xp_icon: "🥔", // (Ziemniak)
+  ui_xp_icon: "🥔",
   
   ui_gem_name: "Ziemniaczki",
   ui_gem_desc: "Pokonani adwersarze uwalniają esencję \"Ziemniaczka\". Akwizycja jest imperatywem! Niezebrane Ziemniaczki z czasem ulegają deprecjacji.",
@@ -30,8 +23,7 @@ export const LANG_PL = {
   ui_levelup_name: "Poziom Wertykalności",
   ui_levelup_desc: "Obiektywne osiągnięcie Wertykalności. Pozwala na re-ewaluację strategii i dobór nowych atrybutów oraz pełną restytucję \"Sytości\".",
   
-  // === 2. UI - HUD (Paski i Statystyki na górze) ===
-  // POPRAWKA v0.90b: Dodano brakujące klucze dla HUD
+  // === 2. UI - HUD ===
   ui_hud_hp_name: "Sytość",
   ui_hud_xp_name: "Wertykalność",
   
@@ -39,9 +31,8 @@ export const LANG_PL = {
   ui_hud_level: "Poziom",
   ui_hud_enemies: "Wrogowie",
   ui_hud_time: "Czas",
-  ui_hud_health: "Życia", // (Używane w starym UI, może się przydać)
+  ui_hud_health: "Życia",
   
-  // POPRAWKA v0.90c: Dodano klucze ostrzeżeń
   ui_hud_new_enemy: "NOWY WRÓG",
   ui_hud_spawn_in: "SPAWN ZA",
   
@@ -75,10 +66,8 @@ export const LANG_PL = {
   ui_config_style_emoji: "😀 Emoji",
   
   ui_config_title_lang: "Język",
-  // (Opcje języka będą dodawane dynamicznie)
   
-  // === 5. UI - Zakładka Przewodnik (Tytuły Sekcji) ===
-  // POPRAWKA v0.90b: Oczyszczono nazwy i dodano emoji
+  // === 5. UI - Zakładka Przewodnik ===
   ui_guide_title: "Przewodnik Hrabiego",
   ui_guide_intro: "Wcielasz się w Estrogenowego Hrabiego Drakula. Zaspokój jego \"Ziemniaczkowy Głód\", gromiąc hejterów i dążąc do absolutnej Wertykalności.",
   ui_guide_basics_title: "🎮 Podstawowe zasady",
@@ -89,7 +78,7 @@ export const LANG_PL = {
   ui_guide_basics_5: "Wrogowie: Pojawiają się coraz trudniejsi 👾 wraz z czasem ⏱️",
   
   ui_guide_pickups_title: "🎁 Pickupy",
-  ui_guide_enemies_title: "👾 Lista Hejterów", // Skrócono
+  ui_guide_enemies_title: "👾 Lista Hejterów",
   ui_guide_hazards_title: "☢️ Pola Zagrożenia",
   ui_guide_weapons_title: "⚔️ Arsenał Hrabiego",
   ui_guide_perks_title: "🔧 Ulepszenia",
@@ -100,13 +89,13 @@ export const LANG_PL = {
   ui_pause_resume: "Wznów",
   ui_pause_menu: "Menu główne",
   
-  ui_resume_text: "Wznawianie za:", // (np. "Wznawianie za: 0.75 s")
+  ui_resume_text: "Wznawianie za:",
   
   ui_levelup_title: "Wybierz ulepszenie",
   ui_levelup_stats: "📊 Aktualne statystyki",
   ui_levelup_max: "Wszystkie perki wymaksowane! Kontynuuj...",
   
-  ui_chest_title: "🎁 Otwórz LudoBox", // Zmieniono z "skrzynię"
+  ui_chest_title: "🎁 Otwórz LudoBox",
   ui_chest_button: "Otwórz i odbierz",
   ui_chest_empty_title: "LudoBox pusty",
   ui_chest_empty_desc: "Wszystkie ulepszenia są już wymaksowane!",
@@ -184,7 +173,7 @@ export const LANG_PL = {
   enemy_elite_name: "Boss-Soul",
   enemy_elite_desc: "Elitarny Hejter o znacznie zwiększonej \"Sytości\". Co 7 sekund stosuje atak specjalny: gwałtowną szarżę, emisję pocisków wokół siebie lub przywołuje wsparcie (tworzy 3 \"Maćków z czatu\"). Zawsze upuszcza LudoBox.",
   
-  enemy_wall_name: "Syndrom Oblężenia", // Używane też do ostrzeżenia
+  enemy_wall_name: "Syndrom Oblężenia",
   enemy_wall_desc: "Pojawia się w idealnym pierścieniu. Ekstremalnie wolny, ale wytrzymały. Po określonym czasie (ok. 34-40s) detonuje, niszcząc wszystkie Ziemniaczki i Pickupy w pobliżu.",
   
   enemy_hazard_name: "Szambo",
@@ -210,6 +199,7 @@ export const LANG_PL = {
   perk_chainLightning_desc: "Automatyczny atak, razi najbliższego hejtera i przeskakuje na kolejnych (w bliskim zasięgu). Lvl 1: 1 Obr., 1 Cel (co 2.5s). Lvl 2: 2 Obr., 2 Cele (2.3s). Lvl 3: 2 Obr., 3 Cele (2.1s). Lvl 4: 3 Obr., 4 Cele (1.9s). Lvl 5: 3 Obr., 5 Celów (1.7s). Lvl 6: 4 Obr., 6 Celów (1.6s).",
   
   // === 12. Perki (Pasywne i AutoGun) (GDD) ===
+  // DODANO BRAKUJĄCE KLUCZE, ABY ZAPOBIEC BŁĘDOM W KONSOLI
   perk_firerate_name: "Plujko Prędszy Jad",
   perk_firerate_desc: "Bo hejt trzeba dawkować szybko! Zwiększa szybkostrzelność Plujko Jadu o +20% na poziom.",
   
@@ -229,5 +219,12 @@ export const LANG_PL = {
   perk_pickup_desc: "Im większy głód, tym dłuższe ręce po Ziemniaczki. Zwiększa bazowy promień przyciągania Ziemniaczków i Pickupów o +40% na poziom.",
   
   perk_health_name: "Poziom Sytości",
-  perk_health_desc: "Większy żołądek na hejt (i Ziemniaczki). Zwiększa maksymalną Sytość o +20 i natychmiast leczy Hrabiego o 20 HP."
+  perk_health_desc: "Większy żołądek na hejt (i Ziemniaczki). Zwiększa maksymalną Sytość o +20 i natychmiast leczy Hrabiego o 20 HP.",
+  
+  // Statystyki w UI
+  ui_stat_level: "Poziom",
+  ui_stat_health: "HP",
+  ui_stat_speed: "Szybkość",
+  ui_stat_enemies: "Pokonani",
+  ui_stat_time: "Czas"
 };

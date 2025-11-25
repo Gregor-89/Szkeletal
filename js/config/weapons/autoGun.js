@@ -1,20 +1,22 @@
 // ==============
-// AUTOGUN.JS (v0.92E - Przekazywanie sprite'a)
+// AUTOGUN.JS (v0.94l - FIX: Missing ID for Perks)
 // Lokalizacja: /js/config/weapons/autoGun.js
 // ==============
 
 import { Weapon } from '../weapon.js';
 import { findClosestEnemy } from '../../managers/enemyManager.js';
 import { playSound } from '../../services/audio.js';
-// Import konfiguracji
 import { WEAPON_CONFIG, PERK_CONFIG } from '../gameData.js';
 
 /**
- * AutoGun: Domyślna broń gracza.
+ * AutoGun: Domyślna broń gracza (Plujko Jad).
  */
 export class AutoGun extends Weapon {
   constructor(player) {
     super(player);
+    
+    // FIX: Przypisanie ID jest wymagane, aby perki (multishot, pierce) mogły znaleźć broń
+    this.id = 'autogun';
     
     const config = WEAPON_CONFIG.AUTOGUN || {};
     
@@ -69,7 +71,6 @@ export class AutoGun extends Weapon {
     
     const finalSpeed = this.bulletSpeed * (game.hyper ? 1.15 : 1);
     
-    // ZMIANA v0.92E: Pobranie konfiguracji sprite'a
     const spriteKey = WEAPON_CONFIG.AUTOGUN.SPRITE || null;
     const spriteScale = WEAPON_CONFIG.AUTOGUN.SPRITE_SCALE || 1.0;
     
@@ -78,7 +79,6 @@ export class AutoGun extends Weapon {
       
       const bullet = bulletsPool.get();
       if (bullet) {
-        // ZMIANA v0.92E: Przekazanie spriteKey i spriteScale do init
         bullet.init(
           this.player.x,
           this.player.y,
@@ -88,14 +88,14 @@ export class AutoGun extends Weapon {
           this.bulletDamage,
           '#FFC107',
           this.pierce,
-          Infinity, // life
-          0, // bounces
-          0, // curveDir
-          null, // animParams
-          null, // playerRef
-          0, // drawScale
-          spriteKey, // NOWY ARGUMENT
-          spriteScale // NOWY ARGUMENT
+          Infinity,
+          0,
+          0,
+          null,
+          null,
+          0,
+          spriteKey,
+          spriteScale
         );
       }
     }

@@ -1,8 +1,9 @@
 // ==============
-// PLAYER.JS (v1.02 - FIX: Knockback & Physics)
+// PLAYER.JS (v1.05 - FIX: Animation Speed Sync & Full Logic)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
+import { AutoGun } from '../config/weapons/autoGun.js';
 import { WhipWeapon } from '../config/weapons/whipWeapon.js'; 
 import { get as getAsset } from '../services/assets.js';
 import { PLAYER_CONFIG, HAZARD_CONFIG } from '../config/gameData.js';
@@ -11,31 +12,31 @@ export class Player {
     constructor(startX, startY) {
         this.x = startX;
         this.y = startY;
-        this.size = 80; // Wizualny rozmiar (hitbox jest mniejszy)
+        this.size = 80; 
 
         this.baseSpeed = PLAYER_CONFIG.BASE_SPEED;
         this.speedMultiplier = 1.0;
         this.color = '#4CAF50';
         
         this.weapons = [];
+        // Gwarancja broni startowej
         this.weapons.push(new WhipWeapon(this));
         
         this.inHazard = false; 
-        
-        // Fizyka
-        this.knockback = { x: 0, y: 0 }; // NOWOŚĆ: Wektor odrzutu
-        
-        // Animacja
         this.spriteSheet = null; 
+        
+        // --- KONFIGURACJA SPRITESHEETA 4x4 ---
         this.totalFrames = 16;
         this.cols = 4;
-        this.rows = 4;
+        this.rows = 4; 
+        
         this.currentFrameIndex = 0; 
         this.animTimer = 0;
-        this.baseAnimSpeed = 0.04; 
+        this.baseAnimSpeed = 0.04; // Bazowy czas klatki (przy pełnej prędkości)
         
         this.isMoving = false;
         this.facingDir = 1; 
+        this.knockback = { x: 0, y: 0 };
     }
 
     reset(canvasWidth, canvasHeight) {
@@ -53,25 +54,24 @@ export class Player {
         this.animTimer = 0;
         this.knockback = { x: 0, y: 0 };
     }
-    
-    // NOWA METODA: Aplikacja odrzutu
+
     applyKnockback(kx, ky) {
         this.knockback.x += kx;
         this.knockback.y += ky;
     }
 
     update(dt, game, keys, jVec, camera) { 
-        // 1. Obsługa Knockbacku (Zanikanie)
+        // 1. Knockback
         if (Math.abs(this.knockback.x) > 0.1 || Math.abs(this.knockback.y) > 0.1) {
             this.x += this.knockback.x * dt;
             this.y += this.knockback.y * dt;
-            this.knockback.x *= 0.9; // Tarcie
+            this.knockback.x *= 0.9;
             this.knockback.y *= 0.9;
         }
-
+        
         let vx = 0, vy = 0;
         
-        // 2. Obliczanie prędkości
+        // 2. Prędkość
         const hazardSlowdown = game.playerInHazard ? HAZARD_CONFIG.SLOWDOWN_MULTIPLIER : 1;
         const wallSlowdown = (1 - (game.collisionSlowdown || 0));
         const pickupBonus = (game.speedT > 0 ? 1.4 : 1);
@@ -91,13 +91,13 @@ export class Player {
         if (keys['a'] || keys['arrowleft']) vx -= currentSpeedFactor;
         if (keys['d'] || keys['arrowright']) vx += currentSpeedFactor;
 
+        // Normalizacja i obliczenie aktualnej prędkości (sp)
         const sp = Math.hypot(vx, vy);
         if (sp > currentMaxSpeed) {
             vx = (vx / sp) * currentMaxSpeed;
             vy = (vy / sp) * currentMaxSpeed;
         }
 
-        // Aplikacja ruchu
         this.x += vx * dt;
         this.y += vy * dt;
         
@@ -112,27 +112,37 @@ export class Player {
             if (game.collisionSlowdown < 0) game.collisionSlowdown = 0;
         }
 
-        // 4. Animacja
-        this.updateAnimation(dt);
+        // 4. Animacja (Przekazujemy aktualną prędkość 'sp' do funkcji)
+        this.updateAnimation(dt, sp);
         
+        // 5. Fallback broni (jeśli zniknęła)
+        if (this.weapons.length === 0) {
+             this.weapons.push(new WhipWeapon(this));
+        }
+
         return this.isMoving;
     }
 
-    updateAnimation(dt) {
+    updateAnimation(dt, currentSpeed) {
         if (!this.spriteSheet) {
             this.spriteSheet = getAsset('player');
         }
         
         if (this.isMoving) {
-            const sp = Math.hypot(this.knockback.x, this.knockback.y); // Uwzględnij knockback w animacji? Nie, tylko input.
-            // Ale szybkość animacji zależna od ruchu
-            this.animTimer += dt;
-            if (this.animTimer > 0.1) {
-                this.frameX = (this.frameX + 1) % 4; 
+            // FIX v1.05: Przywrócono zależność animacji od prędkości
+            // Obliczamy stosunek aktualnej prędkości do bazowej
+            // Jeśli idziesz wolno (np. w bagnie), animacja zwolni.
+            const speedRatio = currentSpeed / this.baseSpeed;
+            
+            // Dodajemy czas pomnożony przez ratio
+            this.animTimer += dt * speedRatio;
+            
+            if (this.animTimer >= this.baseAnimSpeed) {
                 this.animTimer = 0;
+                this.currentFrameIndex = (this.currentFrameIndex + 1) % this.totalFrames;
             }
         } else {
-            this.frameX = 0; 
+            this.currentFrameIndex = 0; // Idle
             this.animTimer = 0;
         }
     }
@@ -160,18 +170,27 @@ export class Player {
         if (this.spriteSheet) {
             const sheetW = this.spriteSheet.naturalWidth;
             const sheetH = this.spriteSheet.naturalHeight;
+            
+            if (sheetW === 0 || sheetH === 0) return;
+
             const frameW = sheetW / this.cols;
             const frameH = sheetH / this.rows;
             
             const col = this.currentFrameIndex % this.cols;
-            const row = Math.floor(this.currentFrameIndex / this.cols);
+            const row = Math.floor(this.currentFrameIndex / this.cols); 
             const sx = col * frameW;
             const sy = row * frameH;
 
-            // Rysujemy 48x64 (fizycznie), co jest mniejsze niż 80px size w configu?
-            // Ustalmy spójność. Jeśli size=80, to obrazek powinien być podobny.
-            // Ale w poprzedniej wersji rysowaliśmy na sztywno wymiary.
+            // Skalowanie: 1.0 = 80px (size)
+            const visualScale = 1.0; 
+            const destH = this.size * visualScale; 
             
+            // Zachowanie proporcji klatki
+            const ratio = frameW / frameH;
+            const destW = destH * ratio; 
+            
+            visualTopOffset = destH / 2; 
+
             ctx.save();
             ctx.translate(this.x, this.y); 
             
@@ -185,16 +204,11 @@ export class Player {
             
             ctx.imageSmoothingEnabled = false; 
             
-            // Wymiary rysowania
-            const drawW = 60; 
-            const drawH = 80;
-            visualTopOffset = drawH / 2;
-
             ctx.drawImage(
                 this.spriteSheet, 
-                this.frameX * frameW, 0, frameW, frameH, 
-                -drawW/2, -drawH/2 - 10, 
-                drawW, drawH            
+                sx, sy, frameW, frameH, 
+                -destW / 2, -destH / 2, 
+                destW, destH            
             );
             
             ctx.filter = 'none'; 
@@ -205,6 +219,7 @@ export class Player {
             ctx.fillRect(this.x - 10, this.y - 10, 20, 20);
         }
         
+        // Efekt Hazardu
         if (game.playerInHazard) {
             const hazardPulse = 50 + 3 * Math.sin(performance.now() / 80); 
             ctx.strokeStyle = '#00FF00'; 
@@ -245,9 +260,8 @@ export class Player {
             ctx.stroke();
         }
         
-        // Rysowanie broni (bicz, orbity itp.)
-        for (const w of this.weapons) {
-            w.draw(ctx);
+        for (const weapon of this.weapons) {
+            weapon.draw(ctx);
         }
     }
 }

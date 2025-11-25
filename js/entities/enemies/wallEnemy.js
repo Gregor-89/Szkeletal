@@ -1,5 +1,5 @@
 // ==============
-// WALLENEMY.JS (v0.98 - FIX: Szczelny Mur)
+// WALLENEMY.JS (v0.94e - FIX: Audio, Chest Destroy, HP Bar)
 // Lokalizacja: /js/entities/enemies/wallEnemy.js
 // ==============
 
@@ -7,6 +7,7 @@ import { Enemy } from '../enemy.js';
 import { WALL_DETONATION_CONFIG } from '../../config/gameData.js';
 import { areaNuke, addHitText, addBombIndicator } from '../../core/utils.js';
 import { killEnemy } from '../../managers/enemyManager.js';
+import { playSound } from '../../services/audio.js';
 
 export class WallEnemy extends Enemy {
   
@@ -25,8 +26,6 @@ export class WallEnemy extends Enemy {
     this.mass = 1000; 
   }
   
-  // NADPISANIE SEPARACJI:
-  // Mur ma tworzyć szczelną barierę. Pozwalamy na duże nakładanie się grafik (ignorujemy visualScale).
   getSeparationRadius() {
       return this.size * 0.5; 
   }
@@ -51,7 +50,11 @@ export class WallEnemy extends Enemy {
     const damage = WALL_DETONATION_CONFIG.WALL_DETONATION_DAMAGE; 
     
     addBombIndicator(bombIndicators, this.x, this.y, radius, 0.5);
+    
+    // FIX: Dźwięk wybuchu
+    playSound('Explosion');
 
+    // Obrażenia obszarowe dla wrogów
     for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
         if (e.id === this.id) continue; 
@@ -68,7 +71,18 @@ export class WallEnemy extends Enemy {
             }
         }
     }
+    
+    // FIX: Niszczenie skrzyń (LudoBoxów) w zasięgu
+    for (let k = chests.length - 1; k >= 0; k--) {
+        const c = chests[k];
+        const dist = Math.hypot(this.x - c.x, this.y - c.y);
+        if (dist <= radius) {
+            chests.splice(k, 1);
+            // Opcjonalnie: efekt zniszczenia skrzyni
+        }
+    }
 
+    // Niszczenie pickupów i gemów (areaNuke to robi, ale upewnijmy się)
     areaNuke(
         this.x,
         this.y,
@@ -158,7 +172,12 @@ export class WallEnemy extends Enemy {
       
       const bx = -w / 2;
       const spriteH = this.size * this.visualScale; 
-      const by = -(spriteH / 2) - 8;
+      // FIX: Dostosowanie pozycji paska HP do dużego sprite'a (obniżenie)
+      // Było: -(spriteH / 2) - 8. Zmieniam na +20 (pod nogami) lub bliżej głowy ale niżej.
+      // Jeśli visualScale 2.9 i size 88, to spriteH = ~255.
+      // -(255/2) = -127. Pasek był bardzo wysoko.
+      // Ustawmy go nieco niżej, np. na 2/3 wysokości od środka w górę.
+      const by = -(spriteH * 0.35); 
       
       ctx.fillStyle = '#300';
       ctx.fillRect(bx, by, w, h);
