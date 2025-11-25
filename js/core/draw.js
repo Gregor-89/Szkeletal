@@ -89,9 +89,9 @@ function drawEnemyHealthBar(ctx, e) {
     // FIX: Precyzyjne obniżenie pasków
     let yOffsetMod = 0;
     if (e.type === 'elite') {
-        yOffsetMod = 35; // (Było 32) + 3px
+        yOffsetMod = 45; // (Było 32) + 3px
     } else if (e.type === 'wall') {
-        yOffsetMod = 38; // (Było 32) + 6px
+        yOffsetMod = 60; // (Było 32) + 6px
     }
 
     const by = -(spriteH / 2) - 8 + yOffsetMod;

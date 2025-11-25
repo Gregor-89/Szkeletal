@@ -1,5 +1,5 @@
 // ==============
-// GEM.JS (v0.94f - FIX: Physics & Acceleration)
+// GEM.JS (v0.94i - FIX: Visual Glows)
 // Lokalizacja: /js/entities/gem.js
 // ==============
 
@@ -127,17 +127,32 @@ export class Gem {
     const sprite = getAsset('gem'); // Upewnij się, że klucz w assets.js to 'gem'
     
     if (sprite) {
-      const targetSize = 20 + (this.val > 1 ? 6 : 0);
+      // FIX: Używamy 'this.r' do skalowania (4->20px, 6->30px, 8->40px)
+      const targetSize = this.r * 5;
+      
       const aspectRatio = sprite.naturalWidth / sprite.naturalHeight;
       const drawHeight = targetSize;
       const drawWidth = targetSize * aspectRatio;
       
-      if (this.val > 1 || this.magnetized) {
-        ctx.shadowColor = 'rgba(255, 215, 0, 0.6)';
+      // FIX: Kolor poświaty zależny od wartości
+      if (this.val >= 20) {
+        // Czerwony (Epicki)
+        ctx.shadowColor = '#ff5252';
+        ctx.shadowBlur = 15;
+      } else if (this.val >= 5) {
+        // Zielony (Rzadki)
+        ctx.shadowColor = '#69f0ae';
         ctx.shadowBlur = 10;
       } else {
-        ctx.shadowColor = 'rgba(79, 195, 247, 0.4)';
+        // Niebieski (Zwykły)
+        ctx.shadowColor = '#4fc3f7';
         ctx.shadowBlur = 5;
+      }
+      
+      if (this.magnetized) {
+        // Złota poświata przy przyciąganiu (dodatkowy efekt)
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 12;
       }
       
       ctx.drawImage(sprite, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);

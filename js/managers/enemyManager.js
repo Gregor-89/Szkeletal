@@ -1,17 +1,15 @@
 // ==============
-// ENEMYMANAGER.JS (v0.94 - FIX: Full Logic Restored)
+// ENEMYMANAGER.JS (v0.94i - FIX: Tiered Gem Sizes)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
 import { devSettings } from '../services/dev.js';
-import { findFreeSpotForPickup, addBombIndicator } from '../core/utils.js'; // Importy narzędzi
+import { findFreeSpotForPickup, addBombIndicator } from '../core/utils.js'; 
 import { playSound } from '../services/audio.js';
 import { getLang } from '../services/i18n.js';
 
-// Import klasy bazowej
 import { Enemy } from '../entities/enemy.js';
 
-// Import wszystkich podklas wrogów
 import { StandardEnemy } from '../entities/enemies/standardEnemy.js';
 import { HordeEnemy } from '../entities/enemies/hordeEnemy.js';
 import { AggressiveEnemy } from '../entities/enemies/aggressiveEnemy.js';
@@ -22,10 +20,8 @@ import { RangedEnemy } from '../entities/enemies/rangedEnemy.js';
 import { EliteEnemy } from '../entities/enemies/eliteEnemy.js';
 import { WallEnemy } from '../entities/enemies/wallEnemy.js';
 
-// Import konfiguracji
 import { ENEMY_STATS, SIEGE_EVENT_CONFIG, WALL_DETONATION_CONFIG } from '../config/gameData.js';
 
-// Import klas pickupów (potrzebne do dropów)
 import { HealPickup } from '../entities/pickups/healPickup.js';
 import { MagnetPickup } from '../entities/pickups/magnetPickup.js';
 import { ShieldPickup } from '../entities/pickups/shieldPickup.js';
@@ -35,7 +31,6 @@ import { FreezePickup } from '../entities/pickups/freezePickup.js';
 
 import { Chest } from '../entities/chest.js';
 
-// Mapa klas wrogów
 export const ENEMY_CLASS_MAP = {
     standard: StandardEnemy,
     horde: HordeEnemy,
@@ -48,7 +43,6 @@ export const ENEMY_CLASS_MAP = {
     wall: WallEnemy
 };
 
-// Mapa klas pickupów
 const PICKUP_CLASS_MAP = {
     heal: HealPickup,
     magnet: MagnetPickup,
@@ -58,15 +52,10 @@ const PICKUP_CLASS_MAP = {
     freeze: FreezePickup
 };
 
-/**
- * Zwraca listę typów wrogów dozwolonych na podstawie czasu gry.
- * Zarządza również timerem ostrzeżenia o nowym wrogu.
- */
 export function getAvailableEnemyTypes(game) {
     const t = game.time;
     const seen = game.seenEnemyTypes; 
 
-    // Definicja czasu odblokowania wrogów
     const availableAtTime = [
         t > 0 ? 'standard' : null,
         t > 30 ? 'horde' : null,
@@ -80,7 +69,6 @@ export function getAvailableEnemyTypes(game) {
     let typesToSpawn = [];
     let newEnemyType = null;
     
-    // Sprawdź, czy pojawił się nowy typ wroga
     for (const type of availableAtTime) {
         if (!seen.includes(type)) {
             newEnemyType = type;
@@ -88,37 +76,28 @@ export function getAvailableEnemyTypes(game) {
         }
     }
     
-    // Logika Ostrzeżenia (New Enemy Warning)
     if (newEnemyType && game.newEnemyWarningT <= 0) {
-        game.newEnemyWarningT = 3.0; // Czas trwania ostrzeżenia
+        game.newEnemyWarningT = 3.0; 
         game.newEnemyWarningType = getLang(`enemy_${newEnemyType}_name`).toUpperCase();
         game.seenEnemyTypes.push(newEnemyType); 
-        playSound('EliteSpawn'); // Dźwięk alarmu
+        playSound('EliteSpawn'); 
         console.log(`[ENEMY-WARN] Aktywowano ostrzeżenie: ${newEnemyType}.`);
         
-        // Podczas ostrzeżenia spawnujemy tylko stare typy
         typesToSpawn = availableAtTime.filter(type => seen.includes(type));
     } else if (newEnemyType && game.newEnemyWarningT > 0) {
-         // Ostrzeżenie trwa - blokujemy nowy typ
          typesToSpawn = availableAtTime.filter(type => seen.includes(type));
     } else {
-        // Brak nowych wrogów lub po ostrzeżeniu - spawnujemy wszystko co dostępne
         typesToSpawn = availableAtTime;
     }
 
-    // Filtrowanie finalne (tylko to co widzieliśmy)
     const typesToSpawnFinal = typesToSpawn.filter(type => seen.includes(type));
 
-    // Obsługa ustawień deweloperskich
     if (devSettings.allowedEnemies.includes('all')) {
         return typesToSpawnFinal.filter(type => type !== 'wall'); 
     }
     return typesToSpawnFinal.filter(type => devSettings.allowedEnemies.includes(type) && type !== 'wall');
 }
 
-/**
- * Fabryka tworząca instancję wroga.
- */
 export function createEnemyInstance(type, x, y, hpScale, enemyIdCounter) { 
     const stats = ENEMY_STATS[type];
     const EnemyClass = ENEMY_CLASS_MAP[type];
@@ -133,9 +112,6 @@ export function createEnemyInstance(type, x, y, hpScale, enemyIdCounter) {
     return newEnemy;
 }
 
-/**
- * Specjalna logika spawnu dla Hordy (grupa wrogów).
- */
 function spawnHorde(enemies, x, y, hpScale, enemyIdCounter) {
     const count = 4 + Math.floor(Math.random() * 3); 
     for (let i = 0; i < count; i++) {
@@ -149,12 +125,9 @@ function spawnHorde(enemies, x, y, hpScale, enemyIdCounter) {
     return enemyIdCounter;
 }
 
-/**
- * Główna funkcja spawnująca pojedynczego wroga (standardowego).
- */
 export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
     let x, y;
-    const margin = 100; // Margines spawnu poza ekranem
+    const margin = 100; 
     
     const viewLeft = camera.offsetX;
     const viewRight = camera.offsetX + camera.viewWidth;
@@ -163,7 +136,6 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
     const worldWidth = camera.worldWidth;
     const worldHeight = camera.worldHeight;
 
-    // Losowanie krawędzi spawnu
     const edge = Math.random();
     if (edge < 0.25) { 
         x = viewLeft + Math.random() * camera.viewWidth;
@@ -179,7 +151,6 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
         y = viewTop + Math.random() * camera.viewHeight;
     }
 
-    // Ograniczenie do świata gry
     x = Math.max(0, Math.min(worldWidth, x));
     y = Math.max(0, Math.min(worldHeight, y));
 
@@ -202,9 +173,6 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
     return enemyIdCounter;
 }
 
-/**
- * Funkcja spawnująca Elitę (Bossa).
- */
 export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     if (devSettings.allowedEnemies.length > 0 && !devSettings.allowedEnemies.includes('all') && !devSettings.allowedEnemies.includes('elite')) {
         return enemyIdCounter; 
@@ -248,10 +216,6 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     return enemyIdCounter;
 }
 
-/**
- * Dodaje wskaźniki (czerwone kółka) dla nadchodzącego oblężenia.
- * Zapisuje pozycje w kolejce spawnu w `state`.
- */
 export function addSiegeIndicators(state) {
     const { bombIndicators, player } = state;
     
@@ -259,17 +223,15 @@ export function addSiegeIndicators(state) {
     const radius = SIEGE_EVENT_CONFIG.SIEGE_EVENT_RADIUS;
     const maxLife = SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME;
 
-    state.siegeSpawnQueue = []; // Reset kolejki
+    state.siegeSpawnQueue = []; 
 
     for (let i = 0; i < count; i++) {
         const angle = (i / count) * Math.PI * 2;
         const x = player.x + Math.cos(angle) * radius;
         const y = player.y + Math.sin(angle) * radius;
         
-        // Zapisz pozycję do późniejszego spawnu
         state.siegeSpawnQueue.push({ x, y });
 
-        // Dodaj wizualny wskaźnik
         bombIndicators.push({
             maxRadius: ENEMY_STATS.wall.size * 0.6, 
             x: x,
@@ -281,9 +243,6 @@ export function addSiegeIndicators(state) {
     }
 }
 
-/**
- * Spawnuje wrogów typu 'wall' (Oblężnik) w miejscach zapisanych w kolejce.
- */
 export function spawnWallEnemies(state) {
     const { enemies, game } = state;
     
@@ -302,21 +261,16 @@ export function spawnWallEnemies(state) {
         }
     }
     
-    state.siegeSpawnQueue = []; // Wyczyść kolejkę
+    state.siegeSpawnQueue = []; 
     
     return state.enemyIdCounter;
 }
 
-/**
- * Inicjuje wydarzenie oblężenia: wskaźniki + dźwięk + ostrzeżenie.
- */
 export function spawnSiegeRing(state) {
     const { game } = state;
     
-    // 1. Dodaj wskaźniki wizualne
     addSiegeIndicators(state);
     
-    // 2. Ostrzeżenie tekstowe (tylko za pierwszym razem)
     if (!game.seenEnemyTypes.includes('wall')) {
         game.newEnemyWarningT = SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME;
         game.newEnemyWarningType = getLang('enemy_wall_name').toUpperCase(); 
@@ -329,9 +283,6 @@ export function spawnSiegeRing(state) {
     return state.enemyIdCounter;
 }
 
-/**
- * Znajduje najbliższego wroga (używane przez bronie).
- */
 export function findClosestEnemy(player, enemies) {
     let closestDist = Infinity;
     let closestEnemy = null;
@@ -350,9 +301,6 @@ export function findClosestEnemy(player, enemies) {
     return { enemy: closestEnemy, distance: closestDist };
 }
 
-/**
- * Pomocnik do efektów wizualnych (cząsteczki przy śmierci/spawnie).
- */
 function spawnColorParticles(particlePool, x, y, color, count = 10, speed = 240, life = 0.4) {
     for (let k = 0; k < count; k++) {
         const p = particlePool.get();
@@ -370,45 +318,45 @@ function spawnColorParticles(particlePool, x, y, color, count = 10, speed = 240,
     }
 }
 
-/**
- * Logika zabicia wroga.
- * Obsługuje wynik, XP, dropy, efekty cząsteczkowe, logikę Splittera i Elite.
- */
 export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital = false, preventDrops = false) {
     
-    // Sprawdzenie czy włączyć logikę odrzutu dla potomstwa (Splitter)
     let spawnKnockback = false;
     if (e.type === 'splitter' && !preventDrops) {
          spawnKnockback = true; 
     }
     
-    // 1. Logika nagród (tylko jeśli nie zablokowane np. przez autodestrukcję)
     if (!preventDrops) {
         game.score += e.stats.score;
         
-        // Drop XP (Gem)
         if (e.stats.xp > 0) {
             const gem = gemsPool.get();
             if (gem) {
-                // Szansa na lepszy gem
                 let val = e.stats.xp;
-                let color = '#4FC3F7'; // Niebieski (domyślny)
+                let color = '#4FC3F7'; // Blue
+                let size = 4;          // Standard size
                 
-                // Prosta logika ulepszania gema (można rozbudować)
-                if (Math.random() < 0.05) { val *= 5; color = '#81C784'; } // Zielony
-                else if (Math.random() < 0.01) { val *= 20; color = '#E57373'; } // Czerwony
+                // FIX: Zróżnicowane rozmiary dla lepszych gemów
+                if (Math.random() < 0.05) { 
+                    val *= 5; 
+                    color = '#81C784'; // Green
+                    size = 6;          // Większy
+                } 
+                else if (Math.random() < 0.01) { 
+                    val *= 20; 
+                    color = '#E57373'; // Red
+                    size = 8;          // Największy
+                } 
 
                 gem.init(
                     e.x + (Math.random() - 0.5) * 5,
                     e.y + (Math.random() - 0.5) * 5,
-                    val > 10 ? 6 : 4,
+                    size, 
                     val,
                     color
                 );
             }
         }
 
-        // Drop Pickupów
         if (e.type !== 'elite') {
             for (const [type, prob] of Object.entries(e.stats.drops)) {
                 if (devSettings.allowedEnemies.includes('all') || devSettings.allowedPickups.includes(type)) {
@@ -418,19 +366,17 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
                         if (PickupClass) {
                             pickups.push(new PickupClass(pos.x, pos.y));
                         }
-                        break; // Tylko jeden pickup na wroga
+                        break; 
                     }
                 }
             }
         }
         
-        // Drop Skrzyni (Elite)
         if (e.type === 'elite') {
             chests.push(new Chest(e.x, e.y));
         }
     }
 
-    // 2. Efekty Cząsteczkowe (Krew/Wybuch)
     const particleCount = fromOrbital ? 3 : 8;
     for (let k = 0; k < particleCount; k++) {
         const p = particlePool.get();
@@ -448,15 +394,12 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         }
     }
 
-    // 3. Specjalna Logika: SPLITTER (Wykop)
     if (e.type === 'splitter') {
         const hpScale = (1 + 0.10 * (game.level - 1) + game.time / 90) * 0.8; 
         
-        // Tworzenie dwóch mniejszych wrogów (Horde jako placeholder dla małych)
         const child1 = createEnemyInstance('horde', e.x - 5, e.y, hpScale, enemyIdCounter++);
         const child2 = createEnemyInstance('horde', e.x + 5, e.y, hpScale, enemyIdCounter++);
         
-        // Efekt wizualny podziału
         if (spawnKnockback) {
             const color = ENEMY_STATS.splitter.color; 
             spawnColorParticles(particlePool, e.x, e.y, color, 15, 300, 0.5);
@@ -466,7 +409,6 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
             child1.speed *= 1.1; 
             enemies.push(child1);
             
-            // Odrzut potomstwa
             if (spawnKnockback) {
                 const angle = Math.atan2(child1.y - e.y, child1.x - e.x) + (Math.random() * 0.5 - 0.25);
                 child1.x += Math.cos(angle) * 15;
@@ -478,7 +420,6 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
             child2.speed *= 1.1; 
             enemies.push(child2);
             
-            // Odrzut potomstwa
             if (spawnKnockback) {
                 const angle = Math.atan2(child2.y - e.y, child2.x - e.x) + (Math.random() * 0.5 - 0.25);
                 child2.x += Math.cos(angle) * 15;
@@ -488,15 +429,11 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         }
     }
     
-    // 4. Specjalna Logika: ELITE (Boss) - Miniony
     if (e.type === 'elite' && preventDrops) { 
-        // preventDrops jest true, jeśli Elita ginie "technicznie" (np. despawn) lub przywoływane są miniony
-        // Tutaj dodajemy efekt wizualny
         const color = ENEMY_STATS.elite.color; 
         spawnColorParticles(particlePool, e.x, e.y, color, 20, 350, 0.6);
     }
 
-    // 5. Usunięcie z tablicy
     enemies.splice(idx, 1);
     return enemyIdCounter;
 }

@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v0.94w - FIX: Sprite Rendering Matrix)
+// PLAYER.JS (v0.94h - FIX: New Shield Effect)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -11,7 +11,7 @@ export class Player {
     constructor(startX, startY) {
         this.x = startX;
         this.y = startY;
-        this.size = 80; // Rozmiar docelowy na ekranie
+        this.size = 80; 
 
         this.baseSpeed = PLAYER_CONFIG.BASE_SPEED;
         this.speedMultiplier = 1.0;
@@ -24,12 +24,10 @@ export class Player {
         
         this.knockback = { x: 0, y: 0 };
         
-        // Assety
         this.spriteSheet = getAsset('player_spritesheet'); 
         if (!this.spriteSheet) this.spriteSheet = getAsset('drakul'); 
         if (!this.spriteSheet) this.spriteSheet = getAsset('player');
         
-        // Konfiguracja Sprite Sheeta
         this.totalFrames = 16; 
         this.cols = 4;
         this.rows = 4;
@@ -77,7 +75,6 @@ export class Player {
     }
 
     update(dt, game, keys, jVec, camera) { 
-        // 1. Fizyka
         if (Math.abs(this.knockback.x) > 0.1 || Math.abs(this.knockback.y) > 0.1) {
             this.x += this.knockback.x * dt;
             this.y += this.knockback.y * dt;
@@ -85,7 +82,6 @@ export class Player {
             this.knockback.y *= 0.9;
         }
 
-        // 2. Input
         let dx = 0, dy = 0;
         if (keys['ArrowUp'] || keys['w']) dy = -1;
         if (keys['ArrowDown'] || keys['s']) dy = 1;
@@ -106,7 +102,6 @@ export class Player {
             this.isMoving = false;
         }
         
-        // 3. Prędkość
         let currentSpeed = this.baseSpeed * this.speedMultiplier;
 
         if (game.collisionSlowdown > 0) {
@@ -125,7 +120,6 @@ export class Player {
         this.x += dx * currentSpeed * dt;
         this.y += dy * currentSpeed * dt;
 
-        // 4. Animacja
         this.updateAnimation(dt);
     }
 
@@ -147,7 +141,6 @@ export class Player {
     }
 
     draw(ctx, game) {
-        // Fallback assetu
         if (!this.spriteSheet) {
              this.spriteSheet = getAsset('player_spritesheet') || getAsset('drakul') || getAsset('player');
         }
@@ -155,7 +148,6 @@ export class Player {
         ctx.save();
         ctx.translate(this.x, this.y); 
         
-        // --- Efekty Wizualne ---
         if (game.playerHitFlashT > 0) {
             if (Math.floor(performance.now() / 50) % 2 === 0) {
                 ctx.filter = 'grayscale(1) brightness(5)';
@@ -164,12 +156,12 @@ export class Player {
             ctx.filter = 'sepia(1) hue-rotate(60deg) saturate(2)';
         }
         
+        // FIX: Nowy efekt tarczy (Pole Siłowe) - warstwa pod graczem
         if (game.shield) {
-            ctx.shadowColor = '#00BFFF';
-            ctx.shadowBlur = 15 + 5 * Math.sin(performance.now() / 100);
+            ctx.shadowColor = '#40C4FF';
+            ctx.shadowBlur = 20 + 5 * Math.sin(performance.now() / 100);
         }
 
-        // --- Rysowanie Postaci ---
         if (this.spriteSheet) {
             if (this.facingDir === -1) {
                 ctx.scale(-1, 1);
@@ -178,9 +170,7 @@ export class Player {
             const sheetW = this.spriteSheet.naturalWidth;
             const sheetH = this.spriteSheet.naturalHeight;
             
-            // Zabezpieczenie przed niezaładowanym obrazkiem
             if (sheetW > 0 && sheetH > 0) {
-                // FIX: Poprawne obliczanie klatki w siatce (cols x rows)
                 const frameW = sheetW / this.cols;
                 const frameH = sheetH / this.rows;
                 
@@ -190,8 +180,6 @@ export class Player {
                 const sx = col * frameW;
                 const sy = row * frameH;
                 
-                // Skalowanie do rozmiaru gracza (80px)
-                // Jeśli grafika ma np. 128px, a chcemy 80px, to scale = 80/128
                 const drawH = this.size; 
                 const ratio = frameW / frameH;
                 const drawW = drawH * ratio;
@@ -201,13 +189,12 @@ export class Player {
                 ctx.drawImage(
                     this.spriteSheet, 
                     sx, sy, frameW, frameH, 
-                    -drawW / 2, -drawH / 2 - 10, // Offset Y -10 (lekko w górę)
+                    -drawW / 2, -drawH / 2 - 10, 
                     drawW, drawH            
                 );
             }
             
         } else {
-            // Fallback (Kwadrat)
             ctx.fillStyle = this.color;
             ctx.fillRect(-10, -10, 20, 20);
         }
@@ -215,12 +202,12 @@ export class Player {
         ctx.filter = 'none'; 
         
         // --- Pasek HP ---
-        if (this.facingDir === -1) ctx.scale(-1, 1); // Reset skali
+        if (this.facingDir === -1) ctx.scale(-1, 1); 
 
         const hpBarW = 64;
         const hpBarH = 6;
         const hpBarX = -hpBarW / 2;
-        const hpBarY = -this.size / 2 - 20; // Nad głową (dynamicznie do rozmiaru)
+        const hpBarY = -this.size / 2 - 20; 
         
         const healthPct = Math.max(0, Math.min(1, game.health / game.maxHealth));
 
@@ -238,19 +225,40 @@ export class Player {
         ctx.lineWidth = 1.5;
         ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
 
-        // --- Efekt Tarczy (Okrąg) ---
+        // FIX: Rysowanie pola siłowego (Tarczy)
         if (game.shield) {
-            const pulse = 50 + 3 * Math.sin(performance.now() / 100); 
-            ctx.strokeStyle = '#90CAF9';
-            ctx.lineWidth = 2;
+            const t = performance.now() / 1000;
+            const r = this.size * 0.8; 
+
+            // 1. Gradient pola (Bańka)
+            const shieldGrad = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, r);
+            shieldGrad.addColorStop(0, 'rgba(64, 196, 255, 0.0)');
+            shieldGrad.addColorStop(0.85, 'rgba(64, 196, 255, 0.15)');
+            shieldGrad.addColorStop(1, 'rgba(64, 196, 255, 0.5)');
+
+            ctx.fillStyle = shieldGrad;
             ctx.beginPath();
-            ctx.arc(0, 0, pulse, 0, Math.PI * 2);
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 2. Obracający się pierścień (Sci-fi)
+            ctx.shadowBlur = 0; // Wyłączamy blur dla linii, żeby była ostra
+            ctx.strokeStyle = 'rgba(200, 240, 255, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([15, 12]); // Przerywana linia
+            
+            ctx.save();
+            ctx.rotate(t * 1.5); // Obrót
+            ctx.beginPath();
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
             ctx.stroke();
+            ctx.restore();
+            
+            ctx.setLineDash([]); 
         }
         
         ctx.restore(); 
         
-        // --- Bronie ---
         for (const w of this.weapons) {
             if (w.draw) w.draw(ctx);
         }
