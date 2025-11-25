@@ -4,6 +4,33 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ---
 
+
+## [0.94] - 2025-11-25
+### Fixed
+- Kompleksowa naprawa fizyki kolizji: Knockback gracza i wrogów działa poprawnie (nawet przy Tarczy/GodMode).
+- Naprawiono błędy krytyczne (crashe) związane z importami broni i pickupów.
+- Usunięto błędy renderingu (artefakty, znikające sprite'y) poprzez stabilizację funkcji draw.
+- Poprawiono logikę spawnu Oblężenia (zapobieganie nakładaniu się fal, losowy czas respawnu 100-300s).
+- Naprawiono pozycjonowanie pasków zdrowia (Elite, Wall) oraz tekstów obrażeń (HitText).
+- Przywrócono brakujące dźwięki (Hit, Explosion, XPPickup) oraz dodano system audio throttling.
+
+### Changed
+- Zbalansowano Oblężnika (HP -40%, Prędkość -20%).
+- Zwiększono zasięg i hitbox Bicza, dodano ochronę point-blank.
+- Ulepszono wizualizacje: Cienie pod stopami (dostrojone dla każdego typu wroga), efekt tonięcia w bagnie, filtr kolorystyczny zamiast obwódek.
+- Zwiększono zasięg pickupa Bomby (+50%).
+- Uporządkowano Menu Dev (dodano debug hitboxów) i Config (usunięto styl pickupów).
+
+## [0.93] - 2025-11-24
+### Added
+- Wprowadzono system animacji oparty na spritesheetach dla wszystkich postaci.
+- Nowe assety graficzne dla wrogów (Dadgamer, Horda, Menel, etc.) oraz gracza (Drakul).
+- Dodano efekty wizualne dla broni (Bicz, Orbital, Nova).
+
+### Changed
+- Zaktualizowano logikę rysowania obiektów, aby obsługiwała klatki animacji.
+- Wprowadzono skalowanie wizualne (visualScale) niezależne od hitboxów logicznych.
+
 ## [v0.92] - 2025-11-20
 ### Dodano (Animacje & Grafika)
 - **System Animacji:** Wdrożono obsługę spritesheetów (klatek animacji) w silniku renderowania (`Enemy.js`, `Player.js`).
