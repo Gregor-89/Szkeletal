@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.99 - FIX: Stable Rendering & Pause Fix)
+// ENEMY.JS (v0.99b - FIX: Show HealthBar on Hit)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -27,6 +27,9 @@ export class Enemy {
         this.hitFlashT = 0;
         this.frozenTimer = 0;
         this.knockback = { x: 0, y: 0 };
+        
+        // FIX: Flaga sterująca wyświetlaniem paska (domyślnie ukryty)
+        this.showHealthBar = false;
         
         this.separationCooldown = Math.random() * 0.15;
         this.separationX = 0;
@@ -174,8 +177,8 @@ export class Enemy {
                 ctx.translate(this.x, this.y);
                 ctx.scale(-1, 1);
                 ctx.drawImage(this.sprite, sx, sy, frameW, frameH, -destW / 2, -destH / 2, destW, destH);
-                ctx.restore(); // Restore for next ops
-                ctx.save(); // Save again
+                ctx.restore();
+                ctx.save();
             } else {
                 ctx.drawImage(this.sprite, sx, sy, frameW, frameH, this.x - destW / 2, this.y - destH / 2, destW, destH);
             }
@@ -186,13 +189,19 @@ export class Enemy {
             ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
         
-        this.drawHealthBar(ctx);
+        // Paski zdrowia są teraz rysowane zewnętrznie przez draw.js
         ctx.restore();
     }
     
     takeDamage(amount) {
         this.hp -= amount;
         this.hitFlashT = 0.15;
+        
+        // FIX: Pokaż pasek zdrowia po pierwszym trafieniu (dla Tank/Elite/Wall)
+        if (this.type === 'tank' || this.type === 'elite' || this.type === 'wall') {
+            this.showHealthBar = true;
+        }
+        
         if (this.hp <= 0) {
             this.die();
             return true;
@@ -209,5 +218,8 @@ export class Enemy {
     freeze(duration) { this.frozenTimer = duration; }
     die() { this.isDead = true; }
     getOutlineColor() { return colorForEnemy(this); }
-    drawHealthBar(ctx) {}
+    
+    drawHealthBar(ctx) {
+        // Metoda pusta, bo rysowanie przejął draw.js, ale zostawiamy dla kompatybilności
+    }
 }

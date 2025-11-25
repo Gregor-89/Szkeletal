@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.98 - FIX: Final Shadows & Restore Render)
+// DRAW.JS (v0.99h - FIX: Perfect Healthbar Offsets)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -13,10 +13,10 @@ let backgroundPattern = null;
 let generatedPatternScale = 0;
 
 const SHADOW_OFFSETS = {
-    'aggressive': 0.18, 
-    'ranged': 0.25,     // Obniżono
-    'elite': 0.24,      // Obniżono
-    'wall': 0.32,       // Obniżono (jeszcze niżej)
+    'aggressive': 0.24, 
+    'ranged': 0.25,
+    'elite': 0.24,
+    'wall': 0.25,       
     'kamikaze': 0.52,   
     'horde': 0.49,      
     'player': 0.42,     
@@ -76,6 +76,49 @@ function drawShadow(ctx, x, y, size, visualScale = 1.0, enemyType = 'default') {
     ctx.restore();
 }
 
+function drawEnemyHealthBar(ctx, e) {
+    if ((e.type !== 'tank' && e.type !== 'elite' && e.type !== 'wall') || !e.showHealthBar) return;
+
+    const visualScale = e.visualScale || 1.5;
+    const w = 40; 
+    const h = 6;
+    
+    const bx = -w / 2;
+    const spriteH = e.size * visualScale;
+    
+    // FIX: Precyzyjne obniżenie pasków
+    let yOffsetMod = 0;
+    if (e.type === 'elite') {
+        yOffsetMod = 35; // (Było 32) + 3px
+    } else if (e.type === 'wall') {
+        yOffsetMod = 38; // (Było 32) + 6px
+    }
+
+    const by = -(spriteH / 2) - 8 + yOffsetMod;
+    
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    
+    // Tło
+    ctx.fillStyle = '#300';
+    ctx.fillRect(bx, by, w, h);
+    
+    const frac = Math.max(0, e.hp / e.maxHp);
+    let hpColor;
+    if (frac > 0.6) hpColor = '#0f0';
+    else if (frac > 0.3) hpColor = '#ff0';
+    else hpColor = '#f00';
+    
+    ctx.fillStyle = hpColor;
+    ctx.fillRect(bx, by, w * frac, h);
+    
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx, by, w, h);
+    
+    ctx.restore();
+}
+
 function drawFPS(ctx, fps, ui, canvas) {
     if (ui.showFPS) {
         ctx.fillStyle = (fps >= 55) ? '#66bb6a' : (fps >= 40 ? '#ffca28' : '#ef5350');
@@ -120,7 +163,6 @@ export function draw(ctx, state, ui, fps) {
         if (game.shakeT <= 0) game.shakeMag = 0;
     }
     
-    // STANDARDOWA TRANSLACJA KAMERY (BEZ KOMBINACJI W ENTITY)
     ctx.translate(-camera.offsetX, -camera.offsetY);
 
     drawBackground(ctx, camera);
@@ -150,9 +192,12 @@ export function draw(ctx, state, ui, fps) {
     for (const e of enemiesToDraw) {
         if (!e.isDead) drawShadow(ctx, e.x, e.y, e.size, e.visualScale || 1.0, e.type);
         e.draw(ctx, game);
+        
+        if (!e.isDead) {
+            drawEnemyHealthBar(ctx, e);
+        }
     }
 
-    // Orbital na wierzchu
     if (player.weapons) {
         for (const w of player.weapons) {
             if (w instanceof OrbitalWeapon && w.draw) w.draw(ctx);
@@ -190,7 +235,6 @@ export function draw(ctx, state, ui, fps) {
 
     ctx.globalAlpha = 1;
 
-    // Bomb Indicators
     for (const b of bombIndicators) {
         if (b.x - b.maxRadius > cullRight || b.x + b.maxRadius < cullLeft || 
             b.y - b.maxRadius > cullBottom || b.y + b.maxRadius < cullTop) continue;

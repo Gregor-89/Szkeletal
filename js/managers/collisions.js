@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.94v - FIX: Hazard Loot Decay Restored)
+// COLLISIONS.JS (v0.94z - FIX: Raised Hit Texts)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -81,7 +81,14 @@ export function checkCollisions(state) {
             if (checkCircleCollision(b.x, b.y, b.size, e.x, e.y, e.size * 0.6)) {
                 hitEnemy = true;
                 const isDead = e.takeDamage(b.damage, 'player');
-                addHitText(hitTextPool, hitTexts, e.x, e.y, b.damage);
+                
+                // FIX: Podniesienie Hit Textów dla dużych wrogów
+                let hitY = e.y;
+                if (e.type === 'wall' || e.type === 'tank' || e.type === 'elite') {
+                    hitY = e.y - e.size * 0.8; // Znacznie wyżej
+                }
+                addHitText(hitTextPool, hitTexts, e.x, hitY, b.damage);
+                
                 playSound('Hit');
 
                 if (e.type !== 'wall' && e.type !== 'tank') {
@@ -140,11 +147,14 @@ export function checkCollisions(state) {
         const g = gems[i];
         if (!g || g.delay > 0) continue; 
         
-        // Jeśli zatonął w bagnie -> usuń
         if (g.isDecayedByHazard && g.isDecayedByHazard()) { g.release(); continue; }
 
         const dist = Math.hypot(player.x - g.x, player.y - g.y);
-        if (dist < game.pickupRange + (game.magnet ? 150 : 0)) g.magnetized = true;
+        
+        if (game.magnet || dist < game.pickupRange) {
+            g.magnetized = true;
+        }
+        
         if (dist < collectionRadius + g.r) {
             game.xp += g.val * (game.level >= 20 ? 1.2 : 1); 
             playSound('XPPickup');
@@ -156,7 +166,11 @@ export function checkCollisions(state) {
         if (!p) continue;
         if (p.isDecayed && p.isDecayed()) { pickups.splice(i, 1); continue; }
         const dist = Math.hypot(player.x - p.x, player.y - p.y);
-        if (dist < game.pickupRange + (game.magnet ? 150 : 0)) p.isMagnetized = true; 
+        
+        if (dist < game.pickupRange) {
+            p.isMagnetized = true; 
+        }
+        
         if (dist < collectionRadius + 10) {
             p.applyEffect(state); 
             playSound('Pickup');
@@ -196,7 +210,6 @@ export function checkCollisions(state) {
             }
         }
         
-        // FIX: Topienie przedmiotów w bagnie (przywrócone z v0.92)
         const hazardRadius = h.r;
         
         // Gemy

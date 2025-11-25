@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.94z - FIX: Wall Nerf)
+// GAMEDATA.JS (v0.94z - FIX: Wall Nerf & Magnet Buff)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -103,7 +103,7 @@ const BASE_DROP_RATES = {
 
 export const PICKUP_CONFIG = {
   BASE_LIFE: 14,
-  MAGNET_DURATION: 2.0,
+  MAGNET_DURATION: 4.0, // FIX: Zwiększono z 2.0 na 4.0
   SHIELD_DURATION: 8.0,
   SPEED_DURATION: 8.0,
   FREEZE_DURATION: 5.0,
@@ -189,17 +189,5 @@ export const ENEMY_STATS = {
   tank: { type: 'tank', hp: 27, speed: 101, size: 108, damage: 5, color: '#795548', score: 20, xp: 1, drops: BASE_DROP_RATES },
   ranged: { type: 'ranged', hp: 4, speed: 120, size: 54, damage: 5, color: '#00BCD4', score: 15, xp: 1, drops: BASE_DROP_RATES, attackRange: 300, attackCooldown: 1.8, projectileSpeed: WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED, projectileDamage: WEAPON_CONFIG.RANGED_ENEMY_BULLET.DAMAGE },
   elite: { type: 'elite', hp: 48, speed: 130, size: 120, damage: 5, color: '#9C27B0', score: 80, xp: 1, drops: {} },
-  
-  // FIX: Zmniejszono HP (20) i Prędkość (16)
-  wall: {
-    type: 'wall',
-    hp: 20,
-    speed: 16,
-    size: 88,
-    damage: 15,
-    color: '#607D8B',
-    score: 25,
-    xp: 0,
-    drops: {}
-  }
+  wall: { type: 'wall', hp: 20, speed: 16, size: 88, damage: 15, color: '#607D8B', score: 25, xp: 0, drops: {} }
 };

@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.94e - FIX: Siege Overlap Prevention)
+// GAMELOGIC.JS (v0.94y - FIX: Smart Siege Intervals)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -17,9 +17,6 @@ import { applyPickupSeparation, spawnConfetti } from './utils.js';
 import { checkCollisions } from '../managers/collisions.js';
 import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG, GAME_CONFIG, WEAPON_CONFIG } from '../config/gameData.js';
 
-/**
- * Funkcja kamery
- */
 export function updateCamera(player, camera, canvasWidth, canvasHeight) {
     player.x = Math.max(player.size / 2, Math.min(camera.worldWidth - player.size / 2, player.x));
     player.y = Math.max(player.size / 2, Math.min(camera.worldHeight - player.size / 2, player.y));
@@ -36,9 +33,6 @@ export function updateCamera(player, camera, canvasWidth, canvasHeight) {
     camera.offsetY = Math.round(targetY);
 }
 
-/**
- * Główna funkcja aktualizująca stan gry.
- */
 export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     const { 
         player, game, settings, canvas,
@@ -98,7 +92,7 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
         
         const isWarningActive = game.newEnemyWarningT > 0;
-        const isSiegeActive = settings.siegeWarningT > 0;
+        const isSiegeActive = (settings.siegeState === 'warning');
 
         if (!isWarningActive && !isSiegeActive && Math.random() < spawnRate && nonWallEnemiesCount < game.dynamicEnemyLimit) { 
             state.enemyIdCounter = spawnEnemy(enemies, game, canvas, state.enemyIdCounter, camera);
@@ -111,32 +105,51 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         }
     }
     
-    // 10. EVENT OBLĘŻENIA (SIEGE) - FIX: Zapobieganie nakładaniu się
-    // Sprawdzamy, czy są już jakieś ściany na mapie
+    // 10. EVENT OBLĘŻENIA (SIEGE) - FIX: Random Interval AFTER wave ends
+    
+    // Inicjalizacja stanu (jeśli brak)
+    if (!settings.siegeState) settings.siegeState = 'idle';
+
     const activeWalls = enemies.some(e => e.type === 'wall');
 
-    if (game.time >= settings.currentSiegeInterval && 
-        (settings.siegeWarningT === undefined || settings.siegeWarningT <= 0)
-    ) {
-        if (activeWalls) {
-            // Jeśli ściany wciąż stoją, opóźnij następne oblężenie o 10 sekund
-            settings.currentSiegeInterval = game.time + 10;
-            console.log(`[LOGIC] Oblężenie opóźnione (poprzednie wciąż aktywne).`);
-        } else {
-            // Start nowego oblężenia
-            settings.siegeWarningT = SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME;
-            state.enemyIdCounter = spawnSiegeRing(state); 
-            settings.lastSiegeEvent = game.time;
-            settings.currentSiegeInterval = game.time + SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL;
-            console.log(`[LOGIC] Oblężenie! Następne za: ${SIEGE_EVENT_CONFIG.SIEGE_EVENT_INTERVAL}s`);
+    // 1. Wykrywanie końca oblężenia
+    if (settings.siegeState === 'active') {
+        if (!activeWalls) {
+            settings.siegeState = 'idle';
+            // Losowy czas: 100 - 300 sekund
+            const nextDelay = 100 + Math.random() * 200;
+            settings.currentSiegeInterval = game.time + nextDelay;
+            console.log(`[LOGIC] Siege Defeated! Next wave in: ${nextDelay.toFixed(1)}s`);
         }
     }
+    // Zabezpieczenie: Jeśli mamy ściany ale stan to idle (np. po wczytaniu gry), przełącz na active
+    else if (activeWalls && settings.siegeState === 'idle') {
+        settings.siegeState = 'active';
+        settings.currentSiegeInterval = Infinity; 
+    }
 
-    if (settings.siegeWarningT > 0) {
-        settings.siegeWarningT -= dt;
-        if (settings.siegeWarningT <= 0) {
-            state.enemyIdCounter = spawnWallEnemies(state); 
-            settings.siegeWarningT = 0;
+    // 2. Sprawdzanie timera (tylko w stanie idle)
+    if (settings.siegeState === 'idle' && game.time >= settings.currentSiegeInterval) {
+        // Start Warning Phase
+        settings.siegeState = 'warning';
+        settings.siegeWarningT = SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME;
+        
+        state.enemyIdCounter = spawnSiegeRing(state); 
+        settings.lastSiegeEvent = game.time;
+        settings.currentSiegeInterval = Infinity; // Blokujemy timer
+        
+        console.log(`[LOGIC] Siege Warning Started!`);
+    }
+
+    // 3. Obsługa Warning Phase
+    if (settings.siegeState === 'warning') {
+        if (settings.siegeWarningT > 0) {
+            settings.siegeWarningT -= dt;
+            if (settings.siegeWarningT <= 0) {
+                state.enemyIdCounter = spawnWallEnemies(state); 
+                settings.siegeWarningT = 0;
+                settings.siegeState = 'active'; 
+            }
         }
     }
 
@@ -193,7 +206,7 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         const p = pickups[i];
         if (!p) { pickups.splice(i, 1); continue; }
 
-        p.update(dt);
+        p.update(dt, player);
         if (p.isDead()) {
             if (pickups[i] === p) pickups.splice(i, 1);
         }
