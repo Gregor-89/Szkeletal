@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v0.94 - FIX: Restore Graphics & Audio)
+// LEVELMANAGER.JS (v0.94l - FIX: Weapon Req Check)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -11,9 +11,8 @@ import { perkPool } from '../config/perks.js';
 import { playSound } from '../services/audio.js';
 import { getLang } from '../services/i18n.js';
 import { get as getAsset } from '../services/assets.js';
-import { pauseGame, resumeGame } from '../ui/ui.js'; // FIX: Import funkcji pauzy
+import { pauseGame, resumeGame } from '../ui/ui.js'; 
 
-// Importy Broni (potrzebne do sprawdzania wymagań)
 import { AutoGun } from '../config/weapons/autoGun.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
@@ -25,10 +24,12 @@ import {
     chestRewardDisplay, chestOverlay
 } from '../ui/domElements.js';
 
-// Mapa klas broni (lokalna)
 const WEAPON_CLASS_MAP_LOCAL = {
     'AutoGun': AutoGun,
-    'ChainLightning': ChainLightningWeapon
+    'ChainLightning': ChainLightningWeapon,
+    'OrbitalWeapon': OrbitalWeapon, // Dodano dla pewności
+    'NovaWeapon': NovaWeapon,       // Dodano dla pewności
+    'WhipWeapon': WhipWeapon        // Dodano dla pewności
 };
 
 export function checkLevelUp(game, player, settings, weapons, state) {
@@ -40,12 +41,10 @@ export function checkLevelUp(game, player, settings, weapons, state) {
 export function levelUp(game, player, hitTextPool, particlePool, settings, weapons, perkLevels) {
     console.log(`--- LEVEL UP (Poziom ${game.level + 1}) ---`);
     
-    // 1. Obsługa mechaniczna
     game.xp -= game.xpNeeded;
     game.level += 1;
     game.xpNeeded = Math.floor(game.xpNeeded * GAME_CONFIG.XP_GROWTH_FACTOR) + GAME_CONFIG.XP_GROWTH_ADD;
 
-    // 2. Efekty (Leczenie, Tarcza)
     const hitTexts = hitTextPool.activeItems; 
 
     if (game.health < game.maxHealth) {
@@ -54,7 +53,6 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
         addHitText(hitTextPool, hitTexts, player.x, player.y - 20, -healedAmount, '#4caf50', getLang('ui_hp_name')); 
     }
 
-    // FIX: Dźwięk Level Up
     playSound('LevelUp');
 
     game.shield = true;
@@ -63,28 +61,21 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
     
     spawnConfetti(particlePool, player.x, player.y);
 
-    // 3. Pauza i UI (z małym opóźnieniem dla efektu)
     setTimeout(() => {
         if (game.running && !game.inMenu) {
-            // FIX: Używamy pauseGame z ui.js aby obsłużyć to spójnie
             pauseGame(game, settings, weapons, player);
             
-            // Ukrywamy standardowy overlay pauzy, bo chcemy LevelUpOverlay
             const pauseOverlay = document.getElementById('pauseOverlay');
             if (pauseOverlay) pauseOverlay.style.display = 'none';
 
             levelUpOverlay.style.display = 'flex';
             
-            // Aktualizacja statystyk w oknie LevelUp
             updateStatsUI(game, player, settings, weapons, statsDisplay);
-            
-            // Generowanie kart perków (zwracamy uwagę na 'showPerks' z v0.93)
             showPerks(perkLevels, player, game, settings, weapons); 
         }
     }, UI_CONFIG.LEVEL_UP_PAUSE); 
 }
 
-// FIX: Funkcja z v0.93 do aktualizacji statystyk (nie zmieniałem logiki, tylko formatowanie)
 export function updateStatsUI(game, player, settings, weapons, targetElement = statsDisplay) {
     if (!targetElement) return;
     targetElement.innerHTML = '';
@@ -104,7 +95,6 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
             : fallbackEmoji;
     };
 
-    // Ikony
     const iconLevel = getIcon('icon_level', '⭐');
     const iconHealth = getIcon('icon_health', '😋');
     const iconSpeed = getIcon('icon_speed', '👟');
@@ -116,10 +106,7 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
     const iconAutoGun = getIcon('icon_autogun', '🔫');
     const iconDamage = getIcon('icon_damage', '💥');
     const iconFirerate = getIcon('icon_firerate', '⏩');
-    // const iconMultishot = getIcon('icon_multishot', '🎯'); // Nieużywane w tym widoku
-    // const iconPierce = getIcon('icon_pierce', '➡️'); // Nieużywane w tym widoku
 
-    // FIX: Bezpieczne pobieranie pickupRange
     const pickupVal = (game.pickupRange || PLAYER_CONFIG.INITIAL_PICKUP_RANGE).toFixed(0);
 
     const stats = [
@@ -161,34 +148,37 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
     });
 }
 
-// FIX: Przywrócona funkcja showPerks z v0.93 (obsługa grafik)
 export function showPerks(perkLevels, player, game, settings, weapons) {
-    // Filtrowanie
+    // FIX: Filtrowanie Perków
     const avail = perkPool.filter(p => {
         const currentLevel = perkLevels[p.id] || 0;
+        
+        // 1. Sprawdź max level
         if (currentLevel >= p.max) return false;
+        
+        // 2. Sprawdź wymaganie broni (np. AutoGun dla multishot)
         if (p.requiresWeapon) { 
             const WeaponClass = WEAPON_CLASS_MAP_LOCAL[p.requiresWeapon];
-            if (!WeaponClass || !player.getWeapon(WeaponClass)) return false;
+            // Jeśli nie ma klasy broni w mapie lub gracz nie ma tej broni w ekwipunku -> ODRZUĆ
+            if (!WeaponClass || !player.getWeapon(WeaponClass)) {
+                return false;
+            }
         }
         return true; 
     });
 
-    // Losowanie
     const picks = [];
     while (picks.length < 3 && avail.length > 0) {
         const i = Math.floor(Math.random() * avail.length);
         picks.push(avail.splice(i, 1)[0]); 
     }
 
-    // Renderowanie
-    perksDiv.innerHTML = ''; // FIX: Używamy perksDiv (element z domElements.js)
+    perksDiv.innerHTML = ''; 
 
     if (picks.length === 0) {
         btnContinueMaxLevel.style.display = 'block';
         perksDiv.innerHTML = `<p style="text-align:center; color:#aaa;">${getLang('ui_levelup_max')}</p>`;
         
-        // Obsługa przycisku kontynuacji
         btnContinueMaxLevel.onclick = () => {
              levelUpOverlay.style.display = 'none';
              resumeGame(game, 0);
@@ -205,7 +195,6 @@ export function showPerks(perkLevels, player, game, settings, weapons) {
                 imgAsset = getAsset(perk.icon);
             }
 
-            // Styl v0.93 - Perk Graphic
             if (imgAsset) {
                 el.className = 'perk perk-graphic';
                 el.innerHTML = `
@@ -245,7 +234,6 @@ export function pickPerk(perk, game, perkLevels, settings, weapons, player, resu
         return;
     }
     
-    // Aplikuj efekt
     const state = { game, settings, weapons, player, perkLevels }; 
     if (perk.apply) {
         perk.apply(state, perk); 

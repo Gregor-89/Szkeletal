@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.94y - FIX: Smart Siege Intervals)
+// GAMELOGIC.JS (v0.94j - FIX: Instant Level Up Pause)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -40,6 +40,9 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         particles, hitTexts, chests, particlePool, hazards 
     } = state;
 
+    // Jeśli gra jest spauzowana (np. level up właśnie nastąpił), nie aktualizuj logiki!
+    if (game.paused) return;
+
     state.killEnemy = (idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital, preventDrops) => 
         killEnemy(idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital, preventDrops);
 
@@ -69,6 +72,15 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
 
         if (e.hazardSlowdownT > 0) e.hazardSlowdownT -= dt;
 
+        // FIX: Sprawdź czy wróg "umiera" (animacja śmierci) - jeśli tak, nie aktualizuj logiki ruchu
+        if (e.dying) {
+            e.deathTimer -= dt;
+            if (e.deathTimer <= 0) {
+                enemies.splice(i, 1);
+            }
+            continue; // Pomiń resztę logiki dla umierającego wroga
+        }
+
         if (e.type === 'wall' && e.isAutoDead) {
             enemies.splice(i, 1);
             continue;
@@ -88,7 +100,7 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     game.dynamicEnemyLimit = Math.floor(dynamicLimit);
 
     if (game.time > GAME_CONFIG.SPAWN_GRACE_PERIOD) {
-        const nonWallEnemiesCount = enemies.filter(e => e && e.type !== 'wall').length;
+        const nonWallEnemiesCount = enemies.filter(e => e && e.type !== 'wall' && !e.dying).length;
         const spawnRate = settings.spawn * (game.hyper ? 1.25 : 1) * (1 + 0.15 * (game.level - 1)) * (1 + game.time / 60);
         
         const isWarningActive = game.newEnemyWarningT > 0;
@@ -105,43 +117,32 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         }
     }
     
-    // 10. EVENT OBLĘŻENIA (SIEGE) - FIX: Random Interval AFTER wave ends
-    
-    // Inicjalizacja stanu (jeśli brak)
+    // 10. EVENT OBLĘŻENIA
     if (!settings.siegeState) settings.siegeState = 'idle';
-
     const activeWalls = enemies.some(e => e.type === 'wall');
 
-    // 1. Wykrywanie końca oblężenia
     if (settings.siegeState === 'active') {
         if (!activeWalls) {
             settings.siegeState = 'idle';
-            // Losowy czas: 100 - 300 sekund
             const nextDelay = 100 + Math.random() * 200;
             settings.currentSiegeInterval = game.time + nextDelay;
             console.log(`[LOGIC] Siege Defeated! Next wave in: ${nextDelay.toFixed(1)}s`);
         }
     }
-    // Zabezpieczenie: Jeśli mamy ściany ale stan to idle (np. po wczytaniu gry), przełącz na active
     else if (activeWalls && settings.siegeState === 'idle') {
         settings.siegeState = 'active';
         settings.currentSiegeInterval = Infinity; 
     }
 
-    // 2. Sprawdzanie timera (tylko w stanie idle)
     if (settings.siegeState === 'idle' && game.time >= settings.currentSiegeInterval) {
-        // Start Warning Phase
         settings.siegeState = 'warning';
         settings.siegeWarningT = SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME;
-        
         state.enemyIdCounter = spawnSiegeRing(state); 
         settings.lastSiegeEvent = game.time;
-        settings.currentSiegeInterval = Infinity; // Blokujemy timer
-        
+        settings.currentSiegeInterval = Infinity; 
         console.log(`[LOGIC] Siege Warning Started!`);
     }
 
-    // 3. Obsługa Warning Phase
     if (settings.siegeState === 'warning') {
         if (settings.siegeWarningT > 0) {
             settings.siegeWarningT -= dt;
@@ -157,6 +158,8 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
 
     for (const e of enemies) {
         if (!e) continue; 
+        // Jeśli umiera, nie aktualizuj logiki ruchu (obsłużone wyżej), ale update potrzebny dla timera
+        if (e.dying) continue; 
         e.update(dt, player, game, state); 
         e.applySeparation(dt, enemies);
     }
@@ -176,7 +179,6 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         if (!eb) { eBullets.splice(i, 1); continue; }
 
         eb.update(dt);
-        
         if (eb.type === 'bottle') {
             if (eb.lastTrailTime === undefined) eb.lastTrailTime = 0; 
             eb.lastTrailTime += dt;
@@ -186,7 +188,6 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
                 if (p) p.init(eb.x, eb.y, (Math.random()-0.5)*80, (Math.random()-0.5)*80, 0.1, '#29b6f6', 0, 1.0, 2);
             }
         }
-
         if (!eb.active) {
             if (eBullets[i] === eb) eBullets.splice(i, 1);
         }
@@ -197,6 +198,8 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         if (!g) { gems.splice(i, 1); continue; }
 
         g.update(player, game, dt);
+        
+        // FIX: Sprawdź czy gem został zebrany (w update gems ustawimy flagę 'collected')
         if (!g.active) {
             if (gems[i] === g) gems.splice(i, 1);
         }
@@ -243,16 +246,22 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         if (stars[i]) stars[i].t = (stars[i].t || 0) + dt; 
     }
 
-    if (game.xp >= game.xpNeeded) {
-        levelUpFn(); 
-    }
-
     state.dt = dt; 
     for (const w of player.weapons) {
         if (w) w.update(state);
     }
 
     checkCollisions(state); 
+
+    // FIX: Natychmiastowe sprawdzenie Level Up
+    if (game.xp >= game.xpNeeded) {
+        // Natychmiast zatrzymaj grę
+        game.paused = true;
+        // Odpal efekt konfetti PRZED oknem
+        spawnConfetti(state.particlePool, player.x, player.y);
+        // Wywołaj logikę UI
+        levelUpFn(); 
+    }
 
     if (game.triggerChestOpen) {
         game.triggerChestOpen = false; 

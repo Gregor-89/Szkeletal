@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.94i - FIX: Tiered Gem Sizes)
+// ENEMYMANAGER.JS (v0.94m - FIX: Juicy Death & Particles)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -9,7 +9,6 @@ import { playSound } from '../services/audio.js';
 import { getLang } from '../services/i18n.js';
 
 import { Enemy } from '../entities/enemy.js';
-
 import { StandardEnemy } from '../entities/enemies/standardEnemy.js';
 import { HordeEnemy } from '../entities/enemies/hordeEnemy.js';
 import { AggressiveEnemy } from '../entities/enemies/aggressiveEnemy.js';
@@ -320,6 +319,8 @@ function spawnColorParticles(particlePool, x, y, color, count = 10, speed = 240,
 
 export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital = false, preventDrops = false) {
     
+    if (e.dying && e.deathTimer < e.deathDuration) return enemyIdCounter;
+
     let spawnKnockback = false;
     if (e.type === 'splitter' && !preventDrops) {
          spawnKnockback = true; 
@@ -332,19 +333,18 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
             const gem = gemsPool.get();
             if (gem) {
                 let val = e.stats.xp;
-                let color = '#4FC3F7'; // Blue
-                let size = 4;          // Standard size
+                let color = '#4FC3F7'; 
+                let size = 4;          
                 
-                // FIX: Zróżnicowane rozmiary dla lepszych gemów
                 if (Math.random() < 0.05) { 
                     val *= 5; 
-                    color = '#81C784'; // Green
-                    size = 6;          // Większy
+                    color = '#81C784'; 
+                    size = 6;          
                 } 
                 else if (Math.random() < 0.01) { 
                     val *= 20; 
-                    color = '#E57373'; // Red
-                    size = 8;          // Największy
+                    color = '#E57373'; 
+                    size = 8;          
                 } 
 
                 gem.init(
@@ -377,19 +377,25 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         }
     }
 
-    const particleCount = fromOrbital ? 3 : 8;
+    // FIX: Soczysty efekt śmierci (więcej cząsteczek, większe, szybsze)
+    const particleCount = 40; // Zwiększono z 20
+    const explosionSpeed = 500; // Zwiększono z 400
+    
     for (let k = 0; k < particleCount; k++) {
         const p = particlePool.get();
         if (p) {
-            const speed = (fromOrbital ? 2 : 4) * 60; 
+            // Losowy rozmiar cząsteczki, żeby wyglądało "chunky"
+            const chunkSize = 4 + Math.random() * 4; 
+            
             p.init(
                 e.x, e.y,
-                (Math.random() - 0.5) * speed, 
-                (Math.random() - 0.5) * speed, 
-                fromOrbital ? 0.16 : 0.5, 
-                fromOrbital ? e.color : '#ff0000', 
+                (Math.random() - 0.5) * explosionSpeed, 
+                (Math.random() - 0.5) * explosionSpeed, 
+                0.4 + Math.random() * 0.3, 
+                e.color, 
                 0, 
-                (1.0 - 0.98) 
+                0.95,
+                chunkSize // Nowy argument size (9-ty)
             );
         }
     }
@@ -399,11 +405,6 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         
         const child1 = createEnemyInstance('horde', e.x - 5, e.y, hpScale, enemyIdCounter++);
         const child2 = createEnemyInstance('horde', e.x + 5, e.y, hpScale, enemyIdCounter++);
-        
-        if (spawnKnockback) {
-            const color = ENEMY_STATS.splitter.color; 
-            spawnColorParticles(particlePool, e.x, e.y, color, 15, 300, 0.5);
-        }
         
         if (child1) {
             child1.speed *= 1.1; 

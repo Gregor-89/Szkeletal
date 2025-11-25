@@ -1,5 +1,5 @@
 // ==============
-// BULLET.JS (v0.95 - FIX: Invisible Hitbox Support)
+// BULLET.JS (v0.94n - FIX: Nova Outline)
 // Lokalizacja: /js/entities/bullet.js
 // ==============
 
@@ -178,7 +178,6 @@ export class PlayerBullet extends Bullet {
   draw(ctx) {
     if (!this.active) return;
 
-    // FIX: Jeśli drawScale jest 0, nie rysuj nic (dla Point-Blank bicza)
     if (this.drawScale <= 0.001 && !this.spriteKey) return;
 
     if (this.animParams && this.playerRef) {
@@ -220,6 +219,12 @@ export class PlayerBullet extends Bullet {
             ctx.translate(this.x, this.y);
             ctx.rotate(this.rotation);
             
+            // FIX: Czerwonawa poświata dla pocisku NOVA
+            if (this.spriteKey === 'projectile_nova') {
+                ctx.shadowColor = 'rgba(255, 50, 50, 0.8)';
+                ctx.shadowBlur = 15;
+            }
+            
             const drawSize = this.size * 2 * this.spriteScale;
             const aspect = sprite.naturalWidth / sprite.naturalHeight;
             let w = drawSize;
@@ -233,7 +238,6 @@ export class PlayerBullet extends Bullet {
         }
     }
 
-    // Fallback (Kółko) - rysuje się tylko jeśli nie ma animacji/sprite'a i drawScale > 0
     ctx.globalAlpha = 1; 
     ctx.fillStyle = this.color;
     ctx.beginPath();

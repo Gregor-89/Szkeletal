@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.94z - FIX: Raised Hit Texts)
+// COLLISIONS.JS (v0.94j - FIX: Collect Gem Animation)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -23,7 +23,8 @@ export function checkCollisions(state) {
     // 1. KOLIZJA GRACZ - WROGOWIE
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
-        if (!enemy || enemy.isDead) continue;
+        // FIX: Ignoruj kolizje z umierającymi wrogami
+        if (!enemy || enemy.isDead || enemy.dying) continue;
         
         if (checkCircleCollision(player.x, player.y, player.size * 0.4, enemy.x, enemy.y, enemy.size * 0.4)) {
             const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
@@ -42,7 +43,6 @@ export function checkCollisions(state) {
                 }
             }
 
-            // Fizyka (zawsze aktywna)
             if (enemy.type === 'wall') {
                 game.collisionSlowdown = COLLISION_CONFIG.WALL_COLLISION_SLOWDOWN || 0.75;
                 player.x += Math.cos(angle) * 5; 
@@ -75,17 +75,17 @@ export function checkCollisions(state) {
         let hitEnemy = false;
         for (let j = enemies.length - 1; j >= 0; j--) {
             const e = enemies[j];
-            if (!e || e.isDead) continue; 
+            // FIX: Ignoruj umierających
+            if (!e || e.isDead || e.dying) continue; 
             if (b.lastEnemyHitId === e.id && b.pierce > 0) continue; 
 
             if (checkCircleCollision(b.x, b.y, b.size, e.x, e.y, e.size * 0.6)) {
                 hitEnemy = true;
                 const isDead = e.takeDamage(b.damage, 'player');
                 
-                // FIX: Podniesienie Hit Textów dla dużych wrogów
                 let hitY = e.y;
                 if (e.type === 'wall' || e.type === 'tank' || e.type === 'elite') {
-                    hitY = e.y - e.size * 0.8; // Znacznie wyżej
+                    hitY = e.y - e.size * 0.8; 
                 }
                 addHitText(hitTextPool, hitTexts, e.x, hitY, b.damage);
                 
@@ -146,6 +146,8 @@ export function checkCollisions(state) {
     for (let i = gems.length - 1; i >= 0; i--) {
         const g = gems[i];
         if (!g || g.delay > 0) continue; 
+        // Jeśli już jest zebrany (zjada się), nie zbieraj go ponownie
+        if (g.isCollected) continue; 
         
         if (g.isDecayedByHazard && g.isDecayedByHazard()) { g.release(); continue; }
 
@@ -158,7 +160,8 @@ export function checkCollisions(state) {
         if (dist < collectionRadius + g.r) {
             game.xp += g.val * (game.level >= 20 ? 1.2 : 1); 
             playSound('XPPickup');
-            g.release(); 
+            // FIX: Zamiast release(), uruchamiamy animację zebrania
+            g.collect(); 
         }
     }
     for (let i = pickups.length - 1; i >= 0; i--) {
@@ -190,14 +193,13 @@ export function checkCollisions(state) {
         }
     }
 
-    // 4. HAZARDY - GRACZ & LOOT DECAY
+    // 4. HAZARDY
     if (!game.hazardTicker) game.hazardTicker = 0;
     game.hazardTicker -= state.dt;
 
     for (const h of hazards) {
         if (!h || !h.isActive()) continue;
 
-        // Gracz
         if (h.checkCollision(player.x, player.y, player.size * 0.4)) {
             game.playerInHazard = true;
             if (!game.shield && !devSettings.godMode && game.hazardTicker <= 0) {
@@ -212,7 +214,6 @@ export function checkCollisions(state) {
         
         const hazardRadius = h.r;
         
-        // Gemy
         for (const g of gems) {
             if (!g.active) continue;
             const d = Math.hypot(g.x - h.x, g.y - h.y);
@@ -220,7 +221,6 @@ export function checkCollisions(state) {
                 g.hazardDecayT = Math.min(1.0, (g.hazardDecayT || 0) + HAZARD_CONFIG.HAZARD_PICKUP_DECAY_RATE * state.dt);
             }
         }
-        // Pickupy
         for (const p of pickups) {
             const d = Math.hypot(p.x - h.x, p.y - h.y);
             if (d < hazardRadius) {
@@ -228,9 +228,8 @@ export function checkCollisions(state) {
             }
         }
         
-        // Wrogowie
         for (const e of enemies) {
-            if (!e) continue;
+            if (!e || e.isDead || e.dying) continue; // Ignoruj trupy
             if (e.type !== 'elite' && e.type !== 'wall') { 
                 if (h.checkCollision(e.x, e.y, e.size * 0.4)) {
                     e.hazardSlowdownT = 0.2; 

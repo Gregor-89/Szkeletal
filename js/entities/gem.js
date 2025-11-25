@@ -1,5 +1,5 @@
 // ==============
-// GEM.JS (v0.94i - FIX: Visual Glows)
+// GEM.JS (v0.94j - FIX: Eating Animation)
 // Lokalizacja: /js/entities/gem.js
 // ==============
 
@@ -9,7 +9,6 @@ import { get as getAsset } from '../services/assets.js';
 
 export class Gem {
   constructor() {
-    // --- Właściwości bazowe ---
     this.x = 0;
     this.y = 0;
     this.r = 6;
@@ -21,17 +20,16 @@ export class Gem {
     
     this.life = 0;
     this.maxLife = GEM_CONFIG.BASE_LIFE;
-    
     this.hazardDecayT = 0;
     
-    // --- Właściwości wizualne ---
     this.floatTimer = Math.random() * Math.PI * 2;
     this.scale = 0;
     this.rotation = 0;
-    
-    // --- Fizyka przyciągania ---
-    this.magnetized = false; // FIX: Używamy tej samej nazwy co w collisions.js
+    this.magnetized = false;
     this.speed = 0;
+    
+    // FIX: Flaga animacji zebrania
+    this.isCollected = false;
   }
   
   init(x, y, r, val, color) {
@@ -52,6 +50,7 @@ export class Gem {
     this.rotation = 0;
     this.magnetized = false;
     this.speed = 0;
+    this.isCollected = false;
   }
   
   release() {
@@ -61,39 +60,54 @@ export class Gem {
     this.active = false;
     this.life = 0;
     this.magnetized = false;
+    this.isCollected = false;
   }
   
   isDecayedByHazard() {
     return this.hazardDecayT >= 1.0;
   }
   
+  // FIX: Metoda wywoływana, gdy gracz dotknie gema
+  collect() {
+    this.isCollected = true;
+    this.magnetized = false; // Przestań gonić, zacznij znikać
+  }
+  
   update(player, game, dt) {
     if (!this.active) return;
     
-    // 1. Obsługa czasu życia
+    // FIX: Animacja zebrania (szybkie pomniejszanie)
+    if (this.isCollected) {
+      this.scale -= 10.0 * dt; // Bardzo szybkie znikanie
+      // Przesuwaj lekko w stronę gracza podczas znikania
+      this.x += (player.x - this.x) * 10 * dt;
+      this.y += (player.y - this.y) * 10 * dt;
+      
+      if (this.scale <= 0) {
+        this.release();
+      }
+      return;
+    }
+    
     this.life -= dt;
     if (this.life <= 0) {
       this.release();
       return;
     }
     
-    // 2. Animacja "Pop-in"
     if (this.scale < 1) {
       this.scale += 3.0 * dt;
       if (this.scale > 1) this.scale = 1;
     }
     
-    // 3. Aktualizacja timera gibotania
     this.floatTimer += dt * 4;
     
-    // 4. Logika Przyciągania (Magnet) - FIX: Akceleracja
     if (this.magnetized) {
       const dx = player.x - this.x;
       const dy = player.y - this.y;
       const dist = Math.hypot(dx, dy);
       
-      // Stopniowe zwiększanie prędkości
-      this.speed += 800 * dt; // Akceleracja (px/s^2)
+      this.speed += 800 * dt;
       const currentSpeed = this.speed;
       
       if (dist > 0) {
@@ -107,50 +121,41 @@ export class Gem {
   
   draw(ctx) {
     if (!this.active) return;
+    if (this.scale <= 0) return; // Nie rysuj jeśli zniknął
     
     ctx.save();
     
-    // Przezroczystość
     let alpha = 1.0 - this.hazardDecayT;
     if (this.life < GEM_CONFIG.FADE_TIME) {
       alpha *= (Math.floor(performance.now() / 150) % 2 === 0) ? 0.3 : 1;
     }
     ctx.globalAlpha = alpha;
     
-    // Transformacje
-    const floatOffset = this.magnetized ? 0 : Math.sin(this.floatTimer) * 3;
+    const floatOffset = (this.magnetized || this.isCollected) ? 0 : Math.sin(this.floatTimer) * 3;
     ctx.translate(this.x, this.y + floatOffset);
     ctx.scale(this.scale, this.scale);
     ctx.rotate(this.rotation);
     
-    // Rysowanie Sprite'a
-    const sprite = getAsset('gem'); // Upewnij się, że klucz w assets.js to 'gem'
+    const sprite = getAsset('gem');
     
     if (sprite) {
-      // FIX: Używamy 'this.r' do skalowania (4->20px, 6->30px, 8->40px)
       const targetSize = this.r * 5;
-      
       const aspectRatio = sprite.naturalWidth / sprite.naturalHeight;
       const drawHeight = targetSize;
       const drawWidth = targetSize * aspectRatio;
       
-      // FIX: Kolor poświaty zależny od wartości
       if (this.val >= 20) {
-        // Czerwony (Epicki)
         ctx.shadowColor = '#ff5252';
         ctx.shadowBlur = 15;
       } else if (this.val >= 5) {
-        // Zielony (Rzadki)
         ctx.shadowColor = '#69f0ae';
         ctx.shadowBlur = 10;
       } else {
-        // Niebieski (Zwykły)
         ctx.shadowColor = '#4fc3f7';
         ctx.shadowBlur = 5;
       }
       
       if (this.magnetized) {
-        // Złota poświata przy przyciąganiu (dodatkowy efekt)
         ctx.shadowColor = '#ffd700';
         ctx.shadowBlur = 12;
       }
@@ -158,7 +163,6 @@ export class Gem {
       ctx.drawImage(sprite, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
       
     } else {
-      // Fallback
       ctx.fillStyle = this.color;
       ctx.rotate(Math.PI / 4);
       const s = this.r;

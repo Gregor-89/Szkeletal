@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.99b - FIX: Show HealthBar on Hit)
+// ENEMY.JS (v0.94l - FIX: Revert Death Anim, Keep Healthbar)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -23,12 +23,14 @@ export class Enemy {
         this.xpValue = stats.xpValue || 1;
         
         this.isDead = false;
+        
+        // Usunięto flagi dying/deathTimer (wracamy do natychmiastowego killa)
+        
         this.hitStun = 0;
         this.hitFlashT = 0;
         this.frozenTimer = 0;
         this.knockback = { x: 0, y: 0 };
         
-        // FIX: Flaga sterująca wyświetlaniem paska (domyślnie ukryty)
         this.showHealthBar = false;
         
         this.separationCooldown = Math.random() * 0.15;
@@ -148,7 +150,6 @@ export class Enemy {
         
         ctx.save();
         
-        // Effects
         if (this.hitFlashT > 0) {
             if (Math.floor(game.time * 20) % 2 === 0) ctx.filter = 'grayscale(1) brightness(5)';
         } else if (this.frozenTimer > 0 || game.freezeT > 0) {
@@ -173,7 +174,6 @@ export class Enemy {
             ctx.imageSmoothingEnabled = false;
             
             if (this.facingDir === -1) {
-                // Flip in place
                 ctx.translate(this.x, this.y);
                 ctx.scale(-1, 1);
                 ctx.drawImage(this.sprite, sx, sy, frameW, frameH, -destW / 2, -destH / 2, destW, destH);
@@ -189,7 +189,7 @@ export class Enemy {
             ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
         
-        // Paski zdrowia są teraz rysowane zewnętrznie przez draw.js
+        // Healthbary rysowane przez draw.js
         ctx.restore();
     }
     
@@ -197,7 +197,6 @@ export class Enemy {
         this.hp -= amount;
         this.hitFlashT = 0.15;
         
-        // FIX: Pokaż pasek zdrowia po pierwszym trafieniu (dla Tank/Elite/Wall)
         if (this.type === 'tank' || this.type === 'elite' || this.type === 'wall') {
             this.showHealthBar = true;
         }
@@ -216,10 +215,13 @@ export class Enemy {
     }
     
     freeze(duration) { this.frozenTimer = duration; }
-    die() { this.isDead = true; }
+    
+    die() {
+        this.isDead = true;
+        // Brak animacji śmierci typu fade-out, robimy to w menedżerze przez particle
+    }
+    
     getOutlineColor() { return colorForEnemy(this); }
     
-    drawHealthBar(ctx) {
-        // Metoda pusta, bo rysowanie przejął draw.js, ale zostawiamy dla kompatybilności
-    }
+    drawHealthBar(ctx) {}
 }
