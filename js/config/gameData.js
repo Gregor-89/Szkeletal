@@ -1,9 +1,8 @@
 // ==============
-// GAMEDATA.JS (v0.94f - FIX: Units Unification & Full Restoration)
+// GAMEDATA.JS (v0.94z - FIX: Wall Nerf)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
-// --- Konfiguracja Gracza ---
 export const PLAYER_CONFIG = {
   BASE_SPEED: 432,
   SIZE: 15,
@@ -12,18 +11,15 @@ export const PLAYER_CONFIG = {
   HEAL_AMOUNT: 30
 };
 
-// --- Konfiguracja Kolizji ---
 export const COLLISION_CONFIG = {
   WALL_COLLISION_SLOWDOWN: 0.75,
   WALL_SLOWDOWN_DURATION: 0.35
 };
 
-// --- Konfiguracja Gry i Spawnowania ---
 export const GAME_CONFIG = {
   SPAWN_GRACE_PERIOD: 4.0,
   INITIAL_SPAWN_RATE: 0.008,
   MAX_ENEMIES: 400,
-  // FIX: Zmieniono na 144 sekundy (z 144000 ms), aby pasowało do gameLogic.js
   ELITE_SPAWN_INTERVAL: 144,
   INITIAL_MAX_ENEMIES: 3,
   ENEMY_LIMIT_GROWTH_PER_MINUTE: 20,
@@ -32,7 +28,6 @@ export const GAME_CONFIG = {
   XP_GROWTH_ADD: 2,
 };
 
-// --- Konfiguracja Wydarzenia Oblężenia (Siege Event) ---
 export const SIEGE_EVENT_CONFIG = {
   SIEGE_EVENT_INTERVAL: 45.0,
   SIEGE_EVENT_START_TIME: 150,
@@ -41,7 +36,6 @@ export const SIEGE_EVENT_CONFIG = {
   SIEGE_EVENT_COUNT: 40,
 };
 
-// --- Konfiguracja Autodestrukcji Oblężnika (Wall) ---
 export const WALL_DETONATION_CONFIG = {
   WALL_DECAY_TIME: 60.5,
   WALL_DETONATION_WARNING_TIME: 6.0,
@@ -50,7 +44,6 @@ export const WALL_DETONATION_CONFIG = {
   WALL_DETONATION_DAMAGE: 15
 };
 
-// --- Konfiguracja Zagrożeń (Hazards) ---
 export const HAZARD_CONFIG = {
   SPAWN_INTERVAL: 12.0,
   MIN_DIST_FROM_PLAYER: 150,
@@ -60,7 +53,7 @@ export const HAZARD_CONFIG = {
   HAZARD_WARNING_TIME: 3.0,
   DAMAGE_PER_SECOND: 25,
   SLOWDOWN_MULTIPLIER: 0.5,
-  HAZARD_ENEMY_SLOWDOWN_MULTIPLIER: 0.7,
+  HAZARD_ENEMY_SLOWDOWN_MULTIPLIER: 0.3,
   HAZARD_ENEMY_DAMAGE_PER_SECOND: 0.4,
   
   MEGA_HAZARD_PROBABILITY: 0.20,
@@ -73,7 +66,6 @@ export const HAZARD_CONFIG = {
   HAZARD_CHEST_DECAY_RATE: 0.067,
 };
 
-// --- Konfiguracja Broni ---
 export const WEAPON_CONFIG = {
   AUTOGUN: {
     BASE_SPEED: 864,
@@ -100,7 +92,6 @@ export const WEAPON_CONFIG = {
   }
 };
 
-// --- Konfiguracja Pickupów ---
 const BASE_DROP_RATES = {
   heal: 0.02,
   magnet: 0.012,
@@ -119,13 +110,11 @@ export const PICKUP_CONFIG = {
   BOMB_RADIUS: 200
 };
 
-// --- Czas Życia Gemów ---
 export const GEM_CONFIG = {
   BASE_LIFE: 35.0,
   FADE_TIME: 5.0
 };
 
-// --- Konfiguracja Ulepszeń (Perków) ---
 export const PERK_CONFIG = {
   firerate: { value: 0.80, max: 6 },
   damage: { value: 1, max: 6 },
@@ -148,10 +137,10 @@ export const PERK_CONFIG = {
   health: { value: 20, max: 3 },
   whip: {
     max: 5,
-    HITBOX_RADIUS: 20,
+    HITBOX_RADIUS: 30,
     calculateCooldown: (level) => (Math.max(1.0, 3.0 - 0.4 * level)),
     calculateDamage: (level) => (1 + Math.floor(level / 2)),
-    calculateDrawScale: (level) => (80 + 25 * (level - 1)),
+    calculateDrawScale: (level) => (100 + 25 * (level - 1)),
     calculateCount: (level) => {
       const counts = [0, 1, 2, 3, 4, 4];
       return counts[level] || 4;
@@ -166,19 +155,16 @@ export const PERK_CONFIG = {
   }
 };
 
-// --- Konfiguracja UI ---
 export const UI_CONFIG = {
   RESUME_TIMER: 0.75,
   LEVEL_UP_PAUSE: 700,
   LOW_HEALTH_THRESHOLD: 0.25
 };
 
-// --- Konfiguracja Świata Gry ---
 export const WORLD_CONFIG = {
   SIZE: 8
 };
 
-// --- Konfiguracja Efektów Wizualnych (VFX) ---
 export const EFFECTS_CONFIG = {
   BOMB_INDICATOR_LIFE: 0.375,
   CONFETTI_COUNT: 80,
@@ -194,22 +180,21 @@ export const EFFECTS_CONFIG = {
   NUKE_PARTICLE_LIFE: 0.6
 };
 
-// --- Konfiguracja Przeciwników ---
 export const ENEMY_STATS = {
-  standard: { type: 'standard', hp: 3, speed: 173, size: 52, damage: 5, color: '#FFC107', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  standard: { type: 'standard', hp: 3, speed: 173, size: 60, damage: 5, color: '#FFC107', score: 10, xp: 1, drops: BASE_DROP_RATES },
   horde: { type: 'horde', hp: 3, speed: 144, size: 39, damage: 5, color: '#8BC34A', score: 10, xp: 1, drops: BASE_DROP_RATES },
   aggressive: { type: 'aggressive', hp: 3, speed: 173, size: 52, damage: 5, color: '#2196F3', score: 10, xp: 1, drops: BASE_DROP_RATES },
   kamikaze: { type: 'kamikaze', hp: 2.4, speed: 158, size: 36, damage: 8, color: '#FFEB3B', score: 10, xp: 1, drops: BASE_DROP_RATES },
   splitter: { type: 'splitter', hp: 4, speed: 158, size: 52, damage: 5, color: '#EC407A', score: 10, xp: 1, drops: BASE_DROP_RATES },
   tank: { type: 'tank', hp: 27, speed: 101, size: 108, damage: 5, color: '#795548', score: 20, xp: 1, drops: BASE_DROP_RATES },
-  ranged: { type: 'ranged', hp: 4, speed: 120, size: 52, damage: 5, color: '#00BCD4', score: 15, xp: 1, drops: BASE_DROP_RATES, attackRange: 300, attackCooldown: 1.8, projectileSpeed: WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED, projectileDamage: WEAPON_CONFIG.RANGED_ENEMY_BULLET.DAMAGE },
+  ranged: { type: 'ranged', hp: 4, speed: 120, size: 54, damage: 5, color: '#00BCD4', score: 15, xp: 1, drops: BASE_DROP_RATES, attackRange: 300, attackCooldown: 1.8, projectileSpeed: WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED, projectileDamage: WEAPON_CONFIG.RANGED_ENEMY_BULLET.DAMAGE },
   elite: { type: 'elite', hp: 48, speed: 130, size: 120, damage: 5, color: '#9C27B0', score: 80, xp: 1, drops: {} },
   
-  // WALL (Statsy V0.99)
+  // FIX: Zmniejszono HP (20) i Prędkość (16)
   wall: {
     type: 'wall',
-    hp: 39, // Zwiększone HP
-    speed: 20,
+    hp: 20,
+    speed: 16,
     size: 88,
     damage: 15,
     color: '#607D8B',

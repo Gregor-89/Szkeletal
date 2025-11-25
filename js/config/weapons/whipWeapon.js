@@ -1,5 +1,5 @@
 // ==============
-// WHIPWEAPON.JS (v0.94c - FIX: Offset & Range)
+// WHIPWEAPON.JS (v0.95 - FIX: Correct Levels & Invisible Point-Blank)
 // Lokalizacja: /js/config/weapons/whipWeapon.js
 // ==============
 
@@ -12,10 +12,8 @@ const WHIP_HITBOX_LIFE = 0.25;
 const WHIP_PIERCE = 99; 
 const WHIP_COLOR = '#C8E6C9'; 
 
-// FIX: Zwiększony offset, aby bicz startował od krawędzi gracza (jak w v0.92/0.93)
-// Gracz ma radius ~20-40px (zależnie od skali), więc 60px to bezpieczny start
-const WHIP_BASE_OFFSET = 60; 
-const WHIP_SPACING = 40; // Zwiększony odstęp między hitboxami dla lepszego zasięgu
+const WHIP_BASE_OFFSET = 70; 
+const WHIP_SPACING = 50;     
 
 export class WhipWeapon extends Weapon {
   constructor(player) {
@@ -28,7 +26,7 @@ export class WhipWeapon extends Weapon {
     this.damage = 0;
     this.drawScale = 0; 
     this.hitboxSize = 20; 
-    this.count = 0;
+    this.count = 0; // To teraz będzie "poziom logiki" (ilość ataków)
     
     this.spriteSheet = getAsset('effect_whip');
     
@@ -39,7 +37,13 @@ export class WhipWeapon extends Weapon {
     this.damage = this.whipConfig.calculateDamage(this.level);
     this.cooldown = this.whipConfig.calculateCooldown(this.level);
     this.drawScale = this.whipConfig.calculateDrawScale(this.level);
-    this.hitboxSize = this.whipConfig.HITBOX_RADIUS || 25; 
+    this.hitboxSize = (this.whipConfig.HITBOX_RADIUS || 30) * 1.1; 
+    
+    // count jest używany do określenia schematu ataku (zgodnie z opisem usera)
+    // Lvl 1 -> count 1
+    // Lvl 2 -> count 2
+    // Lvl 3 -> count 3
+    // Lvl 4+ -> count 4
     this.count = this.whipConfig.calculateCount(this.level);
     
     if (this.timer === 0) {
@@ -69,10 +73,21 @@ export class WhipWeapon extends Weapon {
       const facingDir = this.player.facingDir; 
       const oppositeDir = -facingDir;
       
-      const spawnHitbox = (side, offsetIdx) => {
-        const offsetDist = WHIP_BASE_OFFSET + (offsetIdx * WHIP_SPACING);
-        const hitboxX = this.player.x + (attackX * offsetDist * side);
-        const hitboxY = this.player.y + (attackY * offsetDist * side);
+      // Funkcja spawnuje hitbox
+      // isPointBlank = true -> hitbox na graczu, NIEWIDZIALNY
+      const spawnHitbox = (side, offsetIdx, isPointBlank = false) => {
+        let hitboxX, hitboxY;
+        let currentDrawScale = this.drawScale;
+
+        if (isPointBlank) {
+            hitboxX = this.player.x;
+            hitboxY = this.player.y;
+            currentDrawScale = 0; // FIX: Niewidzialny (skala 0)
+        } else {
+            const offsetDist = WHIP_BASE_OFFSET + (offsetIdx * WHIP_SPACING);
+            hitboxX = this.player.x + (attackX * offsetDist * side);
+            hitboxY = this.player.y + (attackY * offsetDist * side);
+        }
         
         const bullet = bulletsPool.get();
         if (bullet) {
@@ -86,27 +101,36 @@ export class WhipWeapon extends Weapon {
             WHIP_HITBOX_LIFE, 
             0, 
             side, 
-            animParams,
+            // Jeśli skala > 0 to dajemy animację, jeśli 0 (point blank) to null (brak rysowania)
+            currentDrawScale > 0 ? animParams : null,
             this.player, 
-            this.drawScale 
+            currentDrawScale 
           );
         }
       };
       
-      if (this.count === 1) { 
+      // 1. ZAWSZE spawnuj niewidzialny hitbox na graczu (ochrona przed "wejściem w ciało")
+      spawnHitbox(facingDir, 0, true);
+
+      // 2. Logika poziomów (wizualne bicze)
+      // Lvl 1: 1 przód
+      if (this.count >= 1) { 
         spawnHitbox(facingDir, 0);
-      } else if (this.count === 2) { 
-        spawnHitbox(facingDir, 0);
+      } 
+      
+      // Lvl 2: 1 przód + 1 tył
+      if (this.count >= 2) { 
         spawnHitbox(oppositeDir, 0);
-      } else if (this.count === 3) { 
-        spawnHitbox(facingDir, 0);
-        spawnHitbox(facingDir, 1); 
-        spawnHitbox(oppositeDir, 0);
-      } else if (this.count >= 4) { 
-        spawnHitbox(facingDir, 0);
-        spawnHitbox(facingDir, 1);
-        spawnHitbox(oppositeDir, 0);
-        spawnHitbox(oppositeDir, 1);
+      } 
+      
+      // Lvl 3: 2 przód + 1 tył
+      if (this.count >= 3) { 
+        spawnHitbox(facingDir, 1); // Drugi z przodu
+      } 
+      
+      // Lvl 4+: 2 przód + 2 tył
+      if (this.count >= 4) { 
+        spawnHitbox(oppositeDir, 1); // Drugi z tyłu
       }
       
       playSound('Whip');

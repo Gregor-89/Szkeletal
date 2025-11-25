@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.94f - FIX: Shadows & HitText)
+// DRAW.JS (v0.98 - FIX: Final Shadows & Restore Render)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -7,9 +7,21 @@ import { drawIndicators } from '../managers/indicatorManager.js';
 import { get as getAsset } from '../services/assets.js';
 import { getLang } from '../services/i18n.js';
 import { devSettings } from '../services/dev.js';
+import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 
 let backgroundPattern = null;
 let generatedPatternScale = 0;
+
+const SHADOW_OFFSETS = {
+    'aggressive': 0.18, 
+    'ranged': 0.25,     // Obniżono
+    'elite': 0.24,      // Obniżono
+    'wall': 0.32,       // Obniżono (jeszcze niżej)
+    'kamikaze': 0.52,   
+    'horde': 0.49,      
+    'player': 0.42,     
+    'default': 0.45     
+};
 
 function drawBackground(ctx, camera) {
     const TILE_SCALE = 0.25; 
@@ -37,7 +49,6 @@ function drawBackground(ctx, camera) {
             ctx.fillRect(0, 0, camera.worldWidth, camera.worldHeight);
         }
     } else {
-        // Fallback grid
         const tileSize = 40;
         const startX = Math.floor(camera.offsetX / tileSize) * tileSize;
         const startY = Math.floor(camera.offsetY / tileSize) * tileSize;
@@ -52,11 +63,12 @@ function drawBackground(ctx, camera) {
     }
 }
 
-// FIX: Funkcja rysująca cień
-function drawShadow(ctx, x, y, size) {
+function drawShadow(ctx, x, y, size, visualScale = 1.0, enemyType = 'default') {
     ctx.save();
-    ctx.translate(x, y + size * 0.4); // Cień pod nogami
-    ctx.scale(1, 0.3); // Spłaszczone koło (elipsa)
+    const offsetMult = SHADOW_OFFSETS[enemyType] || SHADOW_OFFSETS['default'];
+    const offset = (size * visualScale) * offsetMult;
+    ctx.translate(x, y + offset); 
+    ctx.scale(1 + (visualScale - 1) * 0.5, 0.3); 
     ctx.beginPath();
     ctx.arc(0, 0, size * 0.6, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
@@ -90,7 +102,6 @@ export function draw(ctx, state, ui, fps) {
     } = state;
     
     const { pickupStyleEmoji, pickupShowLabels } = ui;
-    
     ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
     const cullMargin = 150; 
@@ -109,10 +120,10 @@ export function draw(ctx, state, ui, fps) {
         if (game.shakeT <= 0) game.shakeMag = 0;
     }
     
+    // STANDARDOWA TRANSLACJA KAMERY (BEZ KOMBINACJI W ENTITY)
     ctx.translate(-camera.offsetX, -camera.offsetY);
 
     drawBackground(ctx, camera);
-    
     ctx.globalAlpha = 1;
 
     if (game.freezeT > 0) {
@@ -122,11 +133,10 @@ export function draw(ctx, state, ui, fps) {
     
     for (const h of hazards) {
         if (h.x + h.r < cullLeft || h.x - h.r > cullRight || h.y + h.r < cullTop || h.y - h.r > cullBottom) continue;
-        h.draw(ctx); // Hazardy rysują się same (pamiętaj, że mają własny translate w draw)
+        h.draw(ctx);
     }
 
-    // FIX: Rysowanie cieni (Gracz)
-    drawShadow(ctx, player.x, player.y, player.size);
+    drawShadow(ctx, player.x, player.y, player.size, 1.0, 'player');
     player.draw(ctx, game);
 
     const enemiesToDraw = [];
@@ -138,48 +148,49 @@ export function draw(ctx, state, ui, fps) {
     enemiesToDraw.sort((a, b) => a.y - b.y);
 
     for (const e of enemiesToDraw) {
-        // FIX: Rysowanie cieni (Wrogowie)
-        if (!e.isDead) drawShadow(ctx, e.x, e.y, e.size);
+        if (!e.isDead) drawShadow(ctx, e.x, e.y, e.size, e.visualScale || 1.0, e.type);
         e.draw(ctx, game);
+    }
+
+    // Orbital na wierzchu
+    if (player.weapons) {
+        for (const w of player.weapons) {
+            if (w instanceof OrbitalWeapon && w.draw) w.draw(ctx);
+        }
     }
 
     for (const b of bullets) {
         if (b.x < cullLeft || b.x > cullRight || b.y < cullTop || b.y > cullBottom) continue;
         b.draw(ctx);
     }
-
     for (const eb of eBullets) {
         if (eb.x < cullLeft || eb.x > cullRight || eb.y < cullTop || eb.y > cullBottom) continue;
         eb.draw(ctx);
     }
-
     for (const g of gems) {
         if (g.x < cullLeft || g.x > cullRight || g.y < cullTop || g.y > cullBottom) continue;
-        // FIX: Cień gema (opcjonalne, ale ładne)
-        if (g.active) drawShadow(ctx, g.x, g.y, 10);
+        if (g.active) drawShadow(ctx, g.x, g.y, 10, 1.0, 'default');
         g.draw(ctx);
     }
-
     for (const p of pickups) {
         if (p.x < cullLeft || p.x > cullRight || p.y < cullTop || p.y > cullBottom) continue;
-        drawShadow(ctx, p.x, p.y, 20);
+        drawShadow(ctx, p.x, p.y, 20, 1.0, 'default');
         p.draw(ctx, pickupStyleEmoji, pickupShowLabels);
     }
-
     for (const c of chests) {
         if (c.x < cullLeft || c.x > cullRight || c.y < cullTop || c.y > cullBottom) continue;
-        drawShadow(ctx, c.x, c.y, 30);
+        drawShadow(ctx, c.x, c.y, 30, 1.0, 'default');
         c.draw(ctx, pickupStyleEmoji, pickupShowLabels);
     }
-
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
-         if (p.x < cullLeft || p.x > cullRight || p.y < cullTop || p.y > cullBottom) continue;
+        if (p.x < cullLeft || p.x > cullRight || p.y < cullTop || p.y > cullBottom) continue;
         p.draw(ctx);
     }
+
     ctx.globalAlpha = 1;
 
-    // Bomb Indicators (Siege/Nuke)
+    // Bomb Indicators
     for (const b of bombIndicators) {
         if (b.x - b.maxRadius > cullRight || b.x + b.maxRadius < cullLeft || 
             b.y - b.maxRadius > cullBottom || b.y + b.maxRadius < cullTop) continue;
@@ -193,47 +204,45 @@ export function draw(ctx, state, ui, fps) {
             const r = b.maxRadius * pulse;
             const dash = [5, 3];
             
-            ctx.strokeStyle = `rgba(255, 0, 255, ${opacity * 0.9})`; 
-            ctx.shadowColor = `rgba(255, 0, 255, ${opacity * 0.9})`;
+            ctx.lineWidth = 5; 
+            ctx.strokeStyle = `rgba(255, 0, 255, ${opacity})`; 
+            ctx.shadowColor = `rgba(255, 0, 255, 1.0)`;
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = `rgba(255, 0, 255, ${0.15 * opacity})`;
+            
             ctx.setLineDash(dash);
-            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(Math.round(b.x), Math.round(b.y), r, 0, Math.PI * 2); ctx.stroke(); ctx.fill();
             
-            ctx.beginPath();
-            ctx.arc(Math.round(b.x), Math.round(b.y), r, 0, Math.PI * 2); 
-            ctx.stroke();
-            
-            ctx.font = 'bold 16px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-            ctx.fillText(Math.ceil(b.maxLife - b.life), Math.round(b.x), Math.round(b.y) + 5);
-            
+            ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+            ctx.shadowBlur = 4; ctx.shadowColor = '#000';
+            ctx.fillText(Math.ceil(b.maxLife - b.life), Math.round(b.x), Math.round(b.y) + 8);
+            ctx.shadowBlur = 0;
         } else {
             ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
             ctx.shadowColor = `rgba(255, 152, 0, ${opacity * 0.7})`;
             ctx.lineWidth = 3;
             ctx.setLineDash([10, 5]);
-            ctx.beginPath();
-            ctx.arc(Math.round(b.x), Math.round(b.y), currentRadius, 0, Math.PI * 2);
-            ctx.stroke();
+            ctx.beginPath(); ctx.arc(Math.round(b.x), Math.round(b.y), currentRadius, 0, Math.PI * 2); ctx.stroke();
         }
         ctx.setLineDash([]);
-        ctx.shadowBlur = 0;
     }
 
-    // Hitboxes Debug
     if (devSettings.debugHitboxes) {
         ctx.save();
         ctx.lineWidth = 1;
-        ctx.strokeStyle = '#00FF00';
-        ctx.beginPath(); ctx.arc(player.x, player.y, player.size * 0.5, 0, Math.PI * 2); ctx.stroke();
-        ctx.strokeStyle = '#FF0000';
-        for (const e of enemies) {
-            ctx.beginPath(); ctx.arc(e.x, e.y, e.size * 0.5, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = '#00FF00'; ctx.beginPath(); ctx.arc(player.x, player.y, player.size * 0.5, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = '#FF0000'; for (const e of enemies) { ctx.beginPath(); ctx.arc(e.x, e.y, e.size * 0.5, 0, Math.PI * 2); ctx.stroke(); }
+        ctx.strokeStyle = '#FFFF00'; for (const b of bullets) { ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2); ctx.stroke(); }
+        if (player.weapons) {
+            player.weapons.forEach(w => {
+                if (w instanceof OrbitalWeapon && w.items) {
+                    ctx.strokeStyle = '#00FFFF'; w.items.forEach(it => { ctx.beginPath(); ctx.arc(it.ox, it.oy, 15, 0, Math.PI * 2); ctx.stroke(); });
+                }
+            });
         }
         ctx.restore();
     }
 
-    // Hit Texts
     ctx.font = 'bold 14px Arial';
     ctx.textAlign = 'center';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
@@ -244,7 +253,6 @@ export function draw(ctx, state, ui, fps) {
         if (ht.x < cullLeft || ht.x > cullRight || ht.y < cullTop || ht.y > cullBottom) continue;
         ctx.globalAlpha = Math.max(0, ht.life / ht.maxLife); 
         ctx.fillStyle = ht.color;
-        // FIX: Podniesienie tekstu o 30px
         ctx.fillText(ht.text, Math.round(ht.x), Math.round(ht.y) - 30);
     }
     ctx.globalAlpha = 1;
@@ -252,28 +260,22 @@ export function draw(ctx, state, ui, fps) {
 
     ctx.restore(); 
 
-    // HUD Elements (Warnings)
     if (game.newEnemyWarningT > 0 && game.newEnemyWarningType) {
         const warningText = `${getLang('ui_hud_new_enemy')}: ${game.newEnemyWarningType}`;
         const canvasCenterX = canvas.width / 2;
         const warningY = 50; 
         const alpha = Math.min(1, 0.5 + 0.5 * Math.sin(performance.now() / 80));
-        
         ctx.globalAlpha = alpha;
-        ctx.font = 'bold 24px Arial'; 
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#ff7043'; 
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-        ctx.shadowBlur = 8;
+        ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#ff7043'; 
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 8;
         ctx.fillText(warningText, canvasCenterX, warningY); 
-        ctx.font = 'bold 16px Arial'; 
-        ctx.fillStyle = '#fff';
-        ctx.shadowBlur = 4;
+        ctx.font = 'bold 16px Arial'; ctx.fillStyle = '#fff'; ctx.shadowBlur = 4;
         ctx.fillText(`${getLang('ui_hud_spawn_in')}: ${game.newEnemyWarningT.toFixed(1)}s`, canvasCenterX, warningY + 25); 
-        ctx.globalAlpha = 1;
-        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1; ctx.shadowBlur = 0;
     }
 
     drawIndicators(ctx, state);
     drawFPS(ctx, fps, ui, canvas);
+
+    ctx.restore(); 
 }

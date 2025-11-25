@@ -1,5 +1,5 @@
 // ==============
-// HAZARD.JS (v0.94d - FIX: Texture Scale)
+// HAZARD.JS (v0.95 - FIX: Bubble Distribution)
 // Lokalizacja: /js/entities/hazard.js
 // ==============
 
@@ -30,11 +30,10 @@ export class Hazard {
       this.enemyDamage *= HAZARD_CONFIG.MEGA_HAZARD_ENEMY_DAMAGE_MULTIPLIER;
     }
     
-    // --- KSZTAŁT KAŁUŻY (Blobs) ---
     this.blobs = [];
     const blobCount = isMega ? 12 : 7;
     
-    this.blobs.push({ dx: 0, dy: 0, r: this.r * 0.6 }); // Środek
+    this.blobs.push({ dx: 0, dy: 0, r: this.r * 0.6 });
     
     for (let i = 0; i < blobCount; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -91,7 +90,8 @@ export class Hazard {
   spawnBubble() {
     const blob = this.blobs[Math.floor(Math.random() * this.blobs.length)];
     const angle = Math.random() * Math.PI * 2;
-    const dist = Math.random() * (blob.r * 0.8);
+    // FIX: Zwiększono zasięg spawnu bąbelków (z 0.8 na 1.0)
+    const dist = Math.random() * (blob.r * 1.0);
     
     this.bubbles.push({
       x: blob.dx + Math.cos(angle) * dist,
@@ -106,7 +106,6 @@ export class Hazard {
     ctx.save();
     ctx.translate(this.x, this.y);
     
-    // FAZA 1: OSTRZEŻENIE
     if (!this.isActive()) {
       const factor = (Math.sin(this.pulsePhase) + 1) / 2;
       const alpha = 0.3 + 0.4 * factor;
@@ -120,7 +119,6 @@ export class Hazard {
       ctx.arc(0, 0, this.r, 0, Math.PI * 2);
       ctx.stroke();
     }
-    // FAZA 2: AKTYWNA PLAMA
     else {
       let alpha = 1;
       if (this.fadeInT < 1) alpha = this.fadeInT;
@@ -134,7 +132,6 @@ export class Hazard {
         }
       }
       
-      // OBRYS
       ctx.beginPath();
       const borderSize = 4;
       for (const b of this.blobs) {
@@ -144,7 +141,6 @@ export class Hazard {
       ctx.fillStyle = 'rgba(80, 200, 80, 0.5)';
       ctx.fill();
       
-      // ŚRODEK (Tekstura)
       ctx.beginPath();
       for (const b of this.blobs) {
         ctx.moveTo(b.dx + b.r, b.dy);
@@ -154,7 +150,6 @@ export class Hazard {
       if (this.pattern) {
         const matrix = new DOMMatrix();
         matrix.translateSelf(this.x, this.y);
-        // FIX: Zmiana skali tekstury na 0.15 (gęstsza)
         matrix.scaleSelf(0.15, 0.15);
         this.pattern.setTransform(matrix);
         ctx.fillStyle = this.pattern;
@@ -167,7 +162,13 @@ export class Hazard {
       ctx.fill();
       ctx.shadowBlur = 0;
       
-      // Bąbelki
+      if (this.isMega) {
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.fillStyle = 'rgba(100, 0, 100, 0.5)';
+        ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      
       for (const b of this.bubbles) {
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);

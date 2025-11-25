@@ -1,11 +1,10 @@
 // ==============
-// BULLET.JS (v0.97b - FIX: Przywrócenie isOffScreen)
+// BULLET.JS (v0.95 - FIX: Invisible Hitbox Support)
 // Lokalizacja: /js/entities/bullet.js
 // ==============
 
 import { get as getAsset } from '../services/assets.js';
 
-// Klasa bazowa Bullet
 export class Bullet {
     constructor() {
         this.active = false;
@@ -33,20 +32,13 @@ export class Bullet {
         this.type = type; 
     }
 
-    // PRZYWRÓCONA METODA (v0.97b)
     isOffScreen(camera) {
         const margin = 50;
         const viewLeft = camera.offsetX;
         const viewRight = camera.offsetX + camera.viewWidth;
         const viewTop = camera.offsetY;
         const viewBottom = camera.offsetY + camera.viewHeight;
-        
-        return (
-          this.x < viewLeft - margin ||
-          this.x > viewRight + margin ||
-          this.y < viewTop - margin ||
-          this.y > viewBottom + margin
-        );
+        return (this.x < viewLeft - margin || this.x > viewRight + margin || this.y < viewTop - margin || this.y > viewBottom + margin);
     }
 
     release() {
@@ -89,7 +81,6 @@ export class Bullet {
     }
 }
 
-// Klasa Pocisku Gracza
 export class PlayerBullet extends Bullet {
   constructor() {
     super(); 
@@ -97,15 +88,12 @@ export class PlayerBullet extends Bullet {
     this.bouncesLeft = 0;
     this.lastEnemyHitId = -1;
     this.curveDir = 0;
-    
     this.animParams = null;
     this.animTimer = 0;
     this.currentFrame = 0;
-    
     this.playerRef = null;
     this.offsetX = 0;
     this.offsetY = 0;
-    
     this.drawScale = 0;
     this.spriteKey = null;
     this.spriteScale = 1.0;
@@ -162,13 +150,8 @@ export class PlayerBullet extends Bullet {
             }
         }
     } else {
-        // Wywołaj bazowy update (ruch liniowy) tylko jeśli nie jest przyczepiony do gracza
-        // Ale uwaga: super.update() robi też obsługę życia.
-        // Musimy to rozdzielić lub powtórzyć logikę.
-        // W v0.92 było tak:
         this.x += this.vx * dt;
         this.y += this.vy * dt;
-        
         if (this.life !== Infinity) {
             this.life -= dt;
             if (this.life <= 0) {
@@ -194,6 +177,9 @@ export class PlayerBullet extends Bullet {
   
   draw(ctx) {
     if (!this.active) return;
+
+    // FIX: Jeśli drawScale jest 0, nie rysuj nic (dla Point-Blank bicza)
+    if (this.drawScale <= 0.001 && !this.spriteKey) return;
 
     if (this.animParams && this.playerRef) {
       const ap = this.animParams;
@@ -247,6 +233,7 @@ export class PlayerBullet extends Bullet {
         }
     }
 
+    // Fallback (Kółko) - rysuje się tylko jeśli nie ma animacji/sprite'a i drawScale > 0
     ctx.globalAlpha = 1; 
     ctx.fillStyle = this.color;
     ctx.beginPath();
@@ -255,7 +242,6 @@ export class PlayerBullet extends Bullet {
   }
 }
 
-// --- KLASA POCISKU WROGA ---
 export class EnemyBullet extends Bullet {
     static bottleSprite = null;
 
@@ -267,10 +253,7 @@ export class EnemyBullet extends Bullet {
     }
 
     init(x, y, vx, vy, size, damage, color, life = Infinity, type = 'default', rotation = 0) {
-        // Wywołaj init z klasy bazowej
         super.init(x, y, vx, vy, size, damage, color, life, type);
-        
-        // Specyficzne dla EnemyBullet
         if (this.type === 'bottle') {
             this.rotSpeed = (Math.random() > 0.5 ? 1 : -1) * 15; 
             this.rotation = rotation || Math.random() * Math.PI * 2;
@@ -289,28 +272,23 @@ export class EnemyBullet extends Bullet {
         }
     }
 
-    // Nowa metoda draw obsługująca grafiki (Boss + Bottle)
     draw(ctx) {
         if (!this.active) return;
         
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // 1. Sprawdź, czy mamy asset graficzny
         let asset = null;
-        
         if (this.type === 'bottle') {
             if (!EnemyBullet.bottleSprite) EnemyBullet.bottleSprite = getAsset('enemy_ranged_projectile');
             asset = EnemyBullet.bottleSprite;
         } else {
-            // Dla bossa: this.color przechowuje klucz assetu (np. 'boss_proj_1')
             asset = getAsset(this.color);
         }
 
         if (asset) {
-            // --- RYSOWANIE GRAFIKI ---
-            ctx.shadowColor = 'rgba(0, 255, 255, 0.2)'; 
-            ctx.shadowBlur = 4; 
+            ctx.shadowColor = 'rgba(255, 100, 100, 0.5)'; 
+            ctx.shadowBlur = 10; 
             
             if (this.rotation !== 0) ctx.rotate(this.rotation);
             
@@ -318,25 +296,17 @@ export class EnemyBullet extends Bullet {
             let drawHeight = this.size * 2;
 
             if (this.type === 'bottle') {
-                drawWidth = 22 * 0.5; 
-                drawHeight = 64 * 0.5;
+                drawWidth = 22 * 0.625; 
+                drawHeight = 64 * 0.625;
             } else {
-                // Skalowanie dymków
                 drawWidth = this.size * 2.0;
                 drawHeight = this.size * 2.0;
             }
 
             ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(
-                asset, 
-                -drawWidth / 2, 
-                -drawHeight / 2, 
-                drawWidth,      
-                drawHeight       
-            );
+            ctx.drawImage(asset, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
 
         } else {
-            // --- FALLBACK (Kółko) ---
             ctx.shadowColor = this.color;
             ctx.shadowBlur = 4;
             ctx.fillStyle = this.color;

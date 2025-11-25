@@ -1,5 +1,5 @@
 // ==============
-// WALLENEMY.JS (v0.94e - FIX: Audio, Chest Destroy, HP Bar)
+// WALLENEMY.JS (v0.96 - FIX: Lower HP Bar)
 // Lokalizacja: /js/entities/enemies/wallEnemy.js
 // ==============
 
@@ -22,7 +22,7 @@ export class WallEnemy extends Enemy {
     this.assetKey = 'enemy_wall';
 
     this.visualScale = 2.9;
-    this.baseSpeed = (stats.speed || 20) * 0.5; 
+    this.baseSpeed = (stats.speed || 16) * 0.5; 
     this.mass = 1000; 
   }
   
@@ -50,11 +50,8 @@ export class WallEnemy extends Enemy {
     const damage = WALL_DETONATION_CONFIG.WALL_DETONATION_DAMAGE; 
     
     addBombIndicator(bombIndicators, this.x, this.y, radius, 0.5);
-    
-    // FIX: Dźwięk wybuchu
     playSound('Explosion');
 
-    // Obrażenia obszarowe dla wrogów
     for (let j = enemies.length - 1; j >= 0; j--) {
         const e = enemies[j];
         if (e.id === this.id) continue; 
@@ -72,17 +69,14 @@ export class WallEnemy extends Enemy {
         }
     }
     
-    // FIX: Niszczenie skrzyń (LudoBoxów) w zasięgu
     for (let k = chests.length - 1; k >= 0; k--) {
         const c = chests[k];
         const dist = Math.hypot(this.x - c.x, this.y - c.y);
         if (dist <= radius) {
             chests.splice(k, 1);
-            // Opcjonalnie: efekt zniszczenia skrzyni
         }
     }
 
-    // Niszczenie pickupów i gemów (areaNuke to robi, ale upewnijmy się)
     areaNuke(
         this.x,
         this.y,
@@ -93,7 +87,6 @@ export class WallEnemy extends Enemy {
     );
 
     this.isAutoDead = true; 
-    console.log(`[WallEnemy] Oblężnik ID:${this.id} detonuje.`);
   }
 
   update(dt, player, game, state) {
@@ -110,12 +103,8 @@ export class WallEnemy extends Enemy {
         this.die(); 
         return;
     }
-
-    if (this.hitFlashT > 0) this.hitFlashT -= dt;
-    if (this.frozenTimer > 0) {
-        this.frozenTimer -= dt;
-        return;
-    }
+    
+    super.update(dt, player, game, state);
 
     const dx = player.x - this.x;
     const dy = player.y - this.y;
@@ -130,14 +119,6 @@ export class WallEnemy extends Enemy {
         this.y += Math.sin(angle) * speed * dt;
         
         if (Math.abs(dx) > 10) this.facingDir = Math.sign(dx);
-    }
-
-    if (this.totalFrames > 1) {
-        this.animTimer += dt;
-        if (this.animTimer >= this.frameTime) {
-            this.animTimer = 0;
-            this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
-        }
     }
   }
 
@@ -155,9 +136,7 @@ export class WallEnemy extends Enemy {
     }
     
     super.draw(ctx, game);
-    
     this.drawHealthBar(ctx);
-    
     ctx.restore();
   }
   
@@ -172,27 +151,14 @@ export class WallEnemy extends Enemy {
       
       const bx = -w / 2;
       const spriteH = this.size * this.visualScale; 
-      // FIX: Dostosowanie pozycji paska HP do dużego sprite'a (obniżenie)
-      // Było: -(spriteH / 2) - 8. Zmieniam na +20 (pod nogami) lub bliżej głowy ale niżej.
-      // Jeśli visualScale 2.9 i size 88, to spriteH = ~255.
-      // -(255/2) = -127. Pasek był bardzo wysoko.
-      // Ustawmy go nieco niżej, np. na 2/3 wysokości od środka w górę.
-      const by = -(spriteH * 0.35); 
       
-      ctx.fillStyle = '#300';
-      ctx.fillRect(bx, by, w, h);
+      // FIX: Obniżenie o kolejne 2px (z +2 na +4)
+      const by = -(spriteH * 0.35) + 4;
       
-      let hpColor;
-      if (frac > 0.6) hpColor = '#0f0';
-      else if (frac > 0.3) hpColor = '#ff0';
-      else hpColor = '#f00';
-      
-      ctx.fillStyle = hpColor;
-      ctx.fillRect(bx, by, w * frac, h);
-      
-      ctx.strokeStyle = '#111';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(bx, by, w, h);
+      ctx.fillStyle = '#300'; ctx.fillRect(bx, by, w, h);
+      let hpColor = (frac > 0.6) ? '#0f0' : (frac > 0.3 ? '#ff0' : '#f00');
+      ctx.fillStyle = hpColor; ctx.fillRect(bx, by, w * frac, h);
+      ctx.strokeStyle = '#111'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, w, h);
       
       ctx.restore();
   }

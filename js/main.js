@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.94j - FIX: Full Game Title)
+// MAIN.JS (v0.94 Final - COMPLETE)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -139,7 +139,7 @@ function initializeCanvas() {
       siegeSpawnQueue: []
     };
 
-    // FIX: Ustawienie pełnego tytułu z pliku językowego lub hardcoded
+    // FIX: Pełny tytuł gry
     document.title = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${VERSION}`;
     console.log(`[DEBUG-v${VERSION}] js/main.js: Inicjalizacja zakończona.`);
 }

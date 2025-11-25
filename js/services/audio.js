@@ -1,5 +1,5 @@
 // ==============
-// AUDIO.JS (v0.94f - FIX: Audio Throttling)
+// AUDIO.JS (v0.94m - FIX: Better Hit Sound)
 // Lokalizacja: /js/services/audio.js
 // ==============
 
@@ -10,8 +10,7 @@ let isAudioInitialized = false;
 let isLoadTriggered = false;
 const loadedSounds = new Map();
 
-// FIX: Mapa do śledzenia ostatniego czasu odtworzenia dźwięku
-const lastPlayTime = new Map();
+const lastPlayTime = new Map(); 
 
 const AUDIO_ASSET_LIST = [
     { id: 'Click', src: 'sounds/ui_click.wav' },
@@ -82,7 +81,7 @@ export function loadAudio() {
     return Promise.all(promises);
 }
 
-function tone(f = 440, type = 'sine', dur = 0.08, g = 0.12) {
+function tone(f = 440, type = 'sine', dur = 0.08, g = 0.12, slideTo = null) {
     if (!audioCtx || !master || audioCtx.state !== 'running') {
         if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
         return; 
@@ -90,9 +89,18 @@ function tone(f = 440, type = 'sine', dur = 0.08, g = 0.12) {
     const now = audioCtx.currentTime;
     try {
         const o = audioCtx.createOscillator(); const gn = audioCtx.createGain();
-        o.type = type; o.frequency.setValueAtTime(f, now); gn.gain.setValueAtTime(0, now);
-        gn.gain.linearRampToValueAtTime(g, now + 0.005); gn.gain.linearRampToValueAtTime(0, now + dur);
-        o.connect(gn); gn.connect(master); o.start(now); o.stop(now + dur + 0.01);
+        o.type = type; 
+        o.frequency.setValueAtTime(f, now); 
+        
+        if (slideTo !== null) {
+            o.frequency.exponentialRampToValueAtTime(Math.max(1, slideTo), now + dur);
+        }
+
+        gn.gain.setValueAtTime(0, now);
+        gn.gain.linearRampToValueAtTime(g, now + 0.01); 
+        gn.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        
+        o.connect(gn); gn.connect(master); o.start(now); o.stop(now + dur + 0.05);
     } catch (e) {}
 }
 
@@ -100,15 +108,13 @@ export function playSound(eventName) {
     if (!isAudioInitialized || !audioCtx) return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
     
-    // FIX: Throttling (ograniczenie częstotliwości)
     const now = performance.now();
     const lastTime = lastPlayTime.get(eventName) || 0;
-    const throttleTime = (eventName === 'Hit' || eventName === 'Nova') ? 50 : 100; // 50ms dla częstych, 100ms dla reszty
+    const throttleTime = (eventName === 'Hit' || eventName === 'Nova') ? 50 : 100; 
     
-    if (now - lastTime < throttleTime) return; // Pomiń, jeśli za szybko
+    if (now - lastTime < throttleTime) return; 
     lastPlayTime.set(eventName, now);
 
-    // Mapowanie (jeśli potrzeba)
     let targetAsset = eventName;
     if (eventName === 'Gem') targetAsset = 'XPPickup';
 
@@ -123,29 +129,39 @@ export function playSound(eventName) {
         } catch (e) {}
     }
     
-    // Fallbacki
+    // ULEPSZONE FALLBACKI
     switch (eventName) {
-        case 'Click': tone(440, 'sine', 0.08, 0.12); break;
-        case 'LevelUp': tone(700, 'triangle', 0.1, 0.1); break;
+        case 'Click': tone(440, 'sine', 0.08, 0.1); break;
+        case 'LevelUp': tone(600, 'triangle', 0.3, 0.15, 880); break; 
         case 'PerkPick': tone(520, 'square', 0.1, 0.08); break;
-        case 'ChestOpen': tone(300, 'triangle', 0.18, 0.09); break;
-        case 'ChestReward': tone(980, 'sawtooth', 0.16, 0.09); break;
-        case 'PlayerHurt': tone(120, 'sawtooth', 0.08, 0.08); break;
-        case 'Shoot': tone(900, 'triangle', 0.04, 0.06); break;
-        case 'Nova': tone(680, 'square', 0.08, 0.07); break;
-        case 'Whip': tone(1200, 'triangle', 0.06, 0.08); break;
-        case 'ChainLightning': tone(1500, 'sawtooth', 0.1, 0.1); break;
+        case 'ChestOpen': tone(300, 'triangle', 0.2, 0.1, 600); break;
+        case 'ChestReward': tone(880, 'sawtooth', 0.2, 0.1); break;
+        case 'PlayerHurt': tone(150, 'sawtooth', 0.1, 0.1, 50); break; 
+        case 'Shoot': tone(800, 'triangle', 0.05, 0.05, 400); break; 
+        case 'Nova': tone(600, 'square', 0.1, 0.05, 200); break;
+        case 'Whip': tone(900, 'triangle', 0.1, 0.08, 100); break; 
+        case 'ChainLightning': tone(1200, 'sawtooth', 0.15, 0.05, 400); break;
+        
         case 'Gem':
-        case 'XPPickup': tone(660, 'sine', 0.03, 0.05); break;
-        case 'HealPickup': tone(500, 'square', 0.06, 0.06); break;
-        case 'MagnetPickup': tone(300, 'triangle', 0.12, 0.07); break;
-        case 'ShieldPickup': tone(360, 'sine', 0.1, 0.07); break;
-        case 'SpeedPickup': tone(700, 'triangle', 0.08, 0.07); break;
-        case 'BombPickup': tone(160, 'square', 0.12, 0.08); break;
-        case 'FreezePickup': tone(260, 'sine', 0.12, 0.07); break;
-        case 'EliteSpawn': tone(300, 'sawtooth', 0.2, 0.1); break;
-        case 'Hit': tone(150 + Math.random()*50, 'square', 0.05, 0.05); break;
-        case 'Explosion': tone(60, 'sawtooth', 0.3, 0.2); break;
+        case 'XPPickup': tone(800, 'sine', 0.05, 0.05, 1200); break; 
+        
+        case 'HealPickup': tone(400, 'square', 0.1, 0.1, 600); break;
+        case 'MagnetPickup': tone(300, 'triangle', 0.15, 0.1); break;
+        case 'ShieldPickup': tone(200, 'sine', 0.2, 0.1, 400); break;
+        case 'SpeedPickup': tone(600, 'triangle', 0.1, 0.1); break;
+        case 'BombPickup': tone(100, 'square', 0.2, 0.1); break;
+        case 'FreezePickup': tone(1000, 'sine', 0.2, 0.05, 200); break;
+        case 'EliteSpawn': tone(200, 'sawtooth', 0.5, 0.2, 50); break; 
+        
+        // FIX: Nowy dźwięk trafienia (głębszy i krótszy)
+        case 'Hit': 
+            tone(100 + Math.random()*50, 'sawtooth', 0.04, 0.08, 50); 
+            break;
+            
+        case 'Explosion':
+            tone(150, 'sawtooth', 0.4, 0.3, 10); 
+            break;
+            
         default: break;
     }
 }
