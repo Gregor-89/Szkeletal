@@ -1,5 +1,5 @@
 // ==============
-// PERKS.JS (v0.94k - FIX: AutoGun Apply Logic)
+// PERKS.JS (v0.94t - FIX: Verify Weapon Req)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
@@ -12,7 +12,6 @@ export const perkPool = [
     icon: 'icon_autogun',
     emoji: '🔫',
     color: '#FFF',
-    // FIX: Usunięto placeholder, dodano logikę dodawania broni
     apply: (state, perk) => {
        import('../config/weapons/autoGun.js').then(module => {
            const AutoGun = module.AutoGun;
@@ -34,11 +33,13 @@ export const perkPool = [
     color: '#FFFF00',
     value: 0.85,
     max: 6,
+    requiresWeapon: 'AutoGun', // WYMÓG
     apply: (state, perk) => {
-       state.player.weapons.forEach(w => {
+       const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
+       if (w) {
            if(w.fireRate) w.fireRate *= perk.value;
            if(w.cooldown) w.cooldown *= perk.value;
-       });
+       }
     }
   },
   {
@@ -51,11 +52,13 @@ export const perkPool = [
     color: '#FF0000',
     value: 1,
     max: 6,
+    requiresWeapon: 'AutoGun', // WYMÓG
     apply: (state, perk) => {
-       state.player.weapons.forEach(w => {
+       const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
+       if (w) {
            if(w.bulletDamage !== undefined) w.bulletDamage += perk.value;
            if(w.damage !== undefined) w.damage += perk.value;
-       });
+       }
     }
   },
   {
@@ -68,9 +71,9 @@ export const perkPool = [
     color: '#00FFFF',
     value: 1,
     max: 4,
-    requiresWeapon: 'AutoGun',
+    requiresWeapon: 'AutoGun', // WYMÓG
     apply: (state, perk) => {
-       const w = state.player.weapons.find(x => x.id === 'autogun');
+       const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
        if(w) w.multishot += perk.value;
     }
   },
@@ -84,9 +87,9 @@ export const perkPool = [
     color: '#FF00FF',
     value: 1,
     max: 4,
-    requiresWeapon: 'AutoGun',
+    requiresWeapon: 'AutoGun', // WYMÓG
     apply: (state, perk) => {
-       const w = state.player.weapons.find(x => x.id === 'autogun');
+       const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
        if(w) w.pierce += perk.value;
     }
   },

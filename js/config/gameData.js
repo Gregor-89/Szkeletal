@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.94r - FIX: Splatter Colors)
+// GAMEDATA.JS (v0.94x - FIX: Nova Progression)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -77,7 +77,7 @@ export const WEAPON_CONFIG = {
   },
   NOVA: {
     SPRITE: 'projectile_nova',
-    SPRITE_SCALE: 6.0 
+    SPRITE_SCALE: 4.0
   },
   RANGED_ENEMY_BULLET: {
     SPEED: 432,
@@ -128,9 +128,12 @@ export const PERK_CONFIG = {
     calculateSpeed: (level) => (1.2 + 0.2 * level)
   },
   nova: {
-    max: 5,
-    calculateCooldown: (level) => (Math.max(0.6, 2.2 - 0.3 * level)),
-    calculateCount: (level) => (Math.min(24, 8 + 2 * level))
+    max: 6, // Zwiększono max level do 6
+    // FIX: Zbalansowana progresja Novy
+    calculateDamage: (level) => 4 + (level * 3), // Lvl1: 7, Lvl2: 10...
+    calculateCooldown: (level) => Math.max(0.5, 2.3 - (level * 0.3)), // Coraz szybciej
+    calculateCount: (level) => 8 + (level * 2), // Więcej pocisków
+    calculatePierce: (level) => 1 + Math.floor(level / 3) // Pierce: 1 (L1-2), 2 (L3-5), 3 (L6)
   },
   speed: { value: 1.10, max: 4 },
   pickup: { value: 1.40, max: 3 },
@@ -181,50 +184,13 @@ export const EFFECTS_CONFIG = {
 };
 
 export const ENEMY_STATS = {
-  // FIX: Kolory rozbryzgów zaktualizowane pod nowe grafiki
-  standard: { 
-      type: 'standard', hp: 3, speed: 173, size: 60, damage: 5, 
-      color: '#D32F2F', // Czerwony (Krew)
-      score: 10, xp: 1, drops: BASE_DROP_RATES 
-  },
-  horde: { 
-      type: 'horde', hp: 3, speed: 144, size: 43, damage: 5, 
-      color: '#2E7D32', // Zielony (Zombie)
-      score: 10, xp: 1, drops: BASE_DROP_RATES 
-  },
-  aggressive: { 
-      type: 'aggressive', hp: 3, speed: 173, size: 52, damage: 5, 
-      color: '#E91E63', // Różowy
-      score: 10, xp: 1, drops: BASE_DROP_RATES 
-  },
-  kamikaze: { 
-      type: 'kamikaze', hp: 2.4, speed: 158, size: 36, damage: 8, 
-      color: '#76FF03', // Jasny Zielony (Troll)
-      score: 10, xp: 1, drops: BASE_DROP_RATES 
-  },
-  splitter: { 
-      type: 'splitter', hp: 4, speed: 158, size: 52, damage: 5, 
-      color: '#B71C1C', // Ciemna Krew (Wykopek)
-      score: 10, xp: 1, drops: BASE_DROP_RATES 
-  },
-  tank: { 
-      type: 'tank', hp: 27, speed: 101, size: 108, damage: 5, 
-      color: '#F5F5F5', // Biały
-      score: 20, xp: 1, drops: BASE_DROP_RATES 
-  },
-  ranged: { 
-      type: 'ranged', hp: 4, speed: 120, size: 54, damage: 5, 
-      color: '#795548', // Brązowy (Menel)
-      score: 15, xp: 1, drops: BASE_DROP_RATES, attackRange: 300, attackCooldown: 1.8, projectileSpeed: WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED, projectileDamage: WEAPON_CONFIG.RANGED_ENEMY_BULLET.DAMAGE 
-  },
-  elite: { 
-      type: 'elite', hp: 48, speed: 130, size: 120, damage: 5, 
-      color: '#9C27B0', // Fioletowy
-      score: 80, xp: 1, drops: {} 
-  },
-  wall: { 
-      type: 'wall', hp: 20, speed: 8, size: 88, damage: 15, 
-      color: '#9E9E9E', // Szary
-      score: 25, xp: 0, drops: {} 
-  }
+  standard: { type: 'standard', hp: 3, speed: 173, size: 60, damage: 5, color: '#D32F2F', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  horde: { type: 'horde', hp: 3, speed: 144, size: 43, damage: 5, color: '#2E7D32', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  aggressive: { type: 'aggressive', hp: 3, speed: 173, size: 52, damage: 5, color: '#E91E63', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  kamikaze: { type: 'kamikaze', hp: 2.4, speed: 158, size: 36, damage: 8, color: '#76FF03', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  splitter: { type: 'splitter', hp: 4, speed: 158, size: 52, damage: 5, color: '#B71C1C', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  tank: { type: 'tank', hp: 27, speed: 101, size: 108, damage: 5, color: '#F5F5F5', score: 20, xp: 1, drops: BASE_DROP_RATES },
+  ranged: { type: 'ranged', hp: 4, speed: 120, size: 54, damage: 5, color: '#795548', score: 15, xp: 1, drops: BASE_DROP_RATES, attackRange: 300, attackCooldown: 1.8, projectileSpeed: WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED, projectileDamage: WEAPON_CONFIG.RANGED_ENEMY_BULLET.DAMAGE },
+  elite: { type: 'elite', hp: 48, speed: 130, size: 120, damage: 5, color: '#9C27B0', score: 80, xp: 1, drops: {} },
+  wall: { type: 'wall', hp: 20, speed: 8, size: 88, damage: 15, color: '#9E9E9E', score: 25, xp: 0, drops: {} }
 };

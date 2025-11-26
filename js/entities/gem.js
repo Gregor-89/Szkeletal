@@ -1,5 +1,5 @@
 // ==============
-// GEM.JS (v0.94j - FIX: Eating Animation)
+// GEM.JS (v0.94x - FIX: Visual Tint & Glow)
 // Lokalizacja: /js/entities/gem.js
 // ==============
 
@@ -27,8 +27,6 @@ export class Gem {
     this.rotation = 0;
     this.magnetized = false;
     this.speed = 0;
-    
-    // FIX: Flaga animacji zebrania
     this.isCollected = false;
   }
   
@@ -67,19 +65,16 @@ export class Gem {
     return this.hazardDecayT >= 1.0;
   }
   
-  // FIX: Metoda wywoływana, gdy gracz dotknie gema
   collect() {
     this.isCollected = true;
-    this.magnetized = false; // Przestań gonić, zacznij znikać
+    this.magnetized = false;
   }
   
   update(player, game, dt) {
     if (!this.active) return;
     
-    // FIX: Animacja zebrania (szybkie pomniejszanie)
     if (this.isCollected) {
-      this.scale -= 10.0 * dt; // Bardzo szybkie znikanie
-      // Przesuwaj lekko w stronę gracza podczas znikania
+      this.scale -= 10.0 * dt;
       this.x += (player.x - this.x) * 10 * dt;
       this.y += (player.y - this.y) * 10 * dt;
       
@@ -121,7 +116,7 @@ export class Gem {
   
   draw(ctx) {
     if (!this.active) return;
-    if (this.scale <= 0) return; // Nie rysuj jeśli zniknął
+    if (this.scale <= 0) return;
     
     ctx.save();
     
@@ -144,12 +139,13 @@ export class Gem {
       const drawHeight = targetSize;
       const drawWidth = targetSize * aspectRatio;
       
+      // FIX: Zwiększona poświata dla rzadkich
       if (this.val >= 20) {
         ctx.shadowColor = '#ff5252';
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 25; // Było 15
       } else if (this.val >= 5) {
         ctx.shadowColor = '#69f0ae';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 15; // Było 10
       } else {
         ctx.shadowColor = '#4fc3f7';
         ctx.shadowBlur = 5;
@@ -161,6 +157,22 @@ export class Gem {
       }
       
       ctx.drawImage(sprite, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+      
+      // FIX: Nakładanie koloru (Tint)
+      if (this.val > 1) {
+        ctx.globalCompositeOperation = 'source-atop';
+        if (this.val >= 20) {
+          ctx.fillStyle = 'rgba(255, 50, 50, 0.35)'; // Czerwony tint
+        } else {
+          ctx.fillStyle = 'rgba(50, 255, 50, 0.35)'; // Zielony tint
+        }
+        // Rysujemy prostokąt na całym obszarze sprite'a
+        // Dzięki source-atop kolor pokryje tylko nieprzezroczyste piksele sprite'a
+        ctx.fillRect(-drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        
+        // Resetujemy tryb mieszania
+        ctx.globalCompositeOperation = 'source-over';
+      }
       
     } else {
       ctx.fillStyle = this.color;

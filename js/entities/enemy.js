@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.94l - FIX: Revert Death Anim, Keep Healthbar)
+// ENEMY.JS (v0.94u - FIX: Mega Hazard Reset)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -24,8 +24,6 @@ export class Enemy {
         
         this.isDead = false;
         
-        // Usunięto flagi dying/deathTimer (wracamy do natychmiastowego killa)
-        
         this.hitStun = 0;
         this.hitFlashT = 0;
         this.frozenTimer = 0;
@@ -36,7 +34,11 @@ export class Enemy {
         this.separationCooldown = Math.random() * 0.15;
         this.separationX = 0;
         this.separationY = 0;
+        
+        // Timer efektu hazardu
         this.hazardSlowdownT = 0;
+        // Flaga dla Mega Hazardu
+        this.inMegaHazard = false;
         
         const idleKey = stats.assetKey || ('enemy_' + this.type);
         const spriteSheetKey = idleKey + '_spritesheet';
@@ -64,9 +66,16 @@ export class Enemy {
     update(dt, player, game) {
         if (this.isDead) return;
         
+        // FIX: Reset flagi Mega Hazardu na początku klatki
+        // Jeśli wróg nadal stoi w hazardzie, collisions.js ustawi to na true w tej samej klatce
+        this.inMegaHazard = false;
+        
         if (this.hitStun > 0) this.hitStun -= dt;
         if (this.hitFlashT > 0) this.hitFlashT -= dt;
-        if (this.hazardSlowdownT > 0) this.hazardSlowdownT -= dt;
+        
+        if (this.hazardSlowdownT > 0) {
+            this.hazardSlowdownT -= dt;
+        }
         
         if (this.frozenTimer > 0) {
             this.frozenTimer -= dt;
@@ -150,11 +159,18 @@ export class Enemy {
         
         ctx.save();
         
+        // Priororytety Efektów
         if (this.hitFlashT > 0) {
             if (Math.floor(game.time * 20) % 2 === 0) ctx.filter = 'grayscale(1) brightness(5)';
-        } else if (this.frozenTimer > 0 || game.freezeT > 0) {
+        }
+        else if (this.frozenTimer > 0 || game.freezeT > 0) {
             ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(2)';
-        } else if (this.hazardSlowdownT > 0) {
+        }
+        // Efekt Mega Hazardu (tylko jeśli flaga inMegaHazard jest true)
+        else if (this.inMegaHazard) {
+            ctx.filter = 'brightness(0.7) sepia(1) hue-rotate(130deg) saturate(2)';
+        }
+        else if (this.hazardSlowdownT > 0) {
             ctx.filter = 'sepia(1) hue-rotate(60deg) saturate(2)';
         }
         
@@ -218,7 +234,6 @@ export class Enemy {
     
     die() {
         this.isDead = true;
-        // Brak animacji śmierci typu fade-out, robimy to w menedżerze przez particle
     }
     
     getOutlineColor() { return colorForEnemy(this); }

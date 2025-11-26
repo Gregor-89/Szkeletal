@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v0.94h - FIX: New Shield Effect)
+// PLAYER.JS (v0.94w - FIX: Mega Hazard Filter)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -152,11 +152,15 @@ export class Player {
             if (Math.floor(performance.now() / 50) % 2 === 0) {
                 ctx.filter = 'grayscale(1) brightness(5)';
             }
-        } else if (game.playerInHazard) {
+        } 
+        // FIX: Priorytetowy efekt Mega Hazardu (taki sam jak u wroga)
+        else if (game.playerInMegaHazard) {
+            ctx.filter = 'brightness(0.7) sepia(1) hue-rotate(130deg) saturate(2)';
+        }
+        else if (game.playerInHazard) {
             ctx.filter = 'sepia(1) hue-rotate(60deg) saturate(2)';
         }
         
-        // FIX: Nowy efekt tarczy (Pole Siłowe) - warstwa pod graczem
         if (game.shield) {
             ctx.shadowColor = '#40C4FF';
             ctx.shadowBlur = 20 + 5 * Math.sin(performance.now() / 100);
@@ -225,12 +229,10 @@ export class Player {
         ctx.lineWidth = 1.5;
         ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
 
-        // FIX: Rysowanie pola siłowego (Tarczy)
         if (game.shield) {
             const t = performance.now() / 1000;
             const r = this.size * 0.8; 
 
-            // 1. Gradient pola (Bańka)
             const shieldGrad = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, r);
             shieldGrad.addColorStop(0, 'rgba(64, 196, 255, 0.0)');
             shieldGrad.addColorStop(0.85, 'rgba(64, 196, 255, 0.15)');
@@ -241,14 +243,13 @@ export class Player {
             ctx.arc(0, 0, r, 0, Math.PI * 2);
             ctx.fill();
 
-            // 2. Obracający się pierścień (Sci-fi)
-            ctx.shadowBlur = 0; // Wyłączamy blur dla linii, żeby była ostra
+            ctx.shadowBlur = 0; 
             ctx.strokeStyle = 'rgba(200, 240, 255, 0.8)';
             ctx.lineWidth = 2;
-            ctx.setLineDash([15, 12]); // Przerywana linia
+            ctx.setLineDash([15, 12]); 
             
             ctx.save();
-            ctx.rotate(t * 1.5); // Obrót
+            ctx.rotate(t * 1.5); 
             ctx.beginPath();
             ctx.arc(0, 0, r, 0, Math.PI * 2);
             ctx.stroke();

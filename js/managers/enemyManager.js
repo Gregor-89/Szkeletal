@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.94m - FIX: Juicy Death & Particles)
+// ENEMYMANAGER.JS (v0.94x - FIX: Halved Gem Rarity)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -336,12 +336,13 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
                 let color = '#4FC3F7'; 
                 let size = 4;          
                 
-                if (Math.random() < 0.05) { 
+                // FIX: Dwukrotne zmniejszenie szans na drop rzadkich gemów
+                if (Math.random() < 0.025) { // Było 0.05
                     val *= 5; 
                     color = '#81C784'; 
                     size = 6;          
                 } 
-                else if (Math.random() < 0.01) { 
+                else if (Math.random() < 0.005) { // Było 0.01
                     val *= 20; 
                     color = '#E57373'; 
                     size = 8;          
@@ -377,14 +378,12 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         }
     }
 
-    // FIX: Soczysty efekt śmierci (więcej cząsteczek, większe, szybsze)
-    const particleCount = 40; // Zwiększono z 20
-    const explosionSpeed = 500; // Zwiększono z 400
+    const particleCount = 40; 
+    const explosionSpeed = 500; 
     
     for (let k = 0; k < particleCount; k++) {
         const p = particlePool.get();
         if (p) {
-            // Losowy rozmiar cząsteczki, żeby wyglądało "chunky"
             const chunkSize = 4 + Math.random() * 4; 
             
             p.init(
@@ -395,7 +394,7 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
                 e.color, 
                 0, 
                 0.95,
-                chunkSize // Nowy argument size (9-ty)
+                chunkSize 
             );
         }
     }

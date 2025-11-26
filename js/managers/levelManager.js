@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v0.94l - FIX: Weapon Req Check)
+// LEVELMANAGER.JS (v0.94t - FIX: Strict Filter)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -27,9 +27,9 @@ import {
 const WEAPON_CLASS_MAP_LOCAL = {
     'AutoGun': AutoGun,
     'ChainLightning': ChainLightningWeapon,
-    'OrbitalWeapon': OrbitalWeapon, // Dodano dla pewności
-    'NovaWeapon': NovaWeapon,       // Dodano dla pewności
-    'WhipWeapon': WhipWeapon        // Dodano dla pewności
+    'OrbitalWeapon': OrbitalWeapon,
+    'NovaWeapon': NovaWeapon,
+    'WhipWeapon': WhipWeapon
 };
 
 export function checkLevelUp(game, player, settings, weapons, state) {
@@ -149,20 +149,14 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
 }
 
 export function showPerks(perkLevels, player, game, settings, weapons) {
-    // FIX: Filtrowanie Perków
     const avail = perkPool.filter(p => {
         const currentLevel = perkLevels[p.id] || 0;
-        
-        // 1. Sprawdź max level
         if (currentLevel >= p.max) return false;
         
-        // 2. Sprawdź wymaganie broni (np. AutoGun dla multishot)
+        // FIX: Upewniamy się, że warunek jest sprawdzany poprawnie
         if (p.requiresWeapon) { 
-            const WeaponClass = WEAPON_CLASS_MAP_LOCAL[p.requiresWeapon];
-            // Jeśli nie ma klasy broni w mapie lub gracz nie ma tej broni w ekwipunku -> ODRZUĆ
-            if (!WeaponClass || !player.getWeapon(WeaponClass)) {
-                return false;
-            }
+            const hasWeapon = player.weapons.some(w => w.constructor.name === p.requiresWeapon);
+            if (!hasWeapon) return false;
         }
         return true; 
     });
@@ -251,8 +245,8 @@ export function pickChestReward(perkLevels, player) {
         if (currentLevel >= p.max) return false;
         
         if (p.requiresWeapon) {
-            const WeaponClass = WEAPON_CLASS_MAP_LOCAL[p.requiresWeapon];
-            return !!(WeaponClass && player.getWeapon(WeaponClass));
+            const hasWeapon = player.weapons.some(w => w.constructor.name === p.requiresWeapon);
+            if (!hasWeapon) return false;
         }
         return true;
     });

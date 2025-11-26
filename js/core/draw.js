@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.99h - FIX: Perfect Healthbar Offsets)
+// DRAW.JS (v0.94t - FIX: Z-Index Sorting)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -86,12 +86,11 @@ function drawEnemyHealthBar(ctx, e) {
     const bx = -w / 2;
     const spriteH = e.size * visualScale;
     
-    // FIX: Precyzyjne obniżenie pasków
     let yOffsetMod = 0;
     if (e.type === 'elite') {
-        yOffsetMod = 45; // (Było 32) + 3px
+        yOffsetMod = 38; 
     } else if (e.type === 'wall') {
-        yOffsetMod = 60; // (Było 32) + 6px
+        yOffsetMod = 44; 
     }
 
     const by = -(spriteH / 2) - 8 + yOffsetMod;
@@ -99,7 +98,6 @@ function drawEnemyHealthBar(ctx, e) {
     ctx.save();
     ctx.translate(e.x, e.y);
     
-    // Tło
     ctx.fillStyle = '#300';
     ctx.fillRect(bx, by, w, h);
     
@@ -178,25 +176,38 @@ export function draw(ctx, state, ui, fps) {
         h.draw(ctx);
     }
 
-    drawShadow(ctx, player.x, player.y, player.size, 1.0, 'player');
-    player.draw(ctx, game);
+    // --- FIX: Z-INDEX SORTING (Gracz + Wrogowie) ---
+    const renderList = [];
 
-    const enemiesToDraw = [];
+    // 1. Dodaj Gracza
+    renderList.push({ type: 'player_entity', obj: player });
+
+    // 2. Dodaj Wrogów (z Cullingiem)
     for (const e of enemies) {
         const radius = (e.size / 2) * 1.5; 
         if (e.x + radius < cullLeft || e.x - radius > cullRight || e.y + radius < cullTop || e.y - radius > cullBottom) continue;
-        enemiesToDraw.push(e);
+        renderList.push({ type: 'enemy_entity', obj: e });
     }
-    enemiesToDraw.sort((a, b) => a.y - b.y);
 
-    for (const e of enemiesToDraw) {
-        if (!e.isDead) drawShadow(ctx, e.x, e.y, e.size, e.visualScale || 1.0, e.type);
-        e.draw(ctx, game);
-        
-        if (!e.isDead) {
-            drawEnemyHealthBar(ctx, e);
+    // 3. Sortuj po osi Y (im wyższe Y = niżej na ekranie = bliżej kamery = rysowane później)
+    renderList.sort((a, b) => a.obj.y - b.obj.y);
+
+    // 4. Rysuj posortowane obiekty
+    for (const item of renderList) {
+        if (item.type === 'player_entity') {
+            const p = item.obj;
+            drawShadow(ctx, p.x, p.y, p.size, 1.0, 'player');
+            p.draw(ctx, game);
+        } else {
+            const e = item.obj;
+            if (!e.isDead) {
+                drawShadow(ctx, e.x, e.y, e.size, e.visualScale || 1.0, e.type);
+                e.draw(ctx, game);
+                drawEnemyHealthBar(ctx, e);
+            }
         }
     }
+    // -----------------------------------------------
 
     if (player.weapons) {
         for (const w of player.weapons) {

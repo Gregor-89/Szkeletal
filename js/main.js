@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.94 Final - COMPLETE)
+// MAIN.JS (v0.94x - FIX: Dynamic Title Version)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -27,6 +27,7 @@ import { Hazard } from './entities/hazard.js';
 import { loadAssets } from './services/assets.js';
 import { VERSION } from './config/version.js';
 import { displayScores } from './services/scoreManager.js';
+import { getLang } from './services/i18n.js';
 
 class Camera {
     constructor(worldWidth, worldHeight, viewWidth, viewHeight) {
@@ -75,7 +76,8 @@ const settings={
     lastElite:0,
     lastHazardSpawn: 0, 
     lastSiegeEvent: 0,
-    currentSiegeInterval: SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME
+    currentSiegeInterval: SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME,
+    siegeState: 'idle'
 };
 
 let perkLevels={};
@@ -139,8 +141,10 @@ function initializeCanvas() {
       siegeSpawnQueue: []
     };
 
-    // FIX: Pełny tytuł gry
-    document.title = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${VERSION}`;
+    // FIX: Automatyczne ustawianie tytułu z wersją
+    const gameTitle = getLang('ui_game_title') || "Szkeletal";
+    document.title = `${gameTitle} v${VERSION}`;
+    
     console.log(`[DEBUG-v${VERSION}] js/main.js: Inicjalizacja zakończona.`);
 }
 

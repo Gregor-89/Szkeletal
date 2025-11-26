@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.94j - FIX: Collect Gem Animation)
+// COLLISIONS.JS (v0.94w - FIX: Player Mega Hazard Logic)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -17,14 +17,20 @@ export function checkCollisions(state) {
         chests, hazards 
     } = state;
 
+    // Reset flag wrogów
+    for (let i = 0; i < enemies.length; i++) {
+        if (enemies[i]) enemies[i].inMegaHazard = false;
+    }
+
     game.playerInHazard = false;
+    // FIX: Reset flagi Mega Hazardu dla gracza
+    game.playerInMegaHazard = false; 
     game.collisionSlowdown = 0;
 
     // 1. KOLIZJA GRACZ - WROGOWIE
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
-        // FIX: Ignoruj kolizje z umierającymi wrogami
-        if (!enemy || enemy.isDead || enemy.dying) continue;
+        if (!enemy || enemy.isDead) continue;
         
         if (checkCircleCollision(player.x, player.y, player.size * 0.4, enemy.x, enemy.y, enemy.size * 0.4)) {
             const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
@@ -75,8 +81,7 @@ export function checkCollisions(state) {
         let hitEnemy = false;
         for (let j = enemies.length - 1; j >= 0; j--) {
             const e = enemies[j];
-            // FIX: Ignoruj umierających
-            if (!e || e.isDead || e.dying) continue; 
+            if (!e || e.isDead) continue; 
             if (b.lastEnemyHitId === e.id && b.pierce > 0) continue; 
 
             if (checkCircleCollision(b.x, b.y, b.size, e.x, e.y, e.size * 0.6)) {
@@ -146,7 +151,6 @@ export function checkCollisions(state) {
     for (let i = gems.length - 1; i >= 0; i--) {
         const g = gems[i];
         if (!g || g.delay > 0) continue; 
-        // Jeśli już jest zebrany (zjada się), nie zbieraj go ponownie
         if (g.isCollected) continue; 
         
         if (g.isDecayedByHazard && g.isDecayedByHazard()) { g.release(); continue; }
@@ -160,7 +164,6 @@ export function checkCollisions(state) {
         if (dist < collectionRadius + g.r) {
             game.xp += g.val * (game.level >= 20 ? 1.2 : 1); 
             playSound('XPPickup');
-            // FIX: Zamiast release(), uruchamiamy animację zebrania
             g.collect(); 
         }
     }
@@ -200,8 +203,14 @@ export function checkCollisions(state) {
     for (const h of hazards) {
         if (!h || !h.isActive()) continue;
 
+        // Wykrywanie Mega Hazardu PRZED sprawdzeniem gracza
+        const isMega = h.scale > 1.5; 
+
         if (h.checkCollision(player.x, player.y, player.size * 0.4)) {
             game.playerInHazard = true;
+            // FIX: Ustawienie flagi dla gracza
+            if (isMega) game.playerInMegaHazard = true;
+
             if (!game.shield && !devSettings.godMode && game.hazardTicker <= 0) {
                 const chunkDamage = h.damage * 0.5; 
                 game.health -= chunkDamage;
@@ -228,17 +237,28 @@ export function checkCollisions(state) {
             }
         }
         
-        for (const e of enemies) {
-            if (!e || e.isDead || e.dying) continue; // Ignoruj trupy
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            const e = enemies[i];
+            if (!e || e.isDead) continue; 
+            
             if (e.type !== 'elite' && e.type !== 'wall') { 
                 if (h.checkCollision(e.x, e.y, e.size * 0.4)) {
                     e.hazardSlowdownT = 0.2; 
+                    
+                    if (isMega) e.inMegaHazard = true; 
+
                     if (!e.hazardTicker) e.hazardTicker = Math.random() * 0.5; 
                     e.hazardTicker -= state.dt;
+                    
                     if (e.hazardTicker <= 0) {
                         const chunkDamage = h.enemyDamage * 0.5;
                         e.takeDamage(chunkDamage, 'hazard');
                         addHitText(hitTextPool, hitTexts, e.x, e.y - 10, chunkDamage, '#90EE90'); 
+                        
+                        if (e.hp <= 0) {
+                            state.enemyIdCounter = killEnemy(i, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, false, false);
+                        }
+                        
                         e.hazardTicker = 0.5;
                     }
                 }
