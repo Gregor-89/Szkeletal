@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.98 - FIX: Full Logic Restored)
+// DEV.JS (v0.98b - FIX: Auto-Start Scenarios)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -90,8 +90,13 @@ function showDevConfirmModal(text) {
 
 function callStartRun() {
     if (startRunCallback) {
+        // Upewniamy się, że gra wie, iż ładujemy preset
+        devSettings.presetLoaded = true;
         loadConfigCallback();
         startRunCallback();
+        // Zamykamy overlay menu, jeśli jest otwarty
+        const menuOverlay = document.getElementById('menuOverlay');
+        if (menuOverlay) menuOverlay.style.display = 'none';
     } else {
         console.warn("[DEV] Brak callbacka startRunCallback.");
     }
@@ -137,6 +142,9 @@ function devPresetEnemy(enemyType) {
         }
     }
 
+    // FIX: Automatyczny start również dla presetów wrogów
+    callStartRun();
+
     setTimeout(() => {
         if (gameState && gameState.game && gameState.settings) {
             let autoGun = gameState.player.getWeapon(AutoGun);
@@ -169,16 +177,22 @@ function devPresetMinimalWeapons() {
     
     for (let key in perkLevels) delete perkLevels[key];
     
-    game.level = 50; game.time = 1800; devSettings.allowedEnemies = ['all'];
+    game.level = 10; game.time = 60; devSettings.allowedEnemies = ['all'];
     game.xp = 0; game.xpNeeded = calculateXpNeeded(game.level);
     
     document.getElementById('devTime').value = game.time;
     document.getElementById('devLevel').value = game.level;
     document.getElementById('devGodMode').checked = true; 
     
-    const whip = player.getWeapon(WhipWeapon); 
-    if (whip) whip.level = 1;
-    document.getElementById('devWhip').value = 1;
+    // Dodaj WSZYSTKIE bronie na poziomie 1
+    const weaponPerks = ['whip', 'autogun', 'orbital', 'nova', 'chainLightning'];
+    weaponPerks.forEach(id => {
+        const perk = perkPool.find(p => p.id === id);
+        if (perk) {
+            perk.apply(gameState, perk); 
+            perkLevels[id] = 1;
+        }
+    });
 
     applyDevSettings(true);
 }
@@ -204,7 +218,9 @@ function applyDevPreset(targetLevel, perkLevelOffset = 0) {
     const targetWhipLevel = Math.max(1, (whipPerk.max || 5) - perkLevelOffset);
     if (targetWhipLevel > 1) {
         for(let i = 1; i < targetWhipLevel; i++) whip.upgrade(whipPerk);
-        perkLevels['whip'] = targetWhipLevel - 1; 
+        perkLevels['whip'] = targetWhipLevel; 
+    } else {
+        perkLevels['whip'] = 1;
     }
 
     let autoGun = null;
@@ -229,8 +245,8 @@ function applyDevPreset(targetLevel, perkLevelOffset = 0) {
              const targetLvl = Math.max(0, perk.max - perkLevelOffset);
              if (targetLvl > 0) {
                  perkLevels[perk.id] = targetLvl;
-                 if (perk.type !== 'weapon') {
-                     for (let i = 0; i < targetLvl; i++) perk.apply(gameState, perk);
+                 for (let i = 0; i < targetLvl; i++) {
+                     perk.apply(gameState, perk);
                  }
              }
         }
@@ -238,7 +254,7 @@ function applyDevPreset(targetLevel, perkLevelOffset = 0) {
     
     document.getElementById('devLevel').value = game.level;
     document.getElementById('devTime').value = game.time;
-    document.getElementById('devWhip').value = targetWhipLevel;
+    document.getElementById('devWhip').value = perkLevels['whip'] || 1;
     document.getElementById('devAutoGun').value = 1;
     
     if (autoGun) {
@@ -248,7 +264,10 @@ function applyDevPreset(targetLevel, perkLevelOffset = 0) {
         document.getElementById('devPierce').value = autoGun.pierce;
     }
     
-    const orbital = player.getWeapon(OrbitalWeapon); const nova = player.getWeapon(NovaWeapon); const lightning = player.getWeapon(ChainLightningWeapon); 
+    const orbital = player.getWeapon(OrbitalWeapon); 
+    const nova = player.getWeapon(NovaWeapon); 
+    const lightning = player.getWeapon(ChainLightningWeapon); 
+    
     document.getElementById('devOrbital').value = orbital ? orbital.level : 0;
     document.getElementById('devNova').value = nova ? nova.level : 0;
     document.getElementById('devLightning').value = lightning ? lightning.level : 0; 
@@ -259,6 +278,16 @@ function applyDevPreset(targetLevel, perkLevelOffset = 0) {
 
 function devPresetAlmostMax() { applyDevPreset(20, 1); }
 function devPresetMax() { applyDevPreset(50, 0); }
+
+function devStartScenario(type) {
+    console.log(`[Dev] Uruchamianie scenariusza: ${type.toUpperCase()}`);
+    if (type === 'min') devPresetMinimalWeapons();
+    else if (type === 'high') devPresetAlmostMax();
+    else if (type === 'max') devPresetMax();
+    
+    // FIX: Automatyczne uruchomienie gry po wybraniu scenariusza
+    callStartRun();
+}
 
 export function applyDevSettings(silent = false) {
     if (!gameState.game) return;
@@ -298,7 +327,7 @@ export function applyDevSettings(silent = false) {
             whip.level = 1;
             const whipPerk = perkPool.find(p => p.id === 'whip');
             for(let i = 1; i < whipLvl; i++) whip.upgrade(whipPerk);
-            perkLevels['whip'] = whipLvl - 1;
+            perkLevels['whip'] = whipLvl; 
         }
 
         const agLvl = parseInt(document.getElementById('devAutoGun').value) || 0;
@@ -327,11 +356,11 @@ export function applyDevSettings(silent = false) {
             if (lvl > 0) {
                 if (!w) {
                     const p = perkPool.find(x => x.id === perkId);
-                    p.apply({player}, p);
+                    p.apply(gameState, p); 
                     w = player.getWeapon(WeaponClass);
                 }
                 if (w) {
-                    w.level = 0;
+                    w.level = 0; 
                     const p = perkPool.find(x => x.id === perkId);
                     for(let i=0; i<lvl; i++) w.upgrade(p);
                     perkLevels[perkId] = lvl;
@@ -382,5 +411,9 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.devPresetMinimalWeapons = devPresetMinimalWeapons;
     window.devPresetEnemy = devPresetEnemy; 
     
-    console.log('[DEBUG-v0.98] js/services/dev.js: Dev Tools loaded & exported.');
+    // FIX: Mapowanie nazw funkcji dla przycisków w HTML
+    window.devStartScenario = devStartScenario; 
+    window.devStartPreset = devPresetEnemy; 
+    
+    console.log('[DEBUG-v0.98b] js/services/dev.js: Dev Tools loaded & exported.');
 }

@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v0.94w - FIX: Mega Hazard Filter)
+// PLAYER.JS (v0.96 - Opt: Added Type ID)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -9,6 +9,9 @@ import { PLAYER_CONFIG, HAZARD_CONFIG } from '../config/gameData.js';
 
 export class Player {
     constructor(startX, startY) {
+        // OPTYMALIZACJA v0.96: Dodano typ 'player' dla unifikacji sortowania w draw.js
+        this.type = 'player'; 
+        
         this.x = startX;
         this.y = startY;
         this.size = 80; 

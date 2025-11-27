@@ -1,12 +1,12 @@
 // ==============
-// UI.JS (v0.95e - FIX: HUD Formatting & Resume)
+// UI.JS (v0.96b - Volume Sliders Logic)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
 import { devSettings, devStartTime } from '../services/dev.js';
-import { initAudio, playSound } from '../services/audio.js';
+import { initAudio, playSound, setMusicVolume, setSfxVolume } from '../services/audio.js'; // FIX: Added volume setters
 import { 
-    GAME_CONFIG, PLAYER_CONFIG, UI_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG 
+    GAME_CONFIG, PLAYER_CONFIG, UI_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG, MUSIC_CONFIG // FIX: Added MUSIC_CONFIG
 } from '../config/gameData.js';
 import { getLang } from '../services/i18n.js';
 import { get as getAsset } from '../services/assets.js';
@@ -78,6 +78,29 @@ export function initRetroToggles(game, uiData) {
     if (lblBtn && lblChk) {
         lblChk.checked = uiData.pickupShowLabels;
         updateToggleVisual(lblBtn, uiData.pickupShowLabels);
+    }
+
+    // FIX v0.96b: Obsługa suwaków głośności
+    const volMusic = document.getElementById('volMusic');
+    if (volMusic) {
+        // Synchronizuj suwak z aktualną głośnością przy otwarciu
+        if (MUSIC_CONFIG && typeof MUSIC_CONFIG.VOLUME !== 'undefined') {
+            volMusic.value = Math.floor(MUSIC_CONFIG.VOLUME * 100);
+        }
+        // Używamy oninput dla płynnej zmiany w trakcie przesuwania
+        volMusic.oninput = (e) => {
+            const val = parseInt(e.target.value) / 100;
+            setMusicVolume(val);
+        };
+    }
+
+    const volSFX = document.getElementById('volSFX');
+    if (volSFX) {
+        // SFX domyślnie startuje z 0.3 (30%), nie mamy configu w gameData dla SFX, więc ufamy suwakowi (z HTML value="30")
+        volSFX.oninput = (e) => {
+            const val = parseInt(e.target.value) / 100;
+            setSfxVolume(val);
+        };
     }
 }
 
@@ -233,6 +256,10 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
     
     game.inMenu = true; game.paused = true; game.running = false;
 
+    // FIX v0.96a: Start muzyki menu po wejściu do menu
+    initAudio(); 
+    playSound('MusicMenu');
+
     if (uiData.animationFrameId !== null) { cancelAnimationFrame(uiData.animationFrameId); uiData.animationFrameId = null; }
     if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
 
@@ -264,7 +291,11 @@ export function startRun(game, resetAll, uiData) {
     if (uiData.settings.currentSiegeInterval < startOffset) {
         uiData.settings.currentSiegeInterval = startOffset + 10.0; 
     }
+    
     initAudio();
+    // FIX v0.96a: Start muzyki gameplay po rozpoczęciu gry
+    playSound('MusicGameplay');
+    
     if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
 }
 
@@ -362,6 +393,9 @@ export function gameOver(game, uiData) {
     finalLevel.textContent = currentRun.level;
     finalTime.textContent = formatTime(currentRun.time); 
     saveScore(currentRun);
+    
+    // FIX v0.96a: Powrót muzyki menu przy Game Over
+    playSound('MusicMenu');
     
     displayScores('scoresBodyGameOver', currentRun); 
     

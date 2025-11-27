@@ -1,4 +1,4 @@
-/* style.css (v0.95 Final) */
+/* style.css (v0.97 - Loading Screen) */
 
 :root {
     --bg-color: #050505;
@@ -90,9 +90,9 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
 .stat-item-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #aaa; }
 .stat-item-value { font-weight: bold; color: #fff; text-align: right; }
 
-.qr-wrapper { background: #fff; padding: 10px; border-radius: 4px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; }
+.qr-wrapper { background: #fff; padding: 10px; border-radius: 4px; display: flex; justify-content: center; align-items: center; }
 
-.menu-view { display: none; flex-direction: column; height: 100%; animation: fadeIn 0.2s; }
+.menu-view { display: none; flex-direction: column; height: 100%; animation: fadeIn 0.2s; overflow: hidden; }
 .menu-view.active { display: flex; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 .logo-area { text-align: center; margin-bottom: 20px; flex-shrink: 0; }
@@ -100,9 +100,18 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
 .version-tag { color: #666; font-size: 1.2rem; margin-top: 5px; letter-spacing: 2px; }
 .retro-title { text-align: center; color: var(--accent-gold); font-size: 2.5rem; margin: 0 0 15px 0; text-shadow: 3px 3px 0 #000; border-bottom: 2px dashed #444; padding-bottom: 10px; flex-shrink: 0; }
 .text-red { color: var(--accent-red); }
-.menu-list { display: flex; flex-direction: column; gap: 12px; flex-grow: 1; justify-content: center; padding: 0 10%; }
-.spacer { flex-grow: 1; }
-.retro-btn { background: #222; color: #fff; border: 2px solid #fff; padding: 12px; font-family: var(--font-retro); font-size: 1.6rem; text-transform: uppercase; cursor: pointer; text-align: center; width: 100%; box-shadow: 4px 4px 0 #000; position: relative; transition: all 0.1s; }
+
+.menu-list { 
+    display: flex; flex-direction: column; gap: 12px; flex-grow: 1; 
+    padding: 0 10% 20px 10%; 
+    overflow-y: auto; 
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    justify-content: flex-start;
+}
+
+.spacer { flex-grow: 1; min-height: 20px; }
+.retro-btn { background: #222; color: #fff; border: 2px solid #fff; padding: 12px; font-family: var(--font-retro); font-size: 1.6rem; text-transform: uppercase; cursor: pointer; text-align: center; width: 100%; box-shadow: 4px 4px 0 #000; position: relative; transition: all 0.1s; flex-shrink: 0; }
 .retro-btn:active { top: 4px; left: 4px; box-shadow: 0 0 0 #000; }
 .retro-btn:hover { background: #333; color: var(--accent-gold); border-color: var(--accent-gold); }
 .retro-btn.primary { background: #2E7D32; border-color: #4CAF50; font-size: 2rem; padding: 15px; }
@@ -112,7 +121,7 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
 .retro-btn.small { font-size: 1.2rem; padding: 6px 10px; width: auto; }
 .pulse { animation: btnPulse 2s infinite; }
 @keyframes btnPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
-.config-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 12px; margin-bottom: 8px; }
+.config-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 12px; margin-bottom: 8px; flex-shrink: 0; }
 .retro-toggle { background: none; border: none; color: #fff; font-family: var(--font-retro); font-size: 1.6rem; cursor: pointer; text-decoration: underline; }
 .retro-toggle.on { color: var(--accent-green); text-decoration: none; font-weight: bold; }
 .retro-toggle.off { color: var(--accent-red); text-decoration: none; }
@@ -140,5 +149,114 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
     .retro-btn { padding: 14px; font-size: 1.4rem; }
     #gameInfo { font-size: 0.9rem; }
     .stat { min-width: 30%; }
-    .menu-list { padding: 0; }
+    .menu-list { padding: 10px 5% 20px 5%; }
+}
+
+#chestRewardDisplay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 10px;
+}
+
+#chestRewardDisplay img {
+    max-width: 96px; 
+    max-height: 96px;
+    width: auto;
+    height: auto;
+    display: block;
+    margin: 10px auto;
+    object-fit: contain;
+    border: 2px solid #444; 
+    background: #222; 
+    padding: 5px; 
+    border-radius: 8px;
+}
+
+#chestRewardDisplay h3 {
+    color: var(--accent-gold);
+    margin: 10px 0 5px 0;
+    font-size: 1.8rem;
+    text-shadow: 2px 2px 0 #000;
+}
+
+#chestRewardDisplay p {
+    font-size: 1.2rem;
+    color: #ccc;
+    max-width: 400px;
+    margin: 0 auto 10px auto;
+}
+
+.retro-range {
+    -webkit-appearance: none;
+    width: 120px;
+    height: 12px;
+    background: #222;
+    border: 2px solid #555;
+    outline: none;
+    margin: 0 10px;
+}
+.retro-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-gold);
+    border: 2px solid #fff;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 #000;
+}
+.retro-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--accent-gold);
+    border: 2px solid #fff;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 #000;
+}
+
+/* FIX v0.97: Loading Screen Styles */
+#loadingOverlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 300; /* Powyżej wszystkiego */
+}
+
+.loading-container {
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.loading-text {
+    color: var(--accent-gold);
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.loading-bar-border {
+    width: 100%;
+    height: 24px;
+    border: 3px solid #333;
+    background: #111;
+    padding: 2px;
+    box-shadow: 0 0 10px #000;
+}
+
+.loading-bar-fill {
+    height: 100%;
+    background: var(--accent-green);
+    width: 0%;
+    transition: width 0.1s linear;
 }

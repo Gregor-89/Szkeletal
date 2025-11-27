@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.94x - FIX: Dynamic Title Version)
+// MAIN.JS (v0.98 - Integrated Loading Screen)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -18,7 +18,7 @@ import { updateVisualEffects, updateParticles } from './managers/effects.js';
 import { initInput } from './ui/input.js';
 import { devSettings, initDevTools } from './services/dev.js';
 import { updateGame } from './core/gameLogic.js';
-import { loadAudio } from './services/audio.js';
+import { initAudio, loadAudio } from './services/audio.js'; // FIX: Import initAudio
 import { PlayerBullet, EnemyBullet } from './entities/bullet.js';
 import { Gem } from './entities/gem.js';
 import { Particle } from './entities/particle.js';
@@ -43,6 +43,8 @@ class Camera {
 let canvas = null;
 let ctx = null;
 const splashOverlay = document.getElementById('splashOverlay');
+const loadingOverlay = document.getElementById('loadingOverlay'); // FIX
+const loadingBarFill = document.getElementById('loadingBarFill'); // FIX
 
 let savedGameState = null;
 let fps = 0;
@@ -320,27 +322,53 @@ const SPLASH_SEQUENCE = [
 ];
 const SPLASH_DURATIONS = [4000, 15000, 6000];
 
+// FIX v0.98: Nowa funkcja launchApp z paskiem postępu
 function launchApp() {
-    console.log('[Main] Ładowanie zasobów...');
+    console.log('[Main] Startowanie aplikacji...');
+    
+    // Inicjalizacja Audio Context (wymagana interakcja użytkownika później, ale tworzymy obiekt)
+    initAudio();
+
+    // Oblicz całkowitą liczbę zasobów (grafika + audio)
+    // Uwaga: Te właściwości są dostępne, bo są eksportowane w odpowiednich plikach
+    // Jeśli ich nie ma (stara wersja plików), używamy fallbacka
+    const totalAssets = (loadAssets.totalAssets || 50) + (loadAudio.totalSounds || 20);
+    let loadedCount = 0;
+
+    const updateProgress = () => {
+        loadedCount++;
+        const pct = Math.min(100, Math.floor((loadedCount / totalAssets) * 100));
+        if(loadingBarFill) loadingBarFill.style.width = `${pct}%`;
+    };
+
+    // Uruchom ładowanie równoległe
     Promise.all([
-        loadAssets(),
-        loadAudio()
-    ]).then((results) => { 
-        console.log('[Main] Zasoby załadowane.');
-        assetsLoaded = true;
+        loadAssets(updateProgress), // Przekazujemy callback postępu
+        loadAudio(updateProgress)   // Przekazujemy callback postępu
+    ]).then(() => { 
+        console.log('[Main] Wszystkie zasoby załadowane.');
         
-        initializeCanvas();
-        updateUiDataReferences(); 
-        initStars(); 
-        
-        const { wrappedLoadConfig, wrappedStartRun } = initMenuAndEvents();
-        initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
-        initInput(handleEscape, handleJoyStart, handleJoyEnd); 
-        
-        showSplash(currentSplashIndex);
+        // Krótkie opóźnienie dla efektu "100%"
+        setTimeout(() => {
+            if(loadingOverlay) loadingOverlay.style.display = 'none';
+            if(splashOverlay) splashOverlay.style.display = 'flex'; // Pokaż splash dopiero teraz
+            
+            assetsLoaded = true;
+            initializeCanvas();
+            updateUiDataReferences(); 
+            initStars(); 
+            
+            const { wrappedLoadConfig, wrappedStartRun } = initMenuAndEvents();
+            initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun); 
+            initInput(handleEscape, handleJoyStart, handleJoyEnd); 
+            
+            showSplash(currentSplashIndex);
+        }, 500);
 
     }).catch((err) => { 
         console.error("Krytyczny błąd ładowania:", err);
+        // Fallback w razie błędu
+        if(loadingOverlay) loadingOverlay.style.display = 'none';
         assetsLoaded = true;
         initializeCanvas();
         updateUiDataReferences();

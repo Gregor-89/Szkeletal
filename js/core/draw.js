@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.94t - FIX: Z-Index Sorting)
+// DRAW.JS (v0.96 - OPTIMIZED: Static Render List)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -11,6 +11,9 @@ import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 
 let backgroundPattern = null;
 let generatedPatternScale = 0;
+
+// OPTYMALIZACJA v0.96: Statyczna lista renderowania, aby uniknąć alokacji pamięci w każdej klatce
+const renderList = [];
 
 const SHADOW_OFFSETS = {
     'aggressive': 0.24, 
@@ -176,34 +179,37 @@ export function draw(ctx, state, ui, fps) {
         h.draw(ctx);
     }
 
-    // --- FIX: Z-INDEX SORTING (Gracz + Wrogowie) ---
-    const renderList = [];
+    // --- FIX: Z-INDEX SORTING (Optimized for v0.96) ---
+    // Czyścimy listę bez tworzenia nowej tablicy
+    renderList.length = 0;
 
     // 1. Dodaj Gracza
-    renderList.push({ type: 'player_entity', obj: player });
+    renderList.push(player);
 
     // 2. Dodaj Wrogów (z Cullingiem)
-    for (const e of enemies) {
+    for (let i = 0; i < enemies.length; i++) {
+        const e = enemies[i];
         const radius = (e.size / 2) * 1.5; 
         if (e.x + radius < cullLeft || e.x - radius > cullRight || e.y + radius < cullTop || e.y - radius > cullBottom) continue;
-        renderList.push({ type: 'enemy_entity', obj: e });
+        renderList.push(e);
     }
 
     // 3. Sortuj po osi Y (im wyższe Y = niżej na ekranie = bliżej kamery = rysowane później)
-    renderList.sort((a, b) => a.obj.y - b.obj.y);
+    renderList.sort((a, b) => a.y - b.y);
 
-    // 4. Rysuj posortowane obiekty
-    for (const item of renderList) {
-        if (item.type === 'player_entity') {
-            const p = item.obj;
-            drawShadow(ctx, p.x, p.y, p.size, 1.0, 'player');
-            p.draw(ctx, game);
+    // 4. Rysuj posortowane obiekty (bez wrapperów)
+    for (let i = 0; i < renderList.length; i++) {
+        const obj = renderList[i];
+        
+        if (obj.type === 'player') {
+            drawShadow(ctx, obj.x, obj.y, obj.size, 1.0, 'player');
+            obj.draw(ctx, game);
         } else {
-            const e = item.obj;
-            if (!e.isDead) {
-                drawShadow(ctx, e.x, e.y, e.size, e.visualScale || 1.0, e.type);
-                e.draw(ctx, game);
-                drawEnemyHealthBar(ctx, e);
+            // Enemy
+            if (!obj.isDead) {
+                drawShadow(ctx, obj.x, obj.y, obj.size, obj.visualScale || 1.0, obj.type);
+                obj.draw(ctx, game);
+                drawEnemyHealthBar(ctx, obj);
             }
         }
     }

@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.98 - COMPLETE)
+// ASSETS.JS (v0.97 - Loading Progress)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
@@ -8,7 +8,7 @@ const assets = new Map();
 const basePath = 'img/';
 
 function register(key, asset) {
-  console.log(`[Assets] Zarejestrowano zasób: ${key}`);
+  // console.log(`[Assets] Zarejestrowano zasób: ${key}`);
   assets.set(key, asset);
 }
 
@@ -21,25 +21,46 @@ function loadImage(src) {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = () => {
-      // Cicha porażka jest oczekiwana dla brakujących spritesheetów
       resolve(null);
     };
     img.src = src;
   });
 }
 
-async function loadAndRegister(key, src) {
-  const img = await loadImage(src);
-  if (img) {
-    register(key, img);
+// FIX v0.97: loadAssets teraz przyjmuje onProgress callback
+export function loadAssets(onProgress) {
+  console.log('[Assets] Rozpoczynam ładowanie zasobów...');
+  const promises = [];
+  const entries = Object.entries(assetDefinitions);
+  const total = entries.length;
+  
+  // Eksportujemy liczbę assetów dla main.js
+  loadAssets.totalAssets = total;
+  
+  for (const [key, fileName] of entries) {
+    const src = basePath + fileName;
+    
+    // Tworzymy promesę dla każdego pliku
+    const p = loadImage(src).then(img => {
+      if (img) register(key, img);
+      // Wywołaj callback postępu jeśli istnieje
+      if (onProgress) onProgress();
+    });
+    
+    promises.push(p);
   }
+  
+  return Promise.all(promises).then(() => {
+    console.log(`[Assets] Zakończono ładowanie. Załadowano ${assets.size} zasobów.`);
+    return true;
+  });
 }
 
 const assetDefinitions = {
   // --- GRACZ ---
   'player': 'player/drakul_spritesheet.png',
   
-  // --- WROGOWIE (IDLE - Fallback) ---
+  // --- WROGOWIE (IDLE) ---
   'enemy_standard': 'enemies/dadgamer/dadgamer_idle.png',
   'enemy_horde': 'enemies/horde/horde_idle.png',
   'enemy_aggressive': 'enemies/aggressive/aggressive_idle.png',
@@ -50,7 +71,7 @@ const assetDefinitions = {
   'enemy_elite': 'enemies/elite/elite_idle.png',
   'enemy_wall': 'enemies/wall/wall_idle.png',
   
-  // --- WROGOWIE (SPRITESHEETY - AUTOMATYKA) ---
+  // --- WROGOWIE (SPRITESHEETY) ---
   'enemy_standard_spritesheet': 'enemies/dadgamer/dadgamer_spritesheet.png',
   'enemy_horde_spritesheet': 'enemies/horde/horde_spritesheet.png',
   'enemy_aggressive_spritesheet': 'enemies/aggressive/aggressive_spritesheet.png',
@@ -60,7 +81,7 @@ const assetDefinitions = {
   'enemy_elite_spritesheet': 'enemies/elite/elite_spritesheet.png',
   'enemy_wall_spritesheet': 'enemies/wall/wall_spritesheet.png',
   
-  // --- MENEL (RANGED) - SYSTEM 2 SPRITEÓW ---
+  // --- MENEL (RANGED) ---
   'enemy_ranged_walk': 'enemies/ranged/ranged_walk.png',
   'enemy_ranged_attack': 'enemies/ranged/ranged_attack.png',
   
@@ -73,7 +94,7 @@ const assetDefinitions = {
   'projectile_venom': 'projectiles/venom.png',
   'projectile_nova': 'projectiles/nova_shot.png',
   
-  // --- POCISKI BOSSA (KOMENTARZE) ---
+  // --- POCISKI BOSSA ---
   'boss_proj_1': 'projectiles/boss_comment_1.png',
   'boss_proj_2': 'projectiles/boss_comment_2.png',
   'boss_proj_3': 'projectiles/boss_comment_3.png',
@@ -81,7 +102,7 @@ const assetDefinitions = {
   'boss_proj_5': 'projectiles/boss_comment_5.png',
   'boss_proj_6': 'projectiles/boss_comment_6.png',
   
-  // --- IKONY PERKÓW ---
+  // --- IKONY ---
   'icon_orbital': 'icons/orbital.jpg',
   'icon_whip': 'icons/whip.jpg',
   'icon_autogun': 'icons/autogun.png',
@@ -93,13 +114,11 @@ const assetDefinitions = {
   'icon_multishot': 'icons/multishot.png',
   'icon_pierce': 'icons/pierce.png',
   
-  // --- IKONY STATYSTYK ---
   'icon_level': 'icons/level.png',
   'icon_health': 'icons/health.png',
   'icon_speed': 'icons/speed.png',
   'icon_pickup_range': 'icons/magnet.png',
   
-  // --- IKONY HUD ---
   'icon_hud_score': 'icons/hud_score.png',
   'icon_hud_level': 'icons/hud_level.png',
   'icon_hud_xp': 'icons/hud_xp.png',
@@ -107,7 +126,6 @@ const assetDefinitions = {
   'icon_hud_enemies': 'icons/hud_enemies.png',
   'icon_hud_time': 'icons/hud_time.png',
   
-  // --- IKONY BONUSÓW ---
   'icon_hud_speed': 'icons/hud_speed.png',
   'icon_hud_shield': 'icons/hud_shield.png',
   'icon_hud_magnet': 'icons/hud_magnet.png',
@@ -132,19 +150,7 @@ const assetDefinitions = {
   'splash_ratings': 'splash_ratings.png',
   'splash_logo': 'splash_logo.jpg',
   'effect_whip': 'effects/whip_slash.png',
+  
+  'sink': 'sink.png', // Zlew dodany wcześniej
+  'qrcode': 'qrcode.png' // QR dodany wcześniej
 };
-
-export function loadAssets() {
-  console.log('[Assets] Rozpoczynam ładowanie zasobów...');
-  const promises = [];
-  
-  for (const [key, fileName] of Object.entries(assetDefinitions)) {
-    const src = basePath + fileName;
-    promises.push(loadAndRegister(key, src));
-  }
-  
-  return Promise.all(promises).then(() => {
-    console.log(`[Assets] Zakończono ładowanie. Załadowano ${assets.size} zasobów.`);
-    return true;
-  });
-}
