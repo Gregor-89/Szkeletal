@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v0.94t - FIX: Strict Filter)
+// LEVELMANAGER.JS (v0.95e - FIX: Perks Layout)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -153,7 +153,6 @@ export function showPerks(perkLevels, player, game, settings, weapons) {
         const currentLevel = perkLevels[p.id] || 0;
         if (currentLevel >= p.max) return false;
         
-        // FIX: Upewniamy się, że warunek jest sprawdzany poprawnie
         if (p.requiresWeapon) { 
             const hasWeapon = player.weapons.some(w => w.constructor.name === p.requiresWeapon);
             if (!hasWeapon) return false;
@@ -196,15 +195,24 @@ export function showPerks(perkLevels, player, game, settings, weapons) {
                         <img src="${imgAsset.src}" alt="${perk.name}">
                     </div>
                     <div class="perk-info">
-                        <span class="badge">Poziom ${lvl} » ${lvl + 1}</span>
-                        <h4>${getLang(perk.name)}</h4>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                           <h4>${getLang(perk.name)}</h4>
+                           <span class="badge">${lvl} » ${lvl + 1}</span>
+                        </div>
                         <p>${getLang(perk.desc)}</p>
                     </div>
                 `;
             } else {
                 el.className = 'perk';
                 const iconHTML = perk.emoji ? `<span class="picon-emoji">${perk.emoji}</span>` : `<span class="picon" style="background:${perk.color || '#999'}"></span>`;
-                el.innerHTML = `<span class="badge">Poziom ${lvl} » ${lvl + 1}</span><h4>${iconHTML}${getLang(perk.name)}</h4><p>${getLang(perk.desc)}</p>`;
+                el.innerHTML = `
+                   <div class="perk-info">
+                       <div style="display:flex; justify-content:space-between; align-items:center;">
+                           <h4>${iconHTML}${getLang(perk.name)}</h4>
+                           <span class="badge">${lvl} » ${lvl + 1}</span>
+                       </div>
+                       <p>${getLang(perk.desc)}</p>
+                   </div>`;
             }
             
             el.onclick = () => { 

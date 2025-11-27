@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.94 - FIX: Preset Persistence & Full Guide)
+// UI.JS (v0.95e - FIX: HUD Formatting & Resume)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -17,7 +17,7 @@ import {
     levelUpOverlay, pauseOverlay, resumeOverlay, resumeText, 
     chestOverlay, gameOverOverlay, finalScore, finalLevel,
     finalTime, docTitle,
-    enemyCountSpan, enemyLimitSpan, enemyProgressDiv 
+    enemyCountSpan, enemyLimitSpan 
 } from './domElements.js';
 
 import {
@@ -25,8 +25,71 @@ import {
 } from '../services/scoreManager.js';
 
 import { updateStatsUI } from '../managers/levelManager.js';
+import { VERSION } from '../config/version.js'; 
 
-// --- POMOCNIKI ---
+export function switchView(viewId) {
+    document.querySelectorAll('.menu-view').forEach(el => {
+        el.classList.remove('active');
+    });
+    const target = document.getElementById(viewId);
+    if (target) {
+        target.classList.add('active');
+        playSound('Click');
+    }
+    if (viewId === 'view-scores') {
+        displayScores('scoresBodyMenu');
+        const tableBody = document.getElementById('scoresBodyMenu');
+        const emptyMsg = document.getElementById('scoresEmptyMsg');
+        if (tableBody && tableBody.children.length === 0) {
+            if(emptyMsg) emptyMsg.style.display = 'block';
+        } else {
+            if(emptyMsg) emptyMsg.style.display = 'none';
+        }
+    }
+    if (viewId === 'view-guide') {
+        if (window.wrappedGenerateGuide) window.wrappedGenerateGuide();
+    }
+}
+
+export function initRetroToggles(game, uiData) {
+    const hyperBtn = document.getElementById('toggleHyper');
+    const hyperChk = document.getElementById('chkHyper');
+    if (hyperBtn && hyperChk) {
+        hyperChk.checked = game.hyper;
+        updateToggleVisual(hyperBtn, game.hyper);
+    }
+
+    const shakeBtn = document.getElementById('toggleShake');
+    const shakeChk = document.getElementById('chkShake');
+    if (shakeBtn && shakeChk) {
+        shakeChk.checked = !game.screenShakeDisabled;
+        updateToggleVisual(shakeBtn, !game.screenShakeDisabled);
+    }
+
+    const fpsBtn = document.getElementById('toggleFPS');
+    const fpsChk = document.getElementById('chkFPS');
+    if (fpsBtn && fpsChk) {
+        fpsChk.checked = uiData.showFPS;
+        updateToggleVisual(fpsBtn, uiData.showFPS);
+    }
+    
+    const lblBtn = document.getElementById('toggleLabels');
+    const lblChk = document.getElementById('chkPickupLabels');
+    if (lblBtn && lblChk) {
+        lblChk.checked = uiData.pickupShowLabels;
+        updateToggleVisual(lblBtn, uiData.pickupShowLabels);
+    }
+}
+
+function updateToggleVisual(btn, isOn) {
+    if (isOn) {
+        btn.textContent = "WŁ";
+        btn.className = "retro-toggle on";
+    } else {
+        btn.textContent = "WYŁ";
+        btn.className = "retro-toggle off";
+    }
+}
 
 function getIconTag(assetKey, cssClass = 'bar-icon') {
     const asset = getAsset(assetKey);
@@ -36,14 +99,12 @@ function getIconTag(assetKey, cssClass = 'bar-icon') {
     return ''; 
 }
 
-// FIX: Pełna wersja funkcji Guide (z v0.93)
 function generateGuide() {
     const guideContainer = document.getElementById('guideContent');
     if (!guideContainer) return;
 
     const guideData = [
-        { header: "Bohater i Zasoby" },
-        { asset: 'player', nameKey: 'ui_player_name', descKey: 'ui_guide_intro' },
+        { customImg: 'img/drakul.png', nameKey: 'ui_player_name', descKey: 'ui_guide_intro' },
         { asset: 'gem', nameKey: 'ui_gem_name', descKey: 'ui_gem_desc' },
         { asset: 'chest', nameKey: 'pickup_chest_name', descKey: 'pickup_chest_desc' },
         { header: "Znajdźki" },
@@ -71,19 +132,25 @@ function generateGuide() {
         { asset: 'icon_lightning', nameKey: 'perk_chainLightning_name', descKey: 'perk_chainLightning_desc' }
     ];
 
-    let html = `<h4 style="color:#4caf50; margin-bottom:15px;">📖 ${getLang('ui_guide_title')}</h4>`;
+    let html = `<h4 style="color:#4caf50; margin-bottom:15px; text-align:center;">📖 ${getLang('ui_guide_title')}</h4>`;
     guideData.forEach(item => {
         if (item.header) {
-            html += `<div class="guide-section-title">${item.header}</div>`;
+            html += `<div class="guide-section-title" style="margin-top:20px; border-bottom:1px solid #444; color:#FFD700; font-size:1.2em;">${item.header}</div>`;
         } else {
-            const imgTag = getIconTag(item.asset, 'guide-icon');
-            const displayIcon = imgTag ? imgTag : '<span style="font-size:24px;">❓</span>';
+            let displayIcon = '<span style="font-size:24px;">❓</span>';
+            
+            if (item.customImg) {
+                displayIcon = `<img src="${item.customImg}" class="guide-icon">`;
+            } else if (item.asset) {
+                const asset = getAsset(item.asset);
+                if(asset) displayIcon = `<img src="${asset.src}" class="guide-icon">`;
+            }
+            
             const name = item.nameKey ? getLang(item.nameKey) : item.title;
             const desc = item.descKey ? getLang(item.descKey) : item.desc;
-            html += `<div class="guide-entry"><div class="guide-icon-wrapper">${displayIcon}</div><div class="guide-text-wrapper"><strong style="color:#fff;">${name}</strong><br><span style="color:#bbb; font-size:13px;">${desc}</span></div></div>`;
+            html += `<div class="guide-entry"><div class="guide-icon-wrapper">${displayIcon}</div><div class="guide-text-wrapper"><strong style="color:#FFD700;">${name}</strong><br><span style="color:#ccc; font-size:16px;">${desc}</span></div></div>`;
         }
     });
-    html += '<p style="margin-top:20px; color:#666; font-size:11px;">* Grafiki v0.93a</p>';
     guideContainer.innerHTML = html;
 }
 
@@ -96,16 +163,11 @@ export function updateEnemyCounter(game, enemies) {
     const nonWallEnemiesCount = enemies.filter(e => e.type !== 'wall').length;
     const limit = game.dynamicEnemyLimit;
     
-    if (enemyCountSpan) enemyCountSpan.textContent = nonWallEnemiesCount;
-    if (enemyLimitSpan) enemyLimitSpan.textContent = limit;
+    const cntSpan = document.getElementById('enemyCountSpan');
+    const limSpan = document.getElementById('enemyLimitSpan');
     
-    if (enemyProgressDiv && limit > 0) {
-        const enemyPct = Math.min(100, (nonWallEnemiesCount / limit) * 100);
-        enemyProgressDiv.style.width = enemyPct.toFixed(1) + '%';
-        if (enemyPct > 85) enemyProgressDiv.style.background = 'linear-gradient(90deg, #f44336, #e53935)';
-        else if (enemyPct > 50) enemyProgressDiv.style.background = 'linear-gradient(90deg, #ff9800, #fb8c00)';
-        else enemyProgressDiv.style.background = 'linear-gradient(90deg, #4fc3f7, #81c784)';
-    }
+    if (cntSpan) cntSpan.textContent = nonWallEnemiesCount;
+    if (limSpan) limSpan.textContent = limit;
 }
 
 export function updateUI(game, player, settings, weapons, enemies = []) {
@@ -113,22 +175,20 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
     document.getElementById('level').textContent = game.level;
     document.getElementById('xp').textContent = game.xp;
     document.getElementById('xpNeeded').textContent = game.xpNeeded;
-    document.getElementById('health').textContent = Math.max(0, Math.floor(game.health));
+    
+    const healthTxt = document.getElementById('health');
+    if(healthTxt) healthTxt.textContent = `${Math.max(0, Math.floor(game.health))}/${game.maxHealth}`;
+    
     document.getElementById('time').textContent = formatTime(Math.floor(game.time));
 
     const xpPct = Math.max(0, Math.min(1, game.xp / game.xpNeeded));
     xpBarFill.style.width = (xpPct * 100).toFixed(1) + '%';
-    document.getElementById('xpProgress').style.width = (xpPct * 100).toFixed(1) + '%';
-    document.getElementById('healthProgress').style.width = (Math.max(0, game.health / game.maxHealth) * 100).toFixed(1) + '%';
-    document.getElementById('levelProgress').style.width = (Math.min(100, game.level * 5)) + '%';
-    document.getElementById('scoreProgress').style.width = (Math.min(100, game.score / 50)) + '%';
-    document.getElementById('timeProgress').style.width = (Math.min(100, game.time / 6)) + '%';
 
     const healthPctBar = Math.max(0, Math.min(1, game.health / game.maxHealth));
     playerHPBarInner.style.width = (healthPctBar * 100).toFixed(1) + '%';
     
-    const hpIcon = getIconTag('icon_hud_health');
-    playerHPBarTxt.innerHTML = `${hpIcon} ${Math.max(0, Math.floor(game.health))} / ${game.maxHealth}`;
+    playerHPBarTxt.innerHTML = `${Math.max(0, Math.floor(game.health))}/${game.maxHealth}`;
+    xpBarTxt.innerHTML = `${game.xp}/${game.xpNeeded}`;
 
     if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
     if (hpBarOuterRef) { 
@@ -137,11 +197,6 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
         } else {
             hpBarOuterRef.classList.remove('low-health-pulse');
         }
-    }
-
-    if (xpBarTxt) {
-        const xpIcon = getIconTag('icon_hud_xp');
-        xpBarTxt.innerHTML = `${xpIcon} ${game.xp} / ${game.xpNeeded}`;
     }
 
     let bonusHTML = '';
@@ -159,10 +214,7 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
     bonusPanel.innerHTML = bonusHTML;
 }
 
-// --- ZARZĄDZANIE STANEM GRY ---
-
 export function showMenu(game, resetAll, uiData, allowContinue = false) {
-    // FIX: Resetujemy presetLoaded tylko przy powrocie do Menu
     devSettings.presetLoaded = false; 
 
     if (!allowContinue) {
@@ -173,15 +225,18 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
     if (uiData.savedGameState && allowContinue) btnContinue.style.display = 'block';
     else btnContinue.style.display = 'none';
 
+    switchView('view-main');
     menuOverlay.style.display = 'flex';
+    
+    const verTag = document.getElementById('menuVersionTag');
+    if(verTag) verTag.textContent = `v${VERSION}`;
+    
     game.inMenu = true; game.paused = true; game.running = false;
 
     if (uiData.animationFrameId !== null) { cancelAnimationFrame(uiData.animationFrameId); uiData.animationFrameId = null; }
     if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
 
-    const gameTitle = getLang('ui_game_title') || "Szkeletal";
-    docTitle.textContent = `${gameTitle} v${uiData.VERSION}`;
-    
+    initRetroToggles(game, uiData);
     window.wrappedGenerateGuide();
     
     updateUI(game, uiData.player, uiData.settings, null); 
@@ -213,13 +268,11 @@ export function startRun(game, resetAll, uiData) {
     if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
 }
 
-// FIX: Ulepszona logika resetu (obsługa presetów)
 export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     if (uiData.animationFrameId !== null) { cancelAnimationFrame(uiData.animationFrameId); uiData.animationFrameId = null; }
     uiData.lastTime = 0; uiData.startTime = 0;
     const game = uiData.game; 
     
-    // SCENARIUSZ NORMALNY (Brak aktywnego presetu)
     if (devSettings.presetLoaded === false) {
         game.score = 0; game.level = 1; game.health = PLAYER_CONFIG.INITIAL_HEALTH; game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH; game.time = 0; 
         game.xp = 0; game.xpNeeded = GAME_CONFIG.INITIAL_XP_NEEDED; game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
@@ -232,19 +285,14 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         
         for (let key in perkLevels) delete perkLevels[key];
     } 
-    // SCENARIUSZ PRESETU (np. Retry po teście bossa)
     else {
         game.score = 0; 
         settings.lastFire = 0; 
-        // Resetujemy liczniki eventów, ale dev.js może je zaraz nadpisać (to jest OK)
         settings.lastElite = 0; 
         settings.lastHazardSpawn = 0; 
         settings.lastSiegeEvent = 0; 
         settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
         game.newEnemyWarningT = 0; game.newEnemyWarningType = null;
-        
-        // FIX: NIE resetujemy devSettings.presetLoaded tutaj.
-        // Robimy to tylko przy wyjściu do Menu.
         
         const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
         uiData.player.x = worldWidth / 2; uiData.player.y = worldHeight / 2;
@@ -290,12 +338,18 @@ export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
     pauseOverlay.style.display = 'none';
     levelUpOverlay.style.display = 'none'; 
     chestOverlay.style.display = 'none'; 
+    
     if (timerDuration <= 0) { resumeOverlay.style.display = 'none'; game.paused = false; return; }
+    
     let t = timerDuration;
     resumeOverlay.style.display = 'flex';
+    const titleEl = document.getElementById('resumeTitle');
+    
     const id = setInterval(() => {
         t = Math.max(0, t - 0.05);
         resumeText.textContent = `${getLang('ui_resume_text')} ${t.toFixed(2)} s`;
+        if(titleEl) titleEl.textContent = Math.ceil(t);
+        
         if (t <= 0) { clearInterval(id); resumeOverlay.style.display = 'none'; game.paused = false; }
     }, 50);
 }
@@ -308,9 +362,13 @@ export function gameOver(game, uiData) {
     finalLevel.textContent = currentRun.level;
     finalTime.textContent = formatTime(currentRun.time); 
     saveScore(currentRun);
+    
     displayScores('scoresBodyGameOver', currentRun); 
+    
     attachClearScoresListeners();
     gameOverOverlay.style.display = 'flex';
     if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
     if (hpBarOuterRef) hpBarOuterRef.classList.remove('low-health-pulse');
 }
+
+window.wrappedDisplayScores = () => displayScores('scoresBodyMenu');

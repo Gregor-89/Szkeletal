@@ -1,18 +1,12 @@
 // ==============
-// SCOREMANAGER.JS (v0.70 - Refaktoryzacja: Wydzielenie logiki wyników z ui.js)
+// SCOREMANAGER.JS (v0.95e - FIX: Retro Table Support)
 // Lokalizacja: /js/services/scoreManager.js
 // ==============
 
-// Import referencji DOM potrzebnych do wyświetlania wyników i modali
 import {
     confirmOverlay, confirmText, btnConfirmYes, btnConfirmNo
 } from '../ui/domElements.js';
 
-// --- FUNKCJE POMOCNICZE (PRZENIESIONE Z UI.JS) ---
-
-/**
- * Formatuje czas na "Xm Ys"
- */
 export function formatTime(totalSeconds) {
     if (totalSeconds < 60) {
         return `${totalSeconds}s`;
@@ -21,8 +15,6 @@ export function formatTime(totalSeconds) {
     const seconds = totalSeconds % 60;
     return `${minutes}m ${seconds}s`;
 }
-
-// --- TABLICA WYNIKÓW (PRZENIESIONE Z UI.JS) ---
 
 export function saveScore(currentRun) {
     try {
@@ -37,28 +29,23 @@ export function saveScore(currentRun) {
 }
 
 export function displayScores(targetId, highlightRun = null) {
-    // UWAGA: Ta funkcja jest teraz zależna od DOM ładowanego dynamicznie.
-    // Działa, ponieważ jest wywoływana dopiero po załadowaniu menu (w showMenu)
-    // lub na ekranie game over (który jest zawsze załadowany).
     const scoresBody = document.getElementById(targetId);
-    const scoresContainer = scoresBody ? scoresBody.closest('.scores-container') : null; 
-
-    if (!scoresBody || !scoresContainer) {
-        // Cicha awaria, jeśli DOM jeszcze nie istnieje (np. podczas testów)
-        return;
-    }
+    const emptyMsg = document.getElementById('scoresEmptyMsg');
+    
+    if (!scoresBody) return;
 
     try {
         const scores = JSON.parse(localStorage.getItem('szketalScores') || '[]');
 
-        if (scores.length === 0) {
-            scoresContainer.style.display = 'none';
-            return; 
-        } else {
-            scoresContainer.style.display = 'block'; 
-        }
-
         scoresBody.innerHTML = '';
+        
+        if (scores.length === 0) {
+            if (emptyMsg) emptyMsg.style.display = 'block';
+            return; 
+        } 
+        
+        if (emptyMsg) emptyMsg.style.display = 'none';
+
         scores.forEach((s, idx) => {
             const tr = document.createElement('tr');
             
@@ -66,7 +53,8 @@ export function displayScores(targetId, highlightRun = null) {
                 s.score === highlightRun.score && 
                 s.level === highlightRun.level && 
                 s.time === highlightRun.time) {
-                tr.className = 'highlight-score';
+                tr.style.color = '#4CAF50'; 
+                tr.style.fontWeight = 'bold';
                 highlightRun = null; 
             }
             
@@ -80,51 +68,47 @@ export function displayScores(targetId, highlightRun = null) {
 }
 
 function showConfirmModal(text, onConfirm) {
-    if (!confirmOverlay || !confirmText || !btnConfirmYes || !btnConfirmNo) {
-        console.error("BŁĄD: Brakuje elementów DOM dla modala potwierdzenia.");
-        // Fallback na natywny alert, jeśli DOM zawiedzie
-        if (confirm(text)) {
-            onConfirm();
-        }
+    const overlay = document.getElementById('confirmOverlay');
+    const txt = document.getElementById('confirmText');
+    const yes = document.getElementById('btnConfirmYes');
+    const no = document.getElementById('btnConfirmNo');
+
+    if (!overlay || !txt || !yes || !no) {
+        if (confirm(text)) onConfirm();
         return;
     }
     
-    confirmText.textContent = text;
-    confirmOverlay.style.display = 'flex';
+    txt.textContent = text;
+    overlay.style.display = 'flex';
 
-    btnConfirmYes.onclick = () => {
-        confirmOverlay.style.display = 'none';
+    yes.onclick = () => {
+        overlay.style.display = 'none';
         onConfirm(); 
     };
     
-    btnConfirmNo.onclick = () => {
-        confirmOverlay.style.display = 'none';
+    no.onclick = () => {
+        overlay.style.display = 'none';
     };
 }
 
 export function attachClearScoresListeners() {
-    // Ta funkcja musi być wywoływana PO załadowaniu dynamicznego HTML menu
-    document.querySelectorAll('.btn-clear-scores').forEach(button => {
+    const btns = document.querySelectorAll('#btnClearScoresMenu, #btnClearScoresGO');
+    btns.forEach(button => {
         button.onclick = () => {
             const clearScoresAction = () => {
                 try {
                     localStorage.removeItem('szketalScores');
-                    console.log("Tablica wyników wyczyszczona.");
                     displayScores('scoresBodyMenu');
                     displayScores('scoresBodyGameOver');
                 } catch (e) {
-                    console.error("BŁĄD: Nie można wyczyścić tablicy wyników:", e);
-                    alert("Wystąpił błąd podczas czyszczenia wyników.");
+                    console.error("BŁĄD:", e);
                 }
             };
 
             showConfirmModal(
-                "Czy na pewno chcesz wyzerować tablicę wyników? Tej operacji nie można cofnąć.",
+                "Czy na pewno chcesz wyzerować tablicę wyników?",
                 clearScoresAction
             );
         };
     });
 }
-
-// LOG DIAGNOSTYCZNY
-console.log('[DEBUG-v0.70] js/services/scoreManager.js: Załadowano moduł Menedżera Wyników.');

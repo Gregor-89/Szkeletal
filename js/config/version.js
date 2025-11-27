@@ -3,7 +3,7 @@
 // Lokalizacja: /js/config/version.js
 // ==============
 
-export const VERSION = '0.94';
+export const VERSION = '0.95';
 
 // Log diagnostyczny startu
 console.log(`[Szkeletal] Inicjalizacja wersji v${VERSION} (System Auto-Animacji)`);

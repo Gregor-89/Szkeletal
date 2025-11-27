@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.94 - FIX: Debug Hitboxes & Settings)
+// DEV.JS (v0.98 - FIX: Full Logic Restored)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -13,8 +13,24 @@ import { NovaWeapon } from '../config/weapons/novaWeapon.js';
 import { WhipWeapon } from '../config/weapons/whipWeapon.js';
 import { ChainLightningWeapon } from '../config/weapons/chainLightningWeapon.js';
 
-import { PICKUP_CLASS_MAP } from '../managers/effects.js';
+import { HealPickup } from '../entities/pickups/healPickup.js';
+import { MagnetPickup } from '../entities/pickups/magnetPickup.js';
+import { ShieldPickup } from '../entities/pickups/shieldPickup.js';
+import { SpeedPickup } from '../entities/pickups/speedPickup.js';
+import { BombPickup } from '../entities/pickups/bombPickup.js';
+import { FreezePickup } from '../entities/pickups/freezePickup.js';
+import { Chest } from '../entities/chest.js';
+
 import { confirmOverlay, confirmText, btnConfirmYes } from '../ui/domElements.js';
+
+const PICKUP_CLASS_MAP = {
+    'heal': HealPickup,
+    'magnet': MagnetPickup,
+    'shield': ShieldPickup,
+    'speed': SpeedPickup,
+    'bomb': BombPickup,
+    'freeze': FreezePickup
+};
 
 export let devStartTime = 0;
 
@@ -22,13 +38,9 @@ export function resetDevTime() {
     devStartTime = 0;
 }
 
-/**
- * Ustawienia Dev
- * FIX: Dodano debugHitboxes
- */
 export const devSettings = {
     godMode: false,
-    debugHitboxes: false, // NOWOŚĆ: Flaga rysowania hitboxów
+    debugHitboxes: false,
     allowedEnemies: ['all'],
     allowedPickups: ['all'],
     presetLoaded: false,
@@ -102,14 +114,8 @@ function devPresetEnemy(enemyType) {
     }
 
     const ENEMY_UNLOCK_TIMES = {
-        'standard': 0,
-        'horde': 30,
-        'aggressive': 60,
-        'kamikaze': 90,
-        'splitter': 120,
-        'tank': 180,
-        'ranged': 210, 
-        'elite': 0, 
+        'standard': 0, 'horde': 30, 'aggressive': 60, 'kamikaze': 90,
+        'splitter': 120, 'tank': 180, 'ranged': 210, 'elite': 0, 
         'wall': SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME 
     };
     
@@ -118,10 +124,11 @@ function devPresetEnemy(enemyType) {
 
     document.getElementById('devSpawnRate').value = "0.03"; 
     document.getElementById('devMaxEnemies').value = "100"; 
+    
     const timeInput = document.getElementById('devTime');
     if (timeInput) timeInput.value = jumpTime;
 
-    applyDevSettings(); 
+    applyDevSettings(true); 
     devStartTime = jumpTime;
 
     if (gameState && gameState.game) {
@@ -130,11 +137,8 @@ function devPresetEnemy(enemyType) {
         }
     }
 
-    callStartRun();
-
     setTimeout(() => {
         if (gameState && gameState.game && gameState.settings) {
-            
             let autoGun = gameState.player.getWeapon(AutoGun);
             if (!autoGun) {
                 const autogunPerk = perkPool.find(p => p.id === 'autogun');
@@ -143,106 +147,121 @@ function devPresetEnemy(enemyType) {
                     gameState.perkLevels['autogun'] = 1; 
                 }
             }
+            if (enemyType === 'wall') gameState.settings.lastSiegeEvent = -999999; 
+            else gameState.settings.lastSiegeEvent = jumpTime + 10000;
 
-            if (enemyType === 'wall') {
-                gameState.settings.lastSiegeEvent = -999999; 
-            } else {
-                gameState.settings.lastSiegeEvent = jumpTime + 10000;
-            }
-
-            if (enemyType === 'elite') {
-                gameState.settings.lastElite = -999999; 
-            } else {
-                gameState.settings.lastElite = jumpTime + 10000;
-            }
-            
-            console.log(`[Dev] Test wroga ${enemyType} aktywny. Czas: ${jumpTime}s. Eventy zablokowane.`);
+            if (enemyType === 'elite') gameState.settings.lastElite = -999999; 
+            else gameState.settings.lastElite = jumpTime + 10000;
         }
     }, 200);
 }
 
 function devPresetMinimalWeapons() {
-    if (!gameState.game || !gameState.settings || !gameState.player) return;
+    if (!gameState.game) return;
+    const { game, player, perkLevels } = gameState;
     
-    const { game, settings, perkLevels, player } = gameState;
-
     const worldWidth = gameState.canvas.width * (gameState.camera.worldWidth / gameState.camera.viewWidth);
     const worldHeight = gameState.canvas.height * (gameState.camera.worldHeight / gameState.camera.viewHeight);
     player.reset(worldWidth, worldHeight);
     
     game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
-    game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH;
-    game.health = PLAYER_CONFIG.INITIAL_HEALTH;
+    game.health = PLAYER_CONFIG.INITIAL_HEALTH; game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH;
     
     for (let key in perkLevels) delete perkLevels[key];
     
-    game.level = 10; 
-    game.time = 181; 
-    devSettings.allowedEnemies = ['all'];
+    game.level = 50; game.time = 1800; devSettings.allowedEnemies = ['all'];
+    game.xp = 0; game.xpNeeded = calculateXpNeeded(game.level);
     
-    game.xp = 0;
-    game.xpNeeded = calculateXpNeeded(game.level);
-    
-    const devTimeInput = document.getElementById('devTime');
-    if (devTimeInput) devTimeInput.value = game.time; 
-    devStartTime = game.time;
+    document.getElementById('devTime').value = game.time;
+    document.getElementById('devLevel').value = game.level;
+    document.getElementById('devGodMode').checked = true; 
     
     const whip = player.getWeapon(WhipWeapon); 
     if (whip) whip.level = 1;
+    document.getElementById('devWhip').value = 1;
 
-    ['speed', 'pickup', 'health'].forEach(perkId => {
-        const perk = perkPool.find(p => p.id === perkId);
-        if (perk && perk.max > 0) {
-            perk.apply(gameState, perk); 
-            perkLevels[perkId] = 1;
-        }
-    });
+    applyDevSettings(true);
+}
 
-    const autogunPerk = perkPool.find(p => p.id === 'autogun');
-    if (autogunPerk) {
-        autogunPerk.apply(gameState, autogunPerk); 
-        perkLevels['autogun'] = 1;
-        ['firerate', 'damage', 'multishot', 'pierce'].forEach(perkId => {
-             const perk = perkPool.find(p => p.id === perkId);
-             if (perk && perk.max > 0) {
-                perk.apply(gameState, perk); 
-                perkLevels[perkId] = 1;
-             }
-        });
+function applyDevPreset(targetLevel, perkLevelOffset = 0) {
+    if (!gameState.game) return;
+    const { game, settings, perkLevels, player } = gameState;
+    
+    const worldWidth = gameState.canvas.width * (gameState.camera.worldWidth / gameState.camera.viewWidth);
+    const worldHeight = gameState.canvas.height * (gameState.camera.worldHeight / gameState.camera.viewHeight);
+    player.reset(worldWidth, worldHeight);
+    
+    game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
+    game.health = PLAYER_CONFIG.INITIAL_HEALTH; game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH;
+    
+    for (let key in perkLevels) delete perkLevels[key];
+    
+    game.level = targetLevel; game.time = 600; devSettings.allowedEnemies = ['all'];
+    game.xp = 0; game.xpNeeded = calculateXpNeeded(game.level);
+    
+    const whip = player.getWeapon(WhipWeapon); 
+    const whipPerk = perkPool.find(p => p.id === 'whip');
+    const targetWhipLevel = Math.max(1, (whipPerk.max || 5) - perkLevelOffset);
+    if (targetWhipLevel > 1) {
+        for(let i = 1; i < targetWhipLevel; i++) whip.upgrade(whipPerk);
+        perkLevels['whip'] = targetWhipLevel - 1; 
     }
 
-    ['orbital', 'nova', 'chainLightning'].forEach(weaponId => {
-        const perk = perkPool.find(p => p.id === weaponId);
-        if (perk) {
-            perk.apply(gameState, perk); 
-            perkLevels[weaponId] = 1;
+    let autoGun = null;
+    const autogunPerk = perkPool.find(p => p.id === 'autogun');
+    if (autogunPerk) { 
+        autogunPerk.apply(gameState, autogunPerk); 
+        perkLevels['autogun'] = 1; 
+        autoGun = player.getWeapon(AutoGun); 
+    }
+    
+    if (autoGun) {
+        ['damage', 'firerate', 'multishot', 'pierce'].forEach(perkId => {
+            const perk = perkPool.find(p => p.id === perkId);
+            const targetLevel = Math.max(0, perk.max - perkLevelOffset);
+            for (let i = 0; i < targetLevel; i++) perk.apply(gameState, perk);
+            perkLevels[perkId] = targetLevel;
+        });
+    }
+    
+    perkPool.forEach(perk => {
+        if (['orbital', 'nova', 'chainLightning', 'speed', 'pickup', 'health'].includes(perk.id)) {
+             const targetLvl = Math.max(0, perk.max - perkLevelOffset);
+             if (targetLvl > 0) {
+                 perkLevels[perk.id] = targetLvl;
+                 if (perk.type !== 'weapon') {
+                     for (let i = 0; i < targetLvl; i++) perk.apply(gameState, perk);
+                 }
+             }
         }
     });
     
     document.getElementById('devLevel').value = game.level;
-    document.getElementById('devHealth').value = game.health;
-    document.getElementById('devMaxHealth').value = game.maxHealth;
-    document.getElementById('devXP').value = game.xp;
-    document.getElementById('devWhip').value = whip.level;
+    document.getElementById('devTime').value = game.time;
+    document.getElementById('devWhip').value = targetWhipLevel;
     document.getElementById('devAutoGun').value = 1;
-    document.getElementById('devOrbital').value = 1;
-    document.getElementById('devNova').value = 1;
-    document.getElementById('devLightning').value = 1;
-
-    const autoGun = player.getWeapon(AutoGun);
+    
     if (autoGun) {
         document.getElementById('devDamage').value = autoGun.bulletDamage;
         document.getElementById('devFireRate').value = autoGun.fireRate;
         document.getElementById('devMultishot').value = autoGun.multishot;
         document.getElementById('devPierce').value = autoGun.pierce;
     }
-
+    
+    const orbital = player.getWeapon(OrbitalWeapon); const nova = player.getWeapon(NovaWeapon); const lightning = player.getWeapon(ChainLightningWeapon); 
+    document.getElementById('devOrbital').value = orbital ? orbital.level : 0;
+    document.getElementById('devNova').value = nova ? nova.level : 0;
+    document.getElementById('devLightning').value = lightning ? lightning.level : 0; 
+    
     devSettings.presetLoaded = true;
-    callStartRun();
+    applyDevSettings(true); 
 }
 
-function applyDevSettings() {
-    if (!gameState.game || !gameState.settings || !gameState.player) return;
+function devPresetAlmostMax() { applyDevPreset(20, 1); }
+function devPresetMax() { applyDevPreset(50, 0); }
+
+export function applyDevSettings(silent = false) {
+    if (!gameState.game) return;
     
     const { game, settings, player, perkLevels } = gameState;
     
@@ -260,173 +279,96 @@ function applyDevSettings() {
     game.maxHealth = parseInt(document.getElementById('devMaxHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
     game.level = parseInt(document.getElementById('devLevel').value) || 1;
     game.xp = parseInt(document.getElementById('devXP').value) || 0;
+    game.xpNeeded = calculateXpNeeded(game.level);
     
-    // FIX: Flaga ustawiana jest tutaj, ale nie powinna być czyszczona przy restarcie gry
-    devSettings.presetLoaded = true;
-    
-    // FIX: Obsługa GodMode i DebugHitboxes
     devSettings.godMode = document.getElementById('devGodMode').checked;
-    // Pobranie checkboxa (jeśli istnieje w HTML, jeśli nie - false)
     const dbgHb = document.getElementById('devDebugHitboxes');
     devSettings.debugHitboxes = dbgHb ? dbgHb.checked : false;
 
-    if (!game.inMenu || game.manualPause) {
-        game.xpNeeded = calculateXpNeeded(game.level);
-        
-        const whip = player.getWeapon(WhipWeapon);
-        const whipLevel = parseInt(document.getElementById('devWhip').value) || 1;
-        if (whip && whip.level !== whipLevel) {
-            whip.level = 1; 
-            const whipPerk = perkPool.find(p => p.id === 'whip');
-            for(let i = 1; i < whipLevel; i++) whip.upgrade(whipPerk);
-            perkLevels['whip'] = whipLevel - 1;
-        }
-
-        let autoGun = player.getWeapon(AutoGun);
-        const autoGunLevel = parseInt(document.getElementById('devAutoGun').value) || 0; 
-        
-        if (autoGunLevel === 0 && autoGun) {
-            player.weapons = player.weapons.filter(w => !(w instanceof AutoGun));
-            autoGun = null;
-            delete perkLevels['autogun'];
-        } else if (autoGunLevel === 1 && !autoGun) {
-            const autogunPerk = perkPool.find(p => p.id === 'autogun');
-            autogunPerk.apply(gameState, autogunPerk);
-            autoGun = player.getWeapon(AutoGun); 
-            perkLevels['autogun'] = 1;
-        }
-
-        if (autoGun) {
-            autoGun.bulletDamage = parseInt(document.getElementById('devDamage').value) || (WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE || 1);
-            autoGun.fireRate = parseInt(document.getElementById('devFireRate').value) || (WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE || 650);
-            autoGun.multishot = parseInt(document.getElementById('devMultishot').value) || 0;
-            autoGun.pierce = parseInt(document.getElementById('devPierce').value) || 0;
-        }
-
-        // ... Reszta obsługi broni (Orbital, Nova, Lightning) bez zmian ...
-        // Skróciłem ten fragment dla czytelności odpowiedzi, ale w pełnym pliku on tam jest.
-        // Jeśli plik nadpisuje całość, musiałbym to wkleić, ale tutaj skupiamy się na zmianach.
-        // Dla pewności zostawiam kluczowe elementy.
-    }
-    
     settings.spawn = parseFloat(document.getElementById('devSpawnRate').value) || GAME_CONFIG.INITIAL_SPAWN_RATE;
     settings.maxEnemies = parseInt(document.getElementById('devMaxEnemies').value) || GAME_CONFIG.MAX_ENEMIES;
     
     const enemySelect = document.getElementById('devEnemyType');
     devSettings.allowedEnemies = Array.from(enemySelect.selectedOptions).map(o => o.value);
     
-    const pickupSelect = document.getElementById('devPickupType');
-    devSettings.allowedPickups = Array.from(pickupSelect.selectedOptions).map(o => o.value);
+    if (!game.inMenu || game.manualPause) {
+        const whipLvl = parseInt(document.getElementById('devWhip').value) || 1;
+        const whip = player.getWeapon(WhipWeapon);
+        if (whip) {
+            whip.level = 1;
+            const whipPerk = perkPool.find(p => p.id === 'whip');
+            for(let i = 1; i < whipLvl; i++) whip.upgrade(whipPerk);
+            perkLevels['whip'] = whipLvl - 1;
+        }
+
+        const agLvl = parseInt(document.getElementById('devAutoGun').value) || 0;
+        let autoGun = player.getWeapon(AutoGun);
+        if (agLvl > 0) {
+            if (!autoGun) {
+                const p = perkPool.find(x => x.id === 'autogun');
+                p.apply({player}, p);
+                autoGun = player.getWeapon(AutoGun);
+            }
+            if (autoGun) {
+                autoGun.bulletDamage = parseInt(document.getElementById('devDamage').value);
+                autoGun.fireRate = parseInt(document.getElementById('devFireRate').value);
+                autoGun.multishot = parseInt(document.getElementById('devMultishot').value);
+                autoGun.pierce = parseInt(document.getElementById('devPierce').value);
+                perkLevels['autogun'] = 1;
+            }
+        } else if (autoGun) {
+            player.weapons = player.weapons.filter(w => !(w instanceof AutoGun));
+            delete perkLevels['autogun'];
+        }
+        
+        const handleWeapon = (WeaponClass, lvlInputId, perkId) => {
+            const lvl = parseInt(document.getElementById(lvlInputId).value) || 0;
+            let w = player.getWeapon(WeaponClass);
+            if (lvl > 0) {
+                if (!w) {
+                    const p = perkPool.find(x => x.id === perkId);
+                    p.apply({player}, p);
+                    w = player.getWeapon(WeaponClass);
+                }
+                if (w) {
+                    w.level = 0;
+                    const p = perkPool.find(x => x.id === perkId);
+                    for(let i=0; i<lvl; i++) w.upgrade(p);
+                    perkLevels[perkId] = lvl;
+                }
+            } else if (w) {
+                player.weapons = player.weapons.filter(we => !(we instanceof WeaponClass));
+                delete perkLevels[perkId];
+            }
+        };
+
+        handleWeapon(OrbitalWeapon, 'devOrbital', 'orbital');
+        handleWeapon(NovaWeapon, 'devNova', 'nova');
+        handleWeapon(ChainLightningWeapon, 'devLightning', 'chainLightning');
+    }
     
-    showDevConfirmModal('✅ Ustawienia Dev zastosowane!');
-    console.log('✅ Ustawienia Dev zastosowane!');
+    devSettings.presetLoaded = true;
+    console.log('[Dev] Ustawienia zastosowane.');
+    
+    if (!silent) {
+        showDevConfirmModal('✅ Ustawienia Dev zastosowane!');
+    }
 }
 
 function devSpawnPickup(type) {
     if (!gameState.game || !gameState.pickups || !gameState.player) return;
     const { game, pickups, player } = gameState;
+    if (!game.running || game.paused) { alert('❌ Rozpocznij grę!'); return; }
     
-    if (!game.running || game.paused) {
-        alert('❌ Rozpocznij grę przed używaniem tej funkcji!');
-        return;
-    }
     const pos = findFreeSpotForPickup(pickups, player.x, player.y);
-    const PickupClass = PICKUP_CLASS_MAP[type];
-    if (PickupClass) pickups.push(new PickupClass(pos.x, pos.y));
+    let p = null;
+    if (type === 'chest') { gameState.chests.push(new Chest(pos.x, pos.y)); }
+    else {
+        const PickupClass = PICKUP_CLASS_MAP[type];
+        if (PickupClass) p = new PickupClass(pos.x, pos.y);
+    }
+    if (p) pickups.push(p);
 }
-
-function applyDevPreset(level, perkLevelOffset = 0) {
-    // ... Bez zmian logicznych ...
-    // Tutaj normalnie jest kod funkcji applyDevPreset, który tylko ustawia presetLoaded = true na końcu
-    // Ponieważ nie zmieniam logiki tej funkcji, a plik jest duży, zakładam że 'applyDevSettings' jest kluczowe.
-    // Ale zgodnie z instrukcją "ZAWSZE PEŁNY PLIK", muszę to wkleić.
-    
-    if (!gameState.game || !gameState.settings || !gameState.player) return;
-    const { game, settings, perkLevels, player } = gameState;
-    
-    Object.assign(settings, { 
-        spawn: GAME_CONFIG.INITIAL_SPAWN_RATE, maxEnemies: GAME_CONFIG.MAX_ENEMIES, eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL,
-        lastFire: settings.lastFire, lastElite: settings.lastElite
-    });
-    
-    const worldWidth = gameState.canvas.width * (gameState.camera.worldWidth / gameState.camera.viewWidth);
-    const worldHeight = gameState.canvas.height * (gameState.camera.worldHeight / gameState.camera.viewHeight);
-    player.reset(worldWidth, worldHeight);
-    
-    game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
-    game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH; game.health = PLAYER_CONFIG.INITIAL_HEALTH;
-    
-    for (let key in perkLevels) delete perkLevels[key];
-    
-    game.level = level; game.time = 121; devSettings.allowedEnemies = ['all'];
-    game.xp = 0; game.xpNeeded = calculateXpNeeded(game.level);
-    
-    const whip = player.getWeapon(WhipWeapon); 
-    const whipPerk = perkPool.find(p => p.id === 'whip');
-    const targetWhipLevel = Math.max(1, (whipPerk.max || 5) - perkLevelOffset);
-    if (targetWhipLevel > 1) {
-        for(let i = 1; i < targetWhipLevel; i++) whip.upgrade(whipPerk);
-        perkLevels['whip'] = targetWhipLevel - 1; 
-    }
-
-    let autoGun = null;
-    const autogunPerk = perkPool.find(p => p.id === 'autogun');
-    if (autogunPerk) { autogunPerk.apply(gameState, autogunPerk); perkLevels['autogun'] = 1; autoGun = player.getWeapon(AutoGun); }
-    
-    if (autoGun) {
-        ['damage', 'firerate', 'multishot', 'pierce'].forEach(perkId => {
-            const perk = perkPool.find(p => p.id === perkId);
-            const targetLevel = Math.max(0, perk.max - perkLevelOffset);
-            for (let i = 0; i < targetLevel; i++) perk.apply(gameState, perk);
-            perkLevels[perkId] = targetLevel;
-        });
-    }
-    
-    perkPool.forEach(perk => {
-        if (['orbital', 'nova', 'chainLightning', 'speed', 'pickup', 'health'].includes(perk.id)) {
-             const targetLevel = Math.max(0, perk.max - perkLevelOffset);
-             if (targetLevel > 0) {
-                 perkLevels[perk.id] = targetLevel;
-                 for (let i = 0; i < targetLevel; i++) perk.apply(gameState, perk);
-             }
-        }
-    });
-    
-    document.getElementById('devLevel').value = game.level;
-    document.getElementById('devHealth').value = game.health;
-    document.getElementById('devMaxHealth').value = game.maxHealth;
-    document.getElementById('devXP').value = game.xp;
-    
-    const devTimeInput = document.getElementById('devTime');
-    if (devTimeInput) devTimeInput.value = game.time; 
-    devStartTime = game.time;
-    
-    document.getElementById('devWhip').value = whip.level;
-    document.getElementById('devAutoGun').value = autoGun ? 1 : 0;
-    
-    if (autoGun) {
-        document.getElementById('devDamage').value = autoGun.bulletDamage;
-        document.getElementById('devFireRate').value = autoGun.fireRate;
-        document.getElementById('devMultishot').value = autoGun.multishot;
-        document.getElementById('devPierce').value = autoGun.pierce;
-    } else {
-        document.getElementById('devDamage').value = WEAPON_CONFIG.AUTOGUN.BASE_DAMAGE || 1;
-        document.getElementById('devFireRate').value = WEAPON_CONFIG.AUTOGUN.BASE_FIRE_RATE || 650;
-        document.getElementById('devMultishot').value = 0;
-        document.getElementById('devPierce').value = 0;
-    }
-    
-    const orbital = player.getWeapon(OrbitalWeapon); const nova = player.getWeapon(NovaWeapon); const lightning = player.getWeapon(ChainLightningWeapon); 
-    document.getElementById('devOrbital').value = orbital ? orbital.level : 0;
-    document.getElementById('devNova').value = nova ? nova.level : 0;
-    document.getElementById('devLightning').value = lightning ? lightning.level : 0; 
-    
-    devSettings.presetLoaded = true;
-    callStartRun();
-}
-
-function devPresetAlmostMax() { applyDevPreset(10, 1); }
-function devPresetMax() { applyDevPreset(10, 0); }
 
 export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     gameState = stateRef;
@@ -440,5 +382,5 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.devPresetMinimalWeapons = devPresetMinimalWeapons;
     window.devPresetEnemy = devPresetEnemy; 
     
-    console.log('[DEBUG-v0.94] js/services/dev.js: Dev Tools loaded with Hitbox Debug.');
+    console.log('[DEBUG-v0.98] js/services/dev.js: Dev Tools loaded & exported.');
 }
