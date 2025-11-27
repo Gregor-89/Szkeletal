@@ -4,6 +4,48 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ---
 
+## [v0.95] - 2025-11-27 - Retro UI Overhaul & Juicy Update
+### Dodano (UI & Menu)
+- **Nowe Menu Główne:** Całkowita przebudowa interfejsu na styl "Retro Console/Pixel Art" (CSS-only, bez nowych grafik tła).
+- **Hot Coffee:** Dodano sekcję wsparcia z kodem QR i linkiem, zastępującą klasyczne "O Autorze".
+- **System Widoków:** Zastąpiono zakładki (Tabs) hierarchicznym systemem widoków (Main, Config, Guide, Dev).
+- **Responsywność (RWD):** Wprowadzono kontener `.game-view`, naprawiając skalowanie gry i HUD na tabletach oraz urządzeniach mobilnych.
+- **Touch Scroll:** Odblokowano przewijanie list (Perki, Wyniki, Config) gestem na ekranach dotykowych.
+- **Dynamiczna Wersja:** Tytuł okna i tag w menu automatycznie pobierają numer wersji z `version.js`.
+
+### Dodano (VFX & Feedback)
+- **Juicy Death:** Zastąpiono zanikanie wrogów efektowną "eksplozją" cząsteczek (40 sztuk, duża prędkość, kolor zgodny z typem wroga).
+- **Gem Visuals:**
+    - Wprowadzono 3 rozmiary Ziemniaczków (4, 6, 8) zależne od rzadkości (Niebieski, Zielony, Czerwony).
+    - Dodano intensywną, kolorową poświatę (`shadowBlur`) oraz tint dla rzadkich gemów.
+    - Dodano animację "wciągania" gema przez gracza zamiast natychmiastowego znikania.
+- **Mega Hazard VFX:** Dodano toksyczny filtr (zielono-fioletowy) na gracza i wrogów znajdujących się w Mega Hazardzie.
+- **Nova Glow:** Dodano czerwoną poświatę dla pocisków broni Nova.
+
+### Zmieniono (Balans & Mechanika)
+- **Nova (Wybuch Mentalu):**
+    - Całkowicie odseparowano statystyki od AutoGuna.
+    - Przebicie (`Pierce`) zaczyna się od 1 i rośnie co kilka poziomów.
+    - Zwiększono czas życia pocisku do 3.0s.
+    - Zmniejszono skalę wizualną (z 8.0 na 4.0) dla lepszej czytelności.
+- **Gemy:** Zmniejszono szansę na drop rzadkich gemów o połowę (Zielony: 2.5%, Czerwony: 0.5%).
+- **Magnes:** Skrócono czas trwania pickupa z 4.0s na 3.0s.
+- **Wrogowie:**
+    - **Wall:** Zmniejszono prędkość ruchu o 50% (z 16 na 8).
+    - **Horde:** Zwiększono rozmiar o 10% (z 39 na 43).
+- **Logika Perków:** Naprawiono filtrowanie – ulepszenia broni (np. Multishot dla AutoGuna) nie pojawiają się już, jeśli gracz nie posiada tej broni.
+
+### Naprawiono
+- **Krytyczny Błąd Hazardów:** Wrogowie w polach hazardu nie stawali się już nieśmiertelni i nie zacinali się (dodano brakujący `killEnemy` przy `hp <= 0`).
+- **Z-Index:** Naprawiono sortowanie obiektów – wrogowie znajdujący się "wyżej" na ekranie są teraz poprawnie zasłaniani przez gracza/wrogów będących "niżej".
+- **Dev Tools:** Przywrócono pełną funkcjonalność narzędzi deweloperskich, naprawiono przyciski Scenariuszy i Presetów Wrogów (Auto-Start).
+- **UI Fixes:**
+    - Wycentrowano joystick (matematycznie i wizualnie).
+    - Poprawiono wyświetlanie ikon w HUD (brak rozciągania).
+    - Tablica wyników poprawnie wyświetla komunikat "BRAK WYNIKÓW" i odświeża się po Game Over.
+    - Licznik wznawiania gry pokazuje teraz precyzyjny czas zamiast statycznej cyfry.
+
+---
 
 ## [0.94] - 2025-11-25
 ### Fixed
