@@ -1,12 +1,12 @@
 // ==============
-// UI.JS (v0.96b - Volume Sliders Logic)
+// UI.JS (v0.96c - Dev Retry Integration)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
-import { devSettings, devStartTime } from '../services/dev.js';
-import { initAudio, playSound, setMusicVolume, setSfxVolume } from '../services/audio.js'; // FIX: Added volume setters
+import { devSettings, devStartTime, retryLastScenario } from '../services/dev.js'; // FIX: Import retryLastScenario
+import { initAudio, playSound, setMusicVolume, setSfxVolume } from '../services/audio.js'; 
 import { 
-    GAME_CONFIG, PLAYER_CONFIG, UI_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG, MUSIC_CONFIG // FIX: Added MUSIC_CONFIG
+    GAME_CONFIG, PLAYER_CONFIG, UI_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG, MUSIC_CONFIG 
 } from '../config/gameData.js';
 import { getLang } from '../services/i18n.js';
 import { get as getAsset } from '../services/assets.js';
@@ -80,14 +80,11 @@ export function initRetroToggles(game, uiData) {
         updateToggleVisual(lblBtn, uiData.pickupShowLabels);
     }
 
-    // FIX v0.96b: Obsługa suwaków głośności
     const volMusic = document.getElementById('volMusic');
     if (volMusic) {
-        // Synchronizuj suwak z aktualną głośnością przy otwarciu
         if (MUSIC_CONFIG && typeof MUSIC_CONFIG.VOLUME !== 'undefined') {
             volMusic.value = Math.floor(MUSIC_CONFIG.VOLUME * 100);
         }
-        // Używamy oninput dla płynnej zmiany w trakcie przesuwania
         volMusic.oninput = (e) => {
             const val = parseInt(e.target.value) / 100;
             setMusicVolume(val);
@@ -96,7 +93,6 @@ export function initRetroToggles(game, uiData) {
 
     const volSFX = document.getElementById('volSFX');
     if (volSFX) {
-        // SFX domyślnie startuje z 0.3 (30%), nie mamy configu w gameData dla SFX, więc ufamy suwakowi (z HTML value="30")
         volSFX.oninput = (e) => {
             const val = parseInt(e.target.value) / 100;
             setSfxVolume(val);
@@ -256,7 +252,6 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
     
     game.inMenu = true; game.paused = true; game.running = false;
 
-    // FIX v0.96a: Start muzyki menu po wejściu do menu
     initAudio(); 
     playSound('MusicMenu');
 
@@ -275,6 +270,11 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
 }
 
 export function startRun(game, resetAll, uiData) {
+    // FIX v0.96c: Jeśli to restart w trybie Dev, przywróć scenariusz
+    if (devSettings.presetLoaded) {
+        retryLastScenario();
+    }
+
     const startOffset = devStartTime;
     resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); 
     uiData.savedGameState = null;
@@ -293,7 +293,6 @@ export function startRun(game, resetAll, uiData) {
     }
     
     initAudio();
-    // FIX v0.96a: Start muzyki gameplay po rozpoczęciu gry
     playSound('MusicGameplay');
     
     if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
@@ -309,7 +308,8 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         game.xp = 0; game.xpNeeded = GAME_CONFIG.INITIAL_XP_NEEDED; game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
         Object.assign(settings, { spawn: GAME_CONFIG.INITIAL_SPAWN_RATE, maxEnemies: GAME_CONFIG.MAX_ENEMIES, eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL, lastHazardSpawn: 0, lastSiegeEvent: 0, currentSiegeInterval: SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME });
         settings.lastFire = 0; settings.lastElite = 0;
-        game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.seenEnemyTypes = ['standard'];
+        
+        game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.seenEnemyTypes = [];
         
         const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
         uiData.player.reset(worldWidth, worldHeight);
@@ -394,7 +394,6 @@ export function gameOver(game, uiData) {
     finalTime.textContent = formatTime(currentRun.time); 
     saveScore(currentRun);
     
-    // FIX v0.96a: Powrót muzyki menu przy Game Over
     playSound('MusicMenu');
     
     displayScores('scoresBodyGameOver', currentRun); 

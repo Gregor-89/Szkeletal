@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.98b - FIX: Auto-Start Scenarios)
+// DEV.JS (v0.99 - FIX: Strict Mode & Auto-Start)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -33,6 +33,8 @@ const PICKUP_CLASS_MAP = {
 };
 
 export let devStartTime = 0;
+
+let lastScenarioAction = null;
 
 export function resetDevTime() {
     devStartTime = 0;
@@ -90,11 +92,9 @@ function showDevConfirmModal(text) {
 
 function callStartRun() {
     if (startRunCallback) {
-        // Upewniamy się, że gra wie, iż ładujemy preset
         devSettings.presetLoaded = true;
         loadConfigCallback();
         startRunCallback();
-        // Zamykamy overlay menu, jeśli jest otwarty
         const menuOverlay = document.getElementById('menuOverlay');
         if (menuOverlay) menuOverlay.style.display = 'none';
     } else {
@@ -102,8 +102,12 @@ function callStartRun() {
     }
 }
 
-function devPresetEnemy(enemyType) {
+// FIX v0.99: Dodano parametr autoStart, aby uniknąć używania .caller
+function devPresetEnemy(enemyType, autoStart = true) {
     console.log(`[Dev] Uruchamianie testu jednostki: ${enemyType.toUpperCase()}`);
+    
+    // Zapisujemy akcję z autoStart = false, żeby przy retry nie zapętlić gry
+    lastScenarioAction = () => devPresetEnemy(enemyType, false);
 
     const enemySelect = document.getElementById('devEnemyType');
     if (enemySelect) {
@@ -142,8 +146,10 @@ function devPresetEnemy(enemyType) {
         }
     }
 
-    // FIX: Automatyczny start również dla presetów wrogów
-    callStartRun();
+    // FIX v0.99: Bezpieczne wywołanie startu
+    if (autoStart) {
+        callStartRun();
+    }
 
     setTimeout(() => {
         if (gameState && gameState.game && gameState.settings) {
@@ -184,7 +190,6 @@ function devPresetMinimalWeapons() {
     document.getElementById('devLevel').value = game.level;
     document.getElementById('devGodMode').checked = true; 
     
-    // Dodaj WSZYSTKIE bronie na poziomie 1
     const weaponPerks = ['whip', 'autogun', 'orbital', 'nova', 'chainLightning'];
     weaponPerks.forEach(id => {
         const perk = perkPool.find(p => p.id === id);
@@ -279,14 +284,21 @@ function applyDevPreset(targetLevel, perkLevelOffset = 0) {
 function devPresetAlmostMax() { applyDevPreset(20, 1); }
 function devPresetMax() { applyDevPreset(50, 0); }
 
-function devStartScenario(type) {
+// FIX v0.99: Dodano parametr autoStart
+function devStartScenario(type, autoStart = true) {
     console.log(`[Dev] Uruchamianie scenariusza: ${type.toUpperCase()}`);
+    
+    // Zapisujemy akcję z autoStart = false
+    lastScenarioAction = () => devStartScenario(type, false);
+
     if (type === 'min') devPresetMinimalWeapons();
     else if (type === 'high') devPresetAlmostMax();
     else if (type === 'max') devPresetMax();
     
-    // FIX: Automatyczne uruchomienie gry po wybraniu scenariusza
-    callStartRun();
+    // FIX v0.99: Bezpieczne wywołanie
+    if (autoStart) {
+        callStartRun();
+    }
 }
 
 export function applyDevSettings(silent = false) {
@@ -399,6 +411,13 @@ function devSpawnPickup(type) {
     if (p) pickups.push(p);
 }
 
+export function retryLastScenario() {
+    if (lastScenarioAction) {
+        console.log('[Dev] Ponawianie ostatniego scenariusza...');
+        lastScenarioAction();
+    }
+}
+
 export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     gameState = stateRef;
     loadConfigCallback = loadConfigFn;
@@ -410,10 +429,9 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.devPresetMax = devPresetMax;
     window.devPresetMinimalWeapons = devPresetMinimalWeapons;
     window.devPresetEnemy = devPresetEnemy; 
-    
-    // FIX: Mapowanie nazw funkcji dla przycisków w HTML
     window.devStartScenario = devStartScenario; 
     window.devStartPreset = devPresetEnemy; 
+    window.retryLastScenario = retryLastScenario; 
     
-    console.log('[DEBUG-v0.98b] js/services/dev.js: Dev Tools loaded & exported.');
+    console.log('[DEBUG-v0.99] js/services/dev.js: Dev Tools loaded & exported.');
 }

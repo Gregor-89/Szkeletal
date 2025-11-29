@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.98 - Integrated Loading Screen)
+// MAIN.JS (v0.96c - FIX: First Enemy Warning)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -18,7 +18,7 @@ import { updateVisualEffects, updateParticles } from './managers/effects.js';
 import { initInput } from './ui/input.js';
 import { devSettings, initDevTools } from './services/dev.js';
 import { updateGame } from './core/gameLogic.js';
-import { initAudio, loadAudio } from './services/audio.js'; // FIX: Import initAudio
+import { initAudio, loadAudio } from './services/audio.js'; 
 import { PlayerBullet, EnemyBullet } from './entities/bullet.js';
 import { Gem } from './entities/gem.js';
 import { Particle } from './entities/particle.js';
@@ -43,8 +43,8 @@ class Camera {
 let canvas = null;
 let ctx = null;
 const splashOverlay = document.getElementById('splashOverlay');
-const loadingOverlay = document.getElementById('loadingOverlay'); // FIX
-const loadingBarFill = document.getElementById('loadingBarFill'); // FIX
+const loadingOverlay = document.getElementById('loadingOverlay'); 
+const loadingBarFill = document.getElementById('loadingBarFill'); 
 
 let savedGameState = null;
 let fps = 0;
@@ -65,7 +65,8 @@ const game={
   playerHitFlashT: 0, 
   newEnemyWarningT: 0, 
   newEnemyWarningType: null, 
-  seenEnemyTypes: ['standard'], 
+  // FIX v0.96c: Pusta lista, aby wymusić ostrzeżenie o pierwszym wrogu (Dadgamer)
+  seenEnemyTypes: [], 
   dynamicEnemyLimit: GAME_CONFIG.INITIAL_MAX_ENEMIES, 
   introSeen: false 
 };
@@ -330,8 +331,6 @@ function launchApp() {
     initAudio();
 
     // Oblicz całkowitą liczbę zasobów (grafika + audio)
-    // Uwaga: Te właściwości są dostępne, bo są eksportowane w odpowiednich plikach
-    // Jeśli ich nie ma (stara wersja plików), używamy fallbacka
     const totalAssets = (loadAssets.totalAssets || 50) + (loadAudio.totalSounds || 20);
     let loadedCount = 0;
 

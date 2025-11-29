@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.94w - FIX: Player Mega Hazard Logic)
+// COLLISIONS.JS (v0.96c - FIX: Integer XP)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -17,13 +17,11 @@ export function checkCollisions(state) {
         chests, hazards 
     } = state;
 
-    // Reset flag wrogów
     for (let i = 0; i < enemies.length; i++) {
         if (enemies[i]) enemies[i].inMegaHazard = false;
     }
 
     game.playerInHazard = false;
-    // FIX: Reset flagi Mega Hazardu dla gracza
     game.playerInMegaHazard = false; 
     game.collisionSlowdown = 0;
 
@@ -162,7 +160,9 @@ export function checkCollisions(state) {
         }
         
         if (dist < collectionRadius + g.r) {
-            game.xp += g.val * (game.level >= 20 ? 1.2 : 1); 
+            // FIX v0.96c: Wymuszamy Integer XP
+            const collectedXP = Math.floor(g.val * (game.level >= 20 ? 1.2 : 1));
+            game.xp += collectedXP; 
             playSound('XPPickup');
             g.collect(); 
         }
@@ -203,12 +203,10 @@ export function checkCollisions(state) {
     for (const h of hazards) {
         if (!h || !h.isActive()) continue;
 
-        // Wykrywanie Mega Hazardu PRZED sprawdzeniem gracza
         const isMega = h.scale > 1.5; 
 
         if (h.checkCollision(player.x, player.y, player.size * 0.4)) {
             game.playerInHazard = true;
-            // FIX: Ustawienie flagi dla gracza
             if (isMega) game.playerInMegaHazard = true;
 
             if (!game.shield && !devSettings.godMode && game.hazardTicker <= 0) {

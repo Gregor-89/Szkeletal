@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.94u - FIX: Mega Hazard Reset)
+// ENEMY.JS (v0.96e - FIX: Stronger Separation)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -66,8 +66,7 @@ export class Enemy {
     update(dt, player, game) {
         if (this.isDead) return;
         
-        // FIX: Reset flagi Mega Hazardu na początku klatki
-        // Jeśli wróg nadal stoi w hazardzie, collisions.js ustawi to na true w tej samej klatce
+        // Reset flagi Mega Hazardu na początku klatki
         this.inMegaHazard = false;
         
         if (this.hitStun > 0) this.hitStun -= dt;
@@ -125,7 +124,15 @@ export class Enemy {
             this.separationCooldown = 0.15;
             this.separationX = 0;
             this.separationY = 0;
-            const multiplier = 144;
+            
+            // FIX v0.96e: Zwiększona separacja zgodnie z życzeniem
+            // Standard: 310 (było 220)
+            // Horda/Wall: 75 (było 50)
+            let multiplier = 310;
+            if (this.type === 'horde' || this.type === 'wall') {
+                multiplier = 75;
+            }
+            
             const myRadius = this.getSeparationRadius();
             
             for (const other of enemies) {
@@ -159,14 +166,12 @@ export class Enemy {
         
         ctx.save();
         
-        // Priororytety Efektów
         if (this.hitFlashT > 0) {
             if (Math.floor(game.time * 20) % 2 === 0) ctx.filter = 'grayscale(1) brightness(5)';
         }
         else if (this.frozenTimer > 0 || game.freezeT > 0) {
             ctx.filter = 'sepia(1) hue-rotate(170deg) saturate(2)';
         }
-        // Efekt Mega Hazardu (tylko jeśli flaga inMegaHazard jest true)
         else if (this.inMegaHazard) {
             ctx.filter = 'brightness(0.7) sepia(1) hue-rotate(130deg) saturate(2)';
         }
@@ -205,7 +210,6 @@ export class Enemy {
             ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
         
-        // Healthbary rysowane przez draw.js
         ctx.restore();
     }
     
