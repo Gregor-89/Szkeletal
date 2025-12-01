@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.94j - FIX: Instant Level Up Pause)
+// GAMELOGIC.JS (v0.97b - Pass Obstacles to Hazard Spawn)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -37,7 +37,8 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     const { 
         player, game, settings, canvas,
         enemies, eBullets, bullets, gems, pickups, stars,
-        particles, hitTexts, chests, particlePool, hazards 
+        particles, hitTexts, chests, particlePool, hazards,
+        obstacles // FIX v0.97b: Pobieramy obstacles ze stanu
     } = state;
 
     // Jeśli gra jest spauzowana (np. level up właśnie nastąpił), nie aktualizuj logiki!
@@ -88,7 +89,8 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     }
     
     if (game.time - settings.lastHazardSpawn > HAZARD_CONFIG.SPAWN_INTERVAL) {
-        spawnHazard(hazards, player, camera);
+        // FIX v0.97b: Przekazujemy obstacles do spawnHazard
+        spawnHazard(hazards, player, camera, obstacles);
         settings.lastHazardSpawn = game.time;
     }
 

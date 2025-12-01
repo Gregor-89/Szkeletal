@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.96a - Added Music Config)
+// GAMEDATA.JS (v0.97b - Sizes & Scales)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -26,6 +26,63 @@ export const GAME_CONFIG = {
   INITIAL_XP_NEEDED: 5,
   XP_GROWTH_FACTOR: 1.4,
   XP_GROWTH_ADD: 2,
+};
+
+// KONFIGURACJA MAPY v0.97b
+export const MAP_CONFIG = {
+  TREES_COUNT: 250,
+  ROCKS_COUNT: 150,
+  HUTS_COUNT: 30,
+  WATER_COUNT: 50,
+  
+  SAFE_ZONE_RADIUS: 500,
+  
+  // Definicje obiektów ze skalowaniem
+  OBSTACLE_STATS: {
+    tree: {
+      type: 'tree',
+      variants: 3,
+      size: 96,
+      minScale: 2.0, // Od 2x
+      maxScale: 3.0, // Do 3x
+      hitboxScale: 0.2, // Bardzo mały hitbox (tylko pień) przy tak dużej koronie
+      hp: Infinity,
+      isSolid: true
+    },
+    rock: {
+      type: 'rock',
+      variants: 3,
+      size: 64,
+      minScale: 0.5, // Od 0.5x
+      maxScale: 4.0, // Do 4x
+      hitboxScale: 0.8,
+      hp: Infinity,
+      isSolid: true
+    },
+    hut: {
+      type: 'hut',
+      variants: 4,
+      size: 160,
+      minScale: 4.0, // Sztywne 4x
+      maxScale: 4.0,
+      hitboxScale: 0.8,
+      hp: 400, // Więcej HP bo są ogromne
+      isSolid: true,
+      dropChance: 1.0
+    },
+    water: {
+      type: 'water',
+      variants: 3,
+      size: 140,
+      minScale: 1.0, // Od 1x
+      maxScale: 3.0, // Do 3x
+      hitboxScale: 0.8, // Trochę mniejszy obszar spowolnienia niż grafika
+      hp: Infinity,
+      isSolid: false,
+      isSlow: true,
+      slowFactor: 0.5
+    }
+  }
 };
 
 export const SIEGE_EVENT_CONFIG = {
@@ -164,7 +221,7 @@ export const UI_CONFIG = {
 };
 
 export const WORLD_CONFIG = {
-  SIZE: 8
+  SIZE: 16
 };
 
 export const EFFECTS_CONFIG = {
@@ -194,7 +251,6 @@ export const ENEMY_STATS = {
   wall: { type: 'wall', hp: 20, speed: 8, size: 88, damage: 15, color: '#9E9E9E', score: 25, xp: 0, drops: {} }
 };
 
-// Nowa konfiguracja muzyki
 export const MUSIC_CONFIG = {
   MENU_PLAYLIST: [
     'music_1.mp3',

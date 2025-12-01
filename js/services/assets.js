@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.97 - Loading Progress)
+// ASSETS.JS (v0.97a - Loading Progress)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
@@ -84,6 +84,24 @@ const assetDefinitions = {
   // --- MENEL (RANGED) ---
   'enemy_ranged_walk': 'enemies/ranged/ranged_walk.png',
   'enemy_ranged_attack': 'enemies/ranged/ranged_attack.png',
+  
+  // --- ŚRODOWISKO (Nowe v0.97) ---
+  'env_tree_1': 'environment/tree_1.png',
+  'env_tree_2': 'environment/tree_2.png',
+  'env_tree_3': 'environment/tree_3.png',
+  
+  'env_rock_1': 'environment/rock_1.png',
+  'env_rock_2': 'environment/rock_2.png',
+  'env_rock_3': 'environment/rock_3.png',
+  
+  'env_hut_1': 'environment/hut_1.png',
+  'env_hut_2': 'environment/hut_2.png',
+  'env_hut_3': 'environment/hut_3.png',
+  'env_hut_4': 'environment/hut_4.png',
+  
+  'env_water_1': 'environment/water_1.png',
+  'env_water_2': 'environment/water_2.png',
+  'env_water_3': 'environment/water_3.png',
   
   // --- HAZARDY ---
   'hazard_sewage': 'hazards/hazard_sewage.png',

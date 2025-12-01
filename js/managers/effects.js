@@ -1,5 +1,5 @@
 // ==============
-// EFFECTS.JS (v0.99 - FIX: Complete & Optimized)
+// EFFECTS.JS (v0.97b - Hazard Spawning Fix)
 // Lokalizacja: /js/managers/effects.js
 // ==============
 
@@ -28,7 +28,8 @@ export const PICKUP_CLASS_MAP = {
 
 const MIN_SEPARATION_BUFFER = 20;
 
-function findHazardSpawnSpot(player, camera, hazards, hazardRadius) {
+// FIX v0.97b: Dodano parametr 'obstacles' do sprawdzania kolizji
+function findHazardSpawnSpot(player, camera, hazards, obstacles, hazardRadius) {
     const maxAttempts = 20;
     const worldWidth = camera.worldWidth;
     const worldHeight = camera.worldHeight;
@@ -51,6 +52,8 @@ function findHazardSpawnSpot(player, camera, hazards, hazardRadius) {
         if (distToPlayer < safePlayerDist) continue;
         
         let isOverlapping = false;
+        
+        // 1. Sprawdź inne hazardy
         for (const h of hazards) {
             const dx = x - h.x;
             const dy = y - h.y;
@@ -64,12 +67,35 @@ function findHazardSpawnSpot(player, camera, hazards, hazardRadius) {
         
         if (isOverlapping) continue;
         
+        // 2. FIX v0.97b: Sprawdź przeszkody (drzewa, chatki, skały)
+        if (obstacles) {
+            for (const obs of obstacles) {
+                // Pomiń martwe przeszkody (zniszczone chatki)
+                if (obs.isDead) continue;
+                
+                const dx = x - obs.x;
+                const dy = y - obs.y;
+                const dist = Math.hypot(dx, dy);
+                // Hazard nie powinien spawnować się na przeszkodzie
+                // Zakładamy, że hazard nie powinien dotykać hitboxa przeszkody
+                const minSeparation = hazardRadius + obs.size * 0.6;
+                
+                if (dist < minSeparation) {
+                    isOverlapping = true;
+                    break;
+                }
+            }
+        }
+        
+        if (isOverlapping) continue;
+        
         return { x, y };
     }
     return null;
 }
 
-export function spawnHazard(hazards, player, camera) {
+// FIX v0.97b: Dodano parametr 'obstacles'
+export function spawnHazard(hazards, player, camera, obstacles) {
     if (hazards.length >= HAZARD_CONFIG.MAX_HAZARDS) return;
     
     const isMega = Math.random() < HAZARD_CONFIG.MEGA_HAZARD_PROBABILITY;
@@ -81,7 +107,8 @@ export function spawnHazard(hazards, player, camera) {
     }
     
     const radius = HAZARD_CONFIG.SIZE * scale;
-    const pos = findHazardSpawnSpot(player, camera, hazards, radius);
+    // Przekazujemy obstacles do funkcji szukającej
+    const pos = findHazardSpawnSpot(player, camera, hazards, obstacles, radius);
     
     if (!pos) return;
     

@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.96 - FIX: Total Kills Init)
+// MAIN.JS (v0.97a - Obstacles Init)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -28,6 +28,7 @@ import { loadAssets } from './services/assets.js';
 import { VERSION } from './config/version.js';
 import { displayScores } from './services/scoreManager.js';
 import { getLang } from './services/i18n.js';
+import { generateMap } from './managers/mapManager.js'; // FIX v0.97: Import generatora
 
 class Camera {
     constructor(worldWidth, worldHeight, viewWidth, viewHeight) {
@@ -101,6 +102,7 @@ const pickups=[];
 const hazards=[]; 
 const stars=[];
 const bombIndicators = [];
+const obstacles = []; // FIX v0.97: Tablica na przeszkody
 
 let bullets = [];
 let eBullets = [];
@@ -130,6 +132,9 @@ function initializeCanvas() {
     player = new Player(worldWidth / 2, worldHeight / 2); 
     camera = new Camera(worldWidth, worldHeight, canvas.width, canvas.height);
     
+    // FIX v0.97: Generowanie mapy przy inicjalizacji
+    generateMap(obstacles, player);
+
     playerBulletPool = new ObjectPool(PlayerBullet, 500);
     enemyBulletPool = new ObjectPool(EnemyBullet, 500);
     gemsPool = new ObjectPool(Gem, 3000); 
@@ -150,7 +155,8 @@ function initializeCanvas() {
       particlePool: particlePool, hitTextPool: hitTextPool, camera: camera,
       bullets: bullets, eBullets: eBullets, gems: gems, particles: particles, hitTexts: hitTexts,
       trails: [], confettis: [], enemyIdCounter: 0,
-      siegeSpawnQueue: []
+      siegeSpawnQueue: [],
+      obstacles: obstacles // FIX v0.97: Dodano referencję do stanu gry
     };
 
     console.log(`[DEBUG-v${VERSION}] js/main.js: Inicjalizacja zakończona.`);
@@ -175,7 +181,8 @@ const uiData = {
     pickupStyleEmoji: false,
     showFPS: true,
     fpsPosition: 'right',
-    gameData: { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG }
+    gameData: { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG },
+    obstacles: obstacles // FIX v0.97: Dodano do uiData (może się przydać do zapisu gry)
 };
 
 function updateUiDataReferences() {

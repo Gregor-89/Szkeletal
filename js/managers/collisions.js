@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.96i - FIX: Shockwave Interaction)
+// COLLISIONS.JS (v0.97b - Obstacles Physics)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -15,7 +15,7 @@ export function checkCollisions(state) {
     const { 
         player, enemies, bullets, eBullets, gems, pickups, 
         game, settings, particlePool, gemsPool, hitTextPool, hitTexts,
-        chests, hazards, bombIndicators 
+        chests, hazards, bombIndicators, obstacles // FIX v0.97b: Obstacles
     } = state;
 
     for (let i = 0; i < enemies.length; i++) {
@@ -25,6 +25,55 @@ export function checkCollisions(state) {
     game.playerInHazard = false;
     game.playerInMegaHazard = false; 
     game.collisionSlowdown = 0;
+
+    // --- FIX v0.97b: KOLIZJE Z PRZESZKODAMI ---
+    if (obstacles) {
+        for (const obs of obstacles) {
+            if (obs.isDead) continue;
+
+            // 1. Gracz vs Przeszkoda
+            // Używamy hitboxRadius przeszkody i promienia gracza (player.size * 0.4)
+            const dist = Math.hypot(player.x - obs.x, player.y - obs.y);
+            const minDist = obs.hitboxRadius + (player.size * 0.4);
+
+            if (dist < minDist) {
+                // Jeśli jest to przeszkoda SOLIDNA (drzewo, skała, chatka)
+                if (obs.isSolid) {
+                    const angle = Math.atan2(player.y - obs.y, player.x - obs.x);
+                    const push = minDist - dist;
+                    // Wypchnij gracza
+                    player.x += Math.cos(angle) * push;
+                    player.y += Math.sin(angle) * push;
+                }
+                
+                // Jeśli przeszkoda spowalnia (Woda)
+                if (obs.isSlow) {
+                    // Wykorzystujemy istniejącą flagę playerInHazard, aby użyć logiki spowolnienia z Player.js
+                    // W gameData.js water ma slowFactor = 0.5, a hazardy też mają 0.5. Pasuje idealnie.
+                    game.playerInHazard = true;
+                }
+            }
+
+            // 2. Wrogowie vs Przeszkoda (tylko solidne)
+            if (obs.isSolid) {
+                for (const e of enemies) {
+                    if (e.dying) continue;
+                    // Prosta kolizja kołowa
+                    const eDist = Math.hypot(e.x - obs.x, e.y - obs.y);
+                    const eMinDist = obs.hitboxRadius + (e.size * 0.4);
+                    
+                    if (eDist < eMinDist) {
+                        const angle = Math.atan2(e.y - obs.y, e.x - obs.x);
+                        // Wypychamy wroga (ślizganie)
+                        const push = (eMinDist - eDist) * 0.5; // Mniejsza siła, żeby się nie trzęśli
+                        e.x += Math.cos(angle) * push;
+                        e.y += Math.sin(angle) * push;
+                    }
+                }
+            }
+        }
+    }
+    // ------------------------------------------
 
     // --- FIX v0.96i: Obsługa fali uderzeniowej (Shockwave) ---
     for (let b of bombIndicators) {
@@ -95,6 +144,34 @@ export function checkCollisions(state) {
                     }
                 }
             }
+            
+            // FIX v0.97b: Fala niszczy też chatki!
+            if (obstacles) {
+                for (const obs of obstacles) {
+                    if (obs.isDead || obs.hp === Infinity) continue;
+                    // Sprawdź, czy fala dotarła do chatki (tylko raz na falę? Nie mamy ID dla obstacles, więc fala bije co klatkę)
+                    // ALE! BombIndicators żyją krótko. Żeby nie zabić chatki w 1 klatkę (fala zadaje np. 9999 dmg), 
+                    // dodajmy proste sprawdzenie.
+                    
+                    const dist = Math.hypot(b.x - obs.x, b.y - obs.y);
+                    if (dist < currentRadius + obs.hitboxRadius) {
+                        // Fala zadaje np. 50 dmg klatkę chatce (żeby był efekt)
+                        if (obs.takeDamage(10)) { // Jeśli zniszczono
+                             spawnConfetti(particlePool, obs.x, obs.y);
+                             playSound('Explosion');
+                             
+                             // Drop z chatki
+                             if (Math.random() < obs.dropChance) {
+                                 // Zawsze kurczak (Heal) albo Skrzynia?
+                                 // Dajmy 30% szans na Skrzynię, 70% na Kurczaka
+                                 const dropType = Math.random() < 0.3 ? 'chest' : 'heal';
+                                 const PickupClass = PICKUP_CLASS_MAP[dropType];
+                                 if (PickupClass) pickups.push(new PickupClass(obs.x, obs.y));
+                             }
+                        }
+                    }
+                }
+            }
         }
     }
     // ---------------------------------------------------------
@@ -150,6 +227,44 @@ export function checkCollisions(state) {
         if (!b) continue;
         if (typeof b.isOffScreen === 'function' && b.isOffScreen(state.camera)) { b.release(); continue; }
         
+        // FIX v0.97b: Kolizja Pocisk - Przeszkoda (Chatka)
+        if (obstacles) {
+            let hitObs = false;
+            for (const obs of obstacles) {
+                if (obs.isDead || obs.hp === Infinity) continue; // Bij tylko zniszczalne
+                
+                if (checkCircleCollision(b.x, b.y, b.size, obs.x, obs.y, obs.hitboxRadius)) {
+                    hitObs = true;
+                    // Zadaj obrażenia chatce
+                    const destroyed = obs.takeDamage(b.damage);
+                    addHitText(hitTextPool, hitTexts, obs.x, obs.y - 20, b.damage, '#fff');
+                    playSound('Hit');
+                    
+                    // Efekt cząsteczkowy (drzazgi)
+                    const p = particlePool.get();
+                    if (p) p.init(b.x, b.y, Math.random()*100-50, Math.random()*100-50, 0.3, '#5D4037', 0, 0.9, 3);
+
+                    if (destroyed) {
+                        spawnConfetti(particlePool, obs.x, obs.y);
+                        playSound('Explosion');
+                        // Drop
+                        if (Math.random() < obs.dropChance) {
+                             const dropType = Math.random() < 0.3 ? 'chest' : 'heal';
+                             const PickupClass = PICKUP_CLASS_MAP[dropType];
+                             if (PickupClass) pickups.push(new PickupClass(obs.x, obs.y));
+                        }
+                    }
+                    break; // Jeden pocisk trafia jedną przeszkodę
+                }
+            }
+            if (hitObs) {
+                if (b.pierce > 0) b.pierce--;
+                else b.release();
+                continue; // Przejdź do następnego pocisku
+            }
+        }
+        // ------------------------------------------------
+
         let hitEnemy = false;
         for (let j = enemies.length - 1; j >= 0; j--) {
             const e = enemies[j];

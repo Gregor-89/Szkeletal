@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.97a - FIX: Blood Screen)
+// DRAW.JS (v0.97b - Layer Fix: Water Below)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -141,13 +141,13 @@ export function draw(ctx, state, ui, fps) {
     const { 
         canvas, game, stars, player, enemies, bullets, eBullets, 
         gems, pickups, chests, particles, hitTexts, bombIndicators, 
-        hazards, camera 
+        hazards, camera, obstacles // Pobieramy obstacles
     } = state;
     
     const { pickupStyleEmoji, pickupShowLabels } = ui;
     ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
-    const cullMargin = 150; 
+    const cullMargin = 200; // Zwiększony margines dla dużych chatek (640px!)
     const cullLeft = camera.offsetX - cullMargin;
     const cullRight = camera.offsetX + camera.viewWidth + cullMargin;
     const cullTop = camera.offsetY - cullMargin;
@@ -168,6 +168,21 @@ export function draw(ctx, state, ui, fps) {
     drawBackground(ctx, camera);
     ctx.globalAlpha = 1;
 
+    // FIX v0.97b: Rysowanie WODY (i innych płaskich) na spodzie
+    if (obstacles) {
+        for (const obs of obstacles) {
+            // Rysuj tylko wodę tutaj (isSolid = false dla wody)
+            if (obs.type === 'water') {
+                const r = obs.size;
+                if (obs.x + r < cullLeft || obs.x - r > cullRight || obs.y + r < cullTop || obs.y - r > cullBottom) continue;
+                
+                // Aktualizuj logikę trzęsienia
+                obs.update(state.dt || 0.016); 
+                obs.draw(ctx);
+            }
+        }
+    }
+
     if (game.freezeT > 0) {
         ctx.fillStyle = 'rgba(100,200,255,0.08)';
         ctx.fillRect(camera.offsetX, camera.offsetY, camera.viewWidth, camera.viewHeight);
@@ -179,7 +194,6 @@ export function draw(ctx, state, ui, fps) {
     }
 
     renderList.length = 0;
-    // Jeśli gracz nie żyje, nie dodajemy go do listy renderowania, żeby "zniknął"
     if (!player.isDead) {
         renderList.push(player);
     }
@@ -190,20 +204,38 @@ export function draw(ctx, state, ui, fps) {
         if (e.x + radius < cullLeft || e.x - radius > cullRight || e.y + radius < cullTop || e.y - radius > cullBottom) continue;
         renderList.push(e);
     }
+    
+    // FIX v0.97b: Dodawanie tylko STOJĄCYCH przeszkód do Y-sort
+    if (obstacles) {
+        for (const obs of obstacles) {
+            // Wodę już narysowaliśmy, pomijamy ją tutaj
+            if (obs.type === 'water') continue;
+
+            const r = obs.size; 
+            if (obs.x + r < cullLeft || obs.x - r > cullRight || obs.y + r < cullTop || obs.y - r > cullBottom) continue;
+            
+            // Aktualizacja shakeTimer (dla chatek/drzew)
+            obs.update(state.dt || 0.016);
+            renderList.push(obs);
+        }
+    }
 
     renderList.sort((a, b) => a.y - b.y);
 
     for (let i = 0; i < renderList.length; i++) {
         const obj = renderList[i];
+        
         if (obj.type === 'player') {
             drawShadow(ctx, obj.x, obj.y, obj.size, 1.0, 'player');
             obj.draw(ctx, game);
-        } else {
+        } else if (obj.stats) { // Enemy
             if (!obj.isDead) {
                 drawShadow(ctx, obj.x, obj.y, obj.size, obj.visualScale || 1.0, obj.type);
                 obj.draw(ctx, game);
                 drawEnemyHealthBar(ctx, obj);
             }
+        } else if (obj.draw) { // Obstacle (drzewa, chatki, skały)
+             obj.draw(ctx);
         }
     }
 
@@ -317,6 +349,15 @@ export function draw(ctx, state, ui, fps) {
                     ctx.strokeStyle = '#00FFFF'; w.items.forEach(it => { ctx.beginPath(); ctx.arc(it.ox, it.oy, 15, 0, Math.PI * 2); ctx.stroke(); });
                 }
             });
+        }
+        // Debug hitboxów przeszkód
+        if (obstacles) {
+            ctx.strokeStyle = '#0000FF'; 
+            for (const o of obstacles) {
+                ctx.beginPath(); 
+                ctx.arc(o.x, o.y, o.hitboxRadius || o.size/2, 0, Math.PI * 2); 
+                ctx.stroke(); 
+            }
         }
         ctx.restore();
     }
