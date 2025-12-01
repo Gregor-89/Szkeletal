@@ -1,20 +1,21 @@
 // ==============
-// COLLISIONS.JS (v0.96c - FIX: Integer XP)
+// COLLISIONS.JS (v0.96i - FIX: Shockwave Interaction)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
-import { checkCircleCollision, addHitText, limitedShake, spawnConfetti } from '../core/utils.js';
+import { checkCircleCollision, addHitText, limitedShake, spawnConfetti, findFreeSpotForPickup } from '../core/utils.js';
 import { killEnemy } from './enemyManager.js';
 import { playSound } from '../services/audio.js';
 import { devSettings } from '../services/dev.js';
 import { COLLISION_CONFIG, HAZARD_CONFIG } from '../config/gameData.js'; 
 import { getLang } from '../services/i18n.js';
+import { PICKUP_CLASS_MAP } from './effects.js'; // Potrzebne do spawnowania pickupów z fali
 
 export function checkCollisions(state) {
     const { 
         player, enemies, bullets, eBullets, gems, pickups, 
         game, settings, particlePool, gemsPool, hitTextPool, hitTexts,
-        chests, hazards 
+        chests, hazards, bombIndicators 
     } = state;
 
     for (let i = 0; i < enemies.length; i++) {
@@ -24,6 +25,79 @@ export function checkCollisions(state) {
     game.playerInHazard = false;
     game.playerInMegaHazard = false; 
     game.collisionSlowdown = 0;
+
+    // --- FIX v0.96i: Obsługa fali uderzeniowej (Shockwave) ---
+    for (let b of bombIndicators) {
+        if (b.type === 'shockwave') {
+            // Oblicz aktualny promień na podstawie postępu życia
+            const progress = Math.min(1, b.life / b.maxLife);
+            const currentRadius = b.maxRadius * progress;
+            
+            // Sprawdź kolizję z wrogami
+            for (let j = enemies.length - 1; j >= 0; j--) {
+                const e = enemies[j];
+                // Jeśli wróg już oberwał od tej konkretnej fali, pomiń go
+                if (b.hitEnemies.includes(e.id)) continue;
+
+                const dist = Math.hypot(b.x - e.x, b.y - e.y);
+                
+                // Kolizja: Wróg jest wewnątrz aktualnego promienia fali
+                if (dist < currentRadius + e.size) {
+                    b.hitEnemies.push(e.id); // Oznacz jako trafionego
+
+                    const damage = b.damage;
+                    e.takeDamage(damage, 'shockwave');
+                    addHitText(hitTextPool, hitTexts, e.x, e.y - 20, damage, '#ff9800');
+
+                    if (e.hp <= 0) {
+                        // Logika zabijania (skopiowana i dostosowana z areaNuke)
+                        const gem = gemsPool.get();
+                        if (gem) {
+                            gem.init(
+                                e.x + (Math.random() - 0.5) * 5,
+                                e.y + (Math.random() - 0.5) * 5,
+                                4,
+                                (e.type === 'elite') ? 7 : 1,
+                                '#4FC3F7'
+                            );
+                        }
+                        
+                        game.score += (e.type === 'elite') ? 80 : (e.type === 'tank' ? 20 : 10);
+
+                        if (!b.onlyXP) {
+                            // Szansa na pickup
+                            function maybe(type, prob) {
+                                if (!devSettings.allowedPickups.includes('all') && !devSettings.allowedPickups.includes(type)) return;
+                                if (Math.random() < prob) {
+                                    const pos = findFreeSpotForPickup(pickups, e.x, e.y);
+                                    const PickupClass = PICKUP_CLASS_MAP[type];
+                                    if (PickupClass) pickups.push(new PickupClass(pos.x, pos.y));
+                                }
+                            }
+                            maybe('heal', 0.04);
+                            maybe('magnet', 0.025);
+                            maybe('speed', 0.02);
+                            maybe('shield', 0.015);
+                            maybe('bomb', 0.01);
+                            maybe('freeze', 0.01);
+                        }
+                        
+                        // Efekt śmierci (konfetti/cząsteczki)
+                        const p = particlePool.get();
+                        if(p) p.init(e.x, e.y, 0, -50, 0.5, e.color, 0, 0.9, 3);
+
+                        enemies.splice(j, 1);
+                        state.enemyIdCounter++; // Update licznika ID
+                    } else {
+                        // Odrzut dla przeżywających (np. Tank/Wall)
+                        const angle = Math.atan2(e.y - b.y, e.x - b.x);
+                        e.applyKnockback(Math.cos(angle) * 300, Math.sin(angle) * 300);
+                    }
+                }
+            }
+        }
+    }
+    // ---------------------------------------------------------
 
     // 1. KOLIZJA GRACZ - WROGOWIE
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -160,7 +234,6 @@ export function checkCollisions(state) {
         }
         
         if (dist < collectionRadius + g.r) {
-            // FIX v0.96c: Wymuszamy Integer XP
             const collectedXP = Math.floor(g.val * (game.level >= 20 ? 1.2 : 1));
             game.xp += collectedXP; 
             playSound('XPPickup');

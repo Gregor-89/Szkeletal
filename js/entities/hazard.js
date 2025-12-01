@@ -1,5 +1,5 @@
 // ==============
-// HAZARD.JS (v0.95 - FIX: Bubble Distribution)
+// HAZARD.JS (v0.96m - FIX: Balanced Indicator)
 // Lokalizacja: /js/entities/hazard.js
 // ==============
 
@@ -49,10 +49,8 @@ export class Hazard {
     
     this.bubbles = [];
     this.bubbleTimer = 0;
-    
     this.pattern = null;
     this.textureKey = 'hazard_sewage';
-    
     this.pulsePhase = Math.random() * Math.PI * 2;
   }
   
@@ -90,7 +88,6 @@ export class Hazard {
   spawnBubble() {
     const blob = this.blobs[Math.floor(Math.random() * this.blobs.length)];
     const angle = Math.random() * Math.PI * 2;
-    // FIX: Zwiększono zasięg spawnu bąbelków (z 0.8 na 1.0)
     const dist = Math.random() * (blob.r * 1.0);
     
     this.bubbles.push({
@@ -106,20 +103,32 @@ export class Hazard {
     ctx.save();
     ctx.translate(this.x, this.y);
     
+    // FAZA OSTRZEŻENIA (Kompromis wizualny)
     if (!this.isActive()) {
       const factor = (Math.sin(this.pulsePhase) + 1) / 2;
-      const alpha = 0.3 + 0.4 * factor;
-      const color = this.isMega ? `rgba(255, 0, 255, ${alpha})` : `rgba(255, 50, 50, ${alpha})`;
+      const alpha = 0.4 + 0.3 * factor;
       
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
-      ctx.setLineDash([10, 10]);
+      const colorGlow = this.isMega ? `rgba(255, 0, 255, 0.8)` : `rgba(255, 50, 50, 0.8)`;
+      // Zmniejszone krycie wypełnienia dla lepszej czytelności terenu
+      const colorFill = this.isMega ? `rgba(255, 0, 255, 0.25)` : `rgba(255, 50, 50, 0.25)`;
       
       ctx.beginPath();
-      ctx.arc(0, 0, this.r, 0, Math.PI * 2);
-      ctx.stroke();
+      for (const b of this.blobs) {
+        ctx.moveTo(b.dx + b.r, b.dy);
+        ctx.arc(b.dx, b.dy, b.r, 0, Math.PI * 2);
+      }
+      
+      ctx.fillStyle = colorFill;
+      // Zmniejszony blur dla ostrzejszego (ale nie "zbyt" świecącego) konturu
+      ctx.shadowColor = colorGlow;
+      ctx.shadowBlur = 15;
+      
+      ctx.fill();
+      
+      ctx.shadowBlur = 0;
     }
     else {
+      // FAZA AKTYWNA
       let alpha = 1;
       if (this.fadeInT < 1) alpha = this.fadeInT;
       else if (this.life < 1.0) alpha = this.life;

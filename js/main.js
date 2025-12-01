@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.96c - FIX: First Enemy Warning)
+// MAIN.JS (v0.96 - FIX: Total Kills Init)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -18,7 +18,7 @@ import { updateVisualEffects, updateParticles } from './managers/effects.js';
 import { initInput } from './ui/input.js';
 import { devSettings, initDevTools } from './services/dev.js';
 import { updateGame } from './core/gameLogic.js';
-import { initAudio, loadAudio } from './services/audio.js'; 
+import { initAudio, loadAudio, playSound } from './services/audio.js'; 
 import { PlayerBullet, EnemyBullet } from './entities/bullet.js';
 import { Gem } from './entities/gem.js';
 import { Particle } from './entities/particle.js';
@@ -65,10 +65,12 @@ const game={
   playerHitFlashT: 0, 
   newEnemyWarningT: 0, 
   newEnemyWarningType: null, 
-  // FIX v0.96c: Pusta lista, aby wymusić ostrzeżenie o pierwszym wrogu (Dadgamer)
   seenEnemyTypes: [], 
   dynamicEnemyLimit: GAME_CONFIG.INITIAL_MAX_ENEMIES, 
-  introSeen: false 
+  introSeen: false,
+  isDying: false,
+  // FIX v0.96: Nowy licznik całkowitej liczby zabójstw
+  totalKills: 0 
 };
 
 const settings={ 
@@ -108,6 +110,13 @@ let hitTexts = [];
 
 let gameStateRef = {};
 
+function updateGameTitle() {
+    const fullTitle = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${VERSION}`;
+    document.title = fullTitle;
+    const menuVer = document.getElementById('menuVersionTag');
+    if (menuVer) menuVer.textContent = `v${VERSION}`;
+}
+
 function initializeCanvas() {
     if (canvas !== null) return; 
 
@@ -144,10 +153,6 @@ function initializeCanvas() {
       siegeSpawnQueue: []
     };
 
-    // FIX: Automatyczne ustawianie tytułu z wersją
-    const gameTitle = getLang('ui_game_title') || "Szkeletal";
-    document.title = `${gameTitle} v${VERSION}`;
-    
     console.log(`[DEBUG-v${VERSION}] js/main.js: Inicjalizacja zakończona.`);
 }
 
@@ -257,13 +262,47 @@ function loop(currentTime){
                 updateUI(game, player, settings, null); 
             }
         } else {
+            if (game.isDying) {
+                player.updateDeathAnimation(dt);
+                uiData.drawCallback(); 
+                
+                if (player.deathTimer <= 0) {
+                    game.isDying = false; 
+                    window.wrappedGameOver(); 
+                }
+                uiData.animationFrameId = requestAnimationFrame(loop);
+                return; 
+            }
+
             game.time = (currentTime - uiData.startTime) / 1000;
             update(dt); 
             uiData.drawCallback();
             updateUI(game, player, settings, null);
             
-            if(game.health<=0 && !devSettings.godMode){
-                window.wrappedGameOver(); 
+            if(game.health<=0 && !devSettings.godMode && !game.isDying){
+                game.isDying = true;
+                player.startDeath();
+                playSound('Death'); 
+                
+                const particleCount = 150; 
+                for (let k = 0; k < particleCount; k++) {
+                    const p = particlePool.get();
+                    if (p) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = 200 + Math.random() * 600; 
+                        
+                        p.init(
+                            player.x, player.y,
+                            Math.cos(angle) * speed,
+                            Math.sin(angle) * speed,
+                            1.0 + Math.random() * 1.0, 
+                            '#b71c1c', 
+                            0,
+                            0.92, 
+                            5 + Math.random() * 6 
+                        );
+                    }
+                }
             }
         }
         
@@ -323,14 +362,11 @@ const SPLASH_SEQUENCE = [
 ];
 const SPLASH_DURATIONS = [4000, 15000, 6000];
 
-// FIX v0.98: Nowa funkcja launchApp z paskiem postępu
 function launchApp() {
     console.log('[Main] Startowanie aplikacji...');
     
-    // Inicjalizacja Audio Context (wymagana interakcja użytkownika później, ale tworzymy obiekt)
     initAudio();
 
-    // Oblicz całkowitą liczbę zasobów (grafika + audio)
     const totalAssets = (loadAssets.totalAssets || 50) + (loadAudio.totalSounds || 20);
     let loadedCount = 0;
 
@@ -340,17 +376,17 @@ function launchApp() {
         if(loadingBarFill) loadingBarFill.style.width = `${pct}%`;
     };
 
-    // Uruchom ładowanie równoległe
     Promise.all([
-        loadAssets(updateProgress), // Przekazujemy callback postępu
-        loadAudio(updateProgress)   // Przekazujemy callback postępu
+        loadAssets(updateProgress), 
+        loadAudio(updateProgress)   
     ]).then(() => { 
         console.log('[Main] Wszystkie zasoby załadowane.');
         
-        // Krótkie opóźnienie dla efektu "100%"
         setTimeout(() => {
+            updateGameTitle();
+            
             if(loadingOverlay) loadingOverlay.style.display = 'none';
-            if(splashOverlay) splashOverlay.style.display = 'flex'; // Pokaż splash dopiero teraz
+            if(splashOverlay) splashOverlay.style.display = 'flex'; 
             
             assetsLoaded = true;
             initializeCanvas();
@@ -366,7 +402,6 @@ function launchApp() {
 
     }).catch((err) => { 
         console.error("Krytyczny błąd ładowania:", err);
-        // Fallback w razie błędu
         if(loadingOverlay) loadingOverlay.style.display = 'none';
         assetsLoaded = true;
         initializeCanvas();
@@ -425,7 +460,7 @@ window.addEventListener('mousedown', advanceSplash);
 window.addEventListener('touchstart', advanceSplash, { passive: false });
 
 const handleEscape = () => {
-  if(!game.inMenu && game.running){
+  if(!game.inMenu && game.running && !game.isDying){
     if(game.manualPause){
       window.wrappedResumeGame ? window.wrappedResumeGame() : resumeGame(game);
     } else {
@@ -434,12 +469,12 @@ const handleEscape = () => {
   }
 };
 const handleJoyStart = () => {
-  if(game.manualPause && !game.inMenu && game.running){ 
+  if(game.manualPause && !game.inMenu && game.running && !game.isDying){ 
       window.wrappedResumeGame ? window.wrappedResumeGame() : resumeGame(game); 
   }
 };
 const handleJoyEnd = () => {
-  if(!game.manualPause && !game.paused && !game.inMenu && game.running){
+  if(!game.manualPause && !game.paused && !game.inMenu && game.running && !game.isDying){
     window.wrappedPauseGame ? window.wrappedPauseGame() : pauseGame(game, settings, player.weapons, player);
   }
 };

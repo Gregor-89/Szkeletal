@@ -1,5 +1,5 @@
 // ==============
-// AUDIO.JS (v0.98 - Loading Progress)
+// AUDIO.JS (v0.97a - Added Death Sound)
 // Lokalizacja: /js/services/audio.js
 // ==============
 
@@ -14,7 +14,6 @@ let isLoadTriggered = false;
 const loadedSounds = new Map();
 const lastPlayTime = new Map(); 
 
-// SFX ASSETS
 const AUDIO_ASSET_LIST = [
     { id: 'Click', src: 'sounds/ui_click.mp3' },
     { id: 'LevelUp', src: 'sounds/level_up.mp3' },
@@ -35,7 +34,8 @@ const AUDIO_ASSET_LIST = [
     { id: 'Whip', src: 'sounds/whip_crack.mp3' },
     { id: 'ChainLightning', src: 'sounds/lightning.mp3' },
     { id: 'Hit', src: 'sounds/hit.mp3' },
-    { id: 'Explosion', src: 'sounds/explosion.mp3' }
+    { id: 'Explosion', src: 'sounds/explosion.mp3' },
+    { id: 'Death', src: 'sounds/death.mp3' } // FIX: Nowy dźwięk
 ];
 
 // --- MUSIC MANAGER SYSTEM ---
@@ -112,7 +112,6 @@ const MusicManager = {
             const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
             if (this.playRequestId !== myRequestId) {
-                console.log(`[Audio] Anulowano odtwarzanie ${src} (Zestarzałe żądanie)`);
                 return;
             }
 
@@ -134,7 +133,6 @@ const MusicManager = {
 
             source.onended = () => {
                 if (this.currentSource === source && this.playRequestId === myRequestId) { 
-                    console.log('[Audio] Utwór zakończony, losuję następny...');
                     this.currentSource = null; 
                     const savedContext = this.currentContext;
                     this.currentContext = null; 
@@ -183,8 +181,6 @@ const MusicManager = {
     }
 };
 
-// --- CORE AUDIO FUNCTIONS ---
-
 export function initAudio() {
     if (isAudioInitialized || !AudioCtx) return;
     
@@ -203,9 +199,7 @@ export function initAudio() {
         isAudioInitialized = true;
         
         if (!isLoadTriggered) {
-            // Jeśli initAudio jest wołane ręcznie później (np. przez user interaction), 
-            // a nie było loadingu, odpalamy teraz (bez progressu)
-            loadAudio(); 
+            loadAudio();
         }
     } catch (e) { 
         console.error("BŁĄD KRYTYCZNY AUDIO:", e); 
@@ -223,7 +217,6 @@ export function setSfxVolume(val) {
 
 function loadSound(assetInfo) {
     return new Promise(async (resolve) => {
-        // Jeśli brak AudioContext, udajemy że załadowano (cicha gra)
         if (!audioCtx) {
             loadedSounds.set(assetInfo.id, null);
             return resolve();
@@ -242,13 +235,11 @@ function loadSound(assetInfo) {
     });
 }
 
-// FIX v0.98: loadAudio z obsługą onProgress
 export function loadAudio(onProgress) {
     if (!isAudioInitialized) return Promise.resolve();
     if (isLoadTriggered) return Promise.resolve();
     isLoadTriggered = true;
     
-    // Eksportuj liczbę dźwięków dla loadera
     loadAudio.totalSounds = AUDIO_ASSET_LIST.length;
 
     const promises = AUDIO_ASSET_LIST.map(assetInfo => {
@@ -329,6 +320,7 @@ export function playSound(eventName) {
         case 'EliteSpawn': tone(200, 'sawtooth', 0.5, 0.2, 50); break; 
         case 'Hit': tone(100 + Math.random()*50, 'sawtooth', 0.04, 0.08, 50); break;
         case 'Explosion': tone(150, 'sawtooth', 0.4, 0.3, 10); break;
+        case 'Death': tone(50, 'sawtooth', 1.0, 0.5, 10); break; // Fallback dla śmierci
         default: break;
     }
 }

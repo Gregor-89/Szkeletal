@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.96 - OPTIMIZED: Static Render List)
+// DRAW.JS (v0.97a - FIX: Blood Screen)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -12,7 +12,6 @@ import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 let backgroundPattern = null;
 let generatedPatternScale = 0;
 
-// OPTYMALIZACJA v0.96: Statyczna lista renderowania, aby uniknąć alokacji pamięci w każdej klatce
 const renderList = [];
 
 const SHADOW_OFFSETS = {
@@ -179,14 +178,12 @@ export function draw(ctx, state, ui, fps) {
         h.draw(ctx);
     }
 
-    // --- FIX: Z-INDEX SORTING (Optimized for v0.96) ---
-    // Czyścimy listę bez tworzenia nowej tablicy
     renderList.length = 0;
+    // Jeśli gracz nie żyje, nie dodajemy go do listy renderowania, żeby "zniknął"
+    if (!player.isDead) {
+        renderList.push(player);
+    }
 
-    // 1. Dodaj Gracza
-    renderList.push(player);
-
-    // 2. Dodaj Wrogów (z Cullingiem)
     for (let i = 0; i < enemies.length; i++) {
         const e = enemies[i];
         const radius = (e.size / 2) * 1.5; 
@@ -194,18 +191,14 @@ export function draw(ctx, state, ui, fps) {
         renderList.push(e);
     }
 
-    // 3. Sortuj po osi Y (im wyższe Y = niżej na ekranie = bliżej kamery = rysowane później)
     renderList.sort((a, b) => a.y - b.y);
 
-    // 4. Rysuj posortowane obiekty (bez wrapperów)
     for (let i = 0; i < renderList.length; i++) {
         const obj = renderList[i];
-        
         if (obj.type === 'player') {
             drawShadow(ctx, obj.x, obj.y, obj.size, 1.0, 'player');
             obj.draw(ctx, game);
         } else {
-            // Enemy
             if (!obj.isDead) {
                 drawShadow(ctx, obj.x, obj.y, obj.size, obj.visualScale || 1.0, obj.type);
                 obj.draw(ctx, game);
@@ -213,9 +206,8 @@ export function draw(ctx, state, ui, fps) {
             }
         }
     }
-    // -----------------------------------------------
 
-    if (player.weapons) {
+    if (player.weapons && !player.isDead) {
         for (const w of player.weapons) {
             if (w instanceof OrbitalWeapon && w.draw) w.draw(ctx);
         }
@@ -257,6 +249,31 @@ export function draw(ctx, state, ui, fps) {
             b.y - b.maxRadius > cullBottom || b.y + b.maxRadius < cullTop) continue;
         
         const progress = b.life / b.maxLife; 
+        
+        if (b.type === 'shockwave') {
+            const currentRadius = b.maxRadius * progress;
+            const width = 20 * (1 - progress); 
+            const alpha = 1 - progress; 
+            
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(Math.round(b.x), Math.round(b.y), currentRadius, 0, Math.PI * 2);
+            
+            if (b.isWallNuke) {
+                ctx.strokeStyle = `rgba(100, 200, 255, ${alpha})`;
+                ctx.fillStyle = `rgba(100, 200, 255, ${alpha * 0.1})`;
+            } else {
+                ctx.strokeStyle = `rgba(255, 165, 0, ${alpha})`;
+                ctx.fillStyle = `rgba(255, 100, 0, ${alpha * 0.1})`;
+            }
+            
+            ctx.lineWidth = width;
+            ctx.stroke();
+            ctx.fill();
+            ctx.restore();
+            continue; 
+        }
+
         const currentRadius = b.maxRadius * progress;
         const opacity = 0.9 * (1 - progress); 
 
@@ -319,20 +336,32 @@ export function draw(ctx, state, ui, fps) {
     ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
 
-    ctx.restore(); 
+    // FIX v0.97a: Efekt "Krwawego Ekranu"
+    if (player.isDead) {
+        const progress = 1 - (player.deathTimer / player.deathDuration);
+        const bloodAlpha = Math.min(0.8, progress * 1.5); // Szybkie pojawienie się
 
-    if (game.newEnemyWarningT > 0 && game.newEnemyWarningType) {
-        const warningText = `${getLang('ui_hud_new_enemy')}: ${game.newEnemyWarningType}`;
-        const canvasCenterX = canvas.width / 2;
-        const warningY = 50; 
-        const alpha = Math.min(1, 0.5 + 0.5 * Math.sin(performance.now() / 80));
-        ctx.globalAlpha = alpha;
-        ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#ff7043'; 
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 8;
-        ctx.fillText(warningText, canvasCenterX, warningY); 
-        ctx.font = 'bold 16px Arial'; ctx.fillStyle = '#fff'; ctx.shadowBlur = 4;
-        ctx.fillText(`${getLang('ui_hud_spawn_in')}: ${game.newEnemyWarningT.toFixed(1)}s`, canvasCenterX, warningY + 25); 
-        ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+        ctx.save();
+        ctx.translate(camera.offsetX, camera.offsetY); // Reset kamery do 0,0 ekranu
+        
+        // Krwawy gradient (winieta)
+        const grad = ctx.createRadialGradient(
+            camera.viewWidth / 2, camera.viewHeight / 2, camera.viewWidth * 0.2,
+            camera.viewWidth / 2, camera.viewHeight / 2, camera.viewWidth * 0.8
+        );
+        grad.addColorStop(0, `rgba(180, 0, 0, ${bloodAlpha * 0.6})`);
+        grad.addColorStop(1, `rgba(100, 0, 0, ${bloodAlpha})`);
+        
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, camera.viewWidth, camera.viewHeight);
+        
+        // Tekst "You Died" (opcjonalnie, ale robi klimat)
+        if (progress > 0.5) {
+            ctx.fillStyle = `rgba(0, 0, 0, ${(progress - 0.5) * 2})`;
+            ctx.fillRect(0, 0, camera.viewWidth, camera.viewHeight);
+        }
+
+        ctx.restore();
     }
 
     drawIndicators(ctx, state);

@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.99 - FIX: Strict Mode & Auto-Start)
+// DEV.JS (v0.96d - FIX: Min Weapon Level)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -102,11 +102,9 @@ function callStartRun() {
     }
 }
 
-// FIX v0.99: Dodano parametr autoStart, aby uniknąć używania .caller
 function devPresetEnemy(enemyType, autoStart = true) {
     console.log(`[Dev] Uruchamianie testu jednostki: ${enemyType.toUpperCase()}`);
     
-    // Zapisujemy akcję z autoStart = false, żeby przy retry nie zapętlić gry
     lastScenarioAction = () => devPresetEnemy(enemyType, false);
 
     const enemySelect = document.getElementById('devEnemyType');
@@ -146,7 +144,6 @@ function devPresetEnemy(enemyType, autoStart = true) {
         }
     }
 
-    // FIX v0.99: Bezpieczne wywołanie startu
     if (autoStart) {
         callStartRun();
     }
@@ -188,10 +185,17 @@ function devPresetMinimalWeapons() {
     
     document.getElementById('devTime').value = game.time;
     document.getElementById('devLevel').value = game.level;
-    document.getElementById('devGodMode').checked = true; 
+    // FIX: Usunięto wymuszanie God Mode
+    // document.getElementById('devGodMode').checked = true; 
     
     const weaponPerks = ['whip', 'autogun', 'orbital', 'nova', 'chainLightning'];
     weaponPerks.forEach(id => {
+        // FIX: Bicz jest startową bronią (lvl 1), nie dodawaj go ponownie
+        if (id === 'whip') {
+            perkLevels[id] = 1;
+            return;
+        }
+        
         const perk = perkPool.find(p => p.id === id);
         if (perk) {
             perk.apply(gameState, perk); 
@@ -284,18 +288,15 @@ function applyDevPreset(targetLevel, perkLevelOffset = 0) {
 function devPresetAlmostMax() { applyDevPreset(20, 1); }
 function devPresetMax() { applyDevPreset(50, 0); }
 
-// FIX v0.99: Dodano parametr autoStart
 function devStartScenario(type, autoStart = true) {
     console.log(`[Dev] Uruchamianie scenariusza: ${type.toUpperCase()}`);
     
-    // Zapisujemy akcję z autoStart = false
     lastScenarioAction = () => devStartScenario(type, false);
 
     if (type === 'min') devPresetMinimalWeapons();
     else if (type === 'high') devPresetAlmostMax();
     else if (type === 'max') devPresetMax();
     
-    // FIX v0.99: Bezpieczne wywołanie
     if (autoStart) {
         callStartRun();
     }
@@ -433,5 +434,5 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.devStartPreset = devPresetEnemy; 
     window.retryLastScenario = retryLastScenario; 
     
-    console.log('[DEBUG-v0.99] js/services/dev.js: Dev Tools loaded & exported.');
+    console.log('[DEBUG-v0.96d] js/services/dev.js: Dev Tools loaded & exported.');
 }

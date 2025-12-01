@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.94x - FIX: Halved Gem Rarity)
+// ENEMYMANAGER.JS (v0.96 - FIX: Total Kills Counter)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -328,6 +328,8 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
     
     if (!preventDrops) {
         game.score += e.stats.score;
+        // FIX v0.96: Inkrementacja zabójstw
+        game.totalKills = (game.totalKills || 0) + 1;
         
         if (e.stats.xp > 0) {
             const gem = gemsPool.get();
@@ -336,13 +338,12 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
                 let color = '#4FC3F7'; 
                 let size = 4;          
                 
-                // FIX: Dwukrotne zmniejszenie szans na drop rzadkich gemów
-                if (Math.random() < 0.025) { // Było 0.05
+                if (Math.random() < 0.025) { 
                     val *= 5; 
                     color = '#81C784'; 
                     size = 6;          
                 } 
-                else if (Math.random() < 0.005) { // Było 0.01
+                else if (Math.random() < 0.005) { 
                     val *= 20; 
                     color = '#E57373'; 
                     size = 8;          

@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v0.96 - Opt: Added Type ID)
+// PLAYER.JS (v0.96o - FIX: Faster Death)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -9,7 +9,6 @@ import { PLAYER_CONFIG, HAZARD_CONFIG } from '../config/gameData.js';
 
 export class Player {
     constructor(startX, startY) {
-        // OPTYMALIZACJA v0.96: Dodano typ 'player' dla unifikacji sortowania w draw.js
         this.type = 'player'; 
         
         this.x = startX;
@@ -41,6 +40,10 @@ export class Player {
         
         this.isMoving = false;
         this.facingDir = 1; 
+        
+        this.isDead = false;
+        this.deathTimer = 0;
+        this.deathDuration = 1.5; // FIX: Skrócono czas śmierci do 1.5s
     }
 
     reset(canvasWidth, canvasHeight) {
@@ -57,8 +60,22 @@ export class Player {
         this.currentFrame = 0;
         this.animTimer = 0;
         this.knockback = { x: 0, y: 0 };
+        
+        this.isDead = false;
+        this.deathTimer = 0;
     }
     
+    startDeath() {
+        if (this.isDead) return;
+        this.isDead = true;
+        this.deathTimer = this.deathDuration;
+    }
+    
+    updateDeathAnimation(dt) {
+        if (!this.isDead) return;
+        this.deathTimer -= dt;
+    }
+
     applyKnockback(kx, ky) {
         this.knockback.x += kx;
         this.knockback.y += ky;
@@ -78,6 +95,8 @@ export class Player {
     }
 
     update(dt, game, keys, jVec, camera) { 
+        if (this.isDead) return; 
+
         if (Math.abs(this.knockback.x) > 0.1 || Math.abs(this.knockback.y) > 0.1) {
             this.x += this.knockback.x * dt;
             this.y += this.knockback.y * dt;
@@ -144,6 +163,8 @@ export class Player {
     }
 
     draw(ctx, game) {
+        if (this.isDead) return;
+
         if (!this.spriteSheet) {
              this.spriteSheet = getAsset('player_spritesheet') || getAsset('drakul') || getAsset('player');
         }
@@ -156,7 +177,6 @@ export class Player {
                 ctx.filter = 'grayscale(1) brightness(5)';
             }
         } 
-        // FIX: Priorytetowy efekt Mega Hazardu (taki sam jak u wroga)
         else if (game.playerInMegaHazard) {
             ctx.filter = 'brightness(0.7) sepia(1) hue-rotate(130deg) saturate(2)';
         }
@@ -208,7 +228,6 @@ export class Player {
         
         ctx.filter = 'none'; 
         
-        // --- Pasek HP ---
         if (this.facingDir === -1) ctx.scale(-1, 1); 
 
         const hpBarW = 64;

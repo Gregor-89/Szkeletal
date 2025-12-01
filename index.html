@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Szkeletal v0.97</title> 
+<title>Szkeletal</title> 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -39,7 +39,13 @@
       <div class="stat"><span class="stat-icon"><img src="img/icons/hud_level.png" class="stat-icon-img"></span><span id="level">1</span></div>
       <div class="stat"><span class="stat-icon"><img src="img/icons/hud_xp.png" class="stat-icon-img"></span><span id="xp">0</span>/<span id="xpNeeded">5</span></div>
       <div class="stat"><span class="stat-icon"><img src="img/icons/hud_health.png" class="stat-icon-img"></span><span id="health">100</span></div>
-      <div class="stat"><span class="stat-icon"><img src="img/icons/hud_enemies.png" class="stat-icon-img"></span><span id="enemyCountSpan">0</span>/<span id="enemyLimitSpan">0</span></div>
+      
+      <div class="stat">
+          <span class="stat-icon"><img src="img/icons/hud_enemies.png" class="stat-icon-img"></span>
+          <span id="totalKillsSpan">0</span> 
+          (<span id="enemyCountSpan">0</span>/<span id="enemyLimitSpan">0</span>)
+      </div>
+      
       <div class="stat"><span class="stat-icon"><img src="img/icons/hud_time.png" class="stat-icon-img"></span><span id="time">0</span></div>
     </div>
     
@@ -79,7 +85,7 @@
         <h2 class="retro-title">TABLICA WYNIKÓW</h2>
         <div class="retro-scroll-box">
             <table id="retroScoreTable">
-                <thead><tr><th>#</th><th>PKT</th><th>LVL</th><th>CZAS</th></tr></thead>
+                <thead><tr><th>#</th><th>PKT</th><th>ZAB</th><th>LVL</th><th>CZAS</th></tr></thead>
                 <tbody id="scoresBodyMenu"></tbody>
             </table>
             <div id="scoresEmptyMsg" style="text-align:center; color:#666; padding:20px; display:none;">BRAK WYNIKÓW</div>
@@ -231,7 +237,7 @@
         <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
       </div>
 
-      </div>
+    </div>
   </div>
 
   <div id="resumeOverlay" class="retro-overlay" style="display:none; pointer-events:none; background:rgba(0,0,0,0.4);">
@@ -245,7 +251,29 @@
   <div id="levelUpOverlay" class="retro-overlay" style="display:none;"> <div id="levelUpPanel" class="retro-frame wide"> <h2 id="levelUpTitle" class="retro-title">LEVEL UP!</h2> <div id="perks" class="perk-grid"></div> <button id="btnContinueMaxLevel" class="retro-btn warning" style="display:none;">KONTYNUUJ</button> <div class="stats-panel"> <h4 id="levelUpStatsTitle">STATYSTYKI</h4> <div id="statsDisplay" class="stats-grid"></div> </div> </div> </div>
   <div id="pauseOverlay" class="retro-overlay" style="display:none; background:rgba(0,0,0,0.7);"> <div class="retro-frame small"> <h2 id="pauseTitle" class="retro-title">PAUZA</h2> <div class="menu-list"> <button id="btnResume" class="retro-btn">WZNÓW</button> <button id="btnPauseMenu" class="retro-btn warning">MENU</button> </div> <div style="margin-top:20px;"><div id="statsDisplayPause" class="stats-grid"></div></div> </div> </div>
   <div id="chestOverlay" class="retro-overlay" style="display:none;"> <div class="retro-frame small text-center"> <h2 id="chestTitle" class="retro-title">SKRZYNIA</h2> <div id="chestRewardDisplay" class="chest-content"></div> <button id="chestButton" class="retro-btn primary pulse">ODBIERZ</button> </div> </div>
-  <div id="gameOverOverlay" class="retro-overlay" style="display:none;"> <div class="retro-frame"> <h2 id="gameOverTitle" class="retro-title text-red">KONIEC GRY</h2> <div class="gameover-stats" style="font-size:1.3rem; margin-bottom:20px; display:flex; flex-direction:column; align-items:center; gap:5px;"> <p><span id="gameOverScoreLabel">WYNIK:</span> <span id="finalScore" style="color:var(--accent-gold); font-weight:bold;">0</span></p> <p><span id="gameOverLevelLabel">POZIOM:</span> <span id="finalLevel">1</span></p> <p><span id="gameOverTimeLabel">CZAS:</span> <span id="finalTime">0:00</span></p> </div> <div class="retro-scroll-box" style="height:150px;"> <table id="goScoreTable"> <tbody id="scoresBodyGameOver"></tbody> </table> </div> <button id="btnClearScoresGO" class="retro-btn small danger" style="margin-bottom:10px;">WYCZYŚĆ</button> <div class="menu-actions"> <button id="btnRetry" class="retro-btn primary">JESZCZE RAZ</button> <button id="btnMenu" class="retro-btn">MENU</button> </div> </div> </div>
+  
+  <div id="gameOverOverlay" class="retro-overlay" style="display:none;"> 
+    <div class="retro-frame"> 
+      <h2 id="gameOverTitle" class="retro-title text-red">KONIEC GRY</h2> 
+      <div class="gameover-stats" style="font-size:1.3rem; margin-bottom:20px; display:flex; flex-direction:column; align-items:center; gap:5px;"> 
+        <p><span id="gameOverScoreLabel">WYNIK:</span> <span id="finalScore" style="color:var(--accent-gold); font-weight:bold;">0</span></p> 
+        <p><span id="gameOverLevelLabel">POZIOM:</span> <span id="finalLevel">1</span></p> 
+        <p><span id="gameOverTimeLabel">CZAS:</span> <span id="finalTime">0:00</span></p> 
+      </div> 
+      <div class="retro-scroll-box" style="height:150px;"> 
+        <table id="goScoreTable"> 
+          <tbody id="scoresBodyGameOver"></tbody> 
+          <thead><tr><th>#</th><th>PKT</th><th>ZAB</th><th>LVL</th><th>CZAS</th></tr></thead>
+        </table> 
+      </div> 
+      <button id="btnClearScoresGO" class="retro-btn small danger" style="margin-bottom:10px;">WYCZYŚĆ</button> 
+      <div class="menu-actions"> 
+        <button id="btnRetry" class="retro-btn primary">JESZCZE RAZ</button> 
+        <button id="btnMenu" class="retro-btn">MENU</button> 
+      </div> 
+    </div> 
+  </div>
+
   <div id="confirmOverlay" class="retro-overlay" style="display:none;"> <div class="retro-frame small text-center"> <h2 id="confirmTitle" class="retro-title">POTWIERDŹ</h2> <p id="confirmText">Czy wyczyścić wyniki?</p> <div class="menu-actions"> <button id="btnConfirmYes" class="retro-btn danger">TAK</button> <button id="btnConfirmNo" class="retro-btn">NIE</button> </div> </div> </div>
 
   <script type="module" src="js/main.js"></script>
@@ -261,7 +289,6 @@
     document.getElementById('navConfig').onclick = () => menuNav('view-config');
     document.getElementById('navGuide').onclick = () => menuNav('view-guide');
     document.getElementById('navCoffee').onclick = () => menuNav('view-coffee');
-    // FIX: Usunięto handler dla navCredits
     document.getElementById('navDev').onclick = () => menuNav('view-dev');
     document.querySelectorAll('.nav-back').forEach(b => b.onclick = () => menuNav('view-main'));
   </script>

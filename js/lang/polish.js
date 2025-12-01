@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v0.94f - FIX: Full Restoration & Missing Keys)
+// POLISH.JS (v0.96 - FIX: Stats Keys)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -104,6 +104,8 @@ export const LANG_PL = {
   ui_gameover_score: "🎯 Wynik:",
   ui_gameover_level: "⭐ Poziom:",
   ui_gameover_time: "⏱️ Czas przetrwania:",
+  // FIX: Nowa etykieta dla zabitych
+  ui_gameover_kills: "⚔️ Zabici:",
   ui_gameover_retry: "Zagraj ponownie",
   ui_gameover_menu: "Menu",
   
@@ -112,6 +114,8 @@ export const LANG_PL = {
   ui_scores_clear: "🗑️ Wyczyść",
   ui_scores_col_rank: "#️⃣",
   ui_scores_col_score: "🎯 Wynik",
+  // FIX: Nowa kolumna
+  ui_scores_col_kills: "💀 Zabici",
   ui_scores_col_level: "⭐ Poziom",
   ui_scores_col_time: "⏱️ Czas",
   
@@ -199,7 +203,6 @@ export const LANG_PL = {
   perk_chainLightning_desc: "Automatyczny atak, razi najbliższego hejtera i przeskakuje na kolejnych (w bliskim zasięgu). Lvl 1: 1 Obr., 1 Cel (co 2.5s). Lvl 2: 2 Obr., 2 Cele (2.3s). Lvl 3: 2 Obr., 3 Cele (2.1s). Lvl 4: 3 Obr., 4 Cele (1.9s). Lvl 5: 3 Obr., 5 Celów (1.7s). Lvl 6: 4 Obr., 6 Celów (1.6s).",
   
   // === 12. Perki (Pasywne i AutoGun) (GDD) ===
-  // DODANO BRAKUJĄCE KLUCZE, ABY ZAPOBIEC BŁĘDOM W KONSOLI
   perk_firerate_name: "Plujko Prędszy Jad",
   perk_firerate_desc: "Bo hejt trzeba dawkować szybko! Zwiększa szybkostrzelność Plujko Jadu o +20% na poziom.",
   

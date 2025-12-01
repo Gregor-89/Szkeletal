@@ -1,9 +1,9 @@
 // ==============
-// UI.JS (v0.96c - Dev Retry Integration)
+// UI.JS (v0.96q - FIX: Total Kills Display & Save)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
-import { devSettings, devStartTime, retryLastScenario } from '../services/dev.js'; // FIX: Import retryLastScenario
+import { devSettings, devStartTime, retryLastScenario } from '../services/dev.js'; 
 import { initAudio, playSound, setMusicVolume, setSfxVolume } from '../services/audio.js'; 
 import { 
     GAME_CONFIG, PLAYER_CONFIG, UI_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG, MUSIC_CONFIG 
@@ -184,9 +184,11 @@ export function updateEnemyCounter(game, enemies) {
     
     const cntSpan = document.getElementById('enemyCountSpan');
     const limSpan = document.getElementById('enemyLimitSpan');
+    const killsSpan = document.getElementById('totalKillsSpan'); // FIX: Nowy span
     
     if (cntSpan) cntSpan.textContent = nonWallEnemiesCount;
     if (limSpan) limSpan.textContent = limit;
+    if (killsSpan) killsSpan.textContent = game.totalKills || 0; // FIX: Aktualizacja zabójstw
 }
 
 export function updateUI(game, player, settings, weapons, enemies = []) {
@@ -270,7 +272,6 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
 }
 
 export function startRun(game, resetAll, uiData) {
-    // FIX v0.96c: Jeśli to restart w trybie Dev, przywróć scenariusz
     if (devSettings.presetLoaded) {
         retryLastScenario();
     }
@@ -310,6 +311,7 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         settings.lastFire = 0; settings.lastElite = 0;
         
         game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.seenEnemyTypes = [];
+        game.totalKills = 0; // FIX: Reset kills
         
         const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
         uiData.player.reset(worldWidth, worldHeight);
@@ -324,6 +326,7 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         settings.lastSiegeEvent = 0; 
         settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
         game.newEnemyWarningT = 0; game.newEnemyWarningType = null;
+        game.totalKills = 0; // FIX: Reset kills in dev mode too
         
         const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
         uiData.player.x = worldWidth / 2; uiData.player.y = worldHeight / 2;
@@ -350,6 +353,8 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
 }
 
 export function pauseGame(game, settings, weapons, player) {
+    if (game.isDying) return;
+
     if (game.paused || game.inMenu) return;
     game.manualPause = true; 
     game.paused = true;
@@ -388,10 +393,19 @@ export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
 export function gameOver(game, uiData) {
     game.running = false; game.paused = true; uiData.savedGameState = null;
     const finalTimeValue = Math.floor(game.time);
-    const currentRun = { score: game.score, level: game.level, time: finalTimeValue };
+    
+    // FIX v0.96q: Dodano kills do obiektu wyniku
+    const currentRun = { 
+        score: game.score, 
+        level: game.level, 
+        time: finalTimeValue,
+        kills: game.totalKills || 0 
+    };
+    
     finalScore.textContent = currentRun.score;
     finalLevel.textContent = currentRun.level;
     finalTime.textContent = formatTime(currentRun.time); 
+    
     saveScore(currentRun);
     
     playSound('MusicMenu');
