@@ -82,7 +82,7 @@
       </div>
 
       <div id="view-scores" class="menu-view">
-        <h2 class="retro-title">TABLICA WYNIKÓW</h2>
+        <h2 id="scoresTitle" class="retro-title">TABLICA WYNIKÓW</h2>
         <div class="retro-scroll-box">
             <table id="retroScoreTable">
                 <thead><tr><th>#</th><th>PKT</th><th>ZAB</th><th>LVL</th><th>CZAS</th></tr></thead>
@@ -97,41 +97,39 @@
       </div>
 
       <div id="view-config" class="menu-view">
-        <h2 class="retro-title">KONFIGURACJA</h2>
+        <h2 id="configTitleMain" class="retro-title">KONFIGURACJA</h2>
         <div class="retro-scroll-box config-list">
             <input type="checkbox" id="chkHyper" style="display:none;">
             <input type="checkbox" id="chkShake" checked style="display:none;">
             <input type="checkbox" id="chkFPS" checked style="display:none;">
             <input type="checkbox" id="chkPickupLabels" checked style="display:none;">
             
-            <div class="config-row"><span>JOYSTICK</span><button class="retro-toggle" id="toggleJoy">PRAWA</button></div>
-            <div class="config-row"><span>HYPER MODE</span><button class="retro-toggle off" id="toggleHyper">WYŁ</button></div>
-            <div class="config-row"><span>WSTRZĄSY</span><button class="retro-toggle on" id="toggleShake">WŁ</button></div>
-            <div class="config-row"><span>LICZNIK FPS</span><button class="retro-toggle on" id="toggleFPS">WŁ</button></div>
-            <div class="config-row"><span>PODPISY</span><button class="retro-toggle on" id="toggleLabels">WŁ</button></div>
+            <div class="config-row"><span id="lblJoy">JOYSTICK</span><button class="retro-toggle" id="toggleJoy">PRAWA</button></div>
+            <div class="config-row"><span id="lblHyper">HYPER MODE</span><button class="retro-toggle off" id="toggleHyper">WYŁ</button></div>
+            <div class="config-row"><span id="lblShake">WSTRZĄSY</span><button class="retro-toggle on" id="toggleShake">WŁ</button></div>
+            <div class="config-row"><span id="lblFPS">LICZNIK FPS</span><button class="retro-toggle on" id="toggleFPS">WŁ</button></div>
+            <div class="config-row"><span id="lblLabels">PODPISY</span><button class="retro-toggle on" id="toggleLabels">WŁ</button></div>
             
             <div class="config-row">
-                <span>MUZYKA</span>
+                <span id="lblMusic">MUZYKA</span>
                 <input type="range" id="volMusic" class="retro-range" min="0" max="100" value="40">
             </div>
             <div class="config-row">
-                <span>EFEKTY</span>
+                <span id="lblSFX">EFEKTY</span>
                 <input type="range" id="volSFX" class="retro-range" min="0" max="100" value="30">
             </div>
 
-            <div class="config-row"><span>JĘZYK</span><div id="lang-selector-container" class="retro-lang-row"></div></div>
+            <div class="config-row"><span id="lblLang">JĘZYK</span><div id="lang-selector-container" class="retro-lang-row"></div></div>
         </div>
         <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
       </div>
 
       <div id="view-coffee" class="menu-view">
-        <h2 class="retro-title" style="color:#E91E63; border-color:#E91E63;">HOT COFFEE</h2>
+        <h2 id="coffeeTitle" class="retro-title" style="color:#E91E63; border-color:#E91E63;">HOT COFFEE</h2>
         <div class="retro-scroll-box text-center" style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
             <div style="font-size:48px; margin-bottom:15px; width:100%; text-align:center;">☕ + 🥔</div>
-            <p style="font-size:1.3rem; line-height:1.5; margin-bottom:20px; color:#eee; max-width:90%;">
-                Jeżeli doceniasz napracowanie, tysiące łez i potu wylanych nad promptowaniem 
-                (bo ta gierka powstała w 99% za pomocą AI), to możesz mi podziękować 
-                kupując wirtualną kawkę lub dokładając się do zakupu worka ziemniaków!
+            <p id="coffeeDesc" style="font-size:1.3rem; line-height:1.5; margin-bottom:20px; color:#eee; max-width:90%;">
+                Jeżeli doceniasz napracowanie...
             </p>
             <div style="display:flex; flex-direction:row; justify-content:center; align-items:center; gap:30px; margin-bottom:20px;">
                 <div class="qr-wrapper" style="margin-bottom:0;">
@@ -139,60 +137,47 @@
                 </div>
                 <img src="img/sink.png" alt="Zlew" style="height:150px; width:auto; display:block; image-rendering:pixelated;">
             </div>
-            <a href="https://suppi.pl/gregor" target="_blank" class="retro-btn primary pulse" style="text-decoration:none; color:#fff; border-color:#E91E63; background:#C2185B;">
+            <a id="coffeeBtn" href="https://suppi.pl/gregor" target="_blank" class="retro-btn primary pulse" style="text-decoration:none; color:#fff; border-color:#E91E63; background:#C2185B;">
                 POSTAW KAWKĘ
             </a>
-            <div style="margin-top:20px; opacity:0.6; font-size:0.9rem;">Code by Gregor & Gemini AI</div>
+            <div id="coffeeFooter" style="margin-top:20px; opacity:0.6; font-size:0.9rem;">Code by Gregor & Gemini AI</div>
         </div>
         <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
       </div>
 
       <div id="view-dev" class="menu-view">
-        <h2 class="retro-title text-red">DEV TOOLS</h2>
+        <h2 id="devTitle" class="retro-title text-red">DEV TOOLS</h2>
         <div class="retro-scroll-box">
             <div class="dev-section">
-                <p class="dev-label">PRESETY WROGÓW (AUTO-START)</p>
+                <p id="devLblPresets" class="dev-label">PRESETY WROGÓW (AUTO-START)</p>
                 <div class="dev-grid">
-                    <button class="retro-btn small" onclick="window.devStartPreset('standard')">STD</button>
-                    <button class="retro-btn small" onclick="window.devStartPreset('horde')">HRD</button>
-                    <button class="retro-btn small" onclick="window.devStartPreset('ranged')">MENEL</button>
-                    <button class="retro-btn small" onclick="window.devStartPreset('tank')">TANK</button>
-                    <button class="retro-btn small" onclick="window.devStartPreset('splitter')">WYKOP</button>
-                    <button class="retro-btn small" onclick="window.devStartPreset('kamikaze')">TROLL</button>
-                    <button class="retro-btn small warning" onclick="window.devStartPreset('wall')">WALL</button>
-                    <button class="retro-btn small danger" onclick="window.devStartPreset('elite')">BOSS</button>
-                    <button class="retro-btn small" onclick="window.devStartPreset('aggressive')">AGR</button>
+                    <button id="devBtnStd" class="retro-btn small" onclick="window.devStartPreset('standard')">STD</button>
+                    <button id="devBtnHorde" class="retro-btn small" onclick="window.devStartPreset('horde')">HRD</button>
+                    <button id="devBtnRng" class="retro-btn small" onclick="window.devStartPreset('ranged')">RNG</button>
+                    <button id="devBtnTank" class="retro-btn small" onclick="window.devStartPreset('tank')">TANK</button>
+                    <button id="devBtnSplit" class="retro-btn small" onclick="window.devStartPreset('splitter')">SPLIT</button>
+                    <button id="devBtnTroll" class="retro-btn small" onclick="window.devStartPreset('kamikaze')">TROLL</button>
+                    <button id="devBtnWall" class="retro-btn small warning" onclick="window.devStartPreset('wall')">WALL</button>
+                    <button id="devBtnBoss" class="retro-btn small danger" onclick="window.devStartPreset('elite')">BOSS</button>
+                    <button id="devBtnAgr" class="retro-btn small" onclick="window.devStartPreset('aggressive')">AGR</button>
                 </div>
             </div>
             <div class="dev-section">
-                <p class="dev-label">SCENARIUSZE (BROŃ)</p>
+                <p id="devLblScenarios" class="dev-label">SCENARIUSZE</p>
                 <div class="dev-grid">
-                     <button class="retro-btn small" onclick="window.devStartScenario('min')">MIN</button>
-                     <button class="retro-btn small warning" onclick="window.devStartScenario('high')">HIGH</button>
-                     <button class="retro-btn small danger" onclick="window.devStartScenario('max')">MAX</button>
+                     <button id="devBtnMin" class="retro-btn small" onclick="window.devStartScenario('min')">MIN</button>
+                     <button id="devBtnHigh" class="retro-btn small warning" onclick="window.devStartScenario('high')">HIGH</button>
+                     <button id="devBtnMax" class="retro-btn small danger" onclick="window.devStartScenario('max')">MAX</button>
+                     <button id="btnDevPeaceful" class="retro-btn small success" onclick="window.devStartPeaceful()">SPACER</button>
                 </div>
             </div>
             <div class="dev-section">
-                <p class="dev-label">STAN GRACZA</p>
-                <div class="dev-control"><label>Level:</label><input type="number" id="devLevel" min="1" max="100" value="1"></div>
-                <div class="dev-control"><label>HP:</label><input type="number" id="devHealth" min="1" max="9999" value="100"></div>
-                <div class="dev-control"><label>Max HP:</label><input type="number" id="devMaxHealth" min="1" max="9999" value="100"></div>
-                <div class="dev-control"><label>XP:</label><input type="number" id="devXP" min="0" max="9999" value="0"></div>
-                <div class="dev-control"><label>Czas (s):</label><input type="number" id="devTime" min="0" max="999" value="0"></div>
-                <div class="dev-control"><label>God Mode:</label><input type="checkbox" id="devGodMode" style="width:24px; height:24px;"></div>
-                <div class="dev-control"><label>Hitboxy:</label><input type="checkbox" id="devDebugHitboxes" style="width:24px; height:24px;"></div>
-            </div>
-            <div class="dev-section">
-                <p class="dev-label">BRONIE I PERKI</p>
-                <div class="dev-control"><label>Bicz:</label><input type="number" id="devWhip" min="1" max="5" value="1"></div>
-                <div class="dev-control"><label>Orbital:</label><input type="number" id="devOrbital" min="0" max="5" value="0"></div>
-                <div class="dev-control"><label>Nova:</label><input type="number" id="devNova" min="0" max="5" value="0"></div>
-                <div class="dev-control"><label>AutoGun:</label><input type="number" id="devAutoGun" min="0" max="1" value="0"></div>
-                <div class="dev-control"><label>Piorun:</label><input type="number" id="devLightning" min="0" max="6" value="0"></div>
-                <div class="dev-control"><label>Multishot:</label><input type="number" id="devMultishot" min="0" max="10" value="0"></div>
-                <div class="dev-control"><label>Pierce:</label><input type="number" id="devPierce" min="0" max="10" value="0"></div>
-                <div class="dev-control"><label>FireRate:</label><input type="number" id="devFireRate" min="50" max="5000" value="650"></div>
-                <div class="dev-control"><label>Damage:</label><input type="number" id="devDamage" min="1" max="999" value="1"></div>
+                <p id="devLblPlayer" class="dev-label">STAN GRACZA</p>
+                <div class="dev-control"><label id="lblDevLvl">Level:</label><input type="number" id="devLevel" min="1" max="100" value="1"></div>
+                <div class="dev-control"><label id="lblDevHp">HP:</label><input type="number" id="devHealth" min="1" max="9999" value="100"></div>
+                <div class="dev-control"><label id="lblDevXp">XP:</label><input type="number" id="devXP" min="0" max="9999" value="0"></div>
+                <div class="dev-control"><label id="lblDevGod">God Mode:</label><input type="checkbox" id="devGodMode" style="width:24px; height:24px;"></div>
+                <div class="dev-control"><label id="lblDevHit">Hitboxy:</label><input type="checkbox" id="devDebugHitboxes" style="width:24px; height:24px;"></div>
             </div>
             <div class="dev-section">
                 <p class="dev-label">SPAWN ITEM</p>
@@ -226,13 +211,13 @@
                 <div class="dev-control"><label>Rate:</label><input type="number" id="devSpawnRate" step="0.001" value="0.008"></div>
                 <div class="dev-control"><label>Max:</label><input type="number" id="devMaxEnemies" value="300"></div>
             </div>
-            <button onclick="window.applyDevSettings()" class="retro-btn primary" style="margin-top:10px;">ZASTOSUJ</button>
+            <button id="btnDevApply" onclick="window.applyDevSettings()" class="retro-btn primary" style="margin-top:10px;">ZASTOSUJ</button>
         </div>
         <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
       </div>
 
       <div id="view-guide" class="menu-view">
-        <h2 class="retro-title">PRZEWODNIK</h2>
+        <h2 id="guideTitle" class="retro-title">PRZEWODNIK</h2>
         <div id="guideContent" class="retro-scroll-box"></div>
         <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
       </div>
@@ -242,15 +227,52 @@
 
   <div id="resumeOverlay" class="retro-overlay" style="display:none; pointer-events:none; background:rgba(0,0,0,0.4);">
       <div class="retro-frame small text-center" style="border:4px solid #FFD700; background:rgba(10, 10, 10, 0.6); box-shadow:0 0 20px #FFD700; width:auto; padding:30px; backdrop-filter:blur(4px);">
-          <h2 style="color:#FFD700; margin:0 0 10px 0; font-size:3rem; letter-spacing:2px;" class="pulse">PRZYGOTUJ SIĘ</h2>
+          <h2 id="resumeOverlayTitle" style="color:#FFD700; margin:0 0 10px 0; font-size:3rem; letter-spacing:2px;" class="pulse">PRZYGOTUJ SIĘ</h2>
           <div id="resumeText" style="font-size:2rem; color:#fff; text-shadow:1px 1px 0 #000;">Wznawianie...</div>
       </div>
   </div>
 
-  <div id="introOverlay" class="retro-overlay" style="display:none;"> <div class="retro-frame intro-frame"> <div class="intro-image-container"><img id="introImage" class="intro-image" src="" alt="Intro"></div> <div class="intro-controls"> <button id="btnIntroPrev" class="retro-btn small">WSTECZ</button> <button id="btnIntroSkip" class="retro-btn small danger">POMIŃ</button> <button id="btnIntroNext" class="retro-btn small">DALEJ</button> </div> </div> </div>
-  <div id="levelUpOverlay" class="retro-overlay" style="display:none;"> <div id="levelUpPanel" class="retro-frame wide"> <h2 id="levelUpTitle" class="retro-title">LEVEL UP!</h2> <div id="perks" class="perk-grid"></div> <button id="btnContinueMaxLevel" class="retro-btn warning" style="display:none;">KONTYNUUJ</button> <div class="stats-panel"> <h4 id="levelUpStatsTitle">STATYSTYKI</h4> <div id="statsDisplay" class="stats-grid"></div> </div> </div> </div>
-  <div id="pauseOverlay" class="retro-overlay" style="display:none; background:rgba(0,0,0,0.7);"> <div class="retro-frame small"> <h2 id="pauseTitle" class="retro-title">PAUZA</h2> <div class="menu-list"> <button id="btnResume" class="retro-btn">WZNÓW</button> <button id="btnPauseMenu" class="retro-btn warning">MENU</button> </div> <div style="margin-top:20px;"><div id="statsDisplayPause" class="stats-grid"></div></div> </div> </div>
-  <div id="chestOverlay" class="retro-overlay" style="display:none;"> <div class="retro-frame small text-center"> <h2 id="chestTitle" class="retro-title">SKRZYNIA</h2> <div id="chestRewardDisplay" class="chest-content"></div> <button id="chestButton" class="retro-btn primary pulse">ODBIERZ</button> </div> </div>
+  <div id="introOverlay" class="retro-overlay" style="display:none;"> 
+    <div class="retro-frame intro-frame"> 
+      <div class="intro-image-container"><img id="introImage" class="intro-image" src="" alt="Intro"></div> 
+      <div class="intro-controls"> 
+        <button id="btnIntroPrev" class="retro-btn small">WSTECZ</button> 
+        <button id="btnIntroSkip" class="retro-btn small danger">POMIŃ</button> 
+        <button id="btnIntroNext" class="retro-btn small">DALEJ</button> 
+      </div> 
+    </div> 
+  </div>
+  
+  <div id="levelUpOverlay" class="retro-overlay" style="display:none;"> 
+    <div id="levelUpPanel" class="retro-frame wide"> 
+      <h2 id="levelUpTitle" class="retro-title">LEVEL UP!</h2> 
+      <div id="perks" class="perk-grid"></div> 
+      <button id="btnContinueMaxLevel" class="retro-btn warning" style="display:none;">KONTYNUUJ</button> 
+      <div class="stats-panel"> 
+        <h4 id="levelUpStatsTitle">STATYSTYKI</h4> 
+        <div id="statsDisplay" class="stats-grid"></div> 
+      </div> 
+    </div> 
+  </div>
+  
+  <div id="pauseOverlay" class="retro-overlay" style="display:none; background:rgba(0,0,0,0.7);"> 
+    <div class="retro-frame small"> 
+      <h2 id="pauseTitle" class="retro-title">PAUZA</h2> 
+      <div class="menu-list"> 
+        <button id="btnResume" class="retro-btn">WZNÓW</button> 
+        <button id="btnPauseMenu" class="retro-btn warning">MENU</button> 
+      </div> 
+      <div style="margin-top:20px;"><div id="statsDisplayPause" class="stats-grid"></div></div> 
+    </div> 
+  </div>
+  
+  <div id="chestOverlay" class="retro-overlay" style="display:none;"> 
+    <div class="retro-frame small text-center"> 
+      <h2 id="chestTitle" class="retro-title">SKRZYNIA</h2> 
+      <div id="chestRewardDisplay" class="chest-content"></div> 
+      <button id="chestButton" class="retro-btn primary pulse">ODBIERZ</button> 
+    </div> 
+  </div>
   
   <div id="gameOverOverlay" class="retro-overlay" style="display:none;"> 
     <div class="retro-frame"> 
@@ -259,11 +281,12 @@
         <p><span id="gameOverScoreLabel">WYNIK:</span> <span id="finalScore" style="color:var(--accent-gold); font-weight:bold;">0</span></p> 
         <p><span id="gameOverLevelLabel">POZIOM:</span> <span id="finalLevel">1</span></p> 
         <p><span id="gameOverTimeLabel">CZAS:</span> <span id="finalTime">0:00</span></p> 
+        <p><span id="gameOverKillsLabel">ZABICI:</span> <span id="totalKillsSpanGO">0</span></p> 
       </div> 
       <div class="retro-scroll-box" style="height:150px;"> 
         <table id="goScoreTable"> 
           <tbody id="scoresBodyGameOver"></tbody> 
-          <thead><tr><th>#</th><th>PKT</th><th>ZAB</th><th>LVL</th><th>CZAS</th></tr></thead>
+          <thead><tr><th>#</th><th>PKT</th><th>ZAB</th><th>LVL</th><th>CZAS</th></tr></thead> 
         </table> 
       </div> 
       <button id="btnClearScoresGO" class="retro-btn small danger" style="margin-bottom:10px;">WYCZYŚĆ</button> 
@@ -274,7 +297,16 @@
     </div> 
   </div>
 
-  <div id="confirmOverlay" class="retro-overlay" style="display:none;"> <div class="retro-frame small text-center"> <h2 id="confirmTitle" class="retro-title">POTWIERDŹ</h2> <p id="confirmText">Czy wyczyścić wyniki?</p> <div class="menu-actions"> <button id="btnConfirmYes" class="retro-btn danger">TAK</button> <button id="btnConfirmNo" class="retro-btn">NIE</button> </div> </div> </div>
+  <div id="confirmOverlay" class="retro-overlay" style="display:none;"> 
+    <div class="retro-frame small text-center"> 
+      <h2 id="confirmTitle" class="retro-title">POTWIERDŹ</h2> 
+      <p id="confirmText">Czy wyczyścić wyniki?</p> 
+      <div class="menu-actions"> 
+        <button id="btnConfirmYes" class="retro-btn danger">TAK</button> 
+        <button id="btnConfirmNo" class="retro-btn">NIE</button> 
+      </div> 
+    </div> 
+  </div>
 
   <script type="module" src="js/main.js"></script>
   <script>

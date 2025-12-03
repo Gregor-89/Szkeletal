@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.97a - Obstacles Init)
+// MAIN.JS (v0.97h - Splash Screen Race Fix)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -28,7 +28,7 @@ import { loadAssets } from './services/assets.js';
 import { VERSION } from './config/version.js';
 import { displayScores } from './services/scoreManager.js';
 import { getLang } from './services/i18n.js';
-import { generateMap } from './managers/mapManager.js'; // FIX v0.97: Import generatora
+import { generateMap } from './managers/mapManager.js'; 
 
 class Camera {
     constructor(worldWidth, worldHeight, viewWidth, viewHeight) {
@@ -70,7 +70,6 @@ const game={
   dynamicEnemyLimit: GAME_CONFIG.INITIAL_MAX_ENEMIES, 
   introSeen: false,
   isDying: false,
-  // FIX v0.96: Nowy licznik całkowitej liczby zabójstw
   totalKills: 0 
 };
 
@@ -102,7 +101,7 @@ const pickups=[];
 const hazards=[]; 
 const stars=[];
 const bombIndicators = [];
-const obstacles = []; // FIX v0.97: Tablica na przeszkody
+const obstacles = []; 
 
 let bullets = [];
 let eBullets = [];
@@ -132,7 +131,6 @@ function initializeCanvas() {
     player = new Player(worldWidth / 2, worldHeight / 2); 
     camera = new Camera(worldWidth, worldHeight, canvas.width, canvas.height);
     
-    // FIX v0.97: Generowanie mapy przy inicjalizacji
     generateMap(obstacles, player);
 
     playerBulletPool = new ObjectPool(PlayerBullet, 500);
@@ -156,7 +154,7 @@ function initializeCanvas() {
       bullets: bullets, eBullets: eBullets, gems: gems, particles: particles, hitTexts: hitTexts,
       trails: [], confettis: [], enemyIdCounter: 0,
       siegeSpawnQueue: [],
-      obstacles: obstacles // FIX v0.97: Dodano referencję do stanu gry
+      obstacles: obstacles 
     };
 
     console.log(`[DEBUG-v${VERSION}] js/main.js: Inicjalizacja zakończona.`);
@@ -182,7 +180,7 @@ const uiData = {
     showFPS: true,
     fpsPosition: 'right',
     gameData: { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG },
-    obstacles: obstacles // FIX v0.97: Dodano do uiData (może się przydać do zapisu gry)
+    obstacles: obstacles 
 };
 
 function updateUiDataReferences() {
@@ -431,7 +429,10 @@ function finishSplashSequence() {
     splashOverlay.classList.add('fade-out');
     setTimeout(() => {
         splashOverlay.style.display = 'none';
-        initializeIntro(gameStateRef); 
+        // FIX v0.97h: Jeśli gra już trwa (user kliknął przez fade-out), NIE resetuj do menu!
+        if (!game.running) {
+            initializeIntro(gameStateRef); 
+        }
     }, 1000); 
 }
 

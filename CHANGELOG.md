@@ -4,6 +4,64 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ---
 
+## [v0.97] - 2025-12-03
+**"The World & Faith Update"**
+
+### ✨ Nowości (Features)
+- **Proceduralna Mapa**: Świat gry nie jest już pusty! Dodano system generowania otoczenia.
+  - **Drzewa & Skały**: Losowo rozmieszczane przeszkody blokujące ruch.
+  - **Woda**: Spowalnia gracza i wrogów, nadając im niebieski odcień. Oblężnicy (Wall) są na nią odporni.
+  - **Chatki (Huts)**: Duże, zniszczalne budynki. Po zniszczeniu zamieniają się w gruzowisko i wyrzucają Gemy (XP) oraz szansę na Pickup.
+  - **Kapliczki (Shrines)**: 8 kapliczek na mapie. Leczą gracza (jeśli jest ranny) i odnawiają się co 2 minuty. Emanują pulsującą, boską poświatą.
+- **Lokalizacja (i18n)**:
+  - Dodano pełne wsparcie dla języka **Rumuńskiego (Română)**.
+  - Pełne tłumaczenie interfejsu (Menu, Config, Dev Tools) w locie.
+- **Dev Tools**:
+  - Dodano tryb **"Spacer" (Peaceful)** – gra bez wrogów do testowania mapy.
+  - Poprawiono automatyczne uruchamianie scenariuszy.
+
+### 🎨 Wizualia (Visuals)
+- **System Cieni**: Cienie obiektów są teraz rysowane na osobnej warstwie (pod postaciami), co eliminuje błędy graficzne.
+- **Przezroczystość (Occlusion)**: Gracz i wrogowie stają się częściowo widoczni, gdy wchodzą "za" wysokie obiekty (drzewa, chatki).
+- **Warianty**: Każdy typ obiektu ma teraz 6-7 wariantów graficznych oraz losowe lustrzane odbicie (Flip X).
+- **Gruzowisko**: Nowy sprite dla zniszczonych chatek.
+
+### ⚖️ Balans i Poprawki (Balance & Fixes)
+- Zwiększono mapę do rozmiaru 24x (World Size).
+- Zbalansowano drop rate rzadkich (zielonych/czerwonych) gemów.
+- Poprawiono hitboxy obiektów (szczególnie drzew i chatek).
+- Naprawiono błąd "Race Condition" przy szybkim pomijaniu intro (reset gry).
+- Naprawiono błąd z nieskończonym trzęsieniem się obiektów po trafieniu.
+- Pickupy i Gemy są teraz poprawnie sortowane (Z-Index) względem otoczenia.
+- Paski zdrowia i XP mają teraz czytelne etykiety tekstowe.
+
+---
+
+## [v0.96] - 2025-11-29 - Audiowizualny Szlif & Totalna Destrukcja
+### Dodano (Audio & System)
+- **System Muzyczny 2.0:** Wdrożono `MusicManager` obsługujący playlisty (Menu/Gameplay) z inteligentnym systemem losowania (Shuffle Bag) i płynnymi przejściami (Cross-fade).
+- **Regulacja Głośności:** Dodano suwaki w menu Opcji pozwalające niezależnie sterować głośnością Muzyki i Efektów (SFX).
+- **Ekran Ładowania (Preloader):** Gra teraz profesjonalnie ładuje wszystkie zasoby graficzne i dźwiękowe przed startem, wyświetlając pasek postępu.
+
+### Dodano (Rozgrywka & VFX)
+- **Fala Uderzeniowa (Shockwave):** Eksplozje (Bomba, Ściana) nie zabijają już natychmiastowo całego ekranu. Teraz generują fizyczną falę uderzeniową, która rozchodzi się od centrum, niszcząc wrogów na swojej drodze.
+- **Krwawa Śmierć:** Zastąpiono proste zniknięcie gracza dramatyczną sekwencją: pauza gry -> wybuch cząsteczek krwi -> czerwona winieta ekranu -> opóźniony Game Over.
+- **Statystyka Zabójstw:** Dodano licznik "Total Kills" w HUD (format `Zabici (Obecni/Limit)`) oraz nową kolumnę w tabelach wyników.
+
+### Usprawniono (Balans & QoL)
+- **Separacja Wrogów:** Zwiększono siłę odpychania się standardowych wrogów (+40%), aby uniknąć tworzenia się "jednej wielkiej kropki". Horda i Wall zachowują swoją "tłumną" naturę.
+- **Indykatory Hazardów:** Nowy wygląd ostrzeżeń o polach skażeń – teraz mają one kształt docelowej plamy z pulsującą poświatą, zamiast prostych okręgów.
+- **Dev Tools:** Przycisk "Jeszcze raz" po śmierci w trybie testowym resetuje teraz bieżący scenariusz (np. MAX Weapons), zamiast wyrzucać do czystej gry.
+- **Optymalizacja:** Przebudowano pętlę renderowania (`draw.js`), eliminując tworzenie tysięcy obiektów w każdej klatce (mniejsze obciążenie procesora).
+
+### Naprawiono
+- **Tytuł Gry:** Naprawiono błąd, przez który tytuł w przeglądarce nie wyświetlał pełnej nazwy i wersji po załadowaniu.
+- **Menu:** Odblokowano przewijanie list na urządzeniach dotykowych.
+- **Błędy Logiczne:** Naprawiono naliczanie XP (wymuszone liczby całkowite), zablokowano pauzę w trakcie animacji śmierci oraz naprawiono scenariusz "MIN" w narzędziach deweloperskich.
+
+
+---
+
 ## [v0.95] - 2025-11-27 - Retro UI Overhaul & Juicy Update
 ### Dodano (UI & Menu)
 - **Nowe Menu Główne:** Całkowita przebudowa interfejsu na styl "Retro Console/Pixel Art" (CSS-only, bez nowych grafik tła).

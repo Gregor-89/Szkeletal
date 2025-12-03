@@ -1,9 +1,9 @@
 // ==============
-// EVENTMANAGER.JS (v0.98 - FIX: Auto-Start Logic)
+// EVENTMANAGER.JS (v0.97u - Cleanup)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
-import { showMenu, resetAll, pauseGame, resumeGame, gameOver, startRun, switchView } from '../ui/ui.js';
+import { showMenu, resetAll, pauseGame, resumeGame, gameOver, startRun, switchView, updateStaticTranslations } from '../ui/ui.js';
 import { levelUp, pickPerk, openChest } from '../managers/levelManager.js';
 import { saveGame, loadGame } from '../services/saveManager.js';
 import { playSound } from '../services/audio.js';
@@ -43,11 +43,7 @@ function wrappedResetAll() {
     uiDataRef.particlePool = gameStateRef.particlePool;
     uiDataRef.hitTextPool = gameStateRef.hitTextPool;
     uiDataRef.camera = gameStateRef.camera; 
-    
-    if (window.SIEGE_EVENT_CONFIG) {
-        uiDataRef.settings.currentSiegeInterval = window.SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
-    }
-    
+    if (window.SIEGE_EVENT_CONFIG) uiDataRef.settings.currentSiegeInterval = window.SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
     resetAll(uiDataRef.canvas, uiDataRef.settings, uiDataRef.perkLevels, uiDataRef, uiDataRef.camera);
     gameStateRef.enemyIdCounter = 0;
     uiDataRef.animationFrameId = null;
@@ -98,8 +94,7 @@ function wrappedLoadConfig() {
 }
 
 function updateAllStaticText() {
-    const lang = getCurrentLanguage();
-    if (document.getElementById('btnStart')) document.getElementById('btnStart').textContent = getLang('ui_menu_start');
+    if (updateStaticTranslations) updateStaticTranslations();
 }
 
 function buildLanguageSelector() {
@@ -111,6 +106,7 @@ function buildLanguageSelector() {
     
     availableLangs.forEach(langName => {
         const label = document.createElement('label');
+        label.className = 'option';
         const input = document.createElement('input');
         input.type = 'radio';
         input.name = 'lang';
@@ -119,7 +115,7 @@ function buildLanguageSelector() {
         
         input.onchange = () => {
             setLanguage(langName);
-            updateAllStaticText(); 
+            updateStaticTranslations();
         };
         
         const span = document.createElement('span');
@@ -131,26 +127,36 @@ function buildLanguageSelector() {
     });
 }
 
-// FIX: Wrapper Auto-Start dla presetów wrogów
-window.devStartPreset = function(presetName) {
-    if(window.devPresetEnemy) {
-        window.devPresetEnemy(presetName);
-        wrappedStartRun();
-    }
-};
+// FIX v0.97u: USUNIĘTO nadpisywanie window.devStartScenario!
+// Teraz polegamy na tym, co ustawia dev.js (initDevTools).
 
-// FIX: Wrapper Auto-Start dla scenariuszy
-window.devStartScenario = function(type) {
-    if (type === 'min' && window.devPresetMinimalWeapons) window.devPresetMinimalWeapons();
-    if (type === 'high' && window.devPresetAlmostMax) window.devPresetAlmostMax();
-    if (type === 'max' && window.devPresetMax) window.devPresetMax();
+export function initializeMainEvents(stateRef, uiRef) {
+    gameStateRef = stateRef;
+    uiDataRef = uiRef;
     
-    wrappedStartRun();
-};
+    window.wrappedShowMenu = wrappedShowMenu;
+    window.wrappedPauseGame = wrappedPauseGame;
+    window.wrappedResumeGame = wrappedResumeGame;
+    window.wrappedGameOver = wrappedGameOver;
+    window.wrappedLevelUp = wrappedLevelUp;
+    window.wrappedOpenChest = wrappedOpenChest;
+    window.wrappedLoadConfig = wrappedLoadConfig;
+    window.wrappedStartRun = wrappedStartRun; 
+    
+    if (uiRef.gameData && uiDataRef.gameData.SIEGE_EVENT_CONFIG) {
+        window.SIEGE_EVENT_CONFIG = uiRef.gameData.SIEGE_EVENT_CONFIG;
+    }
+    
+    return {
+        initEvents,
+        wrappedLoadConfig,
+        wrappedStartRun 
+    };
+}
 
 function initEvents() {
     buildLanguageSelector();
-    updateAllStaticText(); 
+    updateStaticTranslations(); 
 
     document.getElementById('btnStart').addEventListener('click', () => {
         devSettings.presetLoaded = false;
@@ -171,45 +177,13 @@ function initEvents() {
     bindNav('navConfig', 'view-config');
     bindNav('navGuide', 'view-guide');
     bindNav('navCoffee', 'view-coffee'); 
-    bindNav('navCredits', 'view-credits'); 
     bindNav('navDev', 'view-dev');
     
     document.querySelectorAll('.nav-back').forEach(btn => {
         btn.addEventListener('click', () => switchView('view-main'));
     });
-
-    const setupToggle = (btnId, chkId, callback) => {
-        const btn = document.getElementById(btnId);
-        const chk = document.getElementById(chkId);
-        if(btn && chk) {
-            btn.addEventListener('click', () => {
-                chk.checked = !chk.checked;
-                if(chk.checked) { btn.textContent = "WŁ"; btn.className = "retro-toggle on"; }
-                else { btn.textContent = "WYŁ"; btn.className = "retro-toggle off"; }
-                playSound('Click');
-                if(callback) callback();
-            });
-        }
-    };
-
-    setupToggle('toggleHyper', 'chkHyper');
-    setupToggle('toggleShake', 'chkShake', () => { gameStateRef.game.screenShakeDisabled = !document.getElementById('chkShake').checked; });
-    setupToggle('toggleFPS', 'chkFPS', () => { uiDataRef.showFPS = !!document.getElementById('chkFPS').checked; });
-    setupToggle('toggleLabels', 'chkPickupLabels', () => { uiDataRef.pickupShowLabels = !!document.getElementById('chkPickupLabels').checked; });
-
-    const joyBtn = document.getElementById('toggleJoy');
-    if(joyBtn) {
-        const joyOpts = ['right', 'left', 'off'];
-        const joyLbls = {'right': 'PRAWA', 'left': 'LEWA', 'off': 'WYŁ'};
-        let joyIdx = 0; 
-        joyBtn.addEventListener('click', () => {
-            joyIdx = (joyIdx + 1) % joyOpts.length;
-            const val = joyOpts[joyIdx];
-            joyBtn.textContent = joyLbls[val];
-            setJoystickSide(val);
-            playSound('Click');
-        });
-    }
+    
+    // Toggles są inicjalizowane w ui.js (initRetroToggles), wywoływane z showMenu.
 
     document.getElementById('btnRetry').addEventListener('click', () => {
         gameOverOverlay.style.display='none';
@@ -260,28 +234,4 @@ function initEvents() {
             wrappedPauseGame();
         }
     });
-}
-
-export function initializeMainEvents(stateRef, uiRef) {
-    gameStateRef = stateRef;
-    uiDataRef = uiRef;
-    
-    window.wrappedShowMenu = wrappedShowMenu;
-    window.wrappedPauseGame = wrappedPauseGame;
-    window.wrappedResumeGame = wrappedResumeGame;
-    window.wrappedGameOver = wrappedGameOver;
-    window.wrappedLevelUp = wrappedLevelUp;
-    window.wrappedOpenChest = wrappedOpenChest;
-    window.wrappedLoadConfig = wrappedLoadConfig;
-    window.wrappedStartRun = wrappedStartRun; 
-    
-    if (uiRef.gameData && uiDataRef.gameData.SIEGE_EVENT_CONFIG) {
-        window.SIEGE_EVENT_CONFIG = uiRef.gameData.SIEGE_EVENT_CONFIG;
-    }
-    
-    return {
-        initEvents,
-        wrappedLoadConfig,
-        wrappedStartRun 
-    };
 }

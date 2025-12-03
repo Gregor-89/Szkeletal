@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v0.96o - FIX: Faster Death)
+// PLAYER.JS (v0.97c - Blue Water Visuals)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -43,7 +43,7 @@ export class Player {
         
         this.isDead = false;
         this.deathTimer = 0;
-        this.deathDuration = 1.5; // FIX: Skrócono czas śmierci do 1.5s
+        this.deathDuration = 1.5; 
     }
 
     reset(canvasWidth, canvasHeight) {
@@ -135,6 +135,11 @@ export class Player {
             currentSpeed *= (HAZARD_CONFIG.SLOWDOWN_MULTIPLIER || 0.5);
         }
         
+        // FIX v0.97c: Spowolnienie w wodzie
+        if (game.playerInWater) {
+            currentSpeed *= 0.5; // Stałe spowolnienie 50%
+        }
+        
         if (game.speedT > 0) {
             currentSpeed *= 1.4;
         }
@@ -179,6 +184,10 @@ export class Player {
         } 
         else if (game.playerInMegaHazard) {
             ctx.filter = 'brightness(0.7) sepia(1) hue-rotate(130deg) saturate(2)';
+        }
+        else if (game.playerInWater) {
+            // FIX v0.97c: Niebieski filtr dla wody (Hue 190deg + Saturation 3)
+            ctx.filter = 'brightness(0.9) sepia(1) hue-rotate(190deg) saturate(3)';
         }
         else if (game.playerInHazard) {
             ctx.filter = 'sepia(1) hue-rotate(60deg) saturate(2)';

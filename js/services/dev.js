@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.96d - FIX: Min Weapon Level)
+// DEV.JS (v0.97c - Peaceful Mode & Full Logic)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -185,12 +185,9 @@ function devPresetMinimalWeapons() {
     
     document.getElementById('devTime').value = game.time;
     document.getElementById('devLevel').value = game.level;
-    // FIX: Usunięto wymuszanie God Mode
-    // document.getElementById('devGodMode').checked = true; 
     
     const weaponPerks = ['whip', 'autogun', 'orbital', 'nova', 'chainLightning'];
     weaponPerks.forEach(id => {
-        // FIX: Bicz jest startową bronią (lvl 1), nie dodawaj go ponownie
         if (id === 'whip') {
             perkLevels[id] = 1;
             return;
@@ -288,6 +285,31 @@ function applyDevPreset(targetLevel, perkLevelOffset = 0) {
 function devPresetAlmostMax() { applyDevPreset(20, 1); }
 function devPresetMax() { applyDevPreset(50, 0); }
 
+// FIX v0.97c: Nowa funkcja trybu pokojowego
+function devStartPeaceful() {
+    console.log('[Dev] Uruchamianie trybu pokojowego (spacer)...');
+    
+    // Resetuj logikę powtórzenia
+    lastScenarioAction = () => devStartPeaceful();
+    
+    devSettings.presetLoaded = true;
+    devStartTime = 0;
+    
+    // Wymuś wartości w formularzu (opcjonalne, dla wizualizacji)
+    document.getElementById('devSpawnRate').value = "0"; 
+    document.getElementById('devMaxEnemies').value = "0"; 
+    
+    // Wymuś ustawienia w gameState
+    if (gameState.settings) {
+        gameState.settings.spawn = 0;
+        gameState.settings.maxEnemies = 0;
+        gameState.settings.eliteInterval = 999999;
+        gameState.settings.currentSiegeInterval = 999999;
+    }
+    
+    callStartRun();
+}
+
 function devStartScenario(type, autoStart = true) {
     console.log(`[Dev] Uruchamianie scenariusza: ${type.toUpperCase()}`);
     
@@ -296,6 +318,7 @@ function devStartScenario(type, autoStart = true) {
     if (type === 'min') devPresetMinimalWeapons();
     else if (type === 'high') devPresetAlmostMax();
     else if (type === 'max') devPresetMax();
+    else if (type === 'peaceful') devStartPeaceful(); // Dodano obsługę w switchu
     
     if (autoStart) {
         callStartRun();
@@ -433,6 +456,7 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.devStartScenario = devStartScenario; 
     window.devStartPreset = devPresetEnemy; 
     window.retryLastScenario = retryLastScenario; 
+    window.devStartPeaceful = devStartPeaceful; // FIX v0.97c: Eksport nowej funkcji
     
-    console.log('[DEBUG-v0.96d] js/services/dev.js: Dev Tools loaded & exported.');
+    console.log('[DEBUG-v0.97c] js/services/dev.js: Dev Tools loaded & exported.');
 }

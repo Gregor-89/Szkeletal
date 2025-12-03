@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.96e - FIX: Stronger Separation)
+// ENEMY.JS (v0.97c - Blue Water Visuals)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -35,10 +35,9 @@ export class Enemy {
         this.separationX = 0;
         this.separationY = 0;
         
-        // Timer efektu hazardu
         this.hazardSlowdownT = 0;
-        // Flaga dla Mega Hazardu
         this.inMegaHazard = false;
+        this.inWater = false;
         
         const idleKey = stats.assetKey || ('enemy_' + this.type);
         const spriteSheetKey = idleKey + '_spritesheet';
@@ -65,9 +64,6 @@ export class Enemy {
     
     update(dt, player, game) {
         if (this.isDead) return;
-        
-        // Reset flagi Mega Hazardu na początku klatki
-        this.inMegaHazard = false;
         
         if (this.hitStun > 0) this.hitStun -= dt;
         if (this.hitFlashT > 0) this.hitFlashT -= dt;
@@ -125,9 +121,6 @@ export class Enemy {
             this.separationX = 0;
             this.separationY = 0;
             
-            // FIX v0.96e: Zwiększona separacja zgodnie z życzeniem
-            // Standard: 310 (było 220)
-            // Horda/Wall: 75 (było 50)
             let multiplier = 310;
             if (this.type === 'horde' || this.type === 'wall') {
                 multiplier = 75;
@@ -155,7 +148,10 @@ export class Enemy {
     
     getSpeed(game) {
         const hazardSlowdown = this.hazardSlowdownT > 0 ? HAZARD_CONFIG.HAZARD_ENEMY_SLOWDOWN_MULTIPLIER : 1;
-        return this.speed * (game.freezeT > 0 ? 0.25 : 1) * (1 - (this.hitStun || 0)) * hazardSlowdown;
+        // FIX v0.97c: Spowolnienie w wodzie (50%)
+        const waterSlowdown = this.inWater ? 0.5 : 1.0;
+        
+        return this.speed * (game.freezeT > 0 ? 0.25 : 1) * (1 - (this.hitStun || 0)) * hazardSlowdown * waterSlowdown;
     }
     
     draw(ctx, game) {
@@ -174,6 +170,10 @@ export class Enemy {
         }
         else if (this.inMegaHazard) {
             ctx.filter = 'brightness(0.7) sepia(1) hue-rotate(130deg) saturate(2)';
+        }
+        else if (this.inWater) {
+            // FIX v0.97c: Niebieski filtr dla wroga w wodzie
+            ctx.filter = 'brightness(0.9) sepia(1) hue-rotate(190deg) saturate(3)';
         }
         else if (this.hazardSlowdownT > 0) {
             ctx.filter = 'sepia(1) hue-rotate(60deg) saturate(2)';

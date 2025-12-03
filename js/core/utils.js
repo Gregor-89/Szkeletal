@@ -1,5 +1,5 @@
 // ==============
-// UTILS.JS (v0.96j - FIX: Sound Import)
+// UTILS.JS (v0.97m - HitText Duration Support)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
@@ -7,7 +7,7 @@ import { EFFECTS_CONFIG } from '../config/gameData.js';
 import { devSettings } from '../services/dev.js'; 
 import { PICKUP_CLASS_MAP } from '../managers/effects.js'; 
 import { getLang } from '../services/i18n.js';
-import { playSound } from '../services/audio.js'; // FIX: Dodano import
+import { playSound } from '../services/audio.js';
 
 // --- FIZYKA I KOLIZJE ---
 
@@ -35,7 +35,8 @@ export function findFreeSpotForPickup(pickups, cx, cy, range = 50) {
 
 // --- EFEKTY WIZUALNE I TEKSTOWE ---
 
-export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f', overrideText = null) {
+// FIX v0.97m: Dodano parametr 'duration' (domyślnie 0.66s)
+export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f', overrideText = null, duration = 0.66) {
     const now = performance.now() / 1000;
     let merged = false;
 
@@ -44,6 +45,7 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
         return value.toFixed(0);
     }
     
+    // Mergowanie tylko dla standardowych obrażeń (krótki czas)
     if (damage > 0 && overrideText === null) {
         for (let i = hitTexts.length - 1; i >= 0; i--) {
             const ht = hitTexts[i];
@@ -53,7 +55,7 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
                 if (dist < 25 && timeDiff < 0.15) {
                     ht.damage += damage;
                     ht.text = '-' + formatDamage(ht.damage); 
-                    ht.life = 0.66; 
+                    ht.life = duration; // Odśwież życie
                     ht.vy = -0.8 * 60; 
                     ht.spawnTime = now;
                     merged = true;
@@ -68,7 +70,8 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
         if (ht) {
             const dmgText = (damage >= 0 ? '-' + formatDamage(damage) : '+' + formatDamage(Math.abs(damage)));
             const text = overrideText !== null ? overrideText : dmgText;
-            ht.init(x, y - 10, text, color, 0.66, -0.6 * 60); 
+            // Przekazujemy duration do init (5. argument to life)
+            ht.init(x, y - 10, text, color, duration, -0.6 * 60); 
             ht.spawnTime = now;
             ht.overrideText = overrideText;
             ht.damage = damage;
@@ -144,7 +147,6 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
     const waveSpeed = r * 3.0; 
     const duration = r / waveSpeed; 
 
-    // FIX v0.96j: Dodano dźwięk eksplozji
     playSound('Explosion');
 
     bombIndicators.push({

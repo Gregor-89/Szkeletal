@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.96 - FIX: Total Kills Counter)
+// ENEMYMANAGER.JS (v0.97i - Gem Balance)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -328,7 +328,6 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
     
     if (!preventDrops) {
         game.score += e.stats.score;
-        // FIX v0.96: Inkrementacja zabójstw
         game.totalKills = (game.totalKills || 0) + 1;
         
         if (e.stats.xp > 0) {
@@ -338,12 +337,13 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
                 let color = '#4FC3F7'; 
                 let size = 4;          
                 
-                if (Math.random() < 0.025) { 
+                // FIX v0.97i: Zmniejszona szansa na rzadkie gemy
+                if (Math.random() < 0.015) { // Było 0.025
                     val *= 5; 
                     color = '#81C784'; 
                     size = 6;          
                 } 
-                else if (Math.random() < 0.005) { 
+                else if (Math.random() < 0.001) { // Było 0.005
                     val *= 20; 
                     color = '#E57373'; 
                     size = 8;          

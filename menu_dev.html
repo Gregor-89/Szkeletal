@@ -2,20 +2,20 @@
   <p style="color:#f44336; margin-bottom:15px; font-size: 13px;"><strong>⚠️ Uwaga:</strong> To menu służy do testów. Może zepsuć balans.</p>
   
   <div class="dev-section">
-    <h4>🧪 Szybkie Testy Jednostek (v0.93)</h4>
+    <h4>🧪 Szybkie Testy Jednostek (v0.97)</h4>
     <p style="font-size:12px; margin-bottom:5px;">Kliknij, aby zresetować grę i spawnować TYLKO ten typ:</p>
     <div class="dev-grid">
-      <button class="btn btn-warning" onclick="devPresetEnemy('standard')">DadGamer</button>
-      <button class="btn btn-warning" onclick="devPresetEnemy('horde')">Horda</button>
-      <button class="btn btn-warning" onclick="devPresetEnemy('ranged')">Menel</button>
+      <button class="btn btn-warning" onclick="window.devStartPreset('standard')">DadGamer</button>
+      <button class="btn btn-warning" onclick="window.devStartPreset('horde')">Horda</button>
+      <button class="btn btn-warning" onclick="window.devStartPreset('ranged')">Menel</button>
       
-      <button class="btn btn-warning" onclick="devPresetEnemy('tank')">Szkielet</button>
-      <button class="btn btn-warning" onclick="devPresetEnemy('splitter')">Wykop</button>
-      <button class="btn btn-warning" onclick="devPresetEnemy('kamikaze')">Troll</button>
+      <button class="btn btn-warning" onclick="window.devStartPreset('tank')">Szkielet</button>
+      <button class="btn btn-warning" onclick="window.devStartPreset('splitter')">Wykop</button>
+      <button class="btn btn-warning" onclick="window.devStartPreset('kamikaze')">Troll</button>
       
-      <button class="btn btn-warning" onclick="devPresetEnemy('aggressive')">Prowokator</button>
-      <button class="btn btn-warning" onclick="devPresetEnemy('wall')">Oblężnik</button>
-      <button class="btn btn-danger" onclick="devPresetEnemy('elite')">ELITA (BOSS)</button>
+      <button class="btn btn-warning" onclick="window.devStartPreset('aggressive')">Prowokator</button>
+      <button class="btn btn-warning" onclick="window.devStartPreset('wall')">Oblężnik</button>
+      <button class="btn btn-danger" onclick="window.devStartPreset('elite')">ELITA (BOSS)</button>
     </div>
   </div>
   
@@ -134,20 +134,21 @@
     </div>
     <div class="dev-control">
       <label>Spawn natychmiast:</label>
-      <button class="btn" onclick="devSpawnPickup('heal')">❤️ HP</button>
-      <button class="btn" onclick="devSpawnPickup('bomb')">💣 Bomba</button>
-      <button class="btn" onclick="devSpawnPickup('magnet')">🧲 Magnes</button>
+      <button class="btn" onclick="window.devSpawnPickup('heal')">❤️ HP</button>
+      <button class="btn" onclick="window.devSpawnPickup('bomb')">💣 Bomba</button>
+      <button class="btn" onclick="window.devSpawnPickup('magnet')">🧲 Magnes</button>
     </div>
   </div>
   
   <div class="dev-section">
     <h4>🚀 Scenariusze Testowe</h4>
-    <div class="dev-control" style="justify-content: space-around;">
-      <button class="btn btn-secondary" onclick="devPresetMinimalWeapons()">Test: Min Bronie / Max Czas</button>
-      <button class="btn btn-warning" onclick="devPresetAlmostMax()">Test: Prawie Max</button>
-      <button class="btn btn-danger" onclick="devPresetMax()">Test: Max Staty</button>
+    <div class="dev-control" style="justify-content: space-around; flex-wrap: wrap; gap: 5px;">
+      <button class="btn btn-secondary" onclick="window.devStartScenario('min')">Test: Min Bronie</button>
+      <button class="btn btn-warning" onclick="window.devStartScenario('high')">Test: Prawie Max</button>
+      <button class="btn btn-danger" onclick="window.devStartScenario('max')">Test: Max Staty</button>
+      <button class="btn" style="background-color:#4CAF50; color:white; border-color:#2E7D32;" onclick="window.devStartPeaceful()">🕊️ Spacer (0 Wrogów)</button>
     </div>
   </div>
   
-  <button class="btn" onclick="applyDevSettings()" style="width:100%; margin-top:10px;">✅ Zastosuj Ustawienia Dev</button>
+  <button class="btn" onclick="window.applyDevSettings()" style="width:100%; margin-top:10px;">✅ Zastosuj Ustawienia Dev</button>
 </div>

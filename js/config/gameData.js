@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.97b - Sizes & Scales)
+// GAMEDATA.JS (v0.97m - Final Map Tuning)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -28,59 +28,99 @@ export const GAME_CONFIG = {
   XP_GROWTH_ADD: 2,
 };
 
-// KONFIGURACJA MAPY v0.97b
+// KONFIGURACJA MAPY v0.97m
 export const MAP_CONFIG = {
-  TREES_COUNT: 250,
-  ROCKS_COUNT: 150,
-  HUTS_COUNT: 30,
-  WATER_COUNT: 50,
+  TREES_COUNT: 450,
+  ROCKS_COUNT: 250,
+  HUTS_COUNT: 45,
+  WATER_COUNT: 60,
+  
+  // FIX v0.97m: Zwiększono liczbę kapliczek do 8
+  SHRINE_COUNT: 8, 
   
   SAFE_ZONE_RADIUS: 500,
   
-  // Definicje obiektów ze skalowaniem
   OBSTACLE_STATS: {
-    tree: {
-      type: 'tree',
-      variants: 3,
+    tree: { 
+      type: 'tree', 
+      variants: 6,
       size: 96,
-      minScale: 2.0, // Od 2x
-      maxScale: 3.0, // Do 3x
-      hitboxScale: 0.2, // Bardzo mały hitbox (tylko pień) przy tak dużej koronie
-      hp: Infinity,
-      isSolid: true
-    },
-    rock: {
-      type: 'rock',
-      variants: 3,
-      size: 64,
-      minScale: 0.5, // Od 0.5x
-      maxScale: 4.0, // Do 4x
-      hitboxScale: 0.8,
-      hp: Infinity,
-      isSolid: true
-    },
-    hut: {
-      type: 'hut',
-      variants: 4,
-      size: 160,
-      minScale: 4.0, // Sztywne 4x
-      maxScale: 4.0,
-      hitboxScale: 0.8,
-      hp: 400, // Więcej HP bo są ogromne
+      // FIX v0.97m: Max skala 5.0
+      minScale: 2.5, 
+      maxScale: 5.0, 
+      hitboxScale: 0.15, 
+      spriteOffset: -0.4, 
+      hasShadow: true,
+      shadowScale: 0.80,   
+      shadowOffsetY: 8,  
+      hp: Infinity,   
       isSolid: true,
-      dropChance: 1.0
+      canRotate: false
     },
-    water: {
-      type: 'water',
-      variants: 3,
-      size: 140,
-      minScale: 1.0, // Od 1x
-      maxScale: 3.0, // Do 3x
-      hitboxScale: 0.8, // Trochę mniejszy obszar spowolnienia niż grafika
-      hp: Infinity,
+    rock: { 
+      type: 'rock', 
+      variants: 6,
+      size: 64, 
+      // FIX v0.97m: Skala 1.0 - 3.5
+      minScale: 1.0, 
+      maxScale: 3.5,
+      hitboxScale: 0.8, 
+      spriteOffset: 0,
+      hasShadow: true,
+      shadowScale: 1.5,
+      shadowOffsetY: 25, 
+      hp: Infinity, 
+      isSolid: true,
+      canRotate: true
+    },
+    hut: { 
+      type: 'hut', 
+      variants: 7,
+      size: 110, 
+      minScale: 3.5, maxScale: 3.5, 
+      hitboxScale: 0.7, 
+      spriteOffset: -0.25,
+      hasShadow: true,
+      shadowScale: 1.4, 
+      shadowOffsetY: 12, 
+      hp: 400,        
+      isSolid: true,
+      dropChance: 1.0,
+      canRotate: false 
+    },
+    water: { 
+      type: 'water', 
+      variants: 6,
+      size: 140,      
+      // FIX v0.97m: Max skala 2.2
+      minScale: 0.7, 
+      maxScale: 2.2,
+      hitboxScale: 0.9, 
+      spriteOffset: 0,
+      hasShadow: false, 
+      shadowScale: 0,
+      shadowOffsetY: 0,
+      hp: Infinity, 
       isSolid: false,
-      isSlow: true,
-      slowFactor: 0.5
+      isSlow: true,   
+      slowFactor: 0.5,
+      canRotate: true
+    },
+    shrine: {
+      type: 'shrine',
+      variants: 1,
+      size: 180,
+      minScale: 1.4, maxScale: 1.4,
+      hitboxScale: 0.6,
+      spriteOffset: -0.3,
+      hasShadow: true,
+      shadowScale: 1.0,
+      shadowOffsetY: 20,
+      hp: Infinity,     
+      isSolid: true,    
+      canRotate: false,
+      cooldown: 120,    
+      healAmount: 100   
     }
   }
 };
@@ -221,7 +261,7 @@ export const UI_CONFIG = {
 };
 
 export const WORLD_CONFIG = {
-  SIZE: 16
+  SIZE: 24
 };
 
 export const EFFECTS_CONFIG = {

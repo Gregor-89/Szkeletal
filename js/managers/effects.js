@@ -1,5 +1,5 @@
 // ==============
-// EFFECTS.JS (v0.97b - Hazard Spawning Fix)
+// EFFECTS.JS (v0.97m - Random Hazard Scale)
 // Lokalizacja: /js/managers/effects.js
 // ==============
 
@@ -28,7 +28,6 @@ export const PICKUP_CLASS_MAP = {
 
 const MIN_SEPARATION_BUFFER = 20;
 
-// FIX v0.97b: Dodano parametr 'obstacles' do sprawdzania kolizji
 function findHazardSpawnSpot(player, camera, hazards, obstacles, hazardRadius) {
     const maxAttempts = 20;
     const worldWidth = camera.worldWidth;
@@ -53,7 +52,6 @@ function findHazardSpawnSpot(player, camera, hazards, obstacles, hazardRadius) {
         
         let isOverlapping = false;
         
-        // 1. Sprawdź inne hazardy
         for (const h of hazards) {
             const dx = x - h.x;
             const dy = y - h.y;
@@ -67,17 +65,13 @@ function findHazardSpawnSpot(player, camera, hazards, obstacles, hazardRadius) {
         
         if (isOverlapping) continue;
         
-        // 2. FIX v0.97b: Sprawdź przeszkody (drzewa, chatki, skały)
         if (obstacles) {
             for (const obs of obstacles) {
-                // Pomiń martwe przeszkody (zniszczone chatki)
                 if (obs.isDead) continue;
                 
                 const dx = x - obs.x;
                 const dy = y - obs.y;
                 const dist = Math.hypot(dx, dy);
-                // Hazard nie powinien spawnować się na przeszkodzie
-                // Zakładamy, że hazard nie powinien dotykać hitboxa przeszkody
                 const minSeparation = hazardRadius + obs.size * 0.6;
                 
                 if (dist < minSeparation) {
@@ -94,20 +88,22 @@ function findHazardSpawnSpot(player, camera, hazards, obstacles, hazardRadius) {
     return null;
 }
 
-// FIX v0.97b: Dodano parametr 'obstacles'
 export function spawnHazard(hazards, player, camera, obstacles) {
     if (hazards.length >= HAZARD_CONFIG.MAX_HAZARDS) return;
     
     const isMega = Math.random() < HAZARD_CONFIG.MEGA_HAZARD_PROBABILITY;
     let scale = 1;
+    
     if (isMega) {
         const minScale = HAZARD_CONFIG.MEGA_HAZARD_BASE_MULTIPLIER;
         const maxScale = HAZARD_CONFIG.MEGA_HAZARD_MAX_MULTIPLIER;
         scale = minScale + Math.random() * (maxScale - minScale);
+    } else {
+        // FIX v0.97m: Losowa skala dla małych hazardów (1.0 - 3.0)
+        scale = 1.0 + Math.random() * 2.0;
     }
     
     const radius = HAZARD_CONFIG.SIZE * scale;
-    // Przekazujemy obstacles do funkcji szukającej
     const pos = findHazardSpawnSpot(player, camera, hazards, obstacles, radius);
     
     if (!pos) return;
