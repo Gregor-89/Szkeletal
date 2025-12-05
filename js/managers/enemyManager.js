@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.97i - Gem Balance)
+// ENEMYMANAGER.JS (v0.98c - Boss Spawn Fix)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -18,6 +18,7 @@ import { TankEnemy } from '../entities/enemies/tankEnemy.js';
 import { RangedEnemy } from '../entities/enemies/rangedEnemy.js';
 import { EliteEnemy } from '../entities/enemies/eliteEnemy.js';
 import { WallEnemy } from '../entities/enemies/wallEnemy.js';
+import { LumberjackEnemy } from '../entities/enemies/lumberjackEnemy.js'; 
 
 import { ENEMY_STATS, SIEGE_EVENT_CONFIG, WALL_DETONATION_CONFIG } from '../config/gameData.js';
 
@@ -39,7 +40,8 @@ export const ENEMY_CLASS_MAP = {
     tank: TankEnemy,
     ranged: RangedEnemy,
     elite: EliteEnemy,
-    wall: WallEnemy
+    wall: WallEnemy,
+    lumberjack: LumberjackEnemy
 };
 
 const PICKUP_CLASS_MAP = {
@@ -50,6 +52,8 @@ const PICKUP_CLASS_MAP = {
     bomb: BombPickup,
     freeze: FreezePickup
 };
+
+const BOSS_TYPES = ['elite', 'lumberjack'];
 
 export function getAvailableEnemyTypes(game) {
     const t = game.time;
@@ -173,8 +177,37 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
 }
 
 export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
-    if (devSettings.allowedEnemies.length > 0 && !devSettings.allowedEnemies.includes('all') && !devSettings.allowedEnemies.includes('elite')) {
-        return enemyIdCounter; 
+    let bossType = null;
+
+    // 1. PRIORYTET DEV: Jeśli w devSettings jest wymuszony konkretny boss, spawnuj tylko jego
+    if (devSettings.allowedEnemies.length === 1) {
+        const forcedType = devSettings.allowedEnemies[0];
+        if (BOSS_TYPES.includes(forcedType)) {
+            // Sprawdź czy już jest na mapie (Singleton w trybie dev też obowiązuje, żeby nie zlagowało)
+            const alreadyExists = enemies.some(e => e.type === forcedType);
+            if (alreadyExists) return enemyIdCounter;
+            
+            bossType = forcedType;
+        }
+    }
+
+    // 2. NORMALNA GRA: Losuj z dostępnych
+    if (!bossType) {
+        // Sprawdź czy devSettings pozwala na bossów (jeśli nie jest 'all')
+        if (devSettings.allowedEnemies.length > 0 && !devSettings.allowedEnemies.includes('all')) {
+            const allowedBosses = BOSS_TYPES.filter(t => devSettings.allowedEnemies.includes(t));
+            if (allowedBosses.length === 0) return enemyIdCounter;
+        }
+
+        const activeBossTypes = enemies
+            .filter(e => BOSS_TYPES.includes(e.type))
+            .map(e => e.type);
+            
+        const availableBosses = BOSS_TYPES.filter(type => !activeBossTypes.includes(type));
+        
+        if (availableBosses.length === 0) return enemyIdCounter;
+        
+        bossType = availableBosses[Math.floor(Math.random() * availableBosses.length)];
     }
 
     let x, y;
@@ -206,10 +239,12 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     y = Math.max(0, Math.min(worldHeight, y));
     
     const hpScale = (1 + 0.10 * (game.level - 1) + game.time / 90) * 1.5; 
-    const newEnemy = createEnemyInstance('elite', x, y, hpScale, enemyIdCounter++);
+    
+    const newEnemy = createEnemyInstance(bossType, x, y, hpScale, enemyIdCounter++);
     if (newEnemy) {
         enemies.push(newEnemy);
         playSound('EliteSpawn');
+        console.log(`[BOSS] Zespawnowano: ${bossType.toUpperCase()}`);
     }
     
     return enemyIdCounter;
@@ -337,13 +372,12 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
                 let color = '#4FC3F7'; 
                 let size = 4;          
                 
-                // FIX v0.97i: Zmniejszona szansa na rzadkie gemy
-                if (Math.random() < 0.015) { // Było 0.025
+                if (Math.random() < 0.015) { 
                     val *= 5; 
                     color = '#81C784'; 
                     size = 6;          
                 } 
-                else if (Math.random() < 0.001) { // Było 0.005
+                else if (Math.random() < 0.001) { 
                     val *= 20; 
                     color = '#E57373'; 
                     size = 8;          
@@ -359,7 +393,7 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
             }
         }
 
-        if (e.type !== 'elite') {
+        if (e.type !== 'elite' && e.type !== 'lumberjack') {
             for (const [type, prob] of Object.entries(e.stats.drops)) {
                 if (devSettings.allowedEnemies.includes('all') || devSettings.allowedPickups.includes(type)) {
                     if (Math.random() < prob) {
@@ -374,7 +408,7 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
             }
         }
         
-        if (e.type === 'elite') {
+        if (e.type === 'elite' || e.type === 'lumberjack') {
             chests.push(new Chest(e.x, e.y));
         }
     }
@@ -430,8 +464,8 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         }
     }
     
-    if (e.type === 'elite' && preventDrops) { 
-        const color = ENEMY_STATS.elite.color; 
+    if ((e.type === 'elite' || e.type === 'lumberjack') && preventDrops) { 
+        const color = ENEMY_STATS[e.type].color; 
         spawnColorParticles(particlePool, e.x, e.y, color, 20, 350, 0.6);
     }
 

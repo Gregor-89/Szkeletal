@@ -1,5 +1,5 @@
 // ==============
-// ROMANIAN.JS (v0.97w - Fixes & 'Vine')
+// ROMANIAN.JS (v0.98d - Lumberjack Texts)
 // Lokalizacja: /js/lang/romanian.js
 // ==============
 
@@ -54,7 +54,7 @@ export const LANG_RO = {
   ui_hud_time: "Timp",
   ui_hud_health: "Viață",
   ui_hud_new_enemy: "VINE",
-  ui_warning_new_enemy: "VINE", // Zmieniono z INAMIC NOU
+  ui_warning_new_enemy: "VINE",
   ui_hud_spawn_in: "SPAWN ÎN",
   ui_menu_tab_game: "Joc",
   ui_menu_tab_config: "Configurare",
@@ -160,6 +160,10 @@ export const LANG_RO = {
   enemy_elite_desc: "Hater de elită. La fiecare 7 secunde folosește un atac special: șarjă, proiectile sau invocă ajutoare. Lasă întotdeauna un LudoBox.",
   enemy_wall_name: "Sindromul Asediului",
   enemy_wall_desc: "Apare într-un inel perfect. Extrem de lent, dar durabil. După un timp (cca. 34-40s) detonează.",
+  // NOWOŚĆ: Tłumaczenie dla Drwala
+  enemy_lumberjack_name: "Tăietor Zjebadlo",
+  enemy_lumberjack_desc: "Un boss puternic din pădure. Aruncă topoare curcubeu rotitoare. Are animații de mers și atac. Atenție la \"Urma Curcubeu\"!",
+  
   enemy_hazard_name: "Canalizarea",
   enemy_hazard_desc: "Încetinește Contele și îi provoacă daune. De asemenea, rănește haterii (cu excepția Szkeletal).",
   enemy_megahazard_name: "Câmpul Dramei",

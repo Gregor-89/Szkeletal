@@ -1,9 +1,10 @@
 // ==============
-// BULLET.JS (v0.94n - FIX: Nova Outline)
+// BULLET.JS (v0.99 - Axe Config Fix)
 // Lokalizacja: /js/entities/bullet.js
 // ==============
 
 import { get as getAsset } from '../services/assets.js';
+import { WEAPON_CONFIG } from '../config/gameData.js';
 
 export class Bullet {
     constructor() {
@@ -219,7 +220,6 @@ export class PlayerBullet extends Bullet {
             ctx.translate(this.x, this.y);
             ctx.rotate(this.rotation);
             
-            // FIX: Czerwonawa poświata dla pocisku NOVA
             if (this.spriteKey === 'projectile_nova') {
                 ctx.shadowColor = 'rgba(255, 50, 50, 0.8)';
                 ctx.shadowBlur = 15;
@@ -248,6 +248,7 @@ export class PlayerBullet extends Bullet {
 
 export class EnemyBullet extends Bullet {
     static bottleSprite = null;
+    static axeSprite = null;
 
     constructor() {
         super();
@@ -258,8 +259,15 @@ export class EnemyBullet extends Bullet {
 
     init(x, y, vx, vy, size, damage, color, life = Infinity, type = 'default', rotation = 0) {
         super.init(x, y, vx, vy, size, damage, color, life, type);
+        
         if (this.type === 'bottle') {
-            this.rotSpeed = (Math.random() > 0.5 ? 1 : -1) * 15; 
+            const dir = vx >= 0 ? 1 : -1;
+            this.rotSpeed = dir * 15; 
+            this.rotation = rotation || Math.random() * Math.PI * 2;
+        } else if (this.type === 'axe') {
+            const dir = vx >= 0 ? 1 : -1;
+            const baseSpeed = WEAPON_CONFIG.LUMBERJACK_AXE.ROTATION_SPEED || 15;
+            this.rotSpeed = dir * baseSpeed;
             this.rotation = rotation || Math.random() * Math.PI * 2;
         } else {
             this.rotSpeed = 0;
@@ -271,7 +279,7 @@ export class EnemyBullet extends Bullet {
         super.update(dt);
         if (!this.active) return;
 
-        if (this.type === 'bottle') {
+        if (this.type === 'bottle' || this.type === 'axe') {
             this.rotation += this.rotSpeed * dt;
         }
     }
@@ -286,13 +294,22 @@ export class EnemyBullet extends Bullet {
         if (this.type === 'bottle') {
             if (!EnemyBullet.bottleSprite) EnemyBullet.bottleSprite = getAsset('enemy_ranged_projectile');
             asset = EnemyBullet.bottleSprite;
+        } else if (this.type === 'axe') {
+            if (!EnemyBullet.axeSprite) EnemyBullet.axeSprite = getAsset('projectile_axe');
+            asset = EnemyBullet.axeSprite;
         } else {
             asset = getAsset(this.color);
         }
 
         if (asset) {
-            ctx.shadowColor = 'rgba(255, 100, 100, 0.5)'; 
-            ctx.shadowBlur = 10; 
+            if (this.type === 'axe') {
+                ctx.shadowColor = 'rgba(0, 255, 255, 0.5)';
+                // FIX: Zmniejszono blur o połowę (z 12 na 6) dla lepszej czytelności
+                ctx.shadowBlur = 6; 
+            } else {
+                ctx.shadowColor = 'rgba(255, 100, 100, 0.5)'; 
+                ctx.shadowBlur = 10; 
+            }
             
             if (this.rotation !== 0) ctx.rotate(this.rotation);
             
@@ -302,6 +319,11 @@ export class EnemyBullet extends Bullet {
             if (this.type === 'bottle') {
                 drawWidth = 22 * 0.625; 
                 drawHeight = 64 * 0.625;
+            } else if (this.type === 'axe') {
+                // FIX: Pobieranie rozmiaru z configu (gameData.js)
+                const axeCfg = WEAPON_CONFIG.LUMBERJACK_AXE;
+                drawWidth = axeCfg.SPRITE_WIDTH || 96;
+                drawHeight = axeCfg.SPRITE_HEIGHT || 96;
             } else {
                 drawWidth = this.size * 2.0;
                 drawHeight = this.size * 2.0;

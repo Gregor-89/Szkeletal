@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v0.97c - Peaceful Mode & Full Logic)
+// DEV.JS (v1.02 - Fix: Null Safety & Crash Prevention)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -46,6 +46,7 @@ export const devSettings = {
     allowedEnemies: ['all'],
     allowedPickups: ['all'],
     presetLoaded: false,
+    justStartedFromMenu: false, 
     forcedSpawnRate: null, 
     forcedMaxEnemies: null
 };
@@ -91,19 +92,41 @@ function showDevConfirmModal(text) {
 }
 
 function callStartRun() {
-    if (startRunCallback) {
+    if (typeof startRunCallback === 'function') {
+        console.log("[DEV] callStartRun: Rozpoczynam grę...");
         devSettings.presetLoaded = true;
-        loadConfigCallback();
-        startRunCallback();
+        devSettings.justStartedFromMenu = true; 
+        
         const menuOverlay = document.getElementById('menuOverlay');
         if (menuOverlay) menuOverlay.style.display = 'none';
+        
+        loadConfigCallback();
+        startRunCallback();
     } else {
-        console.warn("[DEV] Brak callbacka startRunCallback.");
+        console.error("[DEV] BŁĄD: startRunCallback nie jest funkcją!", startRunCallback);
     }
 }
 
+// Helpery do bezpiecznego pobierania wartości z DOM
+function getVal(id, defaultValue) {
+    const el = document.getElementById(id);
+    if (!el) return defaultValue;
+    const val = parseFloat(el.value);
+    return isNaN(val) ? defaultValue : val;
+}
+
+function getCheck(id) {
+    const el = document.getElementById(id);
+    return el ? el.checked : false;
+}
+
+function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+}
+
 function devPresetEnemy(enemyType, autoStart = true) {
-    console.log(`[Dev] Uruchamianie testu jednostki: ${enemyType.toUpperCase()}`);
+    console.log(`[Dev] Preset: ${enemyType}, AutoStart: ${autoStart}`);
     
     lastScenarioAction = () => devPresetEnemy(enemyType, false);
 
@@ -112,30 +135,39 @@ function devPresetEnemy(enemyType, autoStart = true) {
         for (let i = 0; i < enemySelect.options.length; i++) {
             enemySelect.options[i].selected = false;
         }
+        let found = false;
         for (let i = 0; i < enemySelect.options.length; i++) {
             if (enemySelect.options[i].value === enemyType) {
                 enemySelect.options[i].selected = true;
+                found = true;
                 break;
             }
+        }
+        if (!found && enemyType === 'lumberjack') {
+            // Jeśli brakuje opcji w HTML, wymuś w pamięci
+            devSettings.allowedEnemies = ['lumberjack'];
         }
     }
 
     const ENEMY_UNLOCK_TIMES = {
         'standard': 0, 'horde': 30, 'aggressive': 60, 'kamikaze': 90,
         'splitter': 120, 'tank': 180, 'ranged': 210, 'elite': 0, 
-        'wall': SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME 
+        'wall': SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME,
+        'lumberjack': 0 
     };
     
     const requiredTime = ENEMY_UNLOCK_TIMES[enemyType] || 0;
     const jumpTime = Math.max(4.1, requiredTime + 1);
 
-    document.getElementById('devSpawnRate').value = "0.03"; 
-    document.getElementById('devMaxEnemies').value = "100"; 
-    
-    const timeInput = document.getElementById('devTime');
-    if (timeInput) timeInput.value = jumpTime;
+    setVal('devSpawnRate', 0.03);
+    setVal('devMaxEnemies', 100);
+    setVal('devTime', jumpTime);
 
+    // Aplikacja ustawień (bezpieczna)
     applyDevSettings(true); 
+    
+    // Wymuszenie, na wypadek błędu w UI
+    devSettings.allowedEnemies = [enemyType];
     devStartTime = jumpTime;
 
     if (gameState && gameState.game) {
@@ -158,11 +190,19 @@ function devPresetEnemy(enemyType, autoStart = true) {
                     gameState.perkLevels['autogun'] = 1; 
                 }
             }
-            if (enemyType === 'wall') gameState.settings.lastSiegeEvent = -999999; 
-            else gameState.settings.lastSiegeEvent = jumpTime + 10000;
+            
+            // Reset timerów
+            if (enemyType === 'wall') {
+                gameState.settings.lastSiegeEvent = -999999; 
+            } else {
+                gameState.settings.lastSiegeEvent = jumpTime + 10000;
+            }
 
-            if (enemyType === 'elite') gameState.settings.lastElite = -999999; 
-            else gameState.settings.lastElite = jumpTime + 10000;
+            if (enemyType === 'elite' || enemyType === 'lumberjack') {
+                gameState.settings.lastElite = -999999; 
+            } else {
+                gameState.settings.lastElite = jumpTime + 10000;
+            }
         }
     }, 200);
 }
@@ -183,8 +223,8 @@ function devPresetMinimalWeapons() {
     game.level = 10; game.time = 60; devSettings.allowedEnemies = ['all'];
     game.xp = 0; game.xpNeeded = calculateXpNeeded(game.level);
     
-    document.getElementById('devTime').value = game.time;
-    document.getElementById('devLevel').value = game.level;
+    setVal('devTime', game.time);
+    setVal('devLevel', game.level);
     
     const weaponPerks = ['whip', 'autogun', 'orbital', 'nova', 'chainLightning'];
     weaponPerks.forEach(id => {
@@ -192,7 +232,6 @@ function devPresetMinimalWeapons() {
             perkLevels[id] = 1;
             return;
         }
-        
         const perk = perkPool.find(p => p.id === id);
         if (perk) {
             perk.apply(gameState, perk); 
@@ -258,25 +297,25 @@ function applyDevPreset(targetLevel, perkLevelOffset = 0) {
         }
     });
     
-    document.getElementById('devLevel').value = game.level;
-    document.getElementById('devTime').value = game.time;
-    document.getElementById('devWhip').value = perkLevels['whip'] || 1;
-    document.getElementById('devAutoGun').value = 1;
+    setVal('devLevel', game.level);
+    setVal('devTime', game.time);
+    setVal('devWhip', perkLevels['whip'] || 1);
+    setVal('devAutoGun', 1);
     
     if (autoGun) {
-        document.getElementById('devDamage').value = autoGun.bulletDamage;
-        document.getElementById('devFireRate').value = autoGun.fireRate;
-        document.getElementById('devMultishot').value = autoGun.multishot;
-        document.getElementById('devPierce').value = autoGun.pierce;
+        setVal('devDamage', autoGun.bulletDamage);
+        setVal('devFireRate', autoGun.fireRate);
+        setVal('devMultishot', autoGun.multishot);
+        setVal('devPierce', autoGun.pierce);
     }
     
     const orbital = player.getWeapon(OrbitalWeapon); 
     const nova = player.getWeapon(NovaWeapon); 
     const lightning = player.getWeapon(ChainLightningWeapon); 
     
-    document.getElementById('devOrbital').value = orbital ? orbital.level : 0;
-    document.getElementById('devNova').value = nova ? nova.level : 0;
-    document.getElementById('devLightning').value = lightning ? lightning.level : 0; 
+    setVal('devOrbital', orbital ? orbital.level : 0);
+    setVal('devNova', nova ? nova.level : 0);
+    setVal('devLightning', lightning ? lightning.level : 0);
     
     devSettings.presetLoaded = true;
     applyDevSettings(true); 
@@ -285,21 +324,14 @@ function applyDevPreset(targetLevel, perkLevelOffset = 0) {
 function devPresetAlmostMax() { applyDevPreset(20, 1); }
 function devPresetMax() { applyDevPreset(50, 0); }
 
-// FIX v0.97c: Nowa funkcja trybu pokojowego
 function devStartPeaceful() {
     console.log('[Dev] Uruchamianie trybu pokojowego (spacer)...');
-    
-    // Resetuj logikę powtórzenia
     lastScenarioAction = () => devStartPeaceful();
-    
     devSettings.presetLoaded = true;
     devStartTime = 0;
+    setVal('devSpawnRate', 0);
+    setVal('devMaxEnemies', 0);
     
-    // Wymuś wartości w formularzu (opcjonalne, dla wizualizacji)
-    document.getElementById('devSpawnRate').value = "0"; 
-    document.getElementById('devMaxEnemies').value = "0"; 
-    
-    // Wymuś ustawienia w gameState
     if (gameState.settings) {
         gameState.settings.spawn = 0;
         gameState.settings.maxEnemies = 0;
@@ -318,7 +350,10 @@ function devStartScenario(type, autoStart = true) {
     if (type === 'min') devPresetMinimalWeapons();
     else if (type === 'high') devPresetAlmostMax();
     else if (type === 'max') devPresetMax();
-    else if (type === 'peaceful') devStartPeaceful(); // Dodano obsługę w switchu
+    else if (type === 'peaceful') {
+         devStartPeaceful();
+         return;
+    }
     
     if (autoStart) {
         callStartRun();
@@ -330,34 +365,35 @@ export function applyDevSettings(silent = false) {
     
     const { game, settings, player, perkLevels } = gameState;
     
-    const devTimeInput = document.getElementById('devTime');
-    if (devTimeInput) {
-        devStartTime = parseFloat(devTimeInput.value) || 0;
-        if (!game.inMenu || game.manualPause) {
-            game.time = devStartTime;
-            settings.lastElite = game.time; 
-            settings.lastSiegeEvent = game.time; 
-        }
+    // Bezpieczne pobieranie wartości (helpery)
+    devStartTime = getVal('devTime', 0);
+    if (!game.inMenu || game.manualPause) {
+        game.time = devStartTime;
+        settings.lastElite = game.time; 
+        settings.lastSiegeEvent = game.time; 
     }
     
-    game.health = parseInt(document.getElementById('devHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
-    game.maxHealth = parseInt(document.getElementById('devMaxHealth').value) || PLAYER_CONFIG.INITIAL_HEALTH;
-    game.level = parseInt(document.getElementById('devLevel').value) || 1;
-    game.xp = parseInt(document.getElementById('devXP').value) || 0;
+    game.health = getVal('devHealth', PLAYER_CONFIG.INITIAL_HEALTH);
+    // FIX: Dodano fallback jeśli devMaxHealth nie istnieje w HTML
+    game.maxHealth = getVal('devMaxHealth', PLAYER_CONFIG.INITIAL_HEALTH);
+    
+    game.level = getVal('devLevel', 1);
+    game.xp = getVal('devXP', 0);
     game.xpNeeded = calculateXpNeeded(game.level);
     
-    devSettings.godMode = document.getElementById('devGodMode').checked;
-    const dbgHb = document.getElementById('devDebugHitboxes');
-    devSettings.debugHitboxes = dbgHb ? dbgHb.checked : false;
+    devSettings.godMode = getCheck('devGodMode');
+    devSettings.debugHitboxes = getCheck('devDebugHitboxes');
 
-    settings.spawn = parseFloat(document.getElementById('devSpawnRate').value) || GAME_CONFIG.INITIAL_SPAWN_RATE;
-    settings.maxEnemies = parseInt(document.getElementById('devMaxEnemies').value) || GAME_CONFIG.MAX_ENEMIES;
+    settings.spawn = getVal('devSpawnRate', GAME_CONFIG.INITIAL_SPAWN_RATE);
+    settings.maxEnemies = getVal('devMaxEnemies', GAME_CONFIG.MAX_ENEMIES);
     
     const enemySelect = document.getElementById('devEnemyType');
-    devSettings.allowedEnemies = Array.from(enemySelect.selectedOptions).map(o => o.value);
+    if (enemySelect) {
+        devSettings.allowedEnemies = Array.from(enemySelect.selectedOptions).map(o => o.value);
+    }
     
     if (!game.inMenu || game.manualPause) {
-        const whipLvl = parseInt(document.getElementById('devWhip').value) || 1;
+        const whipLvl = getVal('devWhip', 1);
         const whip = player.getWeapon(WhipWeapon);
         if (whip) {
             whip.level = 1;
@@ -366,7 +402,7 @@ export function applyDevSettings(silent = false) {
             perkLevels['whip'] = whipLvl; 
         }
 
-        const agLvl = parseInt(document.getElementById('devAutoGun').value) || 0;
+        const agLvl = getVal('devAutoGun', 0);
         let autoGun = player.getWeapon(AutoGun);
         if (agLvl > 0) {
             if (!autoGun) {
@@ -375,10 +411,10 @@ export function applyDevSettings(silent = false) {
                 autoGun = player.getWeapon(AutoGun);
             }
             if (autoGun) {
-                autoGun.bulletDamage = parseInt(document.getElementById('devDamage').value);
-                autoGun.fireRate = parseInt(document.getElementById('devFireRate').value);
-                autoGun.multishot = parseInt(document.getElementById('devMultishot').value);
-                autoGun.pierce = parseInt(document.getElementById('devPierce').value);
+                autoGun.bulletDamage = getVal('devDamage', 1);
+                autoGun.fireRate = getVal('devFireRate', 650);
+                autoGun.multishot = getVal('devMultishot', 0);
+                autoGun.pierce = getVal('devPierce', 0);
                 perkLevels['autogun'] = 1;
             }
         } else if (autoGun) {
@@ -387,7 +423,7 @@ export function applyDevSettings(silent = false) {
         }
         
         const handleWeapon = (WeaponClass, lvlInputId, perkId) => {
-            const lvl = parseInt(document.getElementById(lvlInputId).value) || 0;
+            const lvl = getVal(lvlInputId, 0);
             let w = player.getWeapon(WeaponClass);
             if (lvl > 0) {
                 if (!w) {
@@ -456,7 +492,7 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.devStartScenario = devStartScenario; 
     window.devStartPreset = devPresetEnemy; 
     window.retryLastScenario = retryLastScenario; 
-    window.devStartPeaceful = devStartPeaceful; // FIX v0.97c: Eksport nowej funkcji
+    window.devStartPeaceful = devStartPeaceful; 
     
-    console.log('[DEBUG-v0.97c] js/services/dev.js: Dev Tools loaded & exported.');
+    console.log('[DEBUG-v1.02] js/services/dev.js: Dev Tools loaded & exported.');
 }

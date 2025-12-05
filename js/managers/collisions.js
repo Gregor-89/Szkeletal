@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.97m - Wall Water Immunity)
+// COLLISIONS.JS (v0.99 - Rainbow Splash)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -7,9 +7,31 @@ import { checkCircleCollision, addHitText, limitedShake, spawnConfetti, findFree
 import { killEnemy } from './enemyManager.js';
 import { playSound } from '../services/audio.js';
 import { devSettings } from '../services/dev.js';
-import { COLLISION_CONFIG, HAZARD_CONFIG, MAP_CONFIG } from '../config/gameData.js'; 
+import { COLLISION_CONFIG, HAZARD_CONFIG, MAP_CONFIG, WEAPON_CONFIG } from '../config/gameData.js'; 
 import { getLang } from '../services/i18n.js';
 import { PICKUP_CLASS_MAP } from './effects.js';
+
+// Helper do tęczowego rozbryzgu
+function spawnRainbowSplash(particlePool, x, y, count = 20) {
+    for(let k=0; k<count; k++) {
+        const p = particlePool.get();
+        if(p) {
+            // Każda cząsteczka ma losowy kolor z tęczy
+            const hue = Math.random() * 360;
+            const color = `hsl(${hue}, 100%, 60%)`;
+            p.init(
+                x, y, 
+                (Math.random()-0.5)*400, 
+                (Math.random()-0.5)*400, 
+                0.5 + Math.random()*0.3, 
+                color, 
+                0, 
+                0.94, 
+                4 + Math.random()*4
+            );
+        }
+    }
+}
 
 export function checkCollisions(state) {
     const { 
@@ -35,12 +57,10 @@ export function checkCollisions(state) {
         for (const obs of obstacles) {
             if (obs.isDead) continue; 
 
-            // 1. Gracz vs Przeszkoda
             const dist = Math.hypot(player.x - obs.x, player.y - obs.y);
             const minDist = obs.hitboxRadius + (player.size * 0.4);
 
             if (dist < minDist) {
-                // Obsługa Kapliczki
                 if (obs.type === 'shrine') {
                     const stats = MAP_CONFIG.OBSTACLE_STATS.shrine;
                     const cooldown = stats.cooldown || 120;
@@ -48,14 +68,12 @@ export function checkCollisions(state) {
                     if (game.health < game.maxHealth) {
                         if (game.time >= obs.lastUsedTime + cooldown) {
                             obs.lastUsedTime = game.time;
-                            
                             const heal = stats.healAmount || 100;
                             const oldHp = game.health;
                             game.health = Math.min(game.maxHealth, game.health + heal);
                             const healedAmount = game.health - oldHp;
                             
                             playSound('HealPickup');
-                            // FIX v0.97m: Czas trwania 5.0s
                             addHitText(hitTextPool, hitTexts, player.x, player.y - 50, 0, "#FFD700", "Rzyć umyta, sytość zdobyta", 5.0);
                             addHitText(hitTextPool, hitTexts, player.x, player.y - 30, healedAmount, "#00FF00", "+HP", 2.0);
                             
@@ -79,10 +97,8 @@ export function checkCollisions(state) {
                 }
             }
 
-            // 2. Wrogowie vs Przeszkoda
             if (obs.isSolid || obs.isSlow) {
                 const checkEnemyRadius = obs.hitboxRadius + 100;
-                
                 for (const e of enemies) {
                     if (e.dying) continue;
                     const dx = e.x - obs.x;
@@ -97,7 +113,6 @@ export function checkCollisions(state) {
                             e.x += Math.cos(angle) * push;
                             e.y += Math.sin(angle) * push;
                         }
-                        // FIX v0.97m: Oblężnicy (wall) ignorują wodę
                         if (obs.isSlow && e.type !== 'wall') {
                             e.inWater = true; 
                         }
@@ -145,7 +160,6 @@ export function checkCollisions(state) {
         }
     }
 
-    // --- Shockwave Interaction ---
     for (let b of bombIndicators) {
         if (b.type === 'shockwave') {
             const progress = Math.min(1, b.life / b.maxLife);
@@ -167,7 +181,7 @@ export function checkCollisions(state) {
                         if (gem) {
                             gem.init(e.x + (Math.random() - 0.5) * 5, e.y + (Math.random() - 0.5) * 5, 4, (e.type === 'elite') ? 7 : 1, '#4FC3F7');
                         }
-                        game.score += (e.type === 'elite') ? 80 : (e.type === 'tank' ? 20 : 10);
+                        game.score += (e.type === 'elite' || e.type === 'lumberjack') ? 80 : 10;
 
                         if (!b.onlyXP) {
                             function maybe(type, prob) {
@@ -178,12 +192,8 @@ export function checkCollisions(state) {
                                     if (PickupClass) pickups.push(new PickupClass(pos.x, pos.y));
                                 }
                             }
-                            maybe('heal', 0.04);
-                            maybe('magnet', 0.025);
-                            maybe('speed', 0.02);
-                            maybe('shield', 0.015);
-                            maybe('bomb', 0.01);
-                            maybe('freeze', 0.01);
+                            maybe('heal', 0.04); maybe('magnet', 0.025); maybe('speed', 0.02);
+                            maybe('shield', 0.015); maybe('bomb', 0.01); maybe('freeze', 0.01);
                         }
                         
                         const p = particlePool.get();
@@ -205,17 +215,14 @@ export function checkCollisions(state) {
                     const dist = Math.hypot(b.x - obs.x, b.y - obs.y);
                     if (dist < currentRadius + obs.hitboxRadius) {
                         const destroyed = obs.takeDamage(50, 'player');
-                        
                         if (destroyed) {
                              spawnConfetti(particlePool, obs.x, obs.y);
                              playSound('Explosion');
-                             
                              const gemCount = 5 + Math.floor(Math.random() * 4);
                              for(let k=0; k<gemCount; k++) {
                                  const gem = gemsPool.get();
                                  if (gem) gem.init(obs.x + (Math.random()-0.5)*40, obs.y + (Math.random()-0.5)*40, 5, 5, '#81C784');
                              }
-
                              if (Math.random() < obs.dropChance) {
                                  const dropType = Math.random() < 0.3 ? 'chest' : 'heal';
                                  const PickupClass = PICKUP_CLASS_MAP[dropType];
@@ -285,8 +292,16 @@ export function checkCollisions(state) {
                     const destroyed = obs.takeDamage(b.damage, 'player');
                     addHitText(hitTextPool, hitTexts, obs.x, obs.y - 20, b.damage, '#fff');
                     playSound('Hit');
-                    const p = particlePool.get();
-                    if (p) p.init(b.x, b.y, Math.random()*100-50, Math.random()*100-50, 0.3, '#5D4037', 0, 0.9, 3);
+                    
+                    // ZMIANA: Tęczowy rozbryzg (gdy pocisk siekiery trafi w przeszkodę)
+                    if (b.type === 'axe') {
+                         const count = WEAPON_CONFIG.LUMBERJACK_AXE.IMPACT_PARTICLE_COUNT || 30;
+                         spawnRainbowSplash(particlePool, b.x, b.y, count);
+                    } else {
+                         const p = particlePool.get();
+                         if (p) p.init(b.x, b.y, Math.random()*100-50, Math.random()*100-50, 0.3, '#5D4037', 0, 0.9, 3);
+                    }
+                    
                     if (destroyed) {
                         spawnConfetti(particlePool, obs.x, obs.y);
                         playSound('Explosion');
@@ -319,12 +334,15 @@ export function checkCollisions(state) {
             if (checkCircleCollision(b.x, b.y, b.size, e.x, e.y, e.size * 0.6)) {
                 hitEnemy = true;
                 const isDead = e.takeDamage(b.damage, 'player');
+                
                 let hitY = e.y;
-                if (e.type === 'wall' || e.type === 'tank' || e.type === 'elite') {
+                if (['wall', 'tank', 'elite', 'lumberjack'].includes(e.type)) {
                     hitY = e.y - e.size * 0.8; 
                 }
+                
                 addHitText(hitTextPool, hitTexts, e.x, hitY, b.damage);
                 playSound('Hit');
+                
                 if (e.type !== 'wall' && e.type !== 'tank') {
                     const angle = Math.atan2(e.y - b.y, e.x - b.x);
                     const isOrbital = (b.type === 'orbital');
@@ -332,8 +350,10 @@ export function checkCollisions(state) {
                     const kbForce = (b.damage + 20) * 8 * kbMultiplier; 
                     e.applyKnockback(Math.cos(angle) * kbForce, Math.sin(angle) * kbForce);
                 }
+                
                 const p = particlePool.get();
                 if (p) p.init(b.x, b.y, Math.random()*100-50, Math.random()*100-50, 0.2, b.color, 0, 0.9, 3);
+                
                 if (isDead) {
                     state.enemyIdCounter = killEnemy(j, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, b.type === 'orbital');
                 }
@@ -366,11 +386,19 @@ export function checkCollisions(state) {
                 game.playerHitFlashT = 0.1;
                 addHitText(hitTextPool, hitTexts, player.x, player.y, eb.damage, '#FF0000');
                 playSound('PlayerHurt');
+                
+                // ZMIANA: Tęczowy rozbryzg gdy siekiera trafi gracza
+                if (eb.type === 'axe') {
+                     const count = WEAPON_CONFIG.LUMBERJACK_AXE.IMPACT_PARTICLE_COUNT || 30;
+                     spawnRainbowSplash(particlePool, eb.x, eb.y, count);
+                }
+
                 eb.release(); 
             }
         }
     }
-
+    
+    // ... (reszta bez zmian, aby nie skracać)
     const collectionRadius = 35;
     for (let i = gems.length - 1; i >= 0; i--) {
         const g = gems[i];

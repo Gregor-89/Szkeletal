@@ -1,5 +1,5 @@
 // ==============
-// ENGLISH.JS (v0.97w - Fixes & 'Incoming')
+// ENGLISH.JS (v0.98d - Lumberjack Texts)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
@@ -53,7 +53,7 @@ export const LANG_EN = {
   ui_hud_time: "Time",
   ui_hud_health: "Health",
   ui_hud_new_enemy: "INCOMING",
-  ui_warning_new_enemy: "INCOMING", // Zmieniono z NEW ENEMY
+  ui_warning_new_enemy: "INCOMING",
   ui_hud_spawn_in: "SPAWNING IN",
   ui_menu_tab_game: "Game",
   ui_menu_tab_config: "Configuration",
@@ -159,6 +159,10 @@ export const LANG_EN = {
   enemy_elite_desc: "An elite Hater with significantly increased \"Satiety\". Every 7 seconds, uses a special attack: a violent charge, an emission of projectiles, or summons support (creates 3 \"Chat Matts\"). Always drops a LudoBox.",
   enemy_wall_name: "Siege Syndrome",
   enemy_wall_desc: "Appears in a perfect ring. Extremely slow, but durable. After a set time (approx. 34-40s), it detonates, destroying all nearby Potatoes and Pickups.",
+  // NOWOŚĆ: Tłumaczenie dla Drwala
+  enemy_lumberjack_name: "Lumberjack Zjebadlo",
+  enemy_lumberjack_desc: "A powerful boss from the forest. Throws spinning, rainbow axes. Features walk and attack animations. Beware of his \"Rainbow Trail\"!",
+  
   enemy_hazard_name: "The Sewer",
   enemy_hazard_desc: "Slows the Count and inflicts damage. Also wounds and slows haters (except for Szkeletal). Potatoes and Pickups left in \"The Sewer\" will depreciate.",
   enemy_megahazard_name: "Drama Field",

@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v0.97w - FULL COMPLETE FILE)
+// UI.JS (v1.00 - Logging for Dev Start)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -21,11 +21,9 @@ import { updateStatsUI } from '../managers/levelManager.js';
 import { VERSION } from '../config/version.js'; 
 import { setJoystickSide } from './input.js';
 
-// Stan joysticka (domyślnie prawa)
 let currentJoyMode = 'right';
 let hpBarOuterRef = null;
 
-// Mapa ID elementu -> Klucz tłumaczenia
 const STATIC_TRANSLATION_MAP = {
     'btnStart': 'ui_menu_start', 
     'btnContinue': 'ui_menu_continue', 
@@ -138,7 +136,6 @@ export function updateStaticTranslations() {
         if (window.wrappedGenerateGuide) window.wrappedGenerateGuide();
     }
     
-    // Aktualizacja tekstów na przyciskach toggle
     const onTxt = getLang('ui_on') || "WŁ";
     const offTxt = getLang('ui_off') || "WYŁ";
     document.querySelectorAll('.retro-toggle').forEach(btn => {
@@ -196,15 +193,11 @@ export function initRetroToggles(game, uiData) {
     if(joyBtn) {
         const joyOpts = ['right', 'left', 'off'];
         let joyIdx = 0;
-        
-        // Ustawienie początkowe tekstu
         updateStaticTranslations(); 
 
         joyBtn.addEventListener('click', () => {
             joyIdx = (joyIdx + 1) % joyOpts.length;
             currentJoyMode = joyOpts[joyIdx]; 
-            
-            // Aktualizacja tekstu i stanu
             updateStaticTranslations();
             setJoystickSide(currentJoyMode);
             playSound('Click');
@@ -344,7 +337,7 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
     switchView('view-main');
     menuOverlay.style.display = 'flex';
     
-    updateStaticTranslations(); // FIX: Tłumaczenie menu przy otwarciu
+    updateStaticTranslations(); 
     
     const verTag = document.getElementById('menuVersionTag');
     if(verTag) verTag.textContent = `v${VERSION}`;
@@ -362,7 +355,13 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
 }
 
 export function startRun(game, resetAll, uiData) {
-    if (devSettings.presetLoaded) { retryLastScenario(); }
+    // FIX: Tylko jeśli to NIE jest start bezpośrednio z menu dev, spróbuj przywrócić ostatni scenariusz
+    if (devSettings.presetLoaded && !devSettings.justStartedFromMenu) { 
+        retryLastScenario(); 
+    }
+    // Reset flagi (żeby przy "Jeszcze raz" działało normalnie)
+    devSettings.justStartedFromMenu = false;
+
     const startOffset = devStartTime;
     resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); 
     uiData.savedGameState = null;
@@ -375,6 +374,9 @@ export function startRun(game, resetAll, uiData) {
     uiData.settings.lastElite = game.time;
     uiData.settings.lastSiegeEvent = game.time; 
     if (uiData.settings.currentSiegeInterval < startOffset) uiData.settings.currentSiegeInterval = startOffset + 10.0; 
+    
+    console.log("[UI] startRun: Gra uruchomiona.", { time: game.time, enemies: devSettings.allowedEnemies });
+
     initAudio(); playSound('MusicGameplay');
     if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
 }
@@ -394,6 +396,7 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         uiData.player.reset(worldWidth, worldHeight);
         for (let key in perkLevels) delete perkLevels[key];
     } else {
+        // Jeśli presetLoaded jest true, zachowujemy spawn/maxEnemies ustawione przez dev.js
         game.score = 0; settings.lastFire = 0; settings.lastElite = 0; settings.lastHazardSpawn = 0; settings.lastSiegeEvent = 0; settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
         game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.totalKills = 0; 
         const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
@@ -422,7 +425,7 @@ export function pauseGame(game, settings, weapons, player) {
     game.manualPause = true; game.paused = true;
     pauseOverlay.style.display = 'flex'; resumeOverlay.style.display = 'none';
     try { if (statsDisplayPause) updateStatsUI(game, player, settings, weapons, statsDisplayPause); } catch (e) {}
-    updateStaticTranslations(); // FIX: Tłumaczenie pauzy
+    updateStaticTranslations(); 
 }
 
 export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
@@ -451,7 +454,7 @@ export function gameOver(game, uiData) {
     gameOverOverlay.style.display = 'flex';
     if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
     if (hpBarOuterRef) hpBarOuterRef.classList.remove('low-health-pulse');
-    updateStaticTranslations(); // FIX: Tłumaczenie game over
+    updateStaticTranslations(); 
 }
 
 window.wrappedDisplayScores = () => displayScores('scoresBodyMenu');

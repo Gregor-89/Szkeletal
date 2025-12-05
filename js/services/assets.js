@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.97k - Shrine Asset)
+// ASSETS.JS (v0.98a - Lumberjack Assets)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
@@ -47,6 +47,9 @@ const assetDefinitions = {
   'enemy_ranged': 'enemies/ranged/ranged_idle.png',
   'enemy_elite': 'enemies/elite/elite_idle.png',
   'enemy_wall': 'enemies/wall/wall_idle.png',
+  // NOWOŚĆ: Drwal
+  'enemy_lumberjack': 'enemies/lumberjack/lumberjack_idle.png',
+  
   'enemy_standard_spritesheet': 'enemies/dadgamer/dadgamer_spritesheet.png',
   'enemy_horde_spritesheet': 'enemies/horde/horde_spritesheet.png',
   'enemy_aggressive_spritesheet': 'enemies/aggressive/aggressive_spritesheet.png',
@@ -57,6 +60,9 @@ const assetDefinitions = {
   'enemy_wall_spritesheet': 'enemies/wall/wall_spritesheet.png',
   'enemy_ranged_walk': 'enemies/ranged/ranged_walk.png',
   'enemy_ranged_attack': 'enemies/ranged/ranged_attack.png',
+  // NOWOŚĆ: Animacje Drwala
+  'enemy_lumberjack_walk': 'enemies/lumberjack/lumberjack_walk.png',
+  'enemy_lumberjack_attack': 'enemies/lumberjack/lumberjack_attack.png',
   
   'env_tree_1': 'environment/tree_1.png',
   'env_tree_2': 'environment/tree_2.png',
@@ -84,12 +90,13 @@ const assetDefinitions = {
   'env_water_4': 'environment/water_4.png',
   'env_water_5': 'environment/water_5.png',
   'env_water_6': 'environment/water_6.png',
-  
-  // FIX v0.97k: Shrine
   'env_shrine': 'environment/shrine.png',
   
   'hazard_sewage': 'hazards/hazard_sewage.png',
   'enemy_ranged_projectile': 'projectiles/bottle.png',
+  // NOWOŚĆ: Siekiera
+  'projectile_axe': 'projectiles/axe.png',
+  
   'weapon_orbital_potato': 'weapons/orbital_potato.png',
   'projectile_venom': 'projectiles/venom.png',
   'projectile_nova': 'projectiles/nova_shot.png',

@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v0.97w - Fixes & 'Nadchodzi')
+// POLISH.JS (v0.98c - Lumberjack Texts)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -7,7 +7,7 @@ export const LANG_PL = {
   // UI / HUD
   ui_on: "WŁ",
   ui_off: "WYŁ",
-  ui_warning_new_enemy: "NADCHODZI", // Zmieniono z NOWY WRÓG
+  ui_warning_new_enemy: "NADCHODZI",
   ui_hud_new_enemy: "NADCHODZI",
   
   // Dev Tools
@@ -177,10 +177,11 @@ export const LANG_PL = {
   enemy_ranged_desc: "Adwersarz dystansowy z Olszynek. Utrzymuje optymalny dystans (średni zasięg), unikając bliskiego kontaktu. Aktywnie krąży, miotając butelkami.",
   enemy_elite_name: "Boss-Soul",
   enemy_elite_desc: "Elitarny Hejter o znacznie zwiększonej \"Sytości\". Co 7 sekund stosuje atak specjalny: gwałtowną szarżę, emisję pocisków wokół siebie lub przywołuje wsparcie (tworzy 3 \"Maćków z czatu\"). Zawsze upuszcza LudoBox.",
-  
-  // FIX: Tutaj był błąd w poprzednim polskim pliku
   enemy_wall_name: "Syndrom Oblężenia",
   enemy_wall_desc: "Pojawia się w idealnym pierścieniu. Ekstremalnie wolny, ale wytrzymały. Po określonym czasie (ok. 34-40s) detonuje, niszcząc wszystkie Ziemniaczki i Pickupy w pobliżu.",
+  // NOWOŚĆ: Drwal
+  enemy_lumberjack_name: "Drwal Zjebadło",
+  enemy_lumberjack_desc: "Potężny boss z lasu. Rzuca wirującymi, tęczowymi siekierami. Posiada animację ataku i chodzenia. Uważaj na jego \"Tęczowy Ślad\"!",
   
   enemy_hazard_name: "Szambo",
   enemy_hazard_desc: "Spowalnia Hrabiego i zadaje mu obrażenia. Rani i spowalnia również hejterów (z wyjątkiem Szkeletala). Ziemniaczki i Pickupy pozostawione w \"Szambie\" ulegają deprecjacji.",

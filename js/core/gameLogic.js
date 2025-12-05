@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.97b - Pass Obstacles to Hazard Spawn)
+// GAMELOGIC.JS (v0.99 - Spiral Trail Fix)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -38,10 +38,9 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         player, game, settings, canvas,
         enemies, eBullets, bullets, gems, pickups, stars,
         particles, hitTexts, chests, particlePool, hazards,
-        obstacles // FIX v0.97b: Pobieramy obstacles ze stanu
+        obstacles 
     } = state;
 
-    // Jeśli gra jest spauzowana (np. level up właśnie nastąpił), nie aktualizuj logiki!
     if (game.paused) return;
 
     state.killEnemy = (idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital, preventDrops) => 
@@ -73,13 +72,12 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
 
         if (e.hazardSlowdownT > 0) e.hazardSlowdownT -= dt;
 
-        // FIX: Sprawdź czy wróg "umiera" (animacja śmierci) - jeśli tak, nie aktualizuj logiki ruchu
         if (e.dying) {
             e.deathTimer -= dt;
             if (e.deathTimer <= 0) {
                 enemies.splice(i, 1);
             }
-            continue; // Pomiń resztę logiki dla umierającego wroga
+            continue; 
         }
 
         if (e.type === 'wall' && e.isAutoDead) {
@@ -89,7 +87,6 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
     }
     
     if (game.time - settings.lastHazardSpawn > HAZARD_CONFIG.SPAWN_INTERVAL) {
-        // FIX v0.97b: Przekazujemy obstacles do spawnHazard
         spawnHazard(hazards, player, camera, obstacles);
         settings.lastHazardSpawn = game.time;
     }
@@ -119,7 +116,6 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         }
     }
     
-    // 10. EVENT OBLĘŻENIA
     if (!settings.siegeState) settings.siegeState = 'idle';
     const activeWalls = enemies.some(e => e.type === 'wall');
 
@@ -156,11 +152,8 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         }
     }
 
-    // 11. PĘTLE AKTUALIZACJI
-
     for (const e of enemies) {
         if (!e) continue; 
-        // Jeśli umiera, nie aktualizuj logiki ruchu (obsłużone wyżej), ale update potrzebny dla timera
         if (e.dying) continue; 
         e.update(dt, player, game, state); 
         e.applySeparation(dt, enemies);
@@ -181,15 +174,46 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         if (!eb) { eBullets.splice(i, 1); continue; }
 
         eb.update(dt);
+        
+        if (eb.lastTrailTime === undefined) eb.lastTrailTime = 0; 
+        eb.lastTrailTime += dt;
+        
+        let trailInterval = 0.1;
+        
         if (eb.type === 'bottle') {
-            if (eb.lastTrailTime === undefined) eb.lastTrailTime = 0; 
-            eb.lastTrailTime += dt;
-            if (eb.lastTrailTime >= WEAPON_CONFIG.RANGED_ENEMY_BULLET.TRAIL_INTERVAL) {
+            trailInterval = WEAPON_CONFIG.RANGED_ENEMY_BULLET.TRAIL_INTERVAL;
+            if (eb.lastTrailTime >= trailInterval) {
                 eb.lastTrailTime = 0;
                 const p = particlePool.get();
                 if (p) p.init(eb.x, eb.y, (Math.random()-0.5)*80, (Math.random()-0.5)*80, 0.1, '#29b6f6', 0, 1.0, 2);
             }
         }
+        else if (eb.type === 'axe') {
+            const axeConfig = WEAPON_CONFIG.LUMBERJACK_AXE;
+            trailInterval = axeConfig.TRAIL_INTERVAL || 0.015;
+            
+            if (eb.lastTrailTime >= trailInterval) {
+                eb.lastTrailTime = 0;
+                const p = particlePool.get();
+                if (p) {
+                     const hue = (game.time * 800) % 360; 
+                     const opacity = axeConfig.TRAIL_OPACITY || 0.25;
+                     // HSLA dla przezroczystości
+                     const rainbowColor = `hsla(${hue}, 100%, 60%, ${opacity})`;
+                     
+                     const size = axeConfig.TRAIL_SIZE || 22; // Większy rozmiar
+                     const offset = axeConfig.TRAIL_OFFSET || 40;
+                     
+                     // OBLICZANIE POZYCJI SPIRALI (Ostrze siekiery)
+                     // Uwzględniamy rotację. -PI/2 bo grafika siekiery zwykle ma ostrze u góry
+                     const trailX = eb.x + Math.cos(eb.rotation - Math.PI/2) * offset;
+                     const trailY = eb.y + Math.sin(eb.rotation - Math.PI/2) * offset;
+                     
+                     p.init(trailX, trailY, 0, 0, 0.4, rainbowColor, 0, 1.0, size);
+                }
+            }
+        }
+        
         if (!eb.active) {
             if (eBullets[i] === eb) eBullets.splice(i, 1);
         }
@@ -200,8 +224,6 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         if (!g) { gems.splice(i, 1); continue; }
 
         g.update(player, game, dt);
-        
-        // FIX: Sprawdź czy gem został zebrany (w update gems ustawimy flagę 'collected')
         if (!g.active) {
             if (gems[i] === g) gems.splice(i, 1);
         }
@@ -255,13 +277,9 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
 
     checkCollisions(state); 
 
-    // FIX: Natychmiastowe sprawdzenie Level Up
     if (game.xp >= game.xpNeeded) {
-        // Natychmiast zatrzymaj grę
         game.paused = true;
-        // Odpal efekt konfetti PRZED oknem
         spawnConfetti(state.particlePool, player.x, player.y);
-        // Wywołaj logikę UI
         levelUpFn(); 
     }
 

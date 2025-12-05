@@ -151,15 +151,16 @@
             <div class="dev-section">
                 <p id="devLblPresets" class="dev-label">PRESETY WROGÓW (AUTO-START)</p>
                 <div class="dev-grid">
-                    <button id="devBtnStd" class="retro-btn small" onclick="window.devStartPreset('standard')">STD</button>
-                    <button id="devBtnHorde" class="retro-btn small" onclick="window.devStartPreset('horde')">HRD</button>
-                    <button id="devBtnRng" class="retro-btn small" onclick="window.devStartPreset('ranged')">RNG</button>
-                    <button id="devBtnTank" class="retro-btn small" onclick="window.devStartPreset('tank')">TANK</button>
-                    <button id="devBtnSplit" class="retro-btn small" onclick="window.devStartPreset('splitter')">SPLIT</button>
-                    <button id="devBtnTroll" class="retro-btn small" onclick="window.devStartPreset('kamikaze')">TROLL</button>
-                    <button id="devBtnWall" class="retro-btn small warning" onclick="window.devStartPreset('wall')">WALL</button>
-                    <button id="devBtnBoss" class="retro-btn small danger" onclick="window.devStartPreset('elite')">BOSS</button>
-                    <button id="devBtnAgr" class="retro-btn small" onclick="window.devStartPreset('aggressive')">AGR</button>
+                    <button id="devBtnStd" class="retro-btn small" onclick="window.devStartPreset('standard')">DadGamer</button>
+                    <button id="devBtnHorde" class="retro-btn small" onclick="window.devStartPreset('horde')">Horda</button>
+                    <button id="devBtnRng" class="retro-btn small" onclick="window.devStartPreset('ranged')">Menel</button>
+                    <button id="devBtnTank" class="retro-btn small" onclick="window.devStartPreset('tank')">Szkielet</button>
+                    <button id="devBtnSplit" class="retro-btn small" onclick="window.devStartPreset('splitter')">Wykop</button>
+                    <button id="devBtnTroll" class="retro-btn small" onclick="window.devStartPreset('kamikaze')">Troll</button>
+                    <button id="devBtnWall" class="retro-btn small warning" onclick="window.devStartPreset('wall')">Oblężnik</button>
+                    <button id="devBtnBoss" class="retro-btn small danger" onclick="window.devStartPreset('elite')">ELITA (BOSS)</button>
+                    <button id="devBtnAgr" class="retro-btn small" onclick="window.devStartPreset('aggressive')">Prowokator</button>
+                    <button class="retro-btn small danger" onclick="window.devStartPreset('lumberjack')">DRWAL (BOSS)</button>
                 </div>
             </div>
             <div class="dev-section">
@@ -195,7 +196,7 @@
                 <p class="dev-label">SPAWN WROGÓW (DOZWOLEMNI)</p>
                 <div class="dev-control">
                   <label>Dozwoleni:</label>
-                  <select id="devEnemyType" multiple style="background:#333; color:#fff; padding:5px; height:80px;">
+                  <select id="devEnemyType" multiple style="background:#333; color:#fff; padding:5px; height:100px;">
                     <option value="all" selected>Wszyscy</option>
                     <option value="standard">Standard</option>
                     <option value="horde">Horda</option>
@@ -206,6 +207,7 @@
                     <option value="ranged">Ranged</option>
                     <option value="wall">Wall</option>
                     <option value="elite">Elite</option>
+                    <option value="lumberjack">Drwal</option>
                   </select>
                 </div>
                 <div class="dev-control"><label>Rate:</label><input type="number" id="devSpawnRate" step="0.001" value="0.008"></div>

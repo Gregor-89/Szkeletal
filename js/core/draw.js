@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.97w - FULL COMPLETE FILE)
+// DRAW.JS (v0.99 - Dynamic Shadow Offset)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -8,6 +8,7 @@ import { get as getAsset } from '../services/assets.js';
 import { getLang } from '../services/i18n.js';
 import { devSettings } from '../services/dev.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
+import { ENEMY_STATS } from '../config/gameData.js'; // FIX: Import ENEMY_STATS
 
 let backgroundPattern = null;
 let generatedPatternScale = 0;
@@ -48,7 +49,14 @@ function drawBackground(ctx, camera) {
 
 function drawShadow(ctx, x, y, size, visualScale = 1.0, enemyType = 'default') {
     ctx.save();
-    const offsetMult = SHADOW_OFFSETS[enemyType] || SHADOW_OFFSETS['default'];
+    
+    // ZMIANA: Sprawdzamy czy typ wroga ma zdefiniowany shadowOffset w ENEMY_STATS
+    let offsetMult = SHADOW_OFFSETS[enemyType] || SHADOW_OFFSETS['default'];
+    
+    if (ENEMY_STATS[enemyType] && ENEMY_STATS[enemyType].shadowOffset !== undefined) {
+        offsetMult = ENEMY_STATS[enemyType].shadowOffset;
+    }
+    
     const offset = (size * visualScale) * offsetMult;
     ctx.translate(x, y + offset); 
     ctx.scale(1 + (visualScale - 1) * 0.5, 0.3); 
@@ -58,12 +66,16 @@ function drawShadow(ctx, x, y, size, visualScale = 1.0, enemyType = 'default') {
 }
 
 function drawEnemyHealthBar(ctx, e) {
-    if ((e.type !== 'tank' && e.type !== 'elite' && e.type !== 'wall') || !e.showHealthBar) return;
+    if ((e.type !== 'tank' && e.type !== 'elite' && e.type !== 'wall' && e.type !== 'lumberjack') || !e.showHealthBar) return;
+    
     const visualScale = e.visualScale || 1.5;
     const w = 40; const h = 6; const bx = -w / 2;
     const spriteH = e.size * visualScale;
     let yOffsetMod = 0;
-    if (e.type === 'elite') yOffsetMod = 38; else if (e.type === 'wall') yOffsetMod = 44;
+    if (e.type === 'elite') yOffsetMod = 38; 
+    else if (e.type === 'wall') yOffsetMod = 44;
+    else if (e.type === 'lumberjack') yOffsetMod = 20; 
+    
     const by = -(spriteH / 2) - 8 + yOffsetMod;
     ctx.save(); ctx.translate(e.x, e.y);
     ctx.fillStyle = '#300'; ctx.fillRect(bx, by, w, h);
@@ -138,7 +150,6 @@ export function draw(ctx, state, ui, fps) {
             if (obs.type === 'water' || obs.isRuined) {
                 const r = obs.size;
                 if (obs.x + r < cullLeft || obs.x - r > cullRight || obs.y + r < cullTop || obs.y - r > cullBottom) continue;
-                // FIX v0.97w: Przekazujemy 'player' do update (dla fading logic)
                 obs.update(state.dt || 0.016, player); 
                 obs.draw(ctx, player, game.time);
             }
@@ -182,7 +193,6 @@ export function draw(ctx, state, ui, fps) {
             const r = obs.size; 
             if (obs.x + r < cullLeft || obs.x - r > cullRight || obs.y + r < cullTop || obs.y - r > cullBottom) continue;
             
-            // FIX v0.97w: Przekazujemy 'player'
             obs.update(state.dt || 0.016, player);
             renderList.push(obs);
         }

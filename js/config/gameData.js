@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v0.97m - Final Map Tuning)
+// GAMEDATA.JS (v0.99a - User Fine Tuning)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -28,16 +28,12 @@ export const GAME_CONFIG = {
   XP_GROWTH_ADD: 2,
 };
 
-// KONFIGURACJA MAPY v0.97m
 export const MAP_CONFIG = {
   TREES_COUNT: 450,
   ROCKS_COUNT: 250,
   HUTS_COUNT: 45,
   WATER_COUNT: 60,
-  
-  // FIX v0.97m: Zwiększono liczbę kapliczek do 8
   SHRINE_COUNT: 8, 
-  
   SAFE_ZONE_RADIUS: 500,
   
   OBSTACLE_STATS: {
@@ -45,7 +41,6 @@ export const MAP_CONFIG = {
       type: 'tree', 
       variants: 6,
       size: 96,
-      // FIX v0.97m: Max skala 5.0
       minScale: 2.5, 
       maxScale: 5.0, 
       hitboxScale: 0.15, 
@@ -61,7 +56,6 @@ export const MAP_CONFIG = {
       type: 'rock', 
       variants: 6,
       size: 64, 
-      // FIX v0.97m: Skala 1.0 - 3.5
       minScale: 1.0, 
       maxScale: 3.5,
       hitboxScale: 0.8, 
@@ -92,7 +86,6 @@ export const MAP_CONFIG = {
       type: 'water', 
       variants: 6,
       size: 140,      
-      // FIX v0.97m: Max skala 2.2
       minScale: 0.7, 
       maxScale: 2.2,
       hitboxScale: 0.9, 
@@ -186,6 +179,20 @@ export const WEAPON_CONFIG = {
     TRAIL_LIFE: 0.1,
     TRAIL_SPEED: 80,
     TRAIL_INTERVAL: 0.05
+  },
+  LUMBERJACK_AXE: {
+    SPEED: 550,
+    DAMAGE: 25,
+    SIZE: 48, 
+    // To tutaj regulujesz wizualną wielkość ("rozciągnięcie")
+    SPRITE_WIDTH: 40, 
+    SPRITE_HEIGHT: 86,
+    TRAIL_INTERVAL: 0.015, 
+    TRAIL_SIZE: 20,        
+    TRAIL_OFFSET: 40,      
+    TRAIL_OPACITY: 0.35,    
+    ROTATION_SPEED: 8,    
+    IMPACT_PARTICLE_COUNT: 60 
   }
 };
 
@@ -288,7 +295,21 @@ export const ENEMY_STATS = {
   tank: { type: 'tank', hp: 27, speed: 101, size: 108, damage: 5, color: '#F5F5F5', score: 20, xp: 1, drops: BASE_DROP_RATES },
   ranged: { type: 'ranged', hp: 4, speed: 120, size: 54, damage: 5, color: '#795548', score: 15, xp: 1, drops: BASE_DROP_RATES, attackRange: 300, attackCooldown: 1.8, projectileSpeed: WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED, projectileDamage: WEAPON_CONFIG.RANGED_ENEMY_BULLET.DAMAGE },
   elite: { type: 'elite', hp: 48, speed: 130, size: 120, damage: 5, color: '#9C27B0', score: 80, xp: 1, drops: {} },
-  wall: { type: 'wall', hp: 20, speed: 8, size: 88, damage: 15, color: '#9E9E9E', score: 25, xp: 0, drops: {} }
+  wall: { type: 'wall', hp: 20, speed: 8, size: 88, damage: 15, color: '#9E9E9E', score: 25, xp: 0, drops: {} },
+  lumberjack: { 
+    type: 'lumberjack', 
+    hp: 45, 
+    speed: 135, 
+    size: 90, 
+    damage: 10, 
+    color: '#8D6E63', 
+    score: 100, 
+    xp: 2, 
+    drops: {}, 
+    attackRange: 350, 
+    attackCooldown: 2.2,
+    shadowOffset: 0.15 
+  }
 };
 
 export const MUSIC_CONFIG = {
