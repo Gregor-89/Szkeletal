@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v1.03 - Hunger Refill)
+// COLLISIONS.JS (v1.08 - Use Config Offsets)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -73,7 +73,12 @@ export function checkCollisions(state) {
                             const healedAmount = game.health - oldHp;
                             
                             playSound('HealPickup');
-                            addHitText(hitTextPool, hitTexts, player.x, player.y - 50, 0, "#FFD700", "Rzyć umyta, sytość zdobyta", 5.0);
+                            
+                            // Użycie offsetu z konfigu (stats.textOffset)
+                            const shrineTxt = stats.text || "Rzyć umyta, sytość zdobyta";
+                            const offset = stats.textOffset || -85; // Fallback
+                            addHitText(hitTextPool, hitTexts, player.x, player.y - 50, 0, "#FFD700", shrineTxt, 5.0, player, offset);
+                            
                             addHitText(hitTextPool, hitTexts, player.x, player.y - 30, healedAmount, "#00FF00", "+HP", 2.0);
                             
                             for(let k=0; k<20; k++) {

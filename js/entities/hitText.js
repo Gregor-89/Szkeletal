@@ -1,5 +1,5 @@
 // ==============
-// HITTEXT.JS (v0.62 - Nowy plik dla Puli Obiektów)
+// HITTEXT.JS (v0.99 - Offset Support)
 // Lokalizacja: /js/entities/hitText.js
 // ==============
 
@@ -24,19 +24,26 @@ export class HitText {
     this.spawnTime = 0;
     this.overrideText = null;
     this.damage = 0;
+    
+    // Śledzenie celu
+    this.target = null;
+    this.offsetY = -60; // Domyślny offset
   }
   
   /**
    * Inicjalizuje tekst.
+   * Dodano parametr offsetY (domyślnie -60).
    */
-  init(x, y, text, color, life, vy) {
+  init(x, y, text, color, life, vy, target = null, offsetY = -60) {
     this.x = x;
     this.y = y;
     this.text = text;
     this.color = color;
-    this.life = life; // Czas życia w sekundach
+    this.life = life;
     this.maxLife = life;
-    this.vy = vy; // Prędkość pionowa w px/s
+    this.vy = vy;
+    this.target = target;
+    this.offsetY = offsetY; // Zapamiętujemy offset
     this.active = true;
   }
   
@@ -48,23 +55,29 @@ export class HitText {
       this.pool.release(this);
     }
     this.active = false;
-    
-    // Zresetuj właściwości łączenia
     this.spawnTime = 0;
     this.overrideText = null;
     this.damage = 0;
+    this.target = null;
   }
   
   /**
    * Aktualizuje stan (pozycja i czas życia).
    */
   update(dt) {
-    // Zastosuj fizykę opartą na DT
-    this.y += this.vy * dt;
     this.life -= dt;
+    
+    if (this.target) {
+      // FIX: Używamy zapamiętanego offsetY, a nie sztywnej wartości
+      this.x = this.target.x;
+      this.y = this.target.y + this.offsetY;
+    } else {
+      // Standardowe zachowanie (floating up)
+      this.y += this.vy * dt;
+    }
     
     if (this.life <= 0) {
       this.release();
     }
   }
-} 
+}

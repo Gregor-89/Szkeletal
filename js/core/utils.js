@@ -1,11 +1,10 @@
 // ==============
-// UTILS.JS (v0.97m - HitText Duration Support)
+// UTILS.JS (v0.99 - HitText Offset Support)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
-import { EFFECTS_CONFIG } from '../config/gameData.js';
+import { EFFECTS_CONFIG, WORLD_CONFIG } from '../config/gameData.js';
 import { devSettings } from '../services/dev.js'; 
-import { PICKUP_CLASS_MAP } from '../managers/effects.js'; 
 import { getLang } from '../services/i18n.js';
 import { playSound } from '../services/audio.js';
 
@@ -35,8 +34,8 @@ export function findFreeSpotForPickup(pickups, cx, cy, range = 50) {
 
 // --- EFEKTY WIZUALNE I TEKSTOWE ---
 
-// FIX v0.97m: Dodano parametr 'duration' (domyślnie 0.66s)
-export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f', overrideText = null, duration = 0.66) {
+// FIX v0.99: Dodano parametr 'offsetY' (domyślnie -60)
+export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f', overrideText = null, duration = 0.66, target = null, offsetY = -60) {
     const now = performance.now() / 1000;
     let merged = false;
 
@@ -45,17 +44,17 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
         return value.toFixed(0);
     }
     
-    // Mergowanie tylko dla standardowych obrażeń (krótki czas)
-    if (damage > 0 && overrideText === null) {
+    // Mergowanie tylko dla standardowych obrażeń (bez override, bez targetu)
+    if (damage > 0 && overrideText === null && target === null) {
         for (let i = hitTexts.length - 1; i >= 0; i--) {
             const ht = hitTexts[i];
-            if (ht.overrideText === null) {
+            if (ht.overrideText === null && ht.target === null) {
                 const dist = Math.hypot(x - ht.x, y - ht.y);
                 const timeDiff = now - (ht.spawnTime || 0);
                 if (dist < 25 && timeDiff < 0.15) {
                     ht.damage += damage;
                     ht.text = '-' + formatDamage(ht.damage); 
-                    ht.life = duration; // Odśwież życie
+                    ht.life = duration; 
                     ht.vy = -0.8 * 60; 
                     ht.spawnTime = now;
                     merged = true;
@@ -70,8 +69,10 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
         if (ht) {
             const dmgText = (damage >= 0 ? '-' + formatDamage(damage) : '+' + formatDamage(Math.abs(damage)));
             const text = overrideText !== null ? overrideText : dmgText;
-            // Przekazujemy duration do init (5. argument to life)
-            ht.init(x, y - 10, text, color, duration, -0.6 * 60); 
+            
+            // Przekazujemy wszystkie parametry, w tym nowy offsetY
+            ht.init(x, y - 10, text, color, duration, -0.6 * 60, target, offsetY); 
+            
             ht.spawnTime = now;
             ht.overrideText = overrideText;
             ht.damage = damage;
@@ -103,6 +104,8 @@ export function spawnConfetti(particlePool, x, y) {
 
 export function applyPickupSeparation(pickups, canvas) {
     const count = pickups.length;
+    const worldSize = (WORLD_CONFIG && WORLD_CONFIG.SIZE) ? WORLD_CONFIG.SIZE : 24;
+
     for (let i = 0; i < count; i++) {
         const p1 = pickups[i];
         for (let j = i + 1; j < count; j++) {
@@ -119,8 +122,8 @@ export function applyPickupSeparation(pickups, canvas) {
                 p2.x -= pushX; p2.y -= pushY;
             }
         }
-        p1.x = Math.max(10, Math.min(canvas.width * 8 - 10, p1.x));
-        p1.y = Math.max(10, Math.min(canvas.height * 8 - 10, p1.y));
+        p1.x = Math.max(10, Math.min(canvas.width * worldSize - 10, p1.x));
+        p1.y = Math.max(10, Math.min(canvas.height * worldSize - 10, p1.y));
     }
 }
 

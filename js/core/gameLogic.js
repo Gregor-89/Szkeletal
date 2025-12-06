@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v1.04 - Hunger Quote Tuning)
+// GAMELOGIC.JS (v1.08 - Use Config Offsets)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -57,25 +57,42 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         if (game.hunger <= 0) {
             game.starvationTimer += dt;
             
+            if (typeof game.starvationTextCooldown === 'undefined') {
+                game.starvationTextCooldown = 0;
+            }
+            if (game.starvationTextCooldown > 0) {
+                game.starvationTextCooldown -= dt;
+            }
+            
             if (game.starvationTimer >= HUNGER_CONFIG.STARVATION_TICK) {
                 game.health -= HUNGER_CONFIG.STARVATION_DAMAGE;
                 game.starvationTimer = 0;
                 game.playerHitFlashT = 0.1;
                 playSound('PlayerHurt');
-                addHitText(hitTextPool, hitTexts, player.x, player.y - 20, HUNGER_CONFIG.STARVATION_DAMAGE, '#FF5722', "GŁÓD!");
+                
+                // Użycie offsetu z konfigu (HUNGER_CONFIG.TEXT_OFFSET_WARNING)
+                if (game.starvationTextCooldown <= 0) {
+                    addHitText(hitTextPool, hitTexts, player.x, player.y - 20, 
+                        HUNGER_CONFIG.STARVATION_DAMAGE, '#FF5722', "GŁÓD!", 2.0, player, HUNGER_CONFIG.TEXT_OFFSET_WARNING);
+                    game.starvationTextCooldown = 3.0; 
+                }
             }
 
             game.quoteTimer -= dt;
             if (game.quoteTimer <= 0) {
                 const quotes = HUNGER_CONFIG.QUOTES;
                 const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-                // FIX: 5s duration, 8s interval
-                addHitText(hitTextPool, hitTexts, player.x, player.y - 60, 0, '#FFD700', randomQuote, 5.0);
+                
+                // Użycie offsetu z konfigu (HUNGER_CONFIG.TEXT_OFFSET_QUOTE)
+                addHitText(hitTextPool, hitTexts, player.x, player.y - 60, 
+                    0, '#FFD700', randomQuote, 5.0, player, HUNGER_CONFIG.TEXT_OFFSET_QUOTE);
+                    
                 game.quoteTimer = 8.0; 
             }
         } else {
             game.starvationTimer = 0;
             game.quoteTimer = 0;
+            game.starvationTextCooldown = 0;
         }
     }
 

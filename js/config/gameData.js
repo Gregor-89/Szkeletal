@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v1.05 - Hunger Time 15s)
+// GAMEDATA.JS (v1.08 - Text Offsets Exposed)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -30,19 +30,24 @@ export const GAME_CONFIG = {
 
 export const HUNGER_CONFIG = {
   MAX_HUNGER: 100,
-  // ZMIANA: Zmniejszono tempo spadku (15 sekund życia)
   DECAY_RATE: 6.67, 
   STARVATION_DAMAGE: 1, 
   STARVATION_TICK: 1.0, 
   VIGNETTE_COLOR_START: 'rgba(255, 0, 0, 0.0)',
   VIGNETTE_COLOR_END: 'rgba(180, 0, 0, 0.35)', 
   PULSE_SPEED: 4.0, 
+  
+  // EDYCJA: Pozycje tekstów względem gracza (w pikselach, minus to w górę)
+  // Pasek życia jest na pozycji ok. -60
+  TEXT_OFFSET_WARNING: -40, // Gdzie ma być "GŁÓD!" (np. -35 to pod paskiem)
+  TEXT_OFFSET_QUOTE: -65,   // Gdzie mają być cytaty (np. -85 to nad paskiem)
+
   QUOTES: [
     "Ziemniaczki jeść muszę, bo się uduszę!",
-    "Gdy głód doskwiera, to sytość zabiera!",
-    "Gdy nie jem mych pyszności, to braknie mi sytości!",
-    "Dajcie mi pyry albo umrę!",
-    "Kiszkami marsza gram!"
+    "Gdy głód doskwiera, to mi sytość odbiera!",
+    "Gdy nie zjem mych pyszności, to braknie mi sytości!",
+    "Dajcie mnie ziemniaki, bo mam w kiszkach braki!",
+    "Kiszki marsza grają, gdzieś tu się ziemniaczki czają!"
   ]
 };
 
@@ -131,7 +136,10 @@ export const MAP_CONFIG = {
       isSolid: true,    
       canRotate: false,
       cooldown: 120,    
-      healAmount: 100   
+      healAmount: 100,
+      text: "Rzyć umyta, sytość zdobyta",
+      // EDYCJA: Pozycja tekstu kapliczki
+      textOffset: -85 
     }
   }
 };
