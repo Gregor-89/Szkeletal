@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v0.97c - Blue Water Visuals)
+// ENEMY.JS (v1.02 - Dynamic Animation Speed)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -16,7 +16,9 @@ export class Enemy {
         this.type = stats.type || 'standard';
         this.hp = Math.floor(stats.hp * (hpScale || 1));
         this.maxHp = this.hp;
-        this.speed = stats.speed;
+        // Przechowujemy bazową prędkość ze statystyk do obliczeń ratio
+        this.baseSpeed = stats.speed;
+        this.speed = this.baseSpeed;
         this.size = stats.size || 20;
         this.damage = stats.damage;
         this.color = stats.color;
@@ -62,6 +64,26 @@ export class Enemy {
         this.visualScale = 1.54;
     }
     
+    // NOWOŚĆ: Centralna metoda do animacji
+    updateAnimation(dt, currentSpeed) {
+        if (this.totalFrames > 1) {
+            // Obliczamy stosunek aktualnej prędkości do bazowej
+            // Jeśli wróg stoi (0), animacja stoi.
+            // Jeśli wróg szarżuje (200%), animacja jest 2x szybsza.
+            const speedRatio = currentSpeed / this.baseSpeed;
+            
+            // Zabezpieczenie przed dzieleniem przez 0 lub bardzo małymi wartościami
+            const finalRatio = Math.max(0, speedRatio);
+            
+            this.animTimer += dt * finalRatio;
+            
+            if (this.animTimer >= this.frameTime) {
+                this.animTimer = 0;
+                this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
+            }
+        }
+    }
+    
     update(dt, player, game) {
         if (this.isDead) return;
         
@@ -77,18 +99,21 @@ export class Enemy {
             return;
         }
         
+        let currentSpeed = 0; // Do animacji
+        
         if (Math.abs(this.knockback.x) > 0.1 || Math.abs(this.knockback.y) > 0.1) {
             this.x += this.knockback.x * dt;
             this.y += this.knockback.y * dt;
             this.knockback.x *= 0.9;
             this.knockback.y *= 0.9;
+            // Knockback nie wpływa na animację chodzenia (można ewentualnie zatrzymać)
         }
         else if (this.hitStun <= 0) {
             const dx = player.x - this.x;
             const dy = player.y - this.y;
             const dist = Math.hypot(dx, dy);
             
-            let currentSpeed = this.getSpeed(game);
+            currentSpeed = this.getSpeed(game);
             
             if (dist > 0.1) {
                 const randomOffset = Math.sin(game.time * 3 + this.id * 7.3) * 0.15;
@@ -103,13 +128,8 @@ export class Enemy {
             this.y += this.separationY * 1.0 * dt;
         }
         
-        if (this.totalFrames > 1) {
-            this.animTimer += dt;
-            if (this.animTimer >= this.frameTime) {
-                this.animTimer = 0;
-                this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
-            }
-        }
+        // ZMIANA: Użycie nowej metody
+        this.updateAnimation(dt, currentSpeed);
     }
     
     getSeparationRadius() { return (this.size * this.visualScale) * 0.5; }
@@ -148,7 +168,6 @@ export class Enemy {
     
     getSpeed(game) {
         const hazardSlowdown = this.hazardSlowdownT > 0 ? HAZARD_CONFIG.HAZARD_ENEMY_SLOWDOWN_MULTIPLIER : 1;
-        // FIX v0.97c: Spowolnienie w wodzie (50%)
         const waterSlowdown = this.inWater ? 0.5 : 1.0;
         
         return this.speed * (game.freezeT > 0 ? 0.25 : 1) * (1 - (this.hitStun || 0)) * hazardSlowdown * waterSlowdown;
@@ -172,7 +191,6 @@ export class Enemy {
             ctx.filter = 'brightness(0.7) sepia(1) hue-rotate(130deg) saturate(2)';
         }
         else if (this.inWater) {
-            // FIX v0.97c: Niebieski filtr dla wroga w wodzie
             ctx.filter = 'brightness(0.9) sepia(1) hue-rotate(190deg) saturate(3)';
         }
         else if (this.hazardSlowdownT > 0) {

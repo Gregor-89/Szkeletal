@@ -1,5 +1,5 @@
 // ==============
-// DOMELEMENTS.JS (v1.02 - FIX: All Elements Exported)
+// DOMELEMENTS.JS (v1.03 - Hunger Widget Export)
 // Lokalizacja: /js/ui/domElements.js
 // ==============
 
@@ -23,15 +23,19 @@ export const xpBarOuter = document.getElementById('xpBarOuter');
 export const xpBarFill = document.getElementById('xpBarFill');
 export const xpBarTxt = document.getElementById('xpBarTxt');
 
+// NOWOŚĆ: Widget Głodu
+export const hungerWidget = document.getElementById('hungerWidget');
+export const hungerFill = document.getElementById('hungerFill');
+
 export const bonusPanel = document.getElementById('bonusPanel');
 export const gameInfo = document.getElementById('gameInfo');
-export const enemyCountSpan = document.getElementById('enemyCount');
-export const enemyLimitSpan = document.getElementById('enemyLimit');
+export const enemyCountSpan = document.getElementById('enemyCountSpan');
+export const enemyLimitSpan = document.getElementById('enemyLimitSpan');
 export const enemyProgressDiv = document.getElementById('enemyProgress');
 
 // Statystyki (Menu Pauzy i Level Up)
 export const statsDisplay = document.getElementById('statsDisplay');
-export const statsDisplayPause = document.getElementById('statsDisplayPause'); // FIX: Dodano
+export const statsDisplayPause = document.getElementById('statsDisplayPause');
 
 // Kontenery
 export const perksDiv = document.getElementById('perks');
@@ -66,8 +70,6 @@ export const finalTime = document.getElementById('finalTime');
 export const titleDiv = document.getElementById('title');
 export const docTitle = document.title;
 export const introImage = document.getElementById('introImage');
-
-// FIX: Element potwierdzenia dla dev.js
 export const confirmText = document.getElementById('confirmText');
 
 // Joystick

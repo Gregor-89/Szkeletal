@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.00 - Logging for Dev Start)
+// UI.JS (v1.04 - Hunger Alignment Fix)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -14,7 +14,8 @@ import {
     xpBarFill, playerHPBarInner, playerHPBarTxt, xpBarTxt, bonusPanel, 
     statsDisplayPause, menuOverlay, btnContinue, levelUpOverlay, pauseOverlay, 
     resumeOverlay, resumeText, chestOverlay, gameOverOverlay, finalScore, 
-    finalLevel, finalTime, docTitle, enemyCountSpan, enemyLimitSpan 
+    finalLevel, finalTime, docTitle, enemyCountSpan, enemyLimitSpan,
+    hungerWidget, hungerFill 
 } from './domElements.js';
 import { formatTime, saveScore, displayScores, attachClearScoresListeners } from '../services/scoreManager.js';
 import { updateStatsUI } from '../managers/levelManager.js';
@@ -309,10 +310,33 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
 
     if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
     if (hpBarOuterRef) { 
-        if (healthPctBar <= UI_CONFIG.LOW_HEALTH_THRESHOLD && game.health > 0) {
+        // FIX: Dodano warunek na głód do migania paska
+        const isLowHealth = healthPctBar <= UI_CONFIG.LOW_HEALTH_THRESHOLD && game.health > 0;
+        
+        if (isLowHealth) {
             hpBarOuterRef.classList.add('low-health-pulse');
         } else {
             hpBarOuterRef.classList.remove('low-health-pulse');
+        }
+
+        if (game.hunger <= 0) {
+            hpBarOuterRef.classList.add('hp-bar-starving');
+        } else {
+            hpBarOuterRef.classList.remove('hp-bar-starving');
+        }
+    }
+    
+    if (hungerFill) {
+        const hungerPct = Math.max(0, Math.min(1, game.hunger / game.maxHunger));
+        const topCut = (1 - hungerPct) * 100;
+        hungerFill.style.clipPath = `inset(${topCut}% 0 0 0)`;
+    }
+    
+    if (hungerWidget) {
+        if (game.hunger <= 0) {
+            hungerWidget.classList.add('starving');
+        } else {
+            hungerWidget.classList.remove('starving');
         }
     }
     
@@ -355,11 +379,9 @@ export function showMenu(game, resetAll, uiData, allowContinue = false) {
 }
 
 export function startRun(game, resetAll, uiData) {
-    // FIX: Tylko jeśli to NIE jest start bezpośrednio z menu dev, spróbuj przywrócić ostatni scenariusz
     if (devSettings.presetLoaded && !devSettings.justStartedFromMenu) { 
         retryLastScenario(); 
     }
-    // Reset flagi (żeby przy "Jeszcze raz" działało normalnie)
     devSettings.justStartedFromMenu = false;
 
     const startOffset = devStartTime;
@@ -396,7 +418,6 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         uiData.player.reset(worldWidth, worldHeight);
         for (let key in perkLevels) delete perkLevels[key];
     } else {
-        // Jeśli presetLoaded jest true, zachowujemy spawn/maxEnemies ustawione przez dev.js
         game.score = 0; settings.lastFire = 0; settings.lastElite = 0; settings.lastHazardSpawn = 0; settings.lastSiegeEvent = 0; settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
         game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.totalKills = 0; 
         const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
@@ -405,6 +426,9 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     }
     game.magnet = false; game.magnetT = 0; game.shield = false; game.shieldT = 0; game.speedT = 0; game.freezeT = 0; game.shakeT = 0;
     game.shakeMag = 0; game.manualPause = false; game.collisionSlowdown = 0; game.dynamicEnemyLimit = GAME_CONFIG.INITIAL_MAX_ENEMIES;
+    
+    game.hunger = GAME_CONFIG.MAX_HUNGER || 100;
+    
     uiData.enemies.length = 0; uiData.chests.length = 0; uiData.pickups.length = 0; uiData.bombIndicators.length = 0; uiData.hazards.length = 0; 
     if (uiData.siegeSpawnQueue) uiData.siegeSpawnQueue.length = 0;
     if (uiData.bulletsPool) uiData.bulletsPool.releaseAll();
@@ -416,6 +440,7 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     if (uiData.initStarsCallback) uiData.initStarsCallback();
     if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
     if (hpBarOuterRef) hpBarOuterRef.classList.remove('low-health-pulse');
+    if (hpBarOuterRef) hpBarOuterRef.classList.remove('hp-bar-starving');
     bonusPanel.innerHTML = '';
 }
 
@@ -454,6 +479,7 @@ export function gameOver(game, uiData) {
     gameOverOverlay.style.display = 'flex';
     if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
     if (hpBarOuterRef) hpBarOuterRef.classList.remove('low-health-pulse');
+    if (hpBarOuterRef) hpBarOuterRef.classList.remove('hp-bar-starving');
     updateStaticTranslations(); 
 }
 

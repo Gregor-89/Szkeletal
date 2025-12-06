@@ -1,4 +1,4 @@
-/* style.css (v0.97 - Loading Screen) */
+/* style.css (v1.07 - HUD Fixes) */
 
 :root {
     --bg-color: #050505;
@@ -23,11 +23,93 @@ body {
 
 .game-view { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 800px; position: relative; }
 
+/* FIX: Wyrównanie do dołu (flex-end), aby paski były blisko gry */
+.bars-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* To kluczowe - dopycha do dołu */
+    padding: 0 5px;
+    margin-bottom: 2px; /* Minimalny odstęp */
+    min-height: 54px; 
+}
+
+/* FIX: Paski wycentrowane poziomo, ale przyklejone do dołu kontenera */
+.bars-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centrowanie poziome */
+    justify-content: flex-end; /* Centrowanie pionowe do dołu */
+    width: 100%; 
+    z-index: 5;
+    padding-bottom: 2px; /* Mały odstęp od dolnej krawędzi */
+}
+
 #playerHPBarOuter, #xpBarOuter { position: relative; width: 100%; max-width: 300px; height: 16px; background: #222; border: 2px solid #000; margin-bottom: 2px; }
-#xpBarOuter { height: 8px; max-width: 280px; border-color: #444; margin-bottom: 5px; }
+#xpBarOuter { height: 8px; max-width: 280px; border-color: #444; margin-bottom: 0; }
 #playerHPBarInner { height: 100%; background: linear-gradient(90deg, #F44336, #4CAF50); transition: width 0.2s; }
 #xpBarFill { height: 100%; background: #2196F3; transition: width 0.2s; }
 #playerHPBarTxt, #xpBarTxt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; text-shadow: 1px 1px 0 #000; }
+
+/* Widget pozycjonowany absolutnie */
+.hunger-widget {
+    position: absolute;
+    right: 10px;
+    /* Wyśrodkowanie w pionie względem 54px kontenera */
+    top: 50%; 
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    z-index: 10;
+}
+
+.hp-bar-starving {
+    animation: starvingPulse 0.6s infinite alternate;
+    border-color: #FF0000 !important;
+    box-shadow: 0 0 15px #D32F2F;
+}
+
+@keyframes starvingPulse {
+    from { border-color: #FF0000; box-shadow: 0 0 5px #FF0000; }
+    to { border-color: #FF5252; box-shadow: 0 0 20px #FF5252; }
+}
+
+.hunger-icon-bg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: grayscale(100%) brightness(0.5);
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.hunger-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    transition: clip-path 0.2s linear;
+}
+
+.hunger-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.hunger-widget.starving {
+    animation: hungerPulse 0.5s infinite alternate;
+}
+
+@keyframes hungerPulse {
+    from { transform: translateY(-50%) scale(1.0); filter: drop-shadow(0 0 0 red); }
+    to { transform: translateY(-50%) scale(1.1); filter: drop-shadow(0 0 10px red); }
+}
 
 canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; width: 100%; max-width: 800px; height: auto; aspect-ratio: 4/3; image-rendering: pixelated; }
 

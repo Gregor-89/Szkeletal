@@ -26,8 +26,19 @@
 
   <div id="gameContainer">
     <div class="game-view">
-        <div id="playerHPBarOuter"><div id="playerHPBarInner"></div><div id="playerHPBarTxt"></div></div>
-        <div id="xpBarOuter"><div id="xpBarFill"></div><div id="xpBarTxt"></div></div>
+        <div class="bars-container">
+            <div class="bars-left">
+                <div id="playerHPBarOuter"><div id="playerHPBarInner"></div><div id="playerHPBarTxt"></div></div>
+                <div id="xpBarOuter"><div id="xpBarFill"></div><div id="xpBarTxt"></div></div>
+            </div>
+            
+            <div id="hungerWidget" class="hunger-widget" title="Głód Ziemniaczany">
+                <div id="hungerFill" class="hunger-fill">
+                    <img src="img/pickups/gem_potato.png" alt="Potato Hunger" class="hunger-icon">
+                </div>
+                <img src="img/pickups/gem_potato.png" alt="Potato BG" class="hunger-icon-bg">
+            </div>
+        </div>
         
         <div id="bonusPanel"></div>
 
@@ -151,15 +162,15 @@
             <div class="dev-section">
                 <p id="devLblPresets" class="dev-label">PRESETY WROGÓW (AUTO-START)</p>
                 <div class="dev-grid">
-                    <button id="devBtnStd" class="retro-btn small" onclick="window.devStartPreset('standard')">DadGamer</button>
-                    <button id="devBtnHorde" class="retro-btn small" onclick="window.devStartPreset('horde')">Horda</button>
-                    <button id="devBtnRng" class="retro-btn small" onclick="window.devStartPreset('ranged')">Menel</button>
-                    <button id="devBtnTank" class="retro-btn small" onclick="window.devStartPreset('tank')">Szkielet</button>
-                    <button id="devBtnSplit" class="retro-btn small" onclick="window.devStartPreset('splitter')">Wykop</button>
-                    <button id="devBtnTroll" class="retro-btn small" onclick="window.devStartPreset('kamikaze')">Troll</button>
-                    <button id="devBtnWall" class="retro-btn small warning" onclick="window.devStartPreset('wall')">Oblężnik</button>
-                    <button id="devBtnBoss" class="retro-btn small danger" onclick="window.devStartPreset('elite')">ELITA (BOSS)</button>
-                    <button id="devBtnAgr" class="retro-btn small" onclick="window.devStartPreset('aggressive')">Prowokator</button>
+                    <button id="devBtnStd" class="retro-btn small" onclick="window.devStartPreset('standard')">STD</button>
+                    <button id="devBtnHorde" class="retro-btn small" onclick="window.devStartPreset('horde')">HRD</button>
+                    <button id="devBtnRng" class="retro-btn small" onclick="window.devStartPreset('ranged')">RNG</button>
+                    <button id="devBtnTank" class="retro-btn small" onclick="window.devStartPreset('tank')">TANK</button>
+                    <button id="devBtnSplit" class="retro-btn small" onclick="window.devStartPreset('splitter')">SPLIT</button>
+                    <button id="devBtnTroll" class="retro-btn small" onclick="window.devStartPreset('kamikaze')">TROLL</button>
+                    <button id="devBtnWall" class="retro-btn small warning" onclick="window.devStartPreset('wall')">WALL</button>
+                    <button id="devBtnBoss" class="retro-btn small danger" onclick="window.devStartPreset('elite')">BOSS</button>
+                    <button id="devBtnAgr" class="retro-btn small" onclick="window.devStartPreset('aggressive')">AGR</button>
                     <button class="retro-btn small danger" onclick="window.devStartPreset('lumberjack')">DRWAL (BOSS)</button>
                 </div>
             </div>
@@ -176,6 +187,7 @@
                 <p id="devLblPlayer" class="dev-label">STAN GRACZA</p>
                 <div class="dev-control"><label id="lblDevLvl">Level:</label><input type="number" id="devLevel" min="1" max="100" value="1"></div>
                 <div class="dev-control"><label id="lblDevHp">HP:</label><input type="number" id="devHealth" min="1" max="9999" value="100"></div>
+                <div class="dev-control"><label>Max HP:</label><input type="number" id="devMaxHealth" min="1" max="9999" value="100"></div>
                 <div class="dev-control"><label id="lblDevXp">XP:</label><input type="number" id="devXP" min="0" max="9999" value="0"></div>
                 <div class="dev-control"><label id="lblDevGod">God Mode:</label><input type="checkbox" id="devGodMode" style="width:24px; height:24px;"></div>
                 <div class="dev-control"><label id="lblDevHit">Hitboxy:</label><input type="checkbox" id="devDebugHitboxes" style="width:24px; height:24px;"></div>
@@ -205,7 +217,7 @@
                     <option value="splitter">Splitter</option>
                     <option value="tank">Tank</option>
                     <option value="ranged">Ranged</option>
-                    <option value="wall">Wall</option>
+                    <option value="wall">Oblężnik (Wall)</option>
                     <option value="elite">Elite</option>
                     <option value="lumberjack">Drwal</option>
                   </select>

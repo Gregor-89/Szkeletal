@@ -1,13 +1,13 @@
 // ==============
-// GAMEDATA.JS (v0.99a - User Fine Tuning)
+// GAMEDATA.JS (v1.05 - Hunger Time 15s)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
 export const PLAYER_CONFIG = {
-  BASE_SPEED: 432,
+  BASE_SPEED: 240, 
   SIZE: 15,
   INITIAL_HEALTH: 100,
-  INITIAL_PICKUP_RANGE: 24,
+  INITIAL_PICKUP_RANGE: 30,
   HEAL_AMOUNT: 30
 };
 
@@ -24,8 +24,26 @@ export const GAME_CONFIG = {
   INITIAL_MAX_ENEMIES: 3,
   ENEMY_LIMIT_GROWTH_PER_MINUTE: 20,
   INITIAL_XP_NEEDED: 5,
-  XP_GROWTH_FACTOR: 1.4,
+  XP_GROWTH_FACTOR: 1.2, 
   XP_GROWTH_ADD: 2,
+};
+
+export const HUNGER_CONFIG = {
+  MAX_HUNGER: 100,
+  // ZMIANA: Zmniejszono tempo spadku (15 sekund życia)
+  DECAY_RATE: 6.67, 
+  STARVATION_DAMAGE: 1, 
+  STARVATION_TICK: 1.0, 
+  VIGNETTE_COLOR_START: 'rgba(255, 0, 0, 0.0)',
+  VIGNETTE_COLOR_END: 'rgba(180, 0, 0, 0.35)', 
+  PULSE_SPEED: 4.0, 
+  QUOTES: [
+    "Ziemniaczki jeść muszę, bo się uduszę!",
+    "Gdy głód doskwiera, to sytość zabiera!",
+    "Gdy nie jem mych pyszności, to braknie mi sytości!",
+    "Dajcie mi pyry albo umrę!",
+    "Kiszkami marsza gram!"
+  ]
 };
 
 export const MAP_CONFIG = {
@@ -159,7 +177,7 @@ export const HAZARD_CONFIG = {
 export const WEAPON_CONFIG = {
   AUTOGUN: {
     BASE_SPEED: 864,
-    BASE_DAMAGE: 1,
+    BASE_DAMAGE: 7,
     BASE_FIRE_RATE: 650,
     BASE_SIZE: 3,
     SPRITE: 'projectile_venom',
@@ -170,7 +188,7 @@ export const WEAPON_CONFIG = {
     SPRITE_SCALE: 4.0
   },
   RANGED_ENEMY_BULLET: {
-    SPEED: 432,
+    SPEED: 400,
     DAMAGE: 10,
     SIZE: 12,
     SPRITE_WIDTH: 22,
@@ -184,13 +202,12 @@ export const WEAPON_CONFIG = {
     SPEED: 550,
     DAMAGE: 25,
     SIZE: 48, 
-    // To tutaj regulujesz wizualną wielkość ("rozciągnięcie")
     SPRITE_WIDTH: 40, 
     SPRITE_HEIGHT: 86,
     TRAIL_INTERVAL: 0.015, 
     TRAIL_SIZE: 20,        
     TRAIL_OFFSET: 40,      
-    TRAIL_OPACITY: 0.35,    
+    TRAIL_OPACITY: 0.40,
     ROTATION_SPEED: 8,    
     IMPACT_PARTICLE_COUNT: 60 
   }
@@ -221,31 +238,31 @@ export const GEM_CONFIG = {
 
 export const PERK_CONFIG = {
   firerate: { value: 0.80, max: 6 },
-  damage: { value: 1, max: 6 },
+  damage: { value: 2, max: 6 },
   multishot: { value: 1, max: 4 },
   pierce: { value: 1, max: 4 },
   autogun: { max: 1 },
   orbital: {
     max: 5,
-    calculateDamage: (level) => (1 + Math.floor(level / 2)),
+    calculateDamage: (level) => (5 + level * 2),
     calculateRadius: (level) => ((50 + 6 * level) * 2.25),
     calculateSpeed: (level) => (1.2 + 0.2 * level)
   },
   nova: {
     max: 6,
-    calculateDamage: (level) => 4 + (level * 3),
+    calculateDamage: (level) => (15 + level * 5),
     calculateCooldown: (level) => Math.max(0.5, 2.3 - (level * 0.3)),
-    calculateCount: (level) => 8 + (level * 2),
+    calculateCount: (level) => 3 + (level * 2),
     calculatePierce: (level) => 1 + Math.floor(level / 3)
   },
   speed: { value: 1.10, max: 4 },
   pickup: { value: 1.40, max: 3 },
-  health: { value: 20, max: 3 },
+  health: { value: 30, max: 3 },
   whip: {
     max: 5,
     HITBOX_RADIUS: 30,
     calculateCooldown: (level) => (Math.max(1.0, 3.0 - 0.4 * level)),
-    calculateDamage: (level) => (1 + Math.floor(level / 2)),
+    calculateDamage: (level) => (9 + level * 3),
     calculateDrawScale: (level) => (100 + 25 * (level - 1)),
     calculateCount: (level) => {
       const counts = [0, 1, 2, 3, 4, 4];
@@ -256,7 +273,7 @@ export const PERK_CONFIG = {
     max: 6,
     VISUAL_DURATION: 0.25,
     calculateCooldown: (level) => [0, 2.5, 2.3, 2.1, 1.9, 1.7, 1.6][level] || 1.6,
-    calculateDamage: (level) => [0, 1, 2, 2, 3, 3, 4][level] || 4,
+    calculateDamage: (level) => (6 + level * 2),
     calculateTargets: (level) => [0, 1, 2, 3, 4, 5, 6][level] || 6,
   }
 };
@@ -287,21 +304,21 @@ export const EFFECTS_CONFIG = {
 };
 
 export const ENEMY_STATS = {
-  standard: { type: 'standard', hp: 3, speed: 173, size: 60, damage: 5, color: '#D32F2F', score: 10, xp: 1, drops: BASE_DROP_RATES },
-  horde: { type: 'horde', hp: 3, speed: 144, size: 43, damage: 5, color: '#2E7D32', score: 10, xp: 1, drops: BASE_DROP_RATES },
-  aggressive: { type: 'aggressive', hp: 3, speed: 173, size: 52, damage: 5, color: '#E91E63', score: 10, xp: 1, drops: BASE_DROP_RATES },
-  kamikaze: { type: 'kamikaze', hp: 2.4, speed: 158, size: 36, damage: 8, color: '#76FF03', score: 10, xp: 1, drops: BASE_DROP_RATES },
-  splitter: { type: 'splitter', hp: 4, speed: 158, size: 52, damage: 5, color: '#B71C1C', score: 10, xp: 1, drops: BASE_DROP_RATES },
-  tank: { type: 'tank', hp: 27, speed: 101, size: 108, damage: 5, color: '#F5F5F5', score: 20, xp: 1, drops: BASE_DROP_RATES },
-  ranged: { type: 'ranged', hp: 4, speed: 120, size: 54, damage: 5, color: '#795548', score: 15, xp: 1, drops: BASE_DROP_RATES, attackRange: 300, attackCooldown: 1.8, projectileSpeed: WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED, projectileDamage: WEAPON_CONFIG.RANGED_ENEMY_BULLET.DAMAGE },
-  elite: { type: 'elite', hp: 48, speed: 130, size: 120, damage: 5, color: '#9C27B0', score: 80, xp: 1, drops: {} },
-  wall: { type: 'wall', hp: 20, speed: 8, size: 88, damage: 15, color: '#9E9E9E', score: 25, xp: 0, drops: {} },
+  standard: { type: 'standard', hp: 10, speed: 105, size: 60, damage: 10, color: '#D32F2F', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  horde: { type: 'horde', hp: 8, speed: 95, size: 43, damage: 8, color: '#2E7D32', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  aggressive: { type: 'aggressive', hp: 15, speed: 130, size: 52, damage: 12, color: '#E91E63', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  kamikaze: { type: 'kamikaze', hp: 5, speed: 150, size: 36, damage: 25, color: '#76FF03', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  splitter: { type: 'splitter', hp: 12, speed: 140, size: 52, damage: 10, color: '#B71C1C', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  tank: { type: 'tank', hp: 100, speed: 70, size: 108, damage: 15, color: '#F5F5F5', score: 20, xp: 1, drops: BASE_DROP_RATES },
+  ranged: { type: 'ranged', hp: 12, speed: 110, size: 54, damage: 10, color: '#795548', score: 15, xp: 1, drops: BASE_DROP_RATES, attackRange: 300, attackCooldown: 1.8, projectileSpeed: WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED, projectileDamage: WEAPON_CONFIG.RANGED_ENEMY_BULLET.DAMAGE },
+  elite: { type: 'elite', hp: 350, speed: 115, size: 120, damage: 15, color: '#9C27B0', score: 80, xp: 1, drops: {} },
+  wall: { type: 'wall', hp: 200, speed: 8, size: 88, damage: 20, color: '#9E9E9E', score: 25, xp: 0, drops: {} },
   lumberjack: { 
     type: 'lumberjack', 
-    hp: 45, 
-    speed: 135, 
+    hp: 400, 
+    speed: 120, 
     size: 90, 
-    damage: 10, 
+    damage: 20, 
     color: '#8D6E63', 
     score: 100, 
     xp: 2, 

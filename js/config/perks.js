@@ -1,5 +1,5 @@
 // ==============
-// PERKS.JS (v0.94t - FIX: Verify Weapon Req)
+// PERKS.JS (v1.02 - Full Integrity Check)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
@@ -31,9 +31,9 @@ export const perkPool = [
     icon: 'icon_firerate',
     emoji: '⏩',
     color: '#FFFF00',
-    value: 0.85,
+    value: 0.85, // -15% cooldownu
     max: 6,
-    requiresWeapon: 'AutoGun', // WYMÓG
+    requiresWeapon: 'AutoGun',
     apply: (state, perk) => {
        const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
        if (w) {
@@ -50,9 +50,9 @@ export const perkPool = [
     icon: 'icon_damage',
     emoji: '💥',
     color: '#FF0000',
-    value: 1,
+    value: 2, // +2 DMG (Reforged Balance)
     max: 6,
-    requiresWeapon: 'AutoGun', // WYMÓG
+    requiresWeapon: 'AutoGun',
     apply: (state, perk) => {
        const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
        if (w) {
@@ -71,7 +71,7 @@ export const perkPool = [
     color: '#00FFFF',
     value: 1,
     max: 4,
-    requiresWeapon: 'AutoGun', // WYMÓG
+    requiresWeapon: 'AutoGun',
     apply: (state, perk) => {
        const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
        if(w) w.multishot += perk.value;
@@ -87,7 +87,7 @@ export const perkPool = [
     color: '#FF00FF',
     value: 1,
     max: 4,
-    requiresWeapon: 'AutoGun', // WYMÓG
+    requiresWeapon: 'AutoGun',
     apply: (state, perk) => {
        const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
        if(w) w.pierce += perk.value;
@@ -123,7 +123,7 @@ export const perkPool = [
     icon: 'icon_nova',
     emoji: '💫',
     color: '#FF5722',
-    max: 5,
+    max: 6, // Zgodnie z nowym balansem
     apply: (state, perk) => {
        import('../config/weapons/novaWeapon.js').then(module => {
            const NovaWeapon = module.NovaWeapon;
@@ -217,7 +217,7 @@ export const perkPool = [
     icon: 'icon_health',
     emoji: '❤️',
     color: '#E91E63',
-    value: 20,
+    value: 30, // +30 HP (Reforged Balance)
     max: 3,
     apply: (state, perk) => {
        state.game.maxHealth += perk.value;

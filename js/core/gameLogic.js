@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v0.99 - Spiral Trail Fix)
+// GAMELOGIC.JS (v1.04 - Hunger Quote Tuning)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -13,9 +13,11 @@ import {
     getAvailableEnemyTypes 
 } from '../managers/enemyManager.js'; 
 import { spawnHazard } from '../managers/effects.js';
-import { applyPickupSeparation, spawnConfetti } from './utils.js'; 
+import { applyPickupSeparation, spawnConfetti, addHitText } from './utils.js'; 
 import { checkCollisions } from '../managers/collisions.js';
-import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG, GAME_CONFIG, WEAPON_CONFIG } from '../config/gameData.js';
+import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG, GAME_CONFIG, WEAPON_CONFIG, HUNGER_CONFIG } from '../config/gameData.js';
+import { playSound } from '../services/audio.js';
+import { devSettings } from '../services/dev.js';
 
 export function updateCamera(player, camera, canvasWidth, canvasHeight) {
     player.x = Math.max(player.size / 2, Math.min(camera.worldWidth - player.size / 2, player.x));
@@ -38,7 +40,7 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         player, game, settings, canvas,
         enemies, eBullets, bullets, gems, pickups, stars,
         particles, hitTexts, chests, particlePool, hazards,
-        obstacles 
+        obstacles, hitTextPool 
     } = state;
 
     if (game.paused) return;
@@ -48,6 +50,34 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
 
     player.update(dt, game, keys, jVec(), camera); 
     updateCamera(player, camera, canvas.width, canvas.height);
+
+    if (!devSettings.godMode) {
+        game.hunger = Math.max(0, game.hunger - (HUNGER_CONFIG.DECAY_RATE * dt));
+
+        if (game.hunger <= 0) {
+            game.starvationTimer += dt;
+            
+            if (game.starvationTimer >= HUNGER_CONFIG.STARVATION_TICK) {
+                game.health -= HUNGER_CONFIG.STARVATION_DAMAGE;
+                game.starvationTimer = 0;
+                game.playerHitFlashT = 0.1;
+                playSound('PlayerHurt');
+                addHitText(hitTextPool, hitTexts, player.x, player.y - 20, HUNGER_CONFIG.STARVATION_DAMAGE, '#FF5722', "GŁÓD!");
+            }
+
+            game.quoteTimer -= dt;
+            if (game.quoteTimer <= 0) {
+                const quotes = HUNGER_CONFIG.QUOTES;
+                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                // FIX: 5s duration, 8s interval
+                addHitText(hitTextPool, hitTexts, player.x, player.y - 60, 0, '#FFD700', randomQuote, 5.0);
+                game.quoteTimer = 8.0; 
+            }
+        } else {
+            game.starvationTimer = 0;
+            game.quoteTimer = 0;
+        }
+    }
 
     if (game.magnet) { game.magnetT -= dt; if (game.magnetT <= 0) game.magnet = false; }
     if (game.shield) { game.shieldT -= dt; if (game.shieldT <= 0) game.shield = false; }
@@ -198,17 +228,11 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
                 if (p) {
                      const hue = (game.time * 800) % 360; 
                      const opacity = axeConfig.TRAIL_OPACITY || 0.25;
-                     // HSLA dla przezroczystości
                      const rainbowColor = `hsla(${hue}, 100%, 60%, ${opacity})`;
-                     
-                     const size = axeConfig.TRAIL_SIZE || 22; // Większy rozmiar
+                     const size = axeConfig.TRAIL_SIZE || 22; 
                      const offset = axeConfig.TRAIL_OFFSET || 40;
-                     
-                     // OBLICZANIE POZYCJI SPIRALI (Ostrze siekiery)
-                     // Uwzględniamy rotację. -PI/2 bo grafika siekiery zwykle ma ostrze u góry
                      const trailX = eb.x + Math.cos(eb.rotation - Math.PI/2) * offset;
                      const trailY = eb.y + Math.sin(eb.rotation - Math.PI/2) * offset;
-                     
                      p.init(trailX, trailY, 0, 0, 0.4, rainbowColor, 0, 1.0, size);
                 }
             }

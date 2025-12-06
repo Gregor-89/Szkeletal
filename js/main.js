@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.97h - Splash Screen Race Fix)
+// MAIN.JS (v1.03 - Hunger Logic & Syntax Fix)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -7,7 +7,8 @@ import './services/i18n.js';
 
 import { ObjectPool } from './core/objectPool.js';
 import { Player } from './entities/player.js';
-import { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG } from './config/gameData.js';
+// ZMIANA: Import HUNGER_CONFIG
+import { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG, HUNGER_CONFIG } from './config/gameData.js';
 import { draw } from './core/draw.js';
 
 import { updateUI, resumeGame, showMenu, startRun, resetAll, gameOver, pauseGame, updateEnemyCounter } from './ui/ui.js';
@@ -70,7 +71,12 @@ const game={
   dynamicEnemyLimit: GAME_CONFIG.INITIAL_MAX_ENEMIES, 
   introSeen: false,
   isDying: false,
-  totalKills: 0 
+  totalKills: 0,
+  // ZMIANA: Inicjalizacja zmiennych głodu
+  hunger: HUNGER_CONFIG.MAX_HUNGER,
+  maxHunger: HUNGER_CONFIG.MAX_HUNGER,
+  starvationTimer: 0,
+  quoteTimer: 0
 };
 
 const settings={ 

@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v0.99 - Dynamic Shadow Offset)
+// DRAW.JS (v1.01 - Hunger Vignette)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -8,7 +8,7 @@ import { get as getAsset } from '../services/assets.js';
 import { getLang } from '../services/i18n.js';
 import { devSettings } from '../services/dev.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
-import { ENEMY_STATS } from '../config/gameData.js'; // FIX: Import ENEMY_STATS
+import { ENEMY_STATS, HUNGER_CONFIG } from '../config/gameData.js'; // Dodano HUNGER_CONFIG
 
 let backgroundPattern = null;
 let generatedPatternScale = 0;
@@ -17,7 +17,8 @@ const renderList = [];
 
 const SHADOW_OFFSETS = {
     'aggressive': 0.24, 'ranged': 0.25, 'elite': 0.24, 'wall': 0.25,       
-    'kamikaze': 0.52, 'horde': 0.49, 'player': 0.42, 'default': 0.45     
+    'kamikaze': 0.52, 'horde': 0.49, 'player': 0.42, 'default': 0.45,
+    'lumberjack': 0.12 
 };
 
 function drawBackground(ctx, camera) {
@@ -50,7 +51,6 @@ function drawBackground(ctx, camera) {
 function drawShadow(ctx, x, y, size, visualScale = 1.0, enemyType = 'default') {
     ctx.save();
     
-    // ZMIANA: Sprawdzamy czy typ wroga ma zdefiniowany shadowOffset w ENEMY_STATS
     let offsetMult = SHADOW_OFFSETS[enemyType] || SHADOW_OFFSETS['default'];
     
     if (ENEMY_STATS[enemyType] && ENEMY_STATS[enemyType].shadowOffset !== undefined) {
@@ -113,6 +113,32 @@ function drawEnemyWarning(ctx, game, canvas) {
         ctx.strokeText(text, x, y); ctx.fillText(text, x, y);
         ctx.restore();
     }
+}
+
+// NOWOŚĆ: Funkcja rysująca winietę głodu
+function drawHungerVignette(ctx, game, canvas) {
+    if (game.hunger > 0 || game.isDying) return;
+
+    ctx.save();
+    
+    // Pulsująca przezroczystość
+    const pulse = (Math.sin(game.time * HUNGER_CONFIG.PULSE_SPEED) + 1) / 2; // 0.0 - 1.0
+    // Interpolacja między minimalną a maksymalną przezroczystością
+    // Używamy prostego mnożnika alpha na całym gradiencie
+    const alpha = 0.3 + (pulse * 0.2); // Pulsowanie 0.3 - 0.5
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const radius = Math.max(canvas.width, canvas.height) * 0.8;
+
+    const grad = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius);
+    grad.addColorStop(0, 'rgba(255, 0, 0, 0)'); // Środek przezroczysty
+    grad.addColorStop(1, `rgba(180, 0, 0, ${alpha})`); // Krawędzie czerwone
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.restore();
 }
 
 export function draw(ctx, state, ui, fps) {
@@ -333,6 +359,9 @@ export function draw(ctx, state, ui, fps) {
         if (progress > 0.5) { ctx.fillStyle = `rgba(0, 0, 0, ${(progress - 0.5) * 2})`; ctx.fillRect(0, 0, canvas.width, canvas.height); }
         ctx.restore();
     }
+
+    // NOWOŚĆ: Wywołanie winiety głodu
+    drawHungerVignette(ctx, game, canvas);
 
     drawEnemyWarning(ctx, game, canvas);
     drawIndicators(ctx, state);

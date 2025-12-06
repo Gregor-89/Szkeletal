@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v0.99 - Rainbow Splash)
+// COLLISIONS.JS (v1.03 - Hunger Refill)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -16,7 +16,6 @@ function spawnRainbowSplash(particlePool, x, y, count = 20) {
     for(let k=0; k<count; k++) {
         const p = particlePool.get();
         if(p) {
-            // Każda cząsteczka ma losowy kolor z tęczy
             const hue = Math.random() * 360;
             const color = `hsl(${hue}, 100%, 60%)`;
             p.init(
@@ -292,8 +291,6 @@ export function checkCollisions(state) {
                     const destroyed = obs.takeDamage(b.damage, 'player');
                     addHitText(hitTextPool, hitTexts, obs.x, obs.y - 20, b.damage, '#fff');
                     playSound('Hit');
-                    
-                    // ZMIANA: Tęczowy rozbryzg (gdy pocisk siekiery trafi w przeszkodę)
                     if (b.type === 'axe') {
                          const count = WEAPON_CONFIG.LUMBERJACK_AXE.IMPACT_PARTICLE_COUNT || 30;
                          spawnRainbowSplash(particlePool, b.x, b.y, count);
@@ -301,7 +298,6 @@ export function checkCollisions(state) {
                          const p = particlePool.get();
                          if (p) p.init(b.x, b.y, Math.random()*100-50, Math.random()*100-50, 0.3, '#5D4037', 0, 0.9, 3);
                     }
-                    
                     if (destroyed) {
                         spawnConfetti(particlePool, obs.x, obs.y);
                         playSound('Explosion');
@@ -386,19 +382,15 @@ export function checkCollisions(state) {
                 game.playerHitFlashT = 0.1;
                 addHitText(hitTextPool, hitTexts, player.x, player.y, eb.damage, '#FF0000');
                 playSound('PlayerHurt');
-                
-                // ZMIANA: Tęczowy rozbryzg gdy siekiera trafi gracza
                 if (eb.type === 'axe') {
                      const count = WEAPON_CONFIG.LUMBERJACK_AXE.IMPACT_PARTICLE_COUNT || 30;
                      spawnRainbowSplash(particlePool, eb.x, eb.y, count);
                 }
-
                 eb.release(); 
             }
         }
     }
-    
-    // ... (reszta bez zmian, aby nie skracać)
+
     const collectionRadius = 35;
     for (let i = gems.length - 1; i >= 0; i--) {
         const g = gems[i];
@@ -412,6 +404,10 @@ export function checkCollisions(state) {
         if (dist < collectionRadius + g.r) {
             const collectedXP = Math.floor(g.val * (game.level >= 20 ? 1.2 : 1));
             game.xp += collectedXP; 
+            
+            // ZMIANA: Odnawianie głodu
+            game.hunger = game.maxHunger;
+            
             playSound('XPPickup');
             g.collect(); 
         }

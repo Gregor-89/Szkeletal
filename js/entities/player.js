@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v0.97c - Blue Water Visuals)
+// PLAYER.JS (v1.02 - Analog Animation Speed)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -115,48 +115,64 @@ export class Player {
             dy = jVec.y;
         }
 
+        // ZMIANA: Obliczanie siły wejścia (0.0 - 1.0)
+        let inputMagnitude = 0;
+
         if (dx !== 0 || dy !== 0) {
-            const len = Math.hypot(dx, dy);
-            if (len > 1) { dx /= len; dy /= len; }
+            inputMagnitude = Math.hypot(dx, dy);
+            // Normalizacja wektora ruchu, ale zachowanie siły wejścia
+            if (inputMagnitude > 1) { 
+                dx /= inputMagnitude; 
+                dy /= inputMagnitude; 
+                inputMagnitude = 1; // Cap na 1.0
+            }
             this.isMoving = true;
             if (dx !== 0) this.facingDir = Math.sign(dx);
         } else {
             this.isMoving = false;
         }
         
-        let currentSpeed = this.baseSpeed * this.speedMultiplier;
+        let maxCurrentSpeed = this.baseSpeed * this.speedMultiplier;
 
         if (game.collisionSlowdown > 0) {
-            currentSpeed *= (1 - game.collisionSlowdown);
+            maxCurrentSpeed *= (1 - game.collisionSlowdown);
             game.collisionSlowdown = Math.max(0, game.collisionSlowdown - dt * 2.0);
         }
 
         if (game.playerInHazard) {
-            currentSpeed *= (HAZARD_CONFIG.SLOWDOWN_MULTIPLIER || 0.5);
+            maxCurrentSpeed *= (HAZARD_CONFIG.SLOWDOWN_MULTIPLIER || 0.5);
         }
         
-        // FIX v0.97c: Spowolnienie w wodzie
         if (game.playerInWater) {
-            currentSpeed *= 0.5; // Stałe spowolnienie 50%
+            maxCurrentSpeed *= 0.5; 
         }
         
         if (game.speedT > 0) {
-            currentSpeed *= 1.4;
+            maxCurrentSpeed *= 1.4;
         }
 
-        this.x += dx * currentSpeed * dt;
-        this.y += dy * currentSpeed * dt;
+        // Faktyczna prędkość w tej klatce (uwzględnia analogowe wychylenie)
+        const actualSpeed = maxCurrentSpeed * inputMagnitude;
 
-        this.updateAnimation(dt);
+        this.x += dx * actualSpeed * dt;
+        this.y += dy * actualSpeed * dt;
+
+        // Przekazujemy FAKTYCZNĄ prędkość do animacji
+        this.updateAnimation(dt, actualSpeed);
     }
 
-    updateAnimation(dt) {
+    updateAnimation(dt, actualSpeed) {
         if (!this.spriteSheet) {
             this.spriteSheet = getAsset('player_spritesheet') || getAsset('drakul') || getAsset('player');
         }
         
         if (this.isMoving) {
-            this.animTimer += dt;
+            // ZMIANA: Ratio bazuje na actualSpeed (0..max) vs baseSpeed
+            // Dzięki temu lekki ruch joystickiem = wolne przebieranie nogami
+            const speedRatio = actualSpeed / this.baseSpeed;
+            
+            this.animTimer += dt * speedRatio;
+            
             if (this.animTimer >= this.frameTime) {
                 this.animTimer = 0;
                 this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
@@ -186,7 +202,6 @@ export class Player {
             ctx.filter = 'brightness(0.7) sepia(1) hue-rotate(130deg) saturate(2)';
         }
         else if (game.playerInWater) {
-            // FIX v0.97c: Niebieski filtr dla wody (Hue 190deg + Saturation 3)
             ctx.filter = 'brightness(0.9) sepia(1) hue-rotate(190deg) saturate(3)';
         }
         else if (game.playerInHazard) {

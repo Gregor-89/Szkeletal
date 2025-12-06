@@ -1,5 +1,5 @@
 // ==============
-// PICKUP.JS (v0.95 - FIX: Hazard Decay Visuals + Full Logic)
+// PICKUP.JS (v1.02 - NaN & Visibility Fix)
 // Lokalizacja: /js/entities/pickup.js
 // ==============
 
@@ -7,9 +7,6 @@ import { getPickupEmoji, getPickupColor, getPickupLabel } from '../core/utils.js
 import { get as getAsset } from '../services/assets.js';
 import { PICKUP_CONFIG } from '../config/gameData.js';
 
-/**
- * Mapa kolorów poświaty dla poszczególnych typów pickupów.
- */
 const PICKUP_GLOWS = {
   'heal': 'rgba(255, 255, 255, 1.0)', 
   'magnet': 'rgba(255, 0, 0, 1.0)', 
@@ -21,23 +18,21 @@ const PICKUP_GLOWS = {
   'default': 'rgba(255, 255, 255, 0.8)'
 };
 
-/**
- * Klasa bazowa dla wszystkich pickupów (bonusów).
- */
 export class Pickup {
   constructor(x, y, type) {
     this.x = x;
     this.y = y;
     this.type = type;
     this.r = 12; 
-    this.life = PICKUP_CONFIG.BASE_LIFE; 
+    
+    // FIX: Strong fallback. If config fails, 14s.
+    const cfgLife = (PICKUP_CONFIG && PICKUP_CONFIG.BASE_LIFE);
+    this.life = (typeof cfgLife === 'number' && cfgLife > 0) ? cfgLife : 14;
+    
     this.pulsePhase = Math.random() * Math.PI * 2;
-    
-    // Zmienna śledząca czas przebywania w hazardzie (do efektu tonięcia)
     this.inHazardDecayT = 0; 
-    
     this.floatOffset = Math.random() * 100;
-    this.isMagnetized = false; // Dodano dla zgodności z collisions.js
+    this.isMagnetized = false; 
   }
   
   isDecayed() {
@@ -51,7 +46,6 @@ export class Pickup {
   update(dt, player) {
     this.life -= dt;
     
-    // Logika magnesu (dodana dla kompletności z collisions.js)
     if (this.isMagnetized) {
         const dx = player.x - this.x;
         const dy = player.y - this.y;
@@ -70,19 +64,18 @@ export class Pickup {
   draw(ctx, pickupStyleEmoji, pickupShowLabels) {
     ctx.save();
     
-    // 1. Efekt migania przed zniknięciem (czas życia)
     if (this.life < 4) {
       ctx.globalAlpha = (Math.floor(performance.now() / 150) % 2 === 0) ? 0.3 : 1;
     }
     
-    // 2. Efekt tonięcia w bagnie (Hazard Decay)
-    // Zmniejszamy alpha
-    const decayAlpha = 1.0 - this.inHazardDecayT;
-    ctx.globalAlpha *= decayAlpha; 
+    // FIX: NaN check for decay alpha
+    let decayT = this.inHazardDecayT || 0;
+    if (isNaN(decayT)) decayT = 0;
+    const decayAlpha = 1.0 - decayT;
+    ctx.globalAlpha *= Math.max(0, Math.min(1, decayAlpha)); 
     
-    // Zmniejszamy skalę (efekt wciągania)
-    if (this.inHazardDecayT > 0) {
-        const scale = 1.0 - (this.inHazardDecayT * 0.5);
+    if (decayT > 0) {
+        const scale = 1.0 - (decayT * 0.5);
         ctx.translate(this.x, this.y);
         ctx.scale(scale, scale);
         ctx.translate(-this.x, -this.y);
@@ -90,7 +83,6 @@ export class Pickup {
     
     const pulseScale = 1 + 0.1 * Math.sin(performance.now() / 200 + this.pulsePhase);
     
-    // Obsługa assetu
     const assetKey = (this.type === 'chest') ? 'chest' : 'pickup_' + this.type;
     const sprite = getAsset(assetKey);
     
@@ -98,7 +90,6 @@ export class Pickup {
       const baseSize = 48;
       const size = baseSize * pulseScale;
       
-      // Pływanie góra-dół
       const floatY = Math.sin((performance.now() / 500) + this.floatOffset) * 4;
       
       const aspect = sprite.naturalWidth / sprite.naturalHeight;
@@ -111,18 +102,15 @@ export class Pickup {
         drawW = size * aspect;
       }
       
-      // Cień (Elipsa pod spodem)
       ctx.fillStyle = 'rgba(0,0,0,0.4)';
       ctx.beginPath();
       ctx.ellipse(this.x, this.y + 16, drawW / 2, 6, 0, 0, Math.PI * 2); 
       ctx.fill();
       
-      // Glow (Poświata)
       const glowColor = PICKUP_GLOWS[this.type] || PICKUP_GLOWS['default'];
       ctx.shadowColor = glowColor;
       ctx.shadowBlur = 40; 
       
-      // Rysowanie Sprite'a
       ctx.drawImage(sprite,
         this.x - drawW / 2,
         (this.y - drawH / 2) + floatY,
@@ -133,7 +121,6 @@ export class Pickup {
       ctx.shadowBlur = 0;
       
     } else {
-      // Fallback (stara logika renderowania bez grafik)
       const radius = this.r * pulseScale;
       if (pickupStyleEmoji) {
         ctx.shadowBlur = 8; ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.font = (radius * 2.2) + 'px Arial';
@@ -148,10 +135,8 @@ export class Pickup {
       }
     }
     
-    // Podpisy (Labels)
     if (pickupShowLabels) {
-      // Etykieta też zanika
-      ctx.globalAlpha = (this.life < 4 ? (Math.floor(performance.now() / 150) % 2 === 0 ? 0.3 : 1) : 1.0) * decayAlpha;
+      ctx.globalAlpha = (this.life < 4 ? (Math.floor(performance.now() / 150) % 2 === 0 ? 0.3 : 1) : 1.0) * Math.max(0, decayAlpha);
       
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 12px Arial'; 
