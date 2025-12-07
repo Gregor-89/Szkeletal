@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.04 - Hunger Alignment Fix)
+// UI.JS (v1.09 - Final Tutorial Pause Fix)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -106,6 +106,26 @@ const STATIC_TRANSLATION_MAP = {
     'btnIntroSkip': 'ui_intro_skip'
 };
 
+function updateTutorialTexts() {
+    const tutTitle = document.getElementById('tutTitle');
+    const tutIntro = document.getElementById('tutIntro');
+    const tutList = document.getElementById('tutList');
+    const btnClose = document.getElementById('btnCloseTutorial');
+    
+    if (tutTitle) tutTitle.textContent = getLang('ui_tutorial_title');
+    if (tutIntro) tutIntro.textContent = getLang('ui_tutorial_intro');
+    if (btnClose) btnClose.textContent = getLang('ui_tutorial_btn_close');
+    
+    if (tutList) {
+        tutList.innerHTML = `
+            <li style="margin-bottom:12px;">🕹️ <b>${getLang('ui_tutorial_ctrl_title')}</b><br>${getLang('ui_tutorial_ctrl_desc')}</li>
+            <li style="margin-bottom:12px;">🥔 <b>${getLang('ui_tutorial_hunger_title')}</b><br>${getLang('ui_tutorial_hunger_desc')}</li>
+            <li style="margin-bottom:12px;">📈 <b>${getLang('ui_tutorial_prog_title')}</b><br>${getLang('ui_tutorial_prog_desc')}</li>
+            <li>☠️ <b>${getLang('ui_tutorial_boss_title')}</b><br>${getLang('ui_tutorial_boss_desc')}</li>
+        `;
+    }
+}
+
 export function updateStaticTranslations() {
     for (const [id, key] of Object.entries(STATIC_TRANSLATION_MAP)) {
         const el = document.getElementById(id);
@@ -114,6 +134,8 @@ export function updateStaticTranslations() {
             if (text && !text.startsWith('[')) el.innerText = text; 
         }
     }
+    
+    updateTutorialTexts();
     
     const backText = getLang('ui_nav_back') || 'POWRÓT';
     document.querySelectorAll('.nav-back').forEach(el => el.innerText = backText);
@@ -203,6 +225,32 @@ export function initRetroToggles(game, uiData) {
             setJoystickSide(currentJoyMode);
             playSound('Click');
         });
+    }
+
+    const overlay = document.getElementById('tutorialOverlay');
+    const btnClose = document.getElementById('btnCloseTutorial');
+    const btnShowTutorial = document.getElementById('btnShowTutorialConfig');
+
+    if (btnClose && overlay) {
+        btnClose.onclick = () => {
+            overlay.style.display = 'none';
+            // FIX: Wznów grę TYLKO jeśli nie jesteśmy w menu głównym (gra faktycznie trwa)
+            if (!game.inMenu) {
+                game.paused = false;
+            }
+            playSound('Click');
+            localStorage.setItem('szkeletal_tutorial_seen', 'true');
+        };
+    }
+
+    if (btnShowTutorial && overlay) {
+        btnShowTutorial.onclick = () => {
+            overlay.style.display = 'flex';
+            updateTutorialTexts();
+            playSound('Click');
+            // FIX: ZAWSZE wymuś pauzę przy ręcznym otwarciu (żeby gra nie "toczyła się pod spodem")
+            game.paused = true;
+        };
     }
 
     const volMusic = document.getElementById('volMusic');
@@ -388,7 +436,14 @@ export function startRun(game, resetAll, uiData) {
     resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); 
     uiData.savedGameState = null;
     menuOverlay.style.display = 'none';
-    game.inMenu = false; game.paused = false; game.running = true;
+    
+    // Inicjalizacja dźwięku i pętli
+    initAudio(); playSound('MusicGameplay');
+    if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
+
+    game.inMenu = false; 
+    game.running = true;
+    
     const currentTime = performance.now();
     game.time = startOffset; 
     uiData.startTime = currentTime - startOffset * 1000;
@@ -399,8 +454,19 @@ export function startRun(game, resetAll, uiData) {
     
     console.log("[UI] startRun: Gra uruchomiona.", { time: game.time, enemies: devSettings.allowedEnemies });
 
-    initAudio(); playSound('MusicGameplay');
-    if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
+    // --- SAMOUCZEK (Auto-Start) ---
+    const tutorialSeen = localStorage.getItem('szkeletal_tutorial_seen');
+    if (!tutorialSeen) {
+        const overlay = document.getElementById('tutorialOverlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            // Wypełnij tekstem
+            updateTutorialTexts();
+            game.paused = true; 
+        }
+    } else {
+        game.paused = false; 
+    }
 }
 
 export function resetAll(canvas, settings, perkLevels, uiData, camera) {

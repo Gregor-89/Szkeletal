@@ -24,6 +24,19 @@
     <img id="splashImage" src="img/splash_dev.png" alt="Ekran powitalny">
   </div>
 
+  <div id="tutorialOverlay" class="retro-overlay" style="display:none;">
+    <div class="retro-frame small text-center">
+      <h2 id="tutTitle" class="retro-title"></h2>
+      <div class="retro-scroll-box" style="text-align:left; font-size:1.3rem; line-height:1.4;">
+        <p id="tutIntro" style="color:#FFD700; margin-bottom:15px; text-align:center;"></p>
+        
+        <ul id="tutList" style="list-style:none; padding:0;">
+          </ul>
+      </div>
+      <button id="btnCloseTutorial" class="retro-btn primary pulse"></button>
+    </div>
+  </div>
+
   <div id="gameContainer">
     <div class="game-view">
         <div class="bars-container">
@@ -131,6 +144,11 @@
             </div>
 
             <div class="config-row"><span id="lblLang">JĘZYK</span><div id="lang-selector-container" class="retro-lang-row"></div></div>
+            
+            <div class="config-row">
+                <span>SAMOUCZEK</span>
+                <button id="btnShowTutorialConfig" class="retro-btn small">ODTWÓRZ</button>
+            </div>
         </div>
         <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
       </div>

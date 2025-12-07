@@ -1,5 +1,5 @@
 // ==============
-// ORBITALWEAPON.JS (v0.94i - FIX: Independent Collision Logic)
+// ORBITALWEAPON.JS (v0.98c - Balance Nerf)
 // Lokalizacja: /js/config/weapons/orbitalWeapon.js
 // ==============
 
@@ -8,7 +8,7 @@ import { killEnemy } from '../../managers/enemyManager.js';
 import { addHitText } from '../../core/utils.js';
 import { get as getAsset } from '../../services/assets.js';
 import { PERK_CONFIG } from '../gameData.js';
-import { playSound } from '../../services/audio.js'; // FIX: Import audio
+import { playSound } from '../../services/audio.js';
 
 const ORBITAL_BASE_SIZE = 15;
 const ORBITAL_COLOR = '#80DEEA';
@@ -56,13 +56,12 @@ export class OrbitalWeapon extends Weapon {
       it.oy = this.player.y + Math.sin(ang) * this.radius;
     }
     
-    // 2. Obsługa Kolizji (FIX: Niezależna pętla kolizji dla orbitali)
-    // Orbitale nie są w tablicy 'bullets', więc collisions.js ich nie widzi.
-    // Musimy obsłużyć to tutaj.
-    
+    // 2. Obsługa Kolizji
     this.collisionTimer -= dt;
     if (this.collisionTimer > 0) return;
-    this.collisionTimer = 0.05; // Sprawdzaj co 50ms (optymalizacja)
+    
+    // NERF: Zwiększono interwał uderzeń z 0.05 (20/s) na 0.15 (ok. 6/s)
+    this.collisionTimer = 0.15;
     
     for (let i = 0; i < this.items.length; i++) {
       const it = this.items[i];
@@ -81,17 +80,15 @@ export class OrbitalWeapon extends Weapon {
           const dmg = this.damage;
           e.takeDamage(dmg);
           
-          // FIX: Dźwięk trafienia
           playSound('Hit');
           
-          // FIX: Knockback (Orbital odpycha od gracza)
           if (e.type !== 'wall' && e.type !== 'tank') {
             const angle = Math.atan2(e.y - this.player.y, e.x - this.player.x);
-            const kbForce = (dmg + 10) * 6; // Mocne uderzenie
+            // NERF: Zmniejszono knockback (mnożnik z 6 na 3)
+            const kbForce = (dmg + 5) * 3.0;
             e.applyKnockback(Math.cos(angle) * kbForce, Math.sin(angle) * kbForce);
           }
           
-          // Efekty wizualne
           const p = particlePool.get();
           if (p) {
             p.init(e.x, e.y, (Math.random() - 0.5) * 60, (Math.random() - 0.5) * 60, 0.16, '#80DEEA');

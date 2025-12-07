@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v1.08 - Text Offsets Exposed)
+// GAMEDATA.JS (v1.12 - Hunger 20s & Tutorial Ready)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -23,24 +23,24 @@ export const GAME_CONFIG = {
   ELITE_SPAWN_INTERVAL: 144,
   INITIAL_MAX_ENEMIES: 3,
   ENEMY_LIMIT_GROWTH_PER_MINUTE: 20,
-  INITIAL_XP_NEEDED: 5,
-  XP_GROWTH_FACTOR: 1.2, 
-  XP_GROWTH_ADD: 2,
+  // BALANS XP
+  INITIAL_XP_NEEDED: 5,   
+  XP_GROWTH_FACTOR: 1.35, 
+  XP_GROWTH_ADD: 6,       
 };
 
 export const HUNGER_CONFIG = {
   MAX_HUNGER: 100,
-  DECAY_RATE: 6.67, 
+  // ZMIANA: 100 / 5.0 = 20 sekund życia (było 15s)
+  DECAY_RATE: 5.0, 
   STARVATION_DAMAGE: 1, 
   STARVATION_TICK: 1.0, 
   VIGNETTE_COLOR_START: 'rgba(255, 0, 0, 0.0)',
   VIGNETTE_COLOR_END: 'rgba(180, 0, 0, 0.35)', 
   PULSE_SPEED: 4.0, 
   
-  // EDYCJA: Pozycje tekstów względem gracza (w pikselach, minus to w górę)
-  // Pasek życia jest na pozycji ok. -60
-  TEXT_OFFSET_WARNING: -40, // Gdzie ma być "GŁÓD!" (np. -35 to pod paskiem)
-  TEXT_OFFSET_QUOTE: -65,   // Gdzie mają być cytaty (np. -85 to nad paskiem)
+  TEXT_OFFSET_WARNING: -40, 
+  TEXT_OFFSET_QUOTE: -65,
 
   QUOTES: [
     "Ziemniaczki jeść muszę, bo się uduszę!",
@@ -64,81 +64,48 @@ export const MAP_CONFIG = {
       type: 'tree', 
       variants: 6,
       size: 96,
-      minScale: 2.5, 
-      maxScale: 5.0, 
-      hitboxScale: 0.15, 
-      spriteOffset: -0.4, 
-      hasShadow: true,
-      shadowScale: 0.80,   
-      shadowOffsetY: 8,  
-      hp: Infinity,   
-      isSolid: true,
-      canRotate: false
+      minScale: 2.5, maxScale: 5.0, 
+      hitboxScale: 0.15, spriteOffset: -0.4, 
+      hasShadow: true, shadowScale: 0.80, shadowOffsetY: 8,  
+      hp: Infinity, isSolid: true, canRotate: false
     },
     rock: { 
       type: 'rock', 
       variants: 6,
       size: 64, 
-      minScale: 1.0, 
-      maxScale: 3.5,
-      hitboxScale: 0.8, 
-      spriteOffset: 0,
-      hasShadow: true,
-      shadowScale: 1.5,
-      shadowOffsetY: 25, 
-      hp: Infinity, 
-      isSolid: true,
-      canRotate: true
+      minScale: 1.0, maxScale: 3.5,
+      hitboxScale: 0.8, spriteOffset: 0,
+      hasShadow: true, shadowScale: 1.5, shadowOffsetY: 25, 
+      hp: Infinity, isSolid: true, canRotate: true
     },
     hut: { 
       type: 'hut', 
       variants: 7,
       size: 110, 
       minScale: 3.5, maxScale: 3.5, 
-      hitboxScale: 0.7, 
-      spriteOffset: -0.25,
-      hasShadow: true,
-      shadowScale: 1.4, 
-      shadowOffsetY: 12, 
-      hp: 400,        
-      isSolid: true,
-      dropChance: 1.0,
-      canRotate: false 
+      hitboxScale: 0.7, spriteOffset: -0.25,
+      hasShadow: true, shadowScale: 1.4, shadowOffsetY: 12, 
+      hp: 400, isSolid: true, dropChance: 1.0, canRotate: false 
     },
     water: { 
       type: 'water', 
       variants: 6,
       size: 140,      
-      minScale: 0.7, 
-      maxScale: 2.2,
-      hitboxScale: 0.9, 
-      spriteOffset: 0,
-      hasShadow: false, 
-      shadowScale: 0,
-      shadowOffsetY: 0,
-      hp: Infinity, 
-      isSolid: false,
-      isSlow: true,   
-      slowFactor: 0.5,
-      canRotate: true
+      minScale: 0.7, maxScale: 2.2,
+      hitboxScale: 0.9, spriteOffset: 0,
+      hasShadow: false, shadowScale: 0, shadowOffsetY: 0,
+      hp: Infinity, isSolid: false, isSlow: true, slowFactor: 0.5, canRotate: true
     },
     shrine: {
       type: 'shrine',
       variants: 1,
       size: 180,
       minScale: 1.4, maxScale: 1.4,
-      hitboxScale: 0.6,
-      spriteOffset: -0.3,
-      hasShadow: true,
-      shadowScale: 1.0,
-      shadowOffsetY: 20,
-      hp: Infinity,     
-      isSolid: true,    
-      canRotate: false,
-      cooldown: 120,    
-      healAmount: 100,
+      hitboxScale: 0.6, spriteOffset: -0.3,
+      hasShadow: true, shadowScale: 1.0, shadowOffsetY: 20,
+      hp: Infinity, isSolid: true, canRotate: false,
+      cooldown: 120, healAmount: 100,
       text: "Rzyć umyta, sytość zdobyta",
-      // EDYCJA: Pozycja tekstu kapliczki
       textOffset: -85 
     }
   }
@@ -171,22 +138,20 @@ export const HAZARD_CONFIG = {
   SLOWDOWN_MULTIPLIER: 0.5,
   HAZARD_ENEMY_SLOWDOWN_MULTIPLIER: 0.3,
   HAZARD_ENEMY_DAMAGE_PER_SECOND: 0.4,
-  
   MEGA_HAZARD_PROBABILITY: 0.20,
   MEGA_HAZARD_BASE_MULTIPLIER: 4.0,
   MEGA_HAZARD_MAX_MULTIPLIER: 8.0,
   MEGA_HAZARD_PLAYER_DAMAGE_MULTIPLIER: 0.6,
   MEGA_HAZARD_ENEMY_DAMAGE_MULTIPLIER: 1.0,
-  
   HAZARD_PICKUP_DECAY_RATE: 0.067,
   HAZARD_CHEST_DECAY_RATE: 0.067,
 };
 
 export const WEAPON_CONFIG = {
   AUTOGUN: {
-    BASE_SPEED: 864,
-    BASE_DAMAGE: 7,
-    BASE_FIRE_RATE: 650,
+    BASE_SPEED: 800,
+    BASE_DAMAGE: 5,      
+    BASE_FIRE_RATE: 900, 
     BASE_SIZE: 3,
     SPRITE: 'projectile_venom',
     SPRITE_SCALE: 4.0
@@ -210,24 +175,15 @@ export const WEAPON_CONFIG = {
     SPEED: 550,
     DAMAGE: 25,
     SIZE: 48, 
-    SPRITE_WIDTH: 40, 
-    SPRITE_HEIGHT: 86,
-    TRAIL_INTERVAL: 0.015, 
-    TRAIL_SIZE: 20,        
-    TRAIL_OFFSET: 40,      
-    TRAIL_OPACITY: 0.40,
-    ROTATION_SPEED: 8,    
-    IMPACT_PARTICLE_COUNT: 60 
+    SPRITE_WIDTH: 40, SPRITE_HEIGHT: 86,
+    TRAIL_INTERVAL: 0.015, TRAIL_SIZE: 20, TRAIL_OFFSET: 40, TRAIL_OPACITY: 0.40,
+    ROTATION_SPEED: 8, IMPACT_PARTICLE_COUNT: 60 
   }
 };
 
 const BASE_DROP_RATES = {
-  heal: 0.02,
-  magnet: 0.012,
-  speed: 0.01,
-  shield: 0.007,
-  bomb: 0.005,
-  freeze: 0.005
+  heal: 0.02, magnet: 0.012, speed: 0.01,
+  shield: 0.007, bomb: 0.005, freeze: 0.005
 };
 
 export const PICKUP_CONFIG = {
@@ -252,19 +208,19 @@ export const PERK_CONFIG = {
   autogun: { max: 1 },
   orbital: {
     max: 5,
-    calculateDamage: (level) => (5 + level * 2),
+    calculateDamage: (level) => (3 + level * 2),
     calculateRadius: (level) => ((50 + 6 * level) * 2.25),
     calculateSpeed: (level) => (1.2 + 0.2 * level)
   },
   nova: {
     max: 6,
     calculateDamage: (level) => (15 + level * 5),
-    calculateCooldown: (level) => Math.max(0.5, 2.3 - (level * 0.3)),
-    calculateCount: (level) => 3 + (level * 2),
+    calculateCooldown: (level) => Math.max(0.5, 3.0 - (level * 0.4)),
+    calculateCount: (level) => 2 + level,
     calculatePierce: (level) => 1 + Math.floor(level / 3)
   },
   speed: { value: 1.10, max: 4 },
-  pickup: { value: 1.40, max: 3 },
+  pickup: { value: 1.25, max: 3 }, 
   health: { value: 30, max: 3 },
   whip: {
     max: 5,
@@ -281,7 +237,7 @@ export const PERK_CONFIG = {
     max: 6,
     VISUAL_DURATION: 0.25,
     calculateCooldown: (level) => [0, 2.5, 2.3, 2.1, 1.9, 1.7, 1.6][level] || 1.6,
-    calculateDamage: (level) => (6 + level * 2),
+    calculateDamage: (level) => (10 + level * 3), 
     calculateTargets: (level) => [0, 1, 2, 3, 4, 5, 6][level] || 6,
   }
 };

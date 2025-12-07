@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v1.08 - Use Config Offsets)
+// GAMELOGIC.JS (v1.09 - i18n Texts)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -18,6 +18,8 @@ import { checkCollisions } from '../managers/collisions.js';
 import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG, GAME_CONFIG, WEAPON_CONFIG, HUNGER_CONFIG } from '../config/gameData.js';
 import { playSound } from '../services/audio.js';
 import { devSettings } from '../services/dev.js';
+// NOWE: Import systemu językowego
+import { getLang } from '../services/i18n.js';
 
 export function updateCamera(player, camera, canvasWidth, canvasHeight) {
     player.x = Math.max(player.size / 2, Math.min(camera.worldWidth - player.size / 2, player.x));
@@ -70,22 +72,25 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
                 game.playerHitFlashT = 0.1;
                 playSound('PlayerHurt');
                 
-                // Użycie offsetu z konfigu (HUNGER_CONFIG.TEXT_OFFSET_WARNING)
                 if (game.starvationTextCooldown <= 0) {
+                    // FIX: Użycie getLang zamiast hardcoded stringa
+                    const warningTxt = getLang('warning_hunger') || "GŁÓD!";
                     addHitText(hitTextPool, hitTexts, player.x, player.y - 20, 
-                        HUNGER_CONFIG.STARVATION_DAMAGE, '#FF5722', "GŁÓD!", 2.0, player, HUNGER_CONFIG.TEXT_OFFSET_WARNING);
+                        HUNGER_CONFIG.STARVATION_DAMAGE, '#FF5722', warningTxt, 2.0, player, HUNGER_CONFIG.TEXT_OFFSET_WARNING);
                     game.starvationTextCooldown = 3.0; 
                 }
             }
 
             game.quoteTimer -= dt;
             if (game.quoteTimer <= 0) {
-                const quotes = HUNGER_CONFIG.QUOTES;
-                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                // FIX: Losowanie cytatu z kluczy językowych (1-5)
+                const randIdx = Math.floor(Math.random() * 5) + 1;
+                const randomQuote = getLang(`quote_hunger_${randIdx}`);
                 
-                // Użycie offsetu z konfigu (HUNGER_CONFIG.TEXT_OFFSET_QUOTE)
-                addHitText(hitTextPool, hitTexts, player.x, player.y - 60, 
-                    0, '#FFD700', randomQuote, 5.0, player, HUNGER_CONFIG.TEXT_OFFSET_QUOTE);
+                if (randomQuote) {
+                    addHitText(hitTextPool, hitTexts, player.x, player.y - 60, 
+                        0, '#FFD700', randomQuote, 5.0, player, HUNGER_CONFIG.TEXT_OFFSET_QUOTE);
+                }
                     
                 game.quoteTimer = 8.0; 
             }

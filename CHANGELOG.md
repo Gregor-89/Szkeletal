@@ -2,6 +2,79 @@
 
 Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Szkeletal: Estrone Kiszok".
 
+
+
+---
+
+## [v0.98] - 2025-12-06
+**"Szkeletal Reforged: Hunger & Axes Update"**
+
+### ✨ Nowości (Features)
+- **Nowy Boss: Drwal Zjebadło (Lumberjack)**:
+  - Potężny przeciwnik rzucający wirującymi, tęczowymi siekierami.
+  - Unikalna mechanika "Tęczowego Śladu" (Spiral Trail) i rozbryzgu cząsteczek przy trafieniu.
+  - Posiada dedykowane animacje chodzenia i ataku.
+  - Działa w systemie "Singleton" – na mapie może być tylko jeden boss tego typu naraz.
+- **Mechanika Głodu (Hunger System)**:
+  - Dodano wskaźnik "Ziemniaczanego Głodu" w HUD.
+  - Pasek sytości opróżnia się w ciągu 15 sekund.
+  - **Efekt Głodu**: Gdy pasek spadnie do zera, gracz otrzymuje obrażenia co sekundę, ekran pulsuje na czerwono (winieta), a Drakul rzuca losowymi cytatami o głodzie.
+  - **Odnawianie**: Zebranie dowolnego Ziemniaczka (XP) odnawia głód do 100%.
+- **Szkeletal Reforged (Wielki Rebalans)**:
+  - **Wolniejsza Rozgrywka**: Zmniejszono bazową prędkość gracza (z 432 na 240) i wrogów dla lepszej kontroli taktycznej.
+  - **Skalowanie x10**: Przemnożono HP wrogów i obrażenia broni, aby umożliwić precyzyjniejszy balans.
+  - **Buff Startowy**: Broń "Bicz" (Tłuczek) jest teraz znacznie silniejsza na starcie.
+  - **Progresja XP**: Spłaszczono krzywą levelowania (Factor 1.2), co zapewnia częstsze nagrody.
+  - **Nerf Novy**: Eksplozja Mentalu ma teraz mniej pocisków na 1. poziomie, skaluje się mocniej w late-game.
+
+### 🎨 Wizualia i UI (Visuals & UI)
+- **Dynamiczne Animacje**: Prędkość przebierania nogami (animacji) gracza i wrogów zależy teraz od ich faktycznej prędkości poruszania się (np. zwalnia w bagnie/wodzie).
+- **Lepszy HUD**:
+  - Wycentrowano paski zdrowia i XP.
+  - Dodano animowaną, pulsującą ikonę Ziemniaka (Głód) z efektem "opróżniania" (clip-path).
+  - Pasek zdrowia miga na czerwono przy niskim HP lub głodzie.
+- **Siekiera Drwala**: Zwiększono rozmiar sprite'a, dodano konfigurowalny ślad tęczy i dostrojono rotację kierunkową.
+- **Cienie**: Poprawiono pozycjonowanie cieni pod postaciami (możliwość regulacji `shadowOffset`).
+
+### 🐛 Poprawki (Fixes)
+- **Znikające Pickupy**: Naprawiono błąd, przez który bonusy znikały ułamek sekundy po pojawieniu się (dodano bezpieczny fallback czasu życia).
+- **Dev Tools**: Naprawiono przyciski scenariuszy (Auto-Start), dodano opcję testowania Drwala i zabezpieczono przed błędami brakujących elementów DOM.
+- **Rotacja Pocisków**: Butelki i Siekiery obracają się teraz zgodnie z kierunkiem lotu (w lewo/w prawo).
+
+
+### 🔧 Poprawki i Ulepszenia (Fixes & Improvements)
+- **Mechanika Tekstów ("HitText")**:
+  - Teksty obrażeń, leczenia oraz cytaty ("Flavor Text") są teraz dynamicznie "przyklejone" do celu (np. gracza) i podążają za nim, zamiast wisieć w miejscu spawnu.
+  - Wprowadzono system "pięter" (offsetów) dla tekstów gracza:
+    - **Cytaty**: Wyświetlane wysoko nad głową (-85px).
+    - **Pasek Życia**: Standardowo (-60px).
+    - **Ostrzeżenie o Głodzie**: Wyświetlane poniżej paska życia (-35px).
+  - Zapobiega to nakładaniu się tekstów na siebie i poprawia czytelność.
+- **Bicz (Whip)**:
+  - Zmieniono logikę ataku na **asynchroniczną**: przy odpowiednim poziomie (Lvl 2+), bicz uderza najpierw w przód, a dopiero po chwili (200ms) w tył.
+  - Dodano odtwarzanie dźwięku uderzenia również dla ataku tylnego.
+  - Naprawiono błąd powodujący niewyświetlanie się sprite'a bicza (zła nazwa assetu).
+- **Piorun (Chain Lightning)**:
+  - Zwiększono zasięg rażenia z 200 do **320**, co znacznie poprawia użyteczność broni.
+  - Naprawiono potencjalny crash gry związany z brakiem importów funkcji `killEnemy`.
+- **Balans Rozgrywki (XP)**:
+  - Zmieniono krzywą zdobywania doświadczenia:
+    - **Początek**: Pierwszy poziom wymaga teraz tylko 5 XP (powrót do szybkiego startu).
+    - **Mid-game**: Zwiększono przyrost wymaganego XP (`Factor 1.35`, `Add 6`), co sprawia, że późniejsze poziomy zdobywa się wolniej.
+- **Balans Broni**:
+  - **AutoGun**: Osłabiono na 1. poziomie (Obrażenia 7->5, Szybkostrzelność 650ms->900ms).
+  - **Zasięg Żerowania**: Zmniejszono mnożnik perka z 1.40 na 1.25.
+- **Optymalizacja**:
+  - Wdrożono **Batch Rendering** dla systemu cząsteczek, co znacząco redukuje liczbę wywołań rysowania (`draw calls`) i poprawia wydajność przy dużej liczbie efektów.
+
+---
+
+## [v0.98a] - 2025-12-06
+**"Pickup Teleport Fix"**
+
+### 🐛 Bugfixy
+- **Naprawiono znikanie pickupów**: Skorygowano błąd w `utils.js`, gdzie funkcja separacji (`applyPickupSeparation`) używała starego, małego rozmiaru świata, powodując natychmiastową "teleportację" przedmiotów poza ekran na większych mapach.
+
 ---
 
 ## [v0.97] - 2025-12-03

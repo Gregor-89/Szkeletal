@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v1.01 - Hunger Vignette)
+// DRAW.JS (v1.02 - Particle Batch Rendering)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -8,7 +8,7 @@ import { get as getAsset } from '../services/assets.js';
 import { getLang } from '../services/i18n.js';
 import { devSettings } from '../services/dev.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
-import { ENEMY_STATS, HUNGER_CONFIG } from '../config/gameData.js'; // Dodano HUNGER_CONFIG
+import { ENEMY_STATS, HUNGER_CONFIG } from '../config/gameData.js'; 
 
 let backgroundPattern = null;
 let generatedPatternScale = 0;
@@ -115,25 +115,21 @@ function drawEnemyWarning(ctx, game, canvas) {
     }
 }
 
-// NOWOŚĆ: Funkcja rysująca winietę głodu
 function drawHungerVignette(ctx, game, canvas) {
     if (game.hunger > 0 || game.isDying) return;
 
     ctx.save();
     
-    // Pulsująca przezroczystość
-    const pulse = (Math.sin(game.time * HUNGER_CONFIG.PULSE_SPEED) + 1) / 2; // 0.0 - 1.0
-    // Interpolacja między minimalną a maksymalną przezroczystością
-    // Używamy prostego mnożnika alpha na całym gradiencie
-    const alpha = 0.3 + (pulse * 0.2); // Pulsowanie 0.3 - 0.5
+    const pulse = (Math.sin(game.time * HUNGER_CONFIG.PULSE_SPEED) + 1) / 2; 
+    const alpha = 0.3 + (pulse * 0.2); 
 
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
     const radius = Math.max(canvas.width, canvas.height) * 0.8;
 
     const grad = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius);
-    grad.addColorStop(0, 'rgba(255, 0, 0, 0)'); // Środek przezroczysty
-    grad.addColorStop(1, `rgba(180, 0, 0, ${alpha})`); // Krawędzie czerwone
+    grad.addColorStop(0, 'rgba(255, 0, 0, 0)'); 
+    grad.addColorStop(1, `rgba(180, 0, 0, ${alpha})`); 
 
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -277,10 +273,55 @@ export function draw(ctx, state, ui, fps) {
         eb.draw(ctx);
     }
     
+    // --- PARTICLE BATCH RENDERING (OPTYMALIZACJA) ---
+    const batches = {}; // Grupy dla prostych cząsteczek
+
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         if (p.x < cullLeft || p.x > cullRight || p.y < cullTop || p.y > cullBottom) continue;
-        p.draw(ctx);
+        
+        if (p.rotSpeed !== 0) {
+            // Złożone cząsteczki (obrót) - rysujemy natychmiast (brak batchingu)
+            ctx.save();
+            const alpha = Math.max(0, p.life / p.maxLife);
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            ctx.restore();
+        } else {
+            // Proste cząsteczki - dodajemy do grupy
+            // Kwantyzacja przezroczystości do 0.1, aby grupować podobne
+            let alpha = Math.floor((p.life / p.maxLife) * 10) / 10;
+            if (alpha <= 0) continue; 
+            
+            // Klucz grupy: kolor_alpha (np. "#ff0000_0.8")
+            const key = p.color + '_' + alpha;
+            
+            if (!batches[key]) batches[key] = [];
+            batches[key].push(p);
+        }
+    }
+
+    // Rysowanie grup
+    for (const key in batches) {
+        const list = batches[key];
+        if (list.length === 0) continue;
+        
+        const lastUnderscore = key.lastIndexOf('_');
+        const color = key.substring(0, lastUnderscore);
+        const alpha = parseFloat(key.substring(lastUnderscore + 1));
+        
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        
+        for (const p of list) {
+            ctx.rect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+        }
+        
+        ctx.fill();
     }
 
     ctx.globalAlpha = 1;
@@ -360,7 +401,6 @@ export function draw(ctx, state, ui, fps) {
         ctx.restore();
     }
 
-    // NOWOŚĆ: Wywołanie winiety głodu
     drawHungerVignette(ctx, game, canvas);
 
     drawEnemyWarning(ctx, game, canvas);

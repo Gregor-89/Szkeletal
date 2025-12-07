@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v1.08 - Use Config Offsets)
+// COLLISIONS.JS (v1.07 - i18n Support)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -8,6 +8,7 @@ import { killEnemy } from './enemyManager.js';
 import { playSound } from '../services/audio.js';
 import { devSettings } from '../services/dev.js';
 import { COLLISION_CONFIG, HAZARD_CONFIG, MAP_CONFIG, WEAPON_CONFIG } from '../config/gameData.js'; 
+// NOWE: Import getLang
 import { getLang } from '../services/i18n.js';
 import { PICKUP_CLASS_MAP } from './effects.js';
 
@@ -74,9 +75,10 @@ export function checkCollisions(state) {
                             
                             playSound('HealPickup');
                             
-                            // Użycie offsetu z konfigu (stats.textOffset)
-                            const shrineTxt = stats.text || "Rzyć umyta, sytość zdobyta";
-                            const offset = stats.textOffset || -85; // Fallback
+                            // FIX: Pobieranie tekstu z i18n
+                            const shrineTxt = getLang('shrine_text') || "Rzyć umyta";
+                            // Offset nadal z konfigu
+                            const offset = stats.textOffset || -85; 
                             addHitText(hitTextPool, hitTexts, player.x, player.y - 50, 0, "#FFD700", shrineTxt, 5.0, player, offset);
                             
                             addHitText(hitTextPool, hitTexts, player.x, player.y - 30, healedAmount, "#00FF00", "+HP", 2.0);

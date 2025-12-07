@@ -1,5 +1,5 @@
 // ==============
-// PARTICLE.JS (v0.62 - Nowy plik dla Puli Obiektów)
+// PARTICLE.JS (v0.63 - Render Logic Removed)
 // Lokalizacja: /js/entities/particle.js
 // ==============
 
@@ -62,8 +62,6 @@ export class Particle {
   update(dt) {
     // 1. Zastosuj siły (grawitacja i tarcie)
     this.vy += this.gravity * dt;
-    // Zastosuj tarcie (np. v = v * 0.99) w sposób niezależny od klatek
-    // v_new = v_old * (1 - friction_per_second * dt)
     this.vx *= (1.0 - this.friction * dt);
     
     // 2. Zmień pozycję na podstawie prędkości
@@ -79,28 +77,5 @@ export class Particle {
     if (this.life <= 0) {
       this.release();
     }
-  }
-  
-  /**
-   * Rysuje cząsteczkę.
-   */
-  draw(ctx) {
-    // Oblicz alfę na podstawie czasu życia w sekundach
-    ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
-    ctx.fillStyle = this.color;
-    
-    if (this.rotSpeed !== 0) {
-      // Rysowanie obróconego kwadratu (dla konfetti)
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      ctx.rotate(this.rot);
-      ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
-      ctx.restore();
-    } else {
-      // Rysowanie standardowej kropki (dla trafień, itp.)
-      ctx.fillRect(this.x, this.y, this.size, this.size);
-    }
-    
-    // Reset alpha jest robiony w pętli draw.js
   }
 }
