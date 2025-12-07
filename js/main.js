@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v1.03 - Hunger Logic & Syntax Fix)
+// MAIN.JS (v1.03a - Tutorial Pause Fix)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -47,6 +47,9 @@ let ctx = null;
 const splashOverlay = document.getElementById('splashOverlay');
 const loadingOverlay = document.getElementById('loadingOverlay'); 
 const loadingBarFill = document.getElementById('loadingBarFill'); 
+// ZMIANA: Pobranie referencji do samouczka i intro dla globalnej blokady
+const tutorialOverlay = document.getElementById('tutorialOverlay');
+const introOverlay = document.getElementById('introOverlay');
 
 let savedGameState = null;
 let fps = 0;
@@ -257,6 +260,12 @@ function loop(currentTime){
             fps = frameCount;
             frameCount = 0;
             lastFrameTime = currentTime;
+        }
+        
+        // ZMIANA: Globalne wymuszenie pauzy, jeśli nakładki są widoczne
+        if ((tutorialOverlay && tutorialOverlay.style.display !== 'none') || 
+            (introOverlay && introOverlay.style.display === 'flex')) {
+            game.paused = true;
         }
         
         updateVisualEffects(dt, [], [], bombIndicators); 

@@ -1,5 +1,5 @@
 // ==============
-// INTROMANAGER.JS (v0.90 - Implementacja i18n)
+// INTROMANAGER.JS (v0.90a - Pause Enforcement)
 // Lokalizacja: /js/managers/introManager.js
 // ==============
 

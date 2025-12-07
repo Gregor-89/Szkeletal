@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v1.00 - Ludological Parody)
+// POLISH.JS (v0.98 - Fixes: WSAD, Money Bag Emoji, Single Icons)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -38,18 +38,23 @@ export const LANG_PL = {
   ui_game_title: "Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula",
   ui_player_name: "Drakul",
   
-  // --- SAMOUCZEK (PARODIA LUDOLOGICZNA) ---
+  // --- SAMOUCZEK (UPDATED v0.98 - WSAD & Money Bag) ---
   ui_tutorial_title: "PROTOKÓŁ WSTĘPNY",
-  ui_tutorial_intro: "Witaj w symulacji niedoboru bulwy. Zapoznaj się z aksjomatami rozgrywki.",
-  ui_tutorial_ctrl_title: "🕹️ Interfejs Kinestetyczny:",
-  ui_tutorial_ctrl_desc: "Smyraj ekran (Joystick) lub duś klawisze (WASD). Przemoc jest zautomatyzowana – Twój awatar sam dobiera ofiary.",
-  ui_tutorial_hunger_title: "🥔 Imperatyw Sytości (Krytyczne):",
-  ui_tutorial_hunger_desc: "Pasek Sytości to Twój zegar biologiczny. Ciągle spada. Musisz konsumować XP (Ziemniaczki), by resetować entropię żołądka. Pusty pasek = Bolesna dekompozycja.",
-  ui_tutorial_prog_title: "📈 Akumulacja Kapitału:",
-  ui_tutorial_prog_desc: "Zbieraj świecidełka. Inwestuj w siebie. Biczuj mocniej. W tej ekonomii tylko brutala czeka sukces (i level up).",
-  ui_tutorial_boss_title: "☠️ Anomalie:",
-  ui_tutorial_boss_desc: "Uważaj na Drwala Zjebadło. Jego pasek zdrowia jest nienaturalnie wydłużony.",
-  ui_tutorial_btn_close: "PRZYSWOIŁEM WIEDZĘ",
+  ui_tutorial_intro: "Witaj w symulacji ziemniaczkowego łakomstwa. Wcielasz się w Hrabiego Drakula, który po ucieczce z Res-krainy popadł w ludologiczny obłęd i cierpi na ciągły popęd do pysznych ziemniaczków [XP], w imię których jest gotów poświęcić każdego na swej drodze.",
+  
+  ui_tutorial_ctrl_title: "🕹️ Interfejs Kinestetyczny",
+  ui_tutorial_ctrl_desc: "Smyraj ekran (urządzenia dotykowe) lub duś klawisze (WSAD). Przemoc jest zautomatyzowana – Twój awatar sam dobiera najbliższe ofiary.",
+  
+  ui_tutorial_hunger_title: "🥔 Imperatyw Sytości",
+  ui_tutorial_hunger_desc: "Symbol Ziemniaka to Twój wskaźnik homeostazy żołądkowej. Ciągle spada. Musisz konsumować ziemniaczki, by resetować entropię żołądka, gdyż pusty trzewiostan oznacza głód i bolesną dekompozycję sytości. A gdy i ta spadnie do zera, sam Drakul doświadczy swej agonii.",
+  
+  ui_tutorial_prog_title: "💰 Akumulacja Kapitału",
+  ui_tutorial_prog_desc: "Zbieraj ziemniaczki i inne ustrojstwa z pokonanych adwersarzy. Pozwoli Ci to nie tylko dłużej przetrwać, ale też wznieść się na nowe poziomy wertykalności (Perki), otwierając drogę do potężniejszego arsenału.",
+  
+  ui_tutorial_boss_title: "👾 Oponenci i Dysydenci",
+  ui_tutorial_boss_desc: "Interesariusz czy wróg? Każdy chce odebrać Ci sytość, bez której zezgnonisz niczym menel na bulwarowej ławce. Przerabiaj ich na kartofle, by nie ulec przytłoczeniu. Z najsilniejszych dysydentów wypadają Ludoboxy (automatyczne losowe wzmocnienie).",
+  
+  ui_tutorial_btn_close: "ZACZYNAJMY",
   
   // --- Reszta tekstów ---
   quote_hunger_1: "Ziemniaczki jeść muszę, bo się uduszę!",
