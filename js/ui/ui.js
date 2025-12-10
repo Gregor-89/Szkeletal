@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.09 - Final Tutorial Pause Fix)
+// UI.JS (v1.13 - Gameplay Quote Timer Init)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -118,10 +118,10 @@ function updateTutorialTexts() {
     
     if (tutList) {
         tutList.innerHTML = `
-            <li style="margin-bottom:12px;">🕹️ <b>${getLang('ui_tutorial_ctrl_title')}</b><br>${getLang('ui_tutorial_ctrl_desc')}</li>
-            <li style="margin-bottom:12px;">🥔 <b>${getLang('ui_tutorial_hunger_title')}</b><br>${getLang('ui_tutorial_hunger_desc')}</li>
-            <li style="margin-bottom:12px;">📈 <b>${getLang('ui_tutorial_prog_title')}</b><br>${getLang('ui_tutorial_prog_desc')}</li>
-            <li>☠️ <b>${getLang('ui_tutorial_boss_title')}</b><br>${getLang('ui_tutorial_boss_desc')}</li>
+            <li style="margin-bottom:12px;"><b>${getLang('ui_tutorial_ctrl_title')}</b><br>${getLang('ui_tutorial_ctrl_desc')}</li>
+            <li style="margin-bottom:12px;"><b>${getLang('ui_tutorial_hunger_title')}</b><br>${getLang('ui_tutorial_hunger_desc')}</li>
+            <li style="margin-bottom:12px;"><b>${getLang('ui_tutorial_prog_title')}</b><br>${getLang('ui_tutorial_prog_desc')}</li>
+            <li><b>${getLang('ui_tutorial_boss_title')}</b><br>${getLang('ui_tutorial_boss_desc')}</li>
         `;
     }
 }
@@ -296,6 +296,7 @@ function generateGuide() {
         { asset: 'enemy_ranged', nameKey: 'enemy_ranged_name', descKey: 'enemy_ranged_desc' },
         { asset: 'enemy_wall', nameKey: 'enemy_wall_name', descKey: 'enemy_wall_desc' },
         { asset: 'enemy_elite', nameKey: 'enemy_elite_name', descKey: 'enemy_elite_desc' },
+        { asset: 'enemy_lumberjack', nameKey: 'enemy_lumberjack_name', descKey: 'enemy_lumberjack_desc' },
         { header: getLang('ui_guide_weapons_title') || "Bronie" },
         { asset: 'icon_whip', nameKey: 'perk_whip_name', descKey: 'perk_whip_desc' },
         { asset: 'icon_autogun', nameKey: 'perk_autogun_name', descKey: 'perk_autogun_desc' },
@@ -480,12 +481,16 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         settings.lastFire = 0; settings.lastElite = 0;
         game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.seenEnemyTypes = [];
         game.totalKills = 0; 
+        // NOWOŚĆ: Timer cytatów
+        game.gameplayQuoteTimer = 60; 
         const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
         uiData.player.reset(worldWidth, worldHeight);
         for (let key in perkLevels) delete perkLevels[key];
     } else {
         game.score = 0; settings.lastFire = 0; settings.lastElite = 0; settings.lastHazardSpawn = 0; settings.lastSiegeEvent = 0; settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
         game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.totalKills = 0; 
+        // NOWOŚĆ: Timer cytatów
+        game.gameplayQuoteTimer = 60; 
         const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
         uiData.player.x = worldWidth / 2; uiData.player.y = worldHeight / 2;
         camera.offsetX = (worldWidth / 2) - (canvas.width / 2); camera.offsetY = (worldHeight / 2) - (canvas.height / 2);
@@ -539,6 +544,11 @@ export function gameOver(game, uiData) {
     const finalTimeValue = Math.floor(game.time);
     const currentRun = { score: game.score, level: game.level, time: finalTimeValue, kills: game.totalKills || 0 };
     finalScore.textContent = currentRun.score; finalLevel.textContent = currentRun.level; finalTime.textContent = formatTime(currentRun.time); 
+    
+    // FIX: Teraz na pewno wyświetli aktualną ilość zabitych
+    const gameOverKillsLabel = document.getElementById('totalKillsSpanGO');
+    if (gameOverKillsLabel) gameOverKillsLabel.textContent = game.totalKills || 0;
+
     saveScore(currentRun); playSound('MusicMenu');
     displayScores('scoresBodyGameOver', currentRun); 
     attachClearScoresListeners();

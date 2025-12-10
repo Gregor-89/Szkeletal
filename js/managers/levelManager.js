@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v0.95e - FIX: Perks Layout)
+// LEVELMANAGER.JS (v1.14 - Hybrid XP Logic)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -43,7 +43,16 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
     
     game.xp -= game.xpNeeded;
     game.level += 1;
-    game.xpNeeded = Math.floor(game.xpNeeded * GAME_CONFIG.XP_GROWTH_FACTOR) + GAME_CONFIG.XP_GROWTH_ADD;
+    
+    // HYBRYDOWY PRZYROST XP
+    let growthFactor = GAME_CONFIG.XP_GROWTH_LATE; // Domyślnie 1.35
+    
+    // Jeśli poziom jest mniejszy lub równy 10, użyj trudniejszego mnożnika (1.5)
+    if (game.level <= GAME_CONFIG.XP_THRESHOLD_LEVEL) {
+        growthFactor = GAME_CONFIG.XP_GROWTH_EARLY;
+    }
+    
+    game.xpNeeded = Math.floor(game.xpNeeded * growthFactor) + GAME_CONFIG.XP_GROWTH_ADD;
 
     const hitTexts = hitTextPool.activeItems; 
 

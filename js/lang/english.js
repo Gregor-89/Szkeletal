@@ -1,5 +1,5 @@
 // ==============
-// ENGLISH.JS (v0.98d - Lumberjack Texts)
+// ENGLISH.JS (v1.12 - Gameplay Quotes Keys)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
@@ -80,6 +80,24 @@ export const LANG_EN = {
   ui_config_style_circle: "🔵 Colored Circles",
   ui_config_style_emoji: "😀 Emojis",
   ui_config_title_lang: "Language",
+  
+  // Quotes (Left in Polish as character specific lines)
+  quote_gameplay_1: "Jebać wszystkich Dadgamerów i chuj wam w dupę",
+  quote_gameplay_2: "Mam wyjebane na was melepetów",
+  quote_gameplay_3: "Casuale się zesrali",
+  quote_gameplay_4: "Nie stać was na rozmowę ze mną",
+  quote_gameplay_5: "Recenzenci są sprzedajni",
+  quote_gameplay_6: "Hahaha essa na Maciusia",
+  quote_gameplay_7: "Czy tu jest debilu napisane \"prześlij opinię\"?",
+  quote_gameplay_8: "Polscy streamerzy to biedacy i żebracy",
+  quote_gameplay_9: "Widać czyja matka piła w ciąży",
+  quote_gameplay_10: "Jesteście przyzwyczajeni, że jedyna interakcja waszych rodziców to kłótnia",
+  quote_gameplay_11: "Względem Dadgamerów trzeba się zradykalizować",
+  quote_gameplay_12: "Jesteś nieudacznikiem w moich oczach",
+  quote_gameplay_13: "Ja bym wam wszystkim najebał na tym czacie",
+  quote_gameplay_14: "Typ by dostał w pizdę, to by mi oddał pieniądze",
+  quote_gameplay_15: "Lubię Rocka ale pierdoli",
+  
   ui_guide_title: "The Count's Guide",
   ui_guide_intro: "You take on the role of the Estrogen Count Drakul. Satisfy his \"Potato Hunger\" by smiting haters and striving for absolute Verticality.",
   ui_guide_basics_title: "🎮 Basic Rules",
@@ -155,11 +173,10 @@ export const LANG_EN = {
   enemy_tank_desc: "A relic of abandoned \"lore\". Extremely slow, but with triple \"Satiety\". Completely immanent to knockback and slowing effects (\"Cooldown\" and \"The Sewer\").",
   enemy_ranged_name: "The Bum",
   enemy_ranged_desc: "A ranged adversary from Olszynki. Maintains an optimal distance (medium range), avoiding close contact. Actively circles while hurling bottles.",
-  enemy_elite_name: "Boss-Soul",
+  enemy_elite_name: "Elden Hater",
   enemy_elite_desc: "An elite Hater with significantly increased \"Satiety\". Every 7 seconds, uses a special attack: a violent charge, an emission of projectiles, or summons support (creates 3 \"Chat Matts\"). Always drops a LudoBox.",
   enemy_wall_name: "Siege Syndrome",
   enemy_wall_desc: "Appears in a perfect ring. Extremely slow, but durable. After a set time (approx. 34-40s), it detonates, destroying all nearby Potatoes and Pickups.",
-  // NOWOŚĆ: Tłumaczenie dla Drwala
   enemy_lumberjack_name: "Lumberjack Zjebadlo",
   enemy_lumberjack_desc: "A powerful boss from the forest. Throws spinning, rainbow axes. Features walk and attack animations. Beware of his \"Rainbow Trail\"!",
   

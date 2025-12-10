@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v1.12 - Hunger 20s & Tutorial Ready)
+// GAMEDATA.JS (v1.14 - Hybrid XP Curve)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -23,16 +23,22 @@ export const GAME_CONFIG = {
   ELITE_SPAWN_INTERVAL: 144,
   INITIAL_MAX_ENEMIES: 3,
   ENEMY_LIMIT_GROWTH_PER_MINUTE: 20,
-  // BALANS XP
+  
+  // BALANS XP (SYSTEM HYBRYDOWY)
   INITIAL_XP_NEEDED: 5,   
-  XP_GROWTH_FACTOR: 1.35, 
-  XP_GROWTH_ADD: 6,       
+  XP_GROWTH_ADD: 6,
+  
+  // Do poziomu 10 rośnie szybciej (trudniej)
+  XP_GROWTH_EARLY: 1.5, 
+  // Od poziomu 11 rośnie wolniej (łatwiej)
+  XP_GROWTH_LATE: 1.35, 
+  // Próg zmiany mnożnika
+  XP_THRESHOLD_LEVEL: 10 
 };
 
 export const HUNGER_CONFIG = {
   MAX_HUNGER: 100,
-  // ZMIANA: 100 / 5.0 = 20 sekund życia (było 15s)
-  DECAY_RATE: 5.0, 
+  DECAY_RATE: 5.0, // 20 sekund życia
   STARVATION_DAMAGE: 1, 
   STARVATION_TICK: 1.0, 
   VIGNETTE_COLOR_START: 'rgba(255, 0, 0, 0.0)',
@@ -85,7 +91,8 @@ export const MAP_CONFIG = {
       minScale: 3.5, maxScale: 3.5, 
       hitboxScale: 0.7, spriteOffset: -0.25,
       hasShadow: true, shadowScale: 1.4, shadowOffsetY: 12, 
-      hp: 400, isSolid: true, dropChance: 1.0, canRotate: false 
+      // HP 1200, Drop 0.4 (zgodnie z poprzednim ustaleniem)
+      hp: 1200, isSolid: true, dropChance: 0.4, canRotate: false 
     },
     water: { 
       type: 'water', 
@@ -226,7 +233,8 @@ export const PERK_CONFIG = {
     max: 5,
     HITBOX_RADIUS: 30,
     calculateCooldown: (level) => (Math.max(1.0, 3.0 - 0.4 * level)),
-    calculateDamage: (level) => (9 + level * 3),
+    // Start 10 (kills Dadgamer), wzrost +2.5
+    calculateDamage: (level) => (10 + (level - 1) * 2.5),
     calculateDrawScale: (level) => (100 + 25 * (level - 1)),
     calculateCount: (level) => {
       const counts = [0, 1, 2, 3, 4, 4];

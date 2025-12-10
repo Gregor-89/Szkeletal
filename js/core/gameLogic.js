@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v1.09 - i18n Texts)
+// GAMELOGIC.JS (v1.13 - Quotes Color Fix)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -18,7 +18,6 @@ import { checkCollisions } from '../managers/collisions.js';
 import { HAZARD_CONFIG, SIEGE_EVENT_CONFIG, GAME_CONFIG, WEAPON_CONFIG, HUNGER_CONFIG } from '../config/gameData.js';
 import { playSound } from '../services/audio.js';
 import { devSettings } from '../services/dev.js';
-// NOWE: Import systemu językowego
 import { getLang } from '../services/i18n.js';
 
 export function updateCamera(player, camera, canvasWidth, canvasHeight) {
@@ -57,6 +56,7 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         game.hunger = Math.max(0, game.hunger - (HUNGER_CONFIG.DECAY_RATE * dt));
 
         if (game.hunger <= 0) {
+            // --- LOGIKA GŁODU ---
             game.starvationTimer += dt;
             
             if (typeof game.starvationTextCooldown === 'undefined') {
@@ -73,7 +73,6 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
                 playSound('PlayerHurt');
                 
                 if (game.starvationTextCooldown <= 0) {
-                    // FIX: Użycie getLang zamiast hardcoded stringa
                     const warningTxt = getLang('warning_hunger') || "GŁÓD!";
                     addHitText(hitTextPool, hitTexts, player.x, player.y - 20, 
                         HUNGER_CONFIG.STARVATION_DAMAGE, '#FF5722', warningTxt, 2.0, player, HUNGER_CONFIG.TEXT_OFFSET_WARNING);
@@ -83,7 +82,6 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
 
             game.quoteTimer -= dt;
             if (game.quoteTimer <= 0) {
-                // FIX: Losowanie cytatu z kluczy językowych (1-5)
                 const randIdx = Math.floor(Math.random() * 5) + 1;
                 const randomQuote = getLang(`quote_hunger_${randIdx}`);
                 
@@ -95,9 +93,32 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
                 game.quoteTimer = 8.0; 
             }
         } else {
+            // --- LOGIKA NORMALNA ---
             game.starvationTimer = 0;
             game.quoteTimer = 0;
             game.starvationTextCooldown = 0;
+
+            // CYTATY GAMEPLAY
+            if (typeof game.gameplayQuoteTimer === 'undefined') {
+                game.gameplayQuoteTimer = 60; 
+            }
+
+            if (game.gameplayQuoteTimer > 0) {
+                game.gameplayQuoteTimer -= dt;
+            }
+
+            if (game.gameplayQuoteTimer <= 0) {
+                if (game.health > 0) {
+                    const randIdx = Math.floor(Math.random() * 15) + 1; 
+                    const quote = getLang(`quote_gameplay_${randIdx}`);
+                    if (quote) {
+                        // FIX: Zmieniono kolor na #FFD700 (złoty, jak głód)
+                        addHitText(hitTextPool, hitTexts, player.x, player.y - 60, 
+                            0, '#FFD700', quote, 4.0, player, -50);
+                    }
+                }
+                game.gameplayQuoteTimer = 60 + Math.random() * 10;
+            }
         }
     }
 

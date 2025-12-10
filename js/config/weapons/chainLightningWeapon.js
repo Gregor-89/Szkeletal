@@ -1,5 +1,5 @@
 // ==============
-// CHAINLIGHTNINGWEAPON.JS (v0.98d - Original Visuals + Range 320)
+// CHAINLIGHTNINGWEAPON.JS (v0.99 - Sound Fix)
 // Lokalizacja: /js/config/weapons/chainLightningWeapon.js
 // ==============
 
@@ -18,7 +18,6 @@ export class ChainLightningWeapon extends Weapon {
         this.cooldownMax = PERK_CONFIG.chainLightning.calculateCooldown(this.level);
         this.maxTargets = PERK_CONFIG.chainLightning.calculateTargets(this.level);
         
-        // BALANS: Zasięg zwiększony do 320
         this.range = 320; 
         
         this.activeBolts = []; 
@@ -40,7 +39,6 @@ export class ChainLightningWeapon extends Weapon {
             this.cooldownTimer = this.cooldownMax;
         }
 
-        // Aktualizacja efektów wizualnych
         for (let i = this.activeBolts.length - 1; i >= 0; i--) {
             this.activeBolts[i].life -= state.dt;
             if (this.activeBolts[i].life <= 0) {
@@ -55,7 +53,6 @@ export class ChainLightningWeapon extends Weapon {
         let initialTarget = null;
         let minDist = this.range;
 
-        // Szukanie pierwszego celu
         for (const e of enemies) {
             if (e.dying) continue;
             const dist = Math.hypot(e.x - player.x, e.y - player.y);
@@ -67,12 +64,12 @@ export class ChainLightningWeapon extends Weapon {
 
         if (!initialTarget) return; 
 
-        playSound('Lightning');
+        // FIX: Poprawiona nazwa dźwięku (zgodna z audio.js)
+        playSound('ChainLightning');
         
         const hitEnemies = [initialTarget];
         let currentTarget = initialTarget;
         
-        // Łańcuch
         for (let i = 0; i < this.maxTargets - 1; i++) {
             let nextTarget = null;
             let nextMinDist = this.range * 0.8; 
@@ -94,7 +91,6 @@ export class ChainLightningWeapon extends Weapon {
             }
         }
 
-        // Zadawanie obrażeń
         let prevX = player.x;
         let prevY = player.y - 20; 
 
@@ -126,7 +122,6 @@ export class ChainLightningWeapon extends Weapon {
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         
-        // RESTORED: Oryginalny algorytm rysowania segmentowego z jitterem
         for (const bolt of this.activeBolts) {
             const alpha = bolt.life / 0.25;
             ctx.globalAlpha = alpha;
@@ -143,16 +138,14 @@ export class ChainLightningWeapon extends Weapon {
             const dy = bolt.y2 - bolt.y1;
             const dist = Math.hypot(dx, dy);
             
-            // Dzielimy piorun na segmenty (co ok 20px)
             const segments = Math.max(2, Math.floor(dist / 20));
-            const jitter = 10; // Rozrzut
+            const jitter = 10; 
             
             for (let i = 1; i <= segments; i++) {
                 const frac = i / segments;
                 let tx = bolt.x1 + dx * frac;
                 let ty = bolt.y1 + dy * frac;
                 
-                // Jitter dla punktów pośrednich (ale nie dla ostatniego - musi trafić w cel)
                 if (i < segments) {
                     tx += (Math.random() - 0.5) * jitter;
                     ty += (Math.random() - 0.5) * jitter;

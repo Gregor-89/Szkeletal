@@ -1,5 +1,5 @@
 // ==============
-// ROMANIAN.JS (v0.98d - Lumberjack Texts)
+// ROMANIAN.JS (v1.12 - Gameplay Quotes Keys)
 // Lokalizacja: /js/lang/romanian.js
 // ==============
 
@@ -81,6 +81,24 @@ export const LANG_RO = {
   ui_config_style_circle: "🔵 Cercuri",
   ui_config_style_emoji: "😀 Emoji",
   ui_config_title_lang: "Limbă",
+  
+  // Quotes (Left in Polish)
+  quote_gameplay_1: "Jebać wszystkich Dadgamerów i chuj wam w dupę",
+  quote_gameplay_2: "Mam wyjebane na was melepetów",
+  quote_gameplay_3: "Casuale się zesrali",
+  quote_gameplay_4: "Nie stać was na rozmowę ze mną",
+  quote_gameplay_5: "Recenzenci są sprzedajni",
+  quote_gameplay_6: "Hahaha essa na Maciusia",
+  quote_gameplay_7: "Czy tu jest debilu napisane \"prześlij opinię\"?",
+  quote_gameplay_8: "Polscy streamerzy to biedacy i żebracy",
+  quote_gameplay_9: "Widać czyja matka piła w ciąży",
+  quote_gameplay_10: "Jesteście przyzwyczajeni, że jedyna interakcja waszych rodziców to kłótnia",
+  quote_gameplay_11: "Względem Dadgamerów trzeba się zradykalizować",
+  quote_gameplay_12: "Jesteś nieudacznikiem w moich oczach",
+  quote_gameplay_13: "Ja bym wam wszystkim najebał na tym czacie",
+  quote_gameplay_14: "Typ by dostał w pizdę, to by mi oddał pieniądze",
+  quote_gameplay_15: "Lubię Rocka ale pierdoli",
+  
   ui_guide_title: "Ghidul Contelui",
   ui_guide_intro: "Ești Contele Drakul Estrogenic. Potolește-i \"Foamea de Cartofi\" lovind haterii și tinzând spre Verticalitate absolută.",
   ui_guide_basics_title: "🎮 Reguli de bază",
@@ -160,7 +178,6 @@ export const LANG_RO = {
   enemy_elite_desc: "Hater de elită. La fiecare 7 secunde folosește un atac special: șarjă, proiectile sau invocă ajutoare. Lasă întotdeauna un LudoBox.",
   enemy_wall_name: "Sindromul Asediului",
   enemy_wall_desc: "Apare într-un inel perfect. Extrem de lent, dar durabil. După un timp (cca. 34-40s) detonează.",
-  // NOWOŚĆ: Tłumaczenie dla Drwala
   enemy_lumberjack_name: "Tăietor Zjebadlo",
   enemy_lumberjack_desc: "Un boss puternic din pădure. Aruncă topoare curcubeu rotitoare. Are animații de mers și atac. Atenție la \"Urma Curcubeu\"!",
   

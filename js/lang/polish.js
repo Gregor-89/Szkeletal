@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v0.98 - Fixes: WSAD, Money Bag Emoji, Single Icons)
+// POLISH.JS (v1.12 - Gameplay Quotes)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -38,7 +38,7 @@ export const LANG_PL = {
   ui_game_title: "Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula",
   ui_player_name: "Drakul",
   
-  // --- SAMOUCZEK (UPDATED v0.98 - WSAD & Money Bag) ---
+  // --- SAMOUCZEK ---
   ui_tutorial_title: "PROTOKÓŁ WSTĘPNY",
   ui_tutorial_intro: "Witaj w symulacji ziemniaczkowego łakomstwa. Wcielasz się w Hrabiego Drakula, który po ucieczce z Res-krainy popadł w ludologiczny obłęd i cierpi na ciągły popęd do pysznych ziemniaczków [XP], w imię których jest gotów poświęcić każdego na swej drodze.",
   
@@ -56,7 +56,7 @@ export const LANG_PL = {
   
   ui_tutorial_btn_close: "ZACZYNAJMY",
   
-  // --- Reszta tekstów ---
+  // --- TEKSTY GŁODU ---
   quote_hunger_1: "Ziemniaczki jeść muszę, bo się uduszę!",
   quote_hunger_2: "Gdy głód doskwiera, to mi sytość odbiera!",
   quote_hunger_3: "Gdy nie zjem mych pyszności, to braknie mi sytości!",
@@ -65,6 +65,23 @@ export const LANG_PL = {
   
   warning_hunger: "GŁÓD!",
   shrine_text: "Rzyć umyta, sytość zdobyta",
+  
+  // --- CYTATY GAMEPLAY (NOWOŚĆ v0.98) ---
+  quote_gameplay_1: "Jebać wszystkich Dadgamerów i chuj wam w dupę",
+  quote_gameplay_2: "Mam wyjebane na was melepetów",
+  quote_gameplay_3: "Casuale się zesrali",
+  quote_gameplay_4: "Nie stać was na rozmowę ze mną",
+  quote_gameplay_5: "Recenzenci są sprzedajni",
+  quote_gameplay_6: "Hahaha essa na Maciusia",
+  quote_gameplay_7: "Czy tu jest debilu napisane \"prześlij opinię\"?",
+  quote_gameplay_8: "Polscy streamerzy to biedacy i żebracy",
+  quote_gameplay_9: "Widać czyja matka piła w ciąży",
+  quote_gameplay_10: "Jesteście przyzwyczajeni, że jedyna interakcja waszych rodziców to kłótnia",
+  quote_gameplay_11: "Względem Dadgamerów trzeba się zradykalizować",
+  quote_gameplay_12: "Jesteś nieudacznikiem w moich oczach",
+  quote_gameplay_13: "Ja bym wam wszystkim najebał na tym czacie",
+  quote_gameplay_14: "Typ by dostał w pizdę, to by mi oddał pieniądze",
+  quote_gameplay_15: "Lubię Rocka ale pierdoli",
   
   ui_hp_name: "Sytość",
   ui_hp_desc: "Ataki hejterów redukują Wskaźnik Sytości.",
@@ -113,14 +130,15 @@ export const LANG_PL = {
   
   ui_config_title_lang: "Język",
   
+  // --- PRZEWODNIK ---
   ui_guide_title: "Przewodnik Hrabiego",
   ui_guide_intro: "Bądź Hrabią. Jedz ziemniaki. Biczuj wrogów.",
   ui_guide_basics_title: "🎮 Zasady",
-  ui_guide_basics_1: "Przetrwaj.",
-  ui_guide_basics_2: "Steruj.",
-  ui_guide_basics_3: "Pauzuj.",
-  ui_guide_basics_4: "Rozwijaj się.",
-  ui_guide_basics_5: "Zabijaj.",
+  ui_guide_basics_1: "Cel: Przetrwaj jak najdłużej 📈, zbieraj Ziemniaczki 🥔, zdobywaj kolejne Poziomy Wertykalności ⭐",
+  ui_guide_basics_2: "Sterowanie: WASD/Strzałki ⌨️ lub wirtualny joystick 🕹️ na ekranie",
+  ui_guide_basics_3: "Pauza: Klawisz ESC ⏸️ lub puszczenie joysticka (natychmiastowa autopauza)",
+  ui_guide_basics_4: "Progres: Każdy Poziom Wertykalności = wybór jednego z trzech ulepszeń 🎁",
+  ui_guide_basics_5: "Wrogowie: Z czasem Hejterzy stają się coraz twardsi 👾 ⏱️",
   
   ui_guide_pickups_title: "🎁 Pickupy",
   ui_guide_enemies_title: "👾 Hejterzy",
@@ -170,71 +188,74 @@ export const LANG_PL = {
   ui_intro_next: "Dalej",
   ui_intro_finish: "Menu ▶️",
   
+  // --- PICKUPY ---
   pickup_heal_name: "Talerz Hrabianki",
-  pickup_heal_desc: "+30 HP",
+  pickup_heal_desc: "Relikt utraconej miłości. Natychmiast przywraca +30 punktów Sytości.",
   pickup_magnet_name: "Łakomstwo",
-  pickup_magnet_desc: "Magnes na 2s",
+  pickup_magnet_desc: "2-sekundowy odpust, podczas którego Hrabia wykazuje magnetyczny pociąg do Ziemniaczków.",
   pickup_shield_name: "Tarcza LodoBoga",
-  pickup_shield_desc: "Nietykalność 8s",
+  pickup_shield_desc: "Transcendentalna aura 'Syndromu Boga'. Gwarantuje całkowitą nietykalność przez 8 sekund.",
   pickup_speed_name: "Trampki Menela",
-  pickup_speed_desc: "+40% Speed 8s",
+  pickup_speed_desc: "Relikt z Olszynek. Daje +40% do szybkości poruszania się przez 8 sekund. Idealne do ucieczki.",
   pickup_bomb_name: "BanWave",
-  pickup_bomb_desc: "Bomba",
+  pickup_bomb_desc: "Ostateczny werdykt moderatora. Natychmiastowa anihilacja wszystkich hejterów w pobliżu.",
   pickup_freeze_name: "Ochłonięcie",
-  pickup_freeze_desc: "Slow -75% 5s",
+  pickup_freeze_desc: "Wywołuje 'Potężny Cringe', spowalniając wszystkich wrogów na ekranie (-75% speed) na 5 sekund.",
   pickup_chest_name: "LudoBox",
-  pickup_chest_desc: "Darmowy perk",
+  pickup_chest_desc: "Zaproszenie do ludologicznej ruletki. Gwarantuje jeden losowy atrybut/perk. Wypada z Bossów.",
   
+  // --- WROGOWIE ---
   enemy_standard_name: "Dadgamer",
-  enemy_standard_desc: "Zwykły wróg.",
+  enemy_standard_desc: "Podstawowy hejter, plaga gamingu. Porusza się ruchem sinusoidalnym, utrudniając celowanie.",
   enemy_horde_name: "Maciek z czatu",
-  enemy_horde_desc: "Atakuje w grupie.",
+  enemy_horde_desc: "Bezmózgi fanatyk. Atakuje tylko w grupie. Wolniejszy, ale dąży do otoczenia Gracza.",
   enemy_aggressive_name: "Prowokator",
-  enemy_aggressive_desc: "Szarżuje.",
+  enemy_aggressive_desc: "Podstępny oponent. Zatrzymuje się blisko (sygnalizacja), po czym wykonuje gwałtowną szarżę.",
   enemy_kamikaze_name: "Troll",
-  enemy_kamikaze_desc: "Wybucha.",
+  enemy_kamikaze_desc: "Szybki i chaotyczny. Porusza się agresywnym zygzakiem i przewiduje ruch gracza. Wybucha przy kontakcie.",
   enemy_splitter_name: "Wykopek",
-  enemy_splitter_desc: "Dzieli się po śmierci.",
+  enemy_splitter_desc: "Siewca dramy. Bardzo szybki ruch liniowy. Po pokonaniu dzieli się na dwóch mniejszych hejterów.",
   enemy_tank_name: "Szkeletal",
-  enemy_tank_desc: "Twardy, wolny.",
+  enemy_tank_desc: "Relikt porzuconego lore. Bardzo wolny, ale z potrójną Sytością. Całkowicie odporny na odrzut i spowolnienia.",
   enemy_ranged_name: "Menel",
-  enemy_ranged_desc: "Rzuca butelkami.",
-  enemy_elite_name: "Boss-Soul",
-  enemy_elite_desc: "Elitarny.",
+  enemy_ranged_desc: "Dystansowiec z Olszynek. Utrzymuje dystans i rzuca butelkami, unikając bezpośredniego starcia.",
+  enemy_elite_name: "Elden Hejter",
+  enemy_elite_desc: "Elitarny Hejter z ogromną Sytością. Co 7s używa specjala: szarża, pociski lub przyzwanie pomocy. Upuszcza LudoBox.",
   enemy_wall_name: "Syndrom Oblężenia",
-  enemy_wall_desc: "Ściana.",
+  enemy_wall_desc: "Pojawia się w idealnym pierścieniu. Bardzo wolny i twardy. Po ok. 34-40s detonuje, niszcząc wszystko w pobliżu.",
   enemy_lumberjack_name: "Drwal Zjebadło",
-  enemy_lumberjack_desc: "Boss z siekierą.",
+  enemy_lumberjack_desc: "Strażnik leśnego cringe'u. Rzuca wirującymi tęczowymi toporami i zostawia toksyczny 'Tęczowy Ślad'. Uważaj, bo Cię scanceluje!",
   
   enemy_hazard_name: "Szambo",
-  enemy_hazard_desc: "Obszar obrażeń.",
+  enemy_hazard_desc: "Spowalnia Hrabiego i zadaje obrażenia. Rani też hejterów (z wyjątkiem Szkeletala). Ziemniaki w Szambie gniją.",
   enemy_megahazard_name: "Pole Dramy",
-  enemy_megahazard_desc: "Duże szambo.",
+  enemy_megahazard_desc: "Wersja Mega. Znacznie większy obszar Szamba, zadający zwiększone obrażenia.",
   
+  // --- PERKI ---
   perk_whip_name: "Tłuczek",
-  perk_whip_desc: "Bicz.",
+  perk_whip_desc: "Broń startowa. Biczuje horyzontalnie. Przebija wszystkich wrogów. Kolejne poziomy zwiększają liczbę uderzeń (przód/tył).",
   perk_autogun_name: "Plujko Jad",
-  perk_autogun_desc: "Karabin.",
+  perk_autogun_desc: "Automatyczna broń wypluwająca toksyczny jad w najbliższego wroga. Ulepszana przez osobne perki (Szybkostrzelność itp.).",
   perk_orbital_name: "Orbitalne Ziemniaczki",
-  perk_orbital_desc: "Ochrona.",
+  perk_orbital_desc: "Wirujące artefakty-ziemniaki. Poziomy zwiększają ilość ziemniaków, zasięg i prędkość obrotu.",
   perk_nova_name: "Eksplozja Mentalu",
-  perk_nova_desc: "Obszarówka.",
+  perk_nova_desc: "Cykliczna emanacja 'pato-lore'. Rozrzuca pociski jadu wokół Hrabiego.",
   perk_chainLightning_name: "Pierun Ludologa",
-  perk_chainLightning_desc: "Piorun.",
+  perk_chainLightning_desc: "Automatyczny atak rażący najbliższego wroga i przeskakujący na kolejnych.",
   perk_firerate_name: "Szybkostrzelność",
-  perk_firerate_desc: "+Rate",
+  perk_firerate_desc: "Bo hejt musi być dostarczony szybko! Zwiększa szybkostrzelność Plujko Jadu o +20%.",
   perk_damage_name: "Obrażenia",
-  perk_damage_desc: "+Dmg",
+  perk_damage_desc: "Obiektywny wzrost toksyczności. Dodaje +1 do obrażeń pocisków.",
   perk_multishot_name: "Multishot",
-  perk_multishot_desc: "+1 Pocisk",
+  perk_multishot_desc: "Dywersyfikacja wertykalna. Wystrzeliwuje +1 dodatkowy pocisk.",
   perk_pierce_name: "Przebicie",
-  perk_pierce_desc: "+1 Pierce",
+  perk_pierce_desc: "Twój jad jest tak żrący, że przebija narrację. Przebija +1 dodatkowego wroga.",
   perk_speed_name: "Szybkość",
-  perk_speed_desc: "+Speed",
+  perk_speed_desc: "Nawet Hrabia musi czasem zmienić pozycję. +10% do szybkości ruchu.",
   perk_pickup_name: "Zasięg",
-  perk_pickup_desc: "+Range",
+  perk_pickup_desc: "Im większy głód, tym dłuższe ręce. +40% do zasięgu przyciągania Ziemniaków.",
   perk_health_name: "Zdrowie",
-  perk_health_desc: "+MaxHP",
+  perk_health_desc: "Większy żołądek na hejt. Zwiększa Max Sytość o +20 i leczy 20 HP.",
   
   ui_stat_level: "Lvl",
   ui_stat_health: "HP",
