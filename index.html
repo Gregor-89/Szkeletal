@@ -24,14 +24,25 @@
     <img id="splashImage" src="img/splash_dev.png" alt="Ekran powitalny">
   </div>
 
+  <div id="nickInputOverlay" class="retro-overlay" style="display:none;">
+    <div class="retro-frame small text-center mobile-friendly-modal" style="border-color: var(--accent-gold);">
+        <h2 id="lblNickTitle" class="retro-title">PODPISZ SIĘ</h2>
+        <p id="lblNickText" style="color:#ccc; margin-bottom:10px;">Zanim wyślesz wynik, podaj ksywkę:</p>
+        <input type="text" id="inpQuickNick" class="retro-input" maxlength="20" placeholder="Anon" value="">
+        <p id="lblNickLimit" style="font-size:0.8rem; color:#666; margin-top:5px;">(Max 20 znaków, A-Z, 0-9)</p>
+        <div class="menu-actions" style="margin-top:20px;">
+            <button id="btnConfirmNick" class="retro-btn primary">ZATWIERDŹ</button>
+            <button id="btnCancelNick" class="retro-btn danger">ANULUJ</button>
+        </div>
+    </div>
+  </div>
+
   <div id="tutorialOverlay" class="retro-overlay" style="display:none;">
     <div class="retro-frame small text-center">
       <h2 id="tutTitle" class="retro-title"></h2>
       <div class="retro-scroll-box" style="text-align:left; font-size:1.3rem; line-height:1.4;">
         <p id="tutIntro" style="color:#FFD700; margin-bottom:15px; text-align:center;"></p>
-        
-        <ul id="tutList" style="list-style:none; padding:0;">
-          </ul>
+        <ul id="tutList" style="list-style:none; padding:0;"></ul>
       </div>
       <button id="btnCloseTutorial" class="retro-btn primary pulse"></button>
     </div>
@@ -44,7 +55,6 @@
                 <div id="playerHPBarOuter"><div id="playerHPBarInner"></div><div id="playerHPBarTxt"></div></div>
                 <div id="xpBarOuter"><div id="xpBarFill"></div><div id="xpBarTxt"></div></div>
             </div>
-            
             <div id="hungerWidget" class="hunger-widget" title="Głód Ziemniaczany">
                 <div id="hungerFill" class="hunger-fill">
                     <img src="img/pickups/gem_potato.png" alt="Potato Hunger" class="hunger-icon">
@@ -52,9 +62,7 @@
                 <img src="img/pickups/gem_potato.png" alt="Potato BG" class="hunger-icon-bg">
             </div>
         </div>
-        
         <div id="bonusPanel"></div>
-
         <canvas id="gameCanvas" width="800" height="600"></canvas>
     </div>
     
@@ -63,16 +71,13 @@
       <div class="stat"><span class="stat-icon"><img src="img/icons/hud_level.png" class="stat-icon-img"></span><span id="level">1</span></div>
       <div class="stat"><span class="stat-icon"><img src="img/icons/hud_xp.png" class="stat-icon-img"></span><span id="xp">0</span>/<span id="xpNeeded">5</span></div>
       <div class="stat"><span class="stat-icon"><img src="img/icons/hud_health.png" class="stat-icon-img"></span><span id="health">100</span></div>
-      
       <div class="stat">
           <span class="stat-icon"><img src="img/icons/hud_enemies.png" class="stat-icon-img"></span>
           <span id="totalKillsSpan">0</span> 
           (<span id="enemyCountSpan">0</span>/<span id="enemyLimitSpan">0</span>)
       </div>
-      
       <div class="stat"><span class="stat-icon"><img src="img/icons/hud_time.png" class="stat-icon-img"></span><span id="time">0</span></div>
     </div>
-    
     <div id="joystickZone"><div id="joystickBase"></div><div id="joystick"></div></div>
   </div>
 
@@ -81,8 +86,13 @@
     <div class="menu-vignette"></div>
 
     <div class="retro-frame">
-      
       <div id="view-main" class="menu-view active">
+        <div class="lang-quick-switch" style="position:absolute; top:15px; right:15px; z-index:20; display:flex; gap:10px;">
+            <button id="btnLangPL" style="font-size:2rem; background:none; border:none; cursor:pointer; filter:drop-shadow(2px 2px 0 #000);">🇵🇱</button>
+            <button id="btnLangEN" style="font-size:2rem; background:none; border:none; cursor:pointer; filter:drop-shadow(2px 2px 0 #000);">🇬🇧</button>
+            <button id="btnLangRO" style="font-size:2rem; background:none; border:none; cursor:pointer; filter:drop-shadow(2px 2px 0 #000);">🇷🇴</button>
+        </div>
+
         <div class="logo-area">
             <img src="img/logo.png" alt="Szkeletal" class="pixel-logo">
             <div class="version-tag" id="menuVersionTag"></div> 
@@ -91,31 +101,50 @@
             <button id="btnStart" class="retro-btn primary pulse">NOWA GRA</button>
             <button id="btnContinue" class="retro-btn warning" style="display:none;">KONTYNUUJ</button>
             <div class="spacer"></div>
-            
-            <button id="navScores" class="retro-btn">WYNIKI</button>
+            <button id="navScores" class="retro-btn">KRONIKI POLEGŁYCH</button>
             <button id="navConfig" class="retro-btn">OPCJE</button>
             <button id="navGuide" class="retro-btn">PRZEWODNIK</button>
-            
             <button id="btnReplayIntroMain" class="retro-btn" onclick="window.wrappedDisplayIntro()">ODTWÓRZ INTRO</button>
-            
             <button id="navCoffee" class="retro-btn" style="border-color:#E91E63; color:#E91E63;">HOT COFFEE ☕</button>
-            
             <div class="spacer"></div>
             <button id="navDev" class="retro-btn small text-red">DEV TOOLS</button>
         </div>
       </div>
 
       <div id="view-scores" class="menu-view">
-        <h2 id="scoresTitle" class="retro-title">TABLICA WYNIKÓW</h2>
-        <div class="retro-scroll-box">
-            <table id="retroScoreTable">
-                <thead><tr><th>#</th><th>PKT</th><th>ZAB</th><th>LVL</th><th>CZAS</th></tr></thead>
+        <h2 id="scoresTitle" class="retro-title">MAUZOLEUM</h2>
+        
+        <div class="score-tabs-container">
+            <button id="tabLocalScores" class="score-tab active">LOKALNE</button>
+            <button id="tabOnlineScores" class="score-tab">ONLINE</button>
+        </div>
+        
+        <div id="onlineFilters" class="score-filters" style="display:none;">
+            <button class="filter-btn active" data-period="today">DZIŚ</button>
+            <button class="filter-btn" data-period="weekly">TYDZIEŃ</button>
+            <button class="filter-btn" data-period="monthly">MIESIĄC</button>
+            <button class="filter-btn" data-period="all">ALL</button>
+        </div>
+        
+        <div class="retro-scroll-box" id="scoreScrollBox">
+            <div id="scoreLoading" style="display:none; text-align:center; padding:20px; color:#FFD700;">WCZYTYWANIE...</div>
+            <table id="retroScoreTable" class="sortable-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th data-sort="name">NICK</th>
+                        <th data-sort="score">PKT</th>
+                        <th data-sort="kills">ZAB</th>
+                        <th data-sort="level">LVL</th>
+                        <th data-sort="date">DATA</th>
+                    </tr>
+                </thead>
                 <tbody id="scoresBodyMenu"></tbody>
             </table>
             <div id="scoresEmptyMsg" style="text-align:center; color:#666; padding:20px; display:none;">BRAK WYNIKÓW</div>
         </div>
         <div class="menu-actions">
-            <button id="btnClearScoresMenu" class="retro-btn small danger">WYCZYŚĆ</button>
+            <button id="btnClearScoresMenu" class="retro-btn small danger">WYCZYŚĆ LOKALNE</button>
             <button class="retro-btn nav-back">POWRÓT</button>
         </div>
       </div>
@@ -123,6 +152,12 @@
       <div id="view-config" class="menu-view">
         <h2 id="configTitleMain" class="retro-title">KONFIGURACJA</h2>
         <div class="retro-scroll-box config-list">
+            <div class="config-row" style="flex-direction:column; align-items:flex-start;">
+                <span id="lblNick" style="margin-bottom:5px; color:#FFD700;">TWOJA KSYWKA:</span>
+                <input type="text" id="inpPlayerNick" class="retro-input" maxlength="20" placeholder="Wpisz nick..." value="GRACZ">
+                <span id="lblNickLimitConfig" style="font-size:0.8rem; color:#666;">(Max 20 znaków, A-Z, 0-9)</span>
+            </div>
+            
             <input type="checkbox" id="chkHyper" style="display:none;">
             <input type="checkbox" id="chkShake" checked style="display:none;">
             <input type="checkbox" id="chkFPS" checked style="display:none;">
@@ -142,9 +177,7 @@
                 <span id="lblSFX">EFEKTY</span>
                 <input type="range" id="volSFX" class="retro-range" min="0" max="100" value="30">
             </div>
-
             <div class="config-row"><span id="lblLang">JĘZYK</span><div id="lang-selector-container" class="retro-lang-row"></div></div>
-            
             <div class="config-row">
                 <span>SAMOUCZEK</span>
                 <button id="btnShowTutorialConfig" class="retro-btn small">ODTWÓRZ</button>
@@ -250,11 +283,9 @@
 
       <div id="view-guide" class="menu-view">
         <h2 id="guideTitle" class="retro-title">PRZEWODNIK</h2>
-        <div id="guideContent" class="retro-scroll-box">
-             </div>
+        <div id="guideContent" class="retro-scroll-box"></div>
         <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
       </div>
-
     </div>
   </div>
 
@@ -310,19 +341,59 @@
   <div id="gameOverOverlay" class="retro-overlay" style="display:none;"> 
     <div class="retro-frame"> 
       <h2 id="gameOverTitle" class="retro-title text-red">KONIEC GRY</h2> 
-      <div class="gameover-stats" style="font-size:1.3rem; margin-bottom:20px; display:flex; flex-direction:column; align-items:center; gap:5px;"> 
-        <p><span id="gameOverScoreLabel">WYNIK:</span> <span id="finalScore" style="color:var(--accent-gold); font-weight:bold;">0</span></p> 
-        <p><span id="gameOverLevelLabel">POZIOM:</span> <span id="finalLevel">1</span></p> 
-        <p><span id="gameOverTimeLabel">CZAS:</span> <span id="finalTime">0:00</span></p> 
-        <p><span id="gameOverKillsLabel">ZABICI:</span> <span id="totalKillsSpanGO">0</span></p> 
-      </div> 
+      
+      <div class="gameover-stats-fancy">
+          <div class="fancy-stat-box main">
+              <span class="fancy-label">TWÓJ WYNIK</span>
+              <span id="finalScore" class="fancy-value gold">0</span>
+          </div>
+          <div class="fancy-stat-row">
+              <div class="fancy-stat-box">
+                  <span class="fancy-label">CZAS</span>
+                  <span id="finalTime" class="fancy-value">0:00</span>
+              </div>
+              <div class="fancy-stat-box">
+                  <span class="fancy-label">POZIOM</span>
+                  <span id="finalLevel" class="fancy-value">1</span>
+              </div>
+              <div class="fancy-stat-box">
+                  <span class="fancy-label">ZABICI</span>
+                  <span id="totalKillsSpanGO" class="fancy-value kill-count">0</span>
+              </div>
+          </div>
+      </div>
+
+      <div class="score-tabs-container go-tabs">
+          <button id="tabGOLocal" class="score-tab active small">LOKALNE</button>
+          <button id="tabGOOnline" class="score-tab small">ONLINE</button>
+      </div>
+      <div id="goOnlineFilters" class="score-filters" style="display:none;">
+          <button class="filter-btn active" data-period="today">DZIŚ</button>
+          <button class="filter-btn" data-period="weekly">TYDZIEŃ</button>
+          <button class="filter-btn" data-period="all">ALL</button>
+      </div>
+
       <div class="retro-scroll-box" style="height:150px;"> 
-        <table id="goScoreTable"> 
+        <div id="goScoreLoading" style="display:none; text-align:center; padding:10px; color:#FFD700;">WCZYTYWANIE...</div>
+        <table id="goScoreTable" class="sortable-table"> 
+          <thead>
+              <tr>
+                  <th>#</th>
+                  <th data-sort="name">NICK</th>
+                  <th data-sort="score">PKT</th>
+                  <th data-sort="kills">ZAB</th>
+                  <th data-sort="level">LVL</th>
+                  <th data-sort="date">DATA</th>
+              </tr>
+          </thead> 
           <tbody id="scoresBodyGameOver"></tbody> 
-          <thead><tr><th>#</th><th>PKT</th><th>ZAB</th><th>LVL</th><th>CZAS</th></tr></thead> 
         </table> 
       </div> 
-      <button id="btnClearScoresGO" class="retro-btn small danger" style="margin-bottom:10px;">WYCZYŚĆ</button> 
+      
+      <button id="btnSubmitScore" class="retro-btn small success" style="margin-bottom:10px; border-color:#00E676; background:#1B5E20; display:none;">WYŚLIJ WYNIK</button>
+      <div id="submitMsg" style="text-align:center; font-size:1rem; margin-bottom:5px; height:20px;"></div>
+
+      <button id="btnClearScoresGO" class="retro-btn small danger" style="margin-bottom:10px;">WYCZYŚĆ LOKALNE</button>
       <div class="menu-actions"> 
         <button id="btnRetry" class="retro-btn primary">JESZCZE RAZ</button> 
         <button id="btnMenu" class="retro-btn">MENU</button> 

@@ -1,10 +1,15 @@
 // ==============
-// ENGLISH.JS (v1.12 - Gameplay Quotes Keys)
+// ENGLISH.JS (v0.99g - Nick Limit Translation)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
 export const LANG_EN = {
+  // ... (Wszystkie poprzednie klucze zachowane) ...
   
+  // DODANO NOWY KLUCZ:
+  ui_nick_limit_info: "(Max 20 chars, A-Z, 0-9)",
+  
+  // (Reszta pliku bez zmian, upewnij się że masz wersję v0.99f i dopisz tylko ten klucz na końcu obiektu)
   ui_on: "ON",
   ui_off: "OFF",
   
@@ -21,7 +26,7 @@ export const LANG_EN = {
   
   ui_dev_title: "DEV TOOLS",
   ui_dev_label_presets: "ENEMY PRESETS (AUTO-START)",
-  ui_dev_label_scenarios: "SCENARIOS (WEAPON)",
+  ui_dev_label_scenarios: "SCENARIUSZE (WEAPON)",
   ui_dev_label_player: "PLAYER STATE",
   ui_dev_btn_apply: "APPLY",
   ui_dev_btn_peaceful: "PEACEFUL WALK",
@@ -81,7 +86,6 @@ export const LANG_EN = {
   ui_config_style_emoji: "😀 Emojis",
   ui_config_title_lang: "Language",
   
-  // Quotes (Left in Polish as character specific lines)
   quote_gameplay_1: "Jebać wszystkich Dadgamerów i chuj wam w dupę",
   quote_gameplay_2: "Mam wyjebane na was melepetów",
   quote_gameplay_3: "Casuale się zesrali",
@@ -123,6 +127,7 @@ export const LANG_EN = {
   ui_chest_button: "Open and Claim",
   ui_chest_empty_title: "LudoBox Empty",
   ui_chest_empty_desc: "All upgrades are already maxed out!",
+  
   ui_gameover_title: "💀 GAME OVER",
   ui_gameover_score: "🎯 Score:",
   ui_gameover_level: "⭐ Level:",
@@ -130,17 +135,31 @@ export const LANG_EN = {
   ui_gameover_retry: "Play Again",
   ui_gameover_menu: "Menu",
   ui_gameover_kills: "⚔️ Kills:",
-  ui_scores_title: "🏆 High Scores",
+  
+  ui_gameover_submit: "SUBMIT SCORE",
+  ui_gameover_sent: "SENT!",
+  ui_gameover_error: "NETWORK ERROR",
+  
+  ui_scores_title: "REGISTRY OF LOSERS",
   ui_scores_clear: "🗑️ Clear",
   ui_scores_col_rank: "#",
+  ui_scores_col_nick: "NICK",
   ui_scores_col_score: "Score",
   ui_scores_col_kills: "Kills",
   ui_scores_col_level: "Lvl",
   ui_scores_col_time: "Time",
+  ui_scores_col_date: "Date",
+  
   ui_confirm_title: "Confirmation",
   ui_confirm_clear_scores: "Are you sure you want to clear the high scores? This operation cannot be undone.",
   ui_confirm_yes: "Yes, clear",
   ui_confirm_no: "Cancel",
+  
+  ui_nick_modal_title: "SIGN YOUR NAME",
+  ui_nick_modal_text: "Before sending, enter your nickname:",
+  ui_nick_modal_confirm: "CONFIRM",
+  ui_nick_modal_cancel: "CANCEL",
+  
   ui_intro_prev: "Back",
   ui_intro_skip: "Skip (Close)",
   ui_intro_next: "Next",

@@ -1,5 +1,6 @@
-/* style.css (v1.07 - HUD Fixes) */
+/* style.css (v1.10 - Mobile Modal Fix & Sort) */
 
+/* ... (Zachowane poprzednie style aż do definicji modali) ... */
 :root {
     --bg-color: #050505;
     --frame-bg: rgba(15, 15, 15, 0.85);
@@ -23,28 +24,26 @@ body {
 
 .game-view { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 800px; position: relative; }
 
-/* FIX: Wyrównanie do dołu (flex-end), aby paski były blisko gry */
 .bars-container {
     position: relative;
     width: 100%;
     max-width: 800px;
     display: flex;
     justify-content: center;
-    align-items: flex-end; /* To kluczowe - dopycha do dołu */
+    align-items: flex-end; 
     padding: 0 5px;
-    margin-bottom: 2px; /* Minimalny odstęp */
+    margin-bottom: 2px; 
     min-height: 54px; 
 }
 
-/* FIX: Paski wycentrowane poziomo, ale przyklejone do dołu kontenera */
 .bars-left {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centrowanie poziome */
-    justify-content: flex-end; /* Centrowanie pionowe do dołu */
+    align-items: center; 
+    justify-content: flex-end; 
     width: 100%; 
     z-index: 5;
-    padding-bottom: 2px; /* Mały odstęp od dolnej krawędzi */
+    padding-bottom: 2px; 
 }
 
 #playerHPBarOuter, #xpBarOuter { position: relative; width: 100%; max-width: 300px; height: 16px; background: #222; border: 2px solid #000; margin-bottom: 2px; }
@@ -53,11 +52,9 @@ body {
 #xpBarFill { height: 100%; background: #2196F3; transition: width 0.2s; }
 #playerHPBarTxt, #xpBarTxt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; text-shadow: 1px 1px 0 #000; }
 
-/* Widget pozycjonowany absolutnie */
 .hunger-widget {
     position: absolute;
     right: 10px;
-    /* Wyśrodkowanie w pionie względem 54px kontenera */
     top: 50%; 
     transform: translateY(-50%);
     width: 48px;
@@ -150,6 +147,19 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
 .retro-scroll-box td { padding: 8px; border-bottom: 1px dashed #333; }
 .retro-scroll-box tr:nth-child(1) { color: var(--accent-gold); }
 
+/* SORTOWANIE I STYL TABELI */
+.sortable-table th[data-sort] {
+    cursor: pointer;
+    position: relative;
+    padding-right: 20px;
+}
+.sortable-table th[data-sort]:hover {
+    color: var(--accent-gold);
+    text-decoration: underline;
+}
+/* Mniejsza czcionka dla daty */
+#retroScoreTable td:last-child, #goScoreTable td:last-child { font-size: 0.8em; color: #888; }
+
 .guide-entry { display: flex; flex-direction: row; align-items: flex-start; margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px; }
 .guide-icon-wrapper { width: 50px; min-width: 50px; margin-right: 15px; display: flex; justify-content: center; }
 .guide-text-wrapper { flex: 1; text-align: left; }
@@ -201,6 +211,7 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
 .retro-btn.warning { background: #F57C00; border-color: #FF9800; }
 .retro-btn.danger { background: #C62828; border-color: #EF5350; }
 .retro-btn.small { font-size: 1.2rem; padding: 6px 10px; width: auto; }
+.retro-btn.success { background: #2E7D32; border-color: #4CAF50; }
 .pulse { animation: btnPulse 2s infinite; }
 @keyframes btnPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
 .config-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 12px; margin-bottom: 8px; flex-shrink: 0; }
@@ -299,7 +310,7 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
     box-shadow: 2px 2px 0 #000;
 }
 
-/* FIX v0.97: Loading Screen Styles */
+/* LOADING OVERLAY */
 #loadingOverlay {
     position: fixed;
     inset: 0;
@@ -308,7 +319,7 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    z-index: 300; /* Powyżej wszystkiego */
+    z-index: 300; 
 }
 
 .loading-container {
@@ -342,3 +353,49 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
     width: 0%;
     transition: width 0.1s linear;
 }
+
+/* TABS */
+.score-tabs-container { display: flex; width: 100%; margin-bottom: 10px; border-bottom: 2px solid #444; }
+.score-tab { flex: 1; background: rgba(0,0,0,0.3); border: none; border-bottom: 4px solid transparent; color: #888; font-family: var(--font-retro); font-size: 1.5rem; padding: 10px; cursor: pointer; transition: all 0.2s; }
+.score-tab.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); background: rgba(255, 215, 0, 0.05); }
+.score-tab.small { font-size: 1.2rem; padding: 5px; }
+
+/* FILTRY */
+.score-filters { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+.filter-btn { background: #222; border: 1px solid #444; color: #888; font-family: var(--font-retro); font-size: 1rem; padding: 4px 8px; cursor: pointer; }
+.filter-btn.active { background: #444; color: #fff; border-color: var(--accent-gold); }
+
+/* INPUT */
+.retro-input { background: #111; border: 2px solid #444; color: var(--accent-gold); font-family: var(--font-retro); font-size: 1.5rem; padding: 10px; width: 100%; text-transform: uppercase; text-align: center; }
+.retro-input:focus { outline: none; border-color: var(--accent-green); box-shadow: 0 0 10px rgba(76, 175, 80, 0.3); }
+
+/* GAME OVER FANCY STATS */
+.gameover-stats-fancy { display: flex; flex-direction: column; width: 100%; margin-bottom: 15px; gap: 10px; }
+.fancy-stat-box { background: rgba(0,0,0,0.3); border: 2px solid #444; padding: 5px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 4px; }
+.fancy-stat-box.main { border-color: var(--accent-gold); background: rgba(255, 215, 0, 0.05); padding: 10px; }
+.fancy-stat-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+.fancy-label { font-size: 0.9rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+.fancy-value { font-size: 1.4rem; color: #eee; font-weight: bold; text-shadow: 1px 1px 0 #000; }
+.fancy-value.gold { font-size: 2.5rem; color: var(--accent-gold); text-shadow: 2px 2px 0 #000; }
+.fancy-value.kill-count { color: var(--accent-red); }
+
+/* FIX: Mobile Friendly Modal dla Nick Input */
+@media (max-height: 500px) {
+    .mobile-friendly-modal {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border: none;
+        border-radius: 0;
+        justify-content: flex-start;
+        padding-top: 20px;
+        overflow-y: auto;
+        z-index: 2000; /* Bardzo wysoki Z-index */
+    }
+}
+/* Wysoki z-index dla overlayów input */
+#nickInputOverlay { z-index: 1500; align-items: flex-start; padding-top: 50px; overflow-y: auto; }

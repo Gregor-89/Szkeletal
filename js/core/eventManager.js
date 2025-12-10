@@ -1,5 +1,5 @@
 // ==============
-// EVENTMANAGER.JS (v0.97u - Cleanup)
+// EVENTMANAGER.JS (v0.99e - Fix Start Crash)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
@@ -7,16 +7,8 @@ import { showMenu, resetAll, pauseGame, resumeGame, gameOver, startRun, switchVi
 import { levelUp, pickPerk, openChest } from '../managers/levelManager.js';
 import { saveGame, loadGame } from '../services/saveManager.js';
 import { playSound } from '../services/audio.js';
-import { setJoystickSide } from '../ui/input.js';
-import { devSettings, resetDevTime } from '../services/dev.js';
-import { 
-    getLang, setLanguage, getAvailableLanguages, getCurrentLanguage 
-} from '../services/i18n.js';
-import { get as getAsset } from '../services/assets.js'; 
-import {
-    gameOverOverlay, pauseOverlay, levelUpOverlay, chestOverlay,
-    btnContinueMaxLevel, chestButton, docTitle
-} from '../ui/domElements.js';
+import { resetDevTime, devSettings } from '../services/dev.js';
+import { chestOverlay, gameOverOverlay, pauseOverlay, levelUpOverlay, btnContinueMaxLevel, chestButton } from '../ui/domElements.js';
 
 let gameStateRef = null;
 let uiDataRef = null;
@@ -24,7 +16,7 @@ let uiDataRef = null;
 function wrappedShowMenu(allowContinue = false) {
     uiDataRef.animationFrameId = uiDataRef.animationFrameId;
     showMenu(uiDataRef.game, wrappedResetAll, uiDataRef, allowContinue);
-    updateAllStaticText(); 
+    updateAllStaticText();
 }
 
 function wrappedResetAll() {
@@ -42,7 +34,7 @@ function wrappedResetAll() {
     uiDataRef.gemsPool = gameStateRef.gemsPool;
     uiDataRef.particlePool = gameStateRef.particlePool;
     uiDataRef.hitTextPool = gameStateRef.hitTextPool;
-    uiDataRef.camera = gameStateRef.camera; 
+    uiDataRef.camera = gameStateRef.camera;
     if (window.SIEGE_EVENT_CONFIG) uiDataRef.settings.currentSiegeInterval = window.SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
     resetAll(uiDataRef.canvas, uiDataRef.settings, uiDataRef.perkLevels, uiDataRef, uiDataRef.camera);
     gameStateRef.enemyIdCounter = 0;
@@ -78,7 +70,7 @@ function wrappedGameOver() {
 }
 
 function wrappedStartRun() {
-    startRun(gameStateRef.game, wrappedResetAll, uiDataRef); 
+    startRun(gameStateRef.game, wrappedResetAll, uiDataRef);
 }
 
 function wrappedLoadConfig() {
@@ -86,7 +78,7 @@ function wrappedLoadConfig() {
     const shakeEl = document.getElementById('chkShake');
     const fpsEl = document.getElementById('chkFPS');
     const labelsEl = document.getElementById('chkPickupLabels');
-
+    
     gameStateRef.game.hyper = !!(hyperEl && hyperEl.checked);
     gameStateRef.game.screenShakeDisabled = !!(shakeEl && !shakeEl.checked);
     uiDataRef.showFPS = !!(fpsEl && fpsEl.checked);
@@ -97,38 +89,7 @@ function updateAllStaticText() {
     if (updateStaticTranslations) updateStaticTranslations();
 }
 
-function buildLanguageSelector() {
-    const container = document.getElementById('lang-selector-container');
-    if (!container) return;
-    container.innerHTML = ''; 
-    const availableLangs = getAvailableLanguages();
-    const currentLang = getCurrentLanguage();
-    
-    availableLangs.forEach(langName => {
-        const label = document.createElement('label');
-        label.className = 'option';
-        const input = document.createElement('input');
-        input.type = 'radio';
-        input.name = 'lang';
-        input.value = langName;
-        if (langName === currentLang) input.checked = true;
-        
-        input.onchange = () => {
-            setLanguage(langName);
-            updateStaticTranslations();
-        };
-        
-        const span = document.createElement('span');
-        span.textContent = langName.toUpperCase();
-        
-        label.appendChild(input);
-        label.appendChild(span);
-        container.appendChild(label);
-    });
-}
-
-// FIX v0.97u: USUNIĘTO nadpisywanie window.devStartScenario!
-// Teraz polegamy na tym, co ustawia dev.js (initDevTools).
+// USUNIĘTO: buildLanguageSelector (powodował konflikt i crash)
 
 export function initializeMainEvents(stateRef, uiRef) {
     gameStateRef = stateRef;
@@ -141,7 +102,7 @@ export function initializeMainEvents(stateRef, uiRef) {
     window.wrappedLevelUp = wrappedLevelUp;
     window.wrappedOpenChest = wrappedOpenChest;
     window.wrappedLoadConfig = wrappedLoadConfig;
-    window.wrappedStartRun = wrappedStartRun; 
+    window.wrappedStartRun = wrappedStartRun;
     
     if (uiRef.gameData && uiDataRef.gameData.SIEGE_EVENT_CONFIG) {
         window.SIEGE_EVENT_CONFIG = uiRef.gameData.SIEGE_EVENT_CONFIG;
@@ -150,17 +111,17 @@ export function initializeMainEvents(stateRef, uiRef) {
     return {
         initEvents,
         wrappedLoadConfig,
-        wrappedStartRun 
+        wrappedStartRun
     };
 }
 
 function initEvents() {
-    buildLanguageSelector();
-    updateStaticTranslations(); 
-
+    // buildLanguageSelector(); // USUNIĘTE - UI zajmuje się tym teraz
+    updateStaticTranslations();
+    
     document.getElementById('btnStart').addEventListener('click', () => {
         devSettings.presetLoaded = false;
-        resetDevTime(); 
+        resetDevTime();
         wrappedLoadConfig();
         wrappedStartRun();
     });
@@ -168,39 +129,37 @@ function initEvents() {
         wrappedLoadConfig();
         loadGame(uiDataRef.savedGameState, gameStateRef, uiDataRef);
     });
-
+    
     const bindNav = (btnId, viewId) => {
         const btn = document.getElementById(btnId);
-        if(btn) btn.addEventListener('click', () => switchView(viewId));
+        if (btn) btn.addEventListener('click', () => switchView(viewId));
     };
     bindNav('navScores', 'view-scores');
     bindNav('navConfig', 'view-config');
     bindNav('navGuide', 'view-guide');
-    bindNav('navCoffee', 'view-coffee'); 
+    bindNav('navCoffee', 'view-coffee');
     bindNav('navDev', 'view-dev');
     
     document.querySelectorAll('.nav-back').forEach(btn => {
         btn.addEventListener('click', () => switchView('view-main'));
     });
     
-    // Toggles są inicjalizowane w ui.js (initRetroToggles), wywoływane z showMenu.
-
     document.getElementById('btnRetry').addEventListener('click', () => {
-        gameOverOverlay.style.display='none';
+        gameOverOverlay.style.display = 'none';
         devSettings.presetLoaded = false;
         resetDevTime();
         wrappedLoadConfig();
-        wrappedStartRun(); 
+        wrappedStartRun();
     });
     document.getElementById('btnMenu').addEventListener('click', () => {
-        gameOverOverlay.style.display='none';
+        gameOverOverlay.style.display = 'none';
         wrappedShowMenu(false);
     });
     document.getElementById('btnResume').addEventListener('click', () => {
         wrappedResumeGame();
     });
     document.getElementById('btnPauseMenu').addEventListener('click', () => {
-        pauseOverlay.style.display='none';
+        pauseOverlay.style.display = 'none';
         gameStateRef.game.manualPause = false;
         if (gameStateRef.game.running && !gameStateRef.game.inMenu) {
             uiDataRef.savedGameState = saveGame(gameStateRef);
@@ -209,23 +168,23 @@ function initEvents() {
             wrappedShowMenu(false);
         }
     });
-
+    
     window.wrappedPickPerk = (perk) => {
-        pickPerk(perk, gameStateRef.game, gameStateRef.perkLevels, gameStateRef.settings, gameStateRef.player.weapons, gameStateRef.player, resumeGame); 
+        pickPerk(perk, gameStateRef.game, gameStateRef.perkLevels, gameStateRef.settings, gameStateRef.player.weapons, gameStateRef.player, resumeGame);
     };
     btnContinueMaxLevel.addEventListener('click', () => {
-        levelUpOverlay.style.display='none';
-        pickPerk(null, gameStateRef.game, gameStateRef.perkLevels, gameStateRef.settings, gameStateRef.player.weapons, gameStateRef.player, resumeGame); 
+        levelUpOverlay.style.display = 'none';
+        pickPerk(null, gameStateRef.game, gameStateRef.perkLevels, gameStateRef.settings, gameStateRef.player.weapons, gameStateRef.player, resumeGame);
     });
-    chestButton.addEventListener('click',() => {
-        chestOverlay.style.display='none';
-        if(uiDataRef.currentChestReward){
+    chestButton.addEventListener('click', () => {
+        chestOverlay.style.display = 'none';
+        if (uiDataRef.currentChestReward) {
             const state = { game: gameStateRef.game, settings: gameStateRef.settings, weapons: gameStateRef.player.weapons, player: gameStateRef.player };
             uiDataRef.currentChestReward.apply(state, uiDataRef.currentChestReward);
-            gameStateRef.perkLevels[uiDataRef.currentChestReward.id]=(gameStateRef.perkLevels[uiDataRef.currentChestReward.id]||0)+1;
+            gameStateRef.perkLevels[uiDataRef.currentChestReward.id] = (gameStateRef.perkLevels[uiDataRef.currentChestReward.id] || 0) + 1;
             playSound('ChestReward');
         }
-        uiDataRef.currentChestReward=null;
+        uiDataRef.currentChestReward = null;
         resumeGame(gameStateRef.game, 0.75);
     });
     

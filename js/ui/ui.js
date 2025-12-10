@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.13 - Gameplay Quote Timer Init)
+// UI.JS (v0.99g - Music Fix & Full Translations)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -8,7 +8,7 @@ import { initAudio, playSound, setMusicVolume, setSfxVolume } from '../services/
 import { 
     GAME_CONFIG, PLAYER_CONFIG, UI_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG, MUSIC_CONFIG 
 } from '../config/gameData.js';
-import { getLang } from '../services/i18n.js';
+import { getLang, setLanguage, getAvailableLanguages, getCurrentLangCode } from '../services/i18n.js';
 import { get as getAsset } from '../services/assets.js';
 import { 
     xpBarFill, playerHPBarInner, playerHPBarTxt, xpBarTxt, bonusPanel, 
@@ -21,6 +21,7 @@ import { formatTime, saveScore, displayScores, attachClearScoresListeners } from
 import { updateStatsUI } from '../managers/levelManager.js';
 import { VERSION } from '../config/version.js'; 
 import { setJoystickSide } from './input.js';
+import { LeaderboardService } from '../services/leaderboard.js';
 
 let currentJoyMode = 'right';
 let hpBarOuterRef = null;
@@ -90,10 +91,6 @@ const STATIC_TRANSLATION_MAP = {
     'chestTitle': 'ui_chest_title', 
     'chestButton': 'ui_chest_button', 
     'gameOverTitle': 'ui_gameover_title', 
-    'gameOverScoreLabel': 'ui_gameover_score', 
-    'gameOverLevelLabel': 'ui_gameover_level', 
-    'gameOverTimeLabel': 'ui_gameover_time', 
-    'gameOverKillsLabel': 'ui_gameover_kills',
     'btnRetry': 'ui_gameover_retry', 
     'btnMenu': 'ui_gameover_menu', 
     'confirmTitle': 'ui_confirm_title', 
@@ -103,7 +100,16 @@ const STATIC_TRANSLATION_MAP = {
     
     'btnIntroPrev': 'ui_intro_prev', 
     'btnIntroNext': 'ui_intro_next', 
-    'btnIntroSkip': 'ui_intro_skip'
+    'btnIntroSkip': 'ui_intro_skip',
+    
+    // ZMIANA: Nowe ID z modala
+    'lblNickTitle': 'ui_nick_modal_title',
+    'lblNickText': 'ui_nick_modal_text',
+    'btnConfirmNick': 'ui_nick_modal_confirm',
+    'btnCancelNick': 'ui_nick_modal_cancel',
+    
+    'lblNickLimit': 'ui_nick_limit_info',
+    'lblNickLimitConfig': 'ui_nick_limit_info'
 };
 
 function updateTutorialTexts() {
@@ -135,6 +141,11 @@ export function updateStaticTranslations() {
         }
     }
     
+    const btnSubmit = document.getElementById('btnSubmitScore');
+    if(btnSubmit && btnSubmit.style.display !== 'none' && btnSubmit.textContent !== getLang('ui_gameover_sent')) {
+        btnSubmit.textContent = getLang('ui_gameover_submit') || "WYŚLIJ WYNIK";
+    }
+    
     updateTutorialTexts();
     
     const backText = getLang('ui_nav_back') || 'POWRÓT';
@@ -143,12 +154,13 @@ export function updateStaticTranslations() {
     const headers = document.querySelectorAll('#retroScoreTable th, #goScoreTable th');
     if (headers.length >= 5) {
         headers.forEach((th, index) => {
-            const mod = index % 5;
+            const mod = index % 6; 
             if (mod === 0) th.innerText = getLang('ui_scores_col_rank');
-            if (mod === 1) th.innerText = getLang('ui_scores_col_score');
-            if (mod === 2) th.innerText = getLang('ui_scores_col_kills');
-            if (mod === 3) th.innerText = getLang('ui_scores_col_level');
-            if (mod === 4) th.innerText = getLang('ui_scores_col_time');
+            if (mod === 1) th.innerText = getLang('ui_scores_col_nick');
+            if (mod === 2) th.innerText = getLang('ui_scores_col_score');
+            if (mod === 3) th.innerText = getLang('ui_scores_col_kills');
+            if (mod === 4) th.innerText = getLang('ui_scores_col_level');
+            if (mod === 5) th.innerText = getLang('ui_scores_col_date');
         });
     }
     
@@ -175,15 +187,632 @@ export function updateStaticTranslations() {
     });
 }
 
+function initLanguageSelector() {
+    const container = document.getElementById('lang-selector-container');
+    if (!container) return;
+    
+    const langs = getAvailableLanguages();
+    const current = getCurrentLangCode();
+    
+    container.innerHTML = '';
+    
+    langs.forEach(lang => {
+        const label = document.createElement('label');
+        label.style.marginRight = '15px';
+        label.style.cursor = 'pointer';
+        
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'lang-select';
+        radio.value = lang.code;
+        radio.checked = (lang.code === current);
+        
+        radio.onchange = () => {
+            setLanguage(lang.code);
+            updateStaticTranslations();
+            playSound('Click');
+        };
+        
+        const span = document.createElement('span');
+        span.textContent = ` ${lang.name}`;
+        
+        label.appendChild(radio);
+        label.appendChild(span);
+        container.appendChild(label);
+    });
+}
+
+// --- LEADERBOARD & SORT LOGIC ---
+let currentLeaderboardMode = 'local';
+let currentFilterPeriod = 'today';
+let cachedOnlineScores = [];
+let currentSortColumn = 'score';
+let currentSortDir = 'desc';
+
+function sortData(data, column, dir) {
+    if(!data) return [];
+    return data.sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+        
+        if (column === 'date') {
+            valA = new Date(valA).getTime();
+            valB = new Date(valB).getTime();
+        }
+        else if (typeof valA === 'string') {
+            valA = valA.toLowerCase();
+            valB = valB.toLowerCase();
+        }
+
+        if (valA < valB) return dir === 'asc' ? -1 : 1;
+        if (valA > valB) return dir === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
+
+export function initLeaderboardUI() {
+    const tabLocal = document.getElementById('tabLocalScores');
+    const tabOnline = document.getElementById('tabOnlineScores');
+    const filtersDiv = document.getElementById('onlineFilters');
+    const clearBtn = document.getElementById('btnClearScoresMenu');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+
+    setupTableSorting('retroScoreTable', (col) => {
+        currentSortColumn = col;
+        currentSortDir = currentSortDir === 'desc' ? 'asc' : 'desc';
+        updateView();
+    });
+
+    const updateView = async () => {
+        const tableBody = document.getElementById('scoresBodyMenu');
+        const emptyMsg = document.getElementById('scoresEmptyMsg');
+        const loadingMsg = document.getElementById('scoreLoading');
+        
+        tableBody.innerHTML = '';
+        if(emptyMsg) emptyMsg.style.display = 'none';
+
+        if (currentLeaderboardMode === 'local') {
+            filtersDiv.style.display = 'none';
+            clearBtn.style.display = 'inline-block';
+            if(loadingMsg) loadingMsg.style.display = 'none';
+            
+            let scores = sortData([...(JSON.parse(localStorage.getItem('szkeletal_scores')) || [])], currentSortColumn, currentSortDir);
+            displayScores('scoresBodyMenu', null, scores); 
+            if (tableBody.children.length === 0 && emptyMsg) emptyMsg.style.display = 'block';
+        } else {
+            filtersDiv.style.display = 'flex';
+            clearBtn.style.display = 'none';
+            
+            if (cachedOnlineScores.length === 0) {
+                if(loadingMsg) loadingMsg.style.display = 'block';
+                cachedOnlineScores = await LeaderboardService.getScores(currentFilterPeriod);
+                if(loadingMsg) loadingMsg.style.display = 'none';
+            }
+            
+            const sortedOnline = sortData([...cachedOnlineScores], currentSortColumn, currentSortDir);
+            displayScores('scoresBodyMenu', null, sortedOnline);
+            
+            if ((!sortedOnline || sortedOnline.length === 0) && emptyMsg) {
+                emptyMsg.style.display = 'block';
+                emptyMsg.innerText = getLang('ui_chest_empty_title') || "BRAK WYNIKÓW";
+            }
+        }
+    };
+
+    window.wrappedResetLeaderboard = () => {
+        if(tabLocal) {
+            tabLocal.click();
+        } else {
+            currentLeaderboardMode = 'local';
+            updateView();
+        }
+    };
+
+    if (tabLocal && tabOnline) {
+        tabLocal.onclick = () => {
+            currentLeaderboardMode = 'local';
+            tabLocal.classList.add('active');
+            tabOnline.classList.remove('active');
+            playSound('Click');
+            updateView();
+        };
+        tabOnline.onclick = () => {
+            currentLeaderboardMode = 'online';
+            tabOnline.classList.add('active');
+            tabLocal.classList.remove('active');
+            cachedOnlineScores = []; 
+            playSound('Click');
+            updateView();
+        };
+    }
+
+    filterBtns.forEach(btn => {
+        btn.onclick = () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilterPeriod = btn.dataset.period;
+            cachedOnlineScores = [];
+            playSound('Click');
+            updateView();
+        };
+    });
+
+    const inpNick = document.getElementById('inpPlayerNick');
+    if (inpNick) {
+        const savedNick = localStorage.getItem('szkeletal_player_nick');
+        if (savedNick) inpNick.value = savedNick;
+        inpNick.addEventListener('change', () => {
+            let val = inpNick.value.replace(/[^a-zA-Z0-9_\- ąęćżźńłóśĄĘĆŻŹŃŁÓŚ]/g, '').toUpperCase();
+            if(val.length > 20) val = val.substring(0, 20); 
+            inpNick.value = val;
+            localStorage.setItem('szkeletal_player_nick', val);
+        });
+    }
+
+    initSubmitButtonLogic();
+}
+
+function setupTableSorting(tableId, callback) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const headers = table.querySelectorAll('th[data-sort]');
+    headers.forEach(th => {
+        th.onclick = () => {
+            const col = th.dataset.sort;
+            callback(col);
+            playSound('Click');
+        };
+    });
+    const rankHeader = table.querySelector('th:first-child');
+    if(rankHeader) {
+        rankHeader.onclick = () => {
+            callback('originalRank');
+            playSound('Click');
+        };
+        rankHeader.style.cursor = 'pointer';
+    }
+}
+
+function initSubmitButtonLogic() {
+    const btnSubmit = document.getElementById('btnSubmitScore');
+    const overlay = document.getElementById('nickInputOverlay');
+    const inpQuick = document.getElementById('inpQuickNick');
+    const btnConfirm = document.getElementById('btnConfirmNick');
+    const btnCancel = document.getElementById('btnCancelNick');
+    
+    const performSubmit = async (nickToUse) => {
+        const msgDiv = document.getElementById('submitMsg');
+        msgDiv.textContent = "Wysyłanie...";
+        btnSubmit.style.display = 'none';
+
+        const score = parseInt(finalScore.textContent) || 0;
+        const level = parseInt(finalLevel.textContent) || 1;
+        const timeStr = finalTime.textContent;
+        const parts = timeStr.split(':');
+        const seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        const kills = parseInt(document.getElementById('totalKillsSpanGO').textContent) || 0;
+
+        const result = await LeaderboardService.submitScore(nickToUse, score, level, seconds, kills);
+        
+        if (result.success) {
+            msgDiv.style.color = '#00E676';
+            msgDiv.textContent = getLang('ui_gameover_sent') || "WYSŁANO!";
+            playSound('LevelUp');
+            const tabGOOnline = document.getElementById('tabGOOnline');
+            if(tabGOOnline) tabGOOnline.click();
+        } else {
+            msgDiv.style.color = '#FF5252';
+            msgDiv.textContent = (getLang('ui_gameover_error') || "BŁĄD") + ": " + (result.msg || "Sieć");
+            btnSubmit.style.display = 'inline-block';
+        }
+    };
+
+    if (btnSubmit) {
+        btnSubmit.onclick = () => {
+            let currentNick = localStorage.getItem('szkeletal_player_nick') || "";
+            if (!currentNick || currentNick === "GRACZ" || currentNick === "") {
+                currentNick = "ANON";
+            }
+            
+            if(overlay) {
+                overlay.style.display = 'flex';
+                setTimeout(() => {
+                    if(inpQuick) {
+                        inpQuick.value = currentNick;
+                        inpQuick.focus();
+                    }
+                }, 100);
+            }
+        };
+    }
+
+    if (btnConfirm && inpQuick && overlay) {
+        btnConfirm.onclick = () => {
+            let val = inpQuick.value.replace(/[^a-zA-Z0-9_\- ąęćżźńłóśĄĘĆŻŹŃŁÓŚ]/g, '').toUpperCase();
+            if(val.length === 0) val = "ANON";
+            if(val.length > 20) val = val.substring(0, 20); 
+            
+            localStorage.setItem('szkeletal_player_nick', val);
+            const inpMain = document.getElementById('inpPlayerNick');
+            if(inpMain) inpMain.value = val;
+            
+            overlay.style.display = 'none';
+            performSubmit(val);
+        };
+    }
+
+    if (btnCancel && overlay) {
+        btnCancel.onclick = () => {
+            overlay.style.display = 'none';
+        };
+    }
+}
+
+// Game Over UI Logic (Separate instance)
+let goMode = 'local';
+let goFilter = 'today';
+let cachedGOOnlineScores = [];
+let currentGOSortColumn = 'score';
+let currentGOSortDir = 'desc';
+
+export function initGameOverTabs() {
+    const tabLocal = document.getElementById('tabGOLocal');
+    const tabOnline = document.getElementById('tabGOOnline');
+    const filtersDiv = document.getElementById('goOnlineFilters');
+    const loadingMsg = document.getElementById('goScoreLoading');
+    const clearBtn = document.getElementById('btnClearScoresGO');
+    const filterBtns = document.querySelectorAll('#goOnlineFilters .filter-btn');
+
+    setupTableSorting('goScoreTable', (col) => {
+        if(col === '#') col = 'originalRank';
+        currentGOSortColumn = col;
+        currentGOSortDir = currentGOSortDir === 'desc' ? 'asc' : 'desc';
+        updateGOView();
+    });
+
+    const updateGOView = async () => {
+        const tableBody = document.getElementById('scoresBodyGameOver');
+        tableBody.innerHTML = '';
+        
+        let rawData = [];
+
+        if (goMode === 'local') {
+            filtersDiv.style.display = 'none';
+            if(clearBtn) clearBtn.style.display = 'inline-block';
+            if(loadingMsg) loadingMsg.style.display = 'none';
+            
+            let stored = JSON.parse(localStorage.getItem('szkeletal_scores')) || [];
+            stored.forEach((e, i) => e.originalRank = i + 1);
+            rawData = stored;
+        } else {
+            filtersDiv.style.display = 'flex';
+            if(clearBtn) clearBtn.style.display = 'none';
+            
+            if (cachedGOOnlineScores.length === 0) {
+                if(loadingMsg) loadingMsg.style.display = 'block';
+                cachedGOOnlineScores = await LeaderboardService.getScores(goFilter);
+                if(loadingMsg) loadingMsg.style.display = 'none';
+            }
+            rawData = cachedGOOnlineScores;
+        }
+        
+        const sortedData = sortData([...rawData], currentGOSortColumn, currentGOSortDir);
+        displayScores('scoresBodyGameOver', null, sortedData); 
+    };
+
+    if (tabLocal && tabOnline) {
+        tabLocal.onclick = () => {
+            goMode = 'local';
+            tabLocal.classList.add('active');
+            tabOnline.classList.remove('active');
+            playSound('Click');
+            updateGOView();
+        };
+        tabOnline.onclick = () => {
+            goMode = 'online';
+            tabOnline.classList.add('active');
+            tabLocal.classList.remove('active');
+            cachedGOOnlineScores = [];
+            playSound('Click');
+            updateGOView();
+        };
+    }
+
+    filterBtns.forEach(btn => {
+        btn.onclick = () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            goFilter = btn.dataset.period;
+            cachedGOOnlineScores = []; // Clear local cache on filter change
+            playSound('Click');
+            updateGOView();
+        };
+    });
+    
+    goMode = 'local';
+    goFilter = 'today';
+    currentGOSortColumn = 'score';
+    currentGOSortDir = 'desc';
+    
+    if(tabLocal) {
+        tabLocal.classList.add('active');
+        if(tabOnline) tabOnline.classList.remove('active');
+    }
+    updateGOView();
+}
+
+// EKSPORTOWANE FUNKCJE STERUJĄCE
+
+export function updateEnemyCounter(game, enemies) {
+    if (!game.running || game.paused) return;
+    const nonWallEnemiesCount = enemies.filter(e => e.type !== 'wall').length;
+    const limit = game.dynamicEnemyLimit;
+    const cntSpan = document.getElementById('enemyCountSpan');
+    const limSpan = document.getElementById('enemyLimitSpan');
+    const killsSpan = document.getElementById('totalKillsSpan'); 
+    if (cntSpan) cntSpan.textContent = nonWallEnemiesCount;
+    if (limSpan) limSpan.textContent = limit;
+    if (killsSpan) killsSpan.textContent = game.totalKills || 0; 
+}
+
+export function updateUI(game, player, settings, weapons, enemies = []) {
+    document.getElementById('score').textContent = game.score;
+    document.getElementById('level').textContent = game.level;
+    document.getElementById('xp').textContent = game.xp;
+    document.getElementById('xpNeeded').textContent = game.xpNeeded;
+    const healthTxt = document.getElementById('health');
+    if(healthTxt) healthTxt.textContent = `${Math.max(0, Math.floor(game.health))}/${game.maxHealth}`;
+    document.getElementById('time').textContent = formatTime(Math.floor(game.time));
+    const xpPct = Math.max(0, Math.min(1, game.xp / game.xpNeeded));
+    xpBarFill.style.width = (xpPct * 100).toFixed(1) + '%';
+    const healthPctBar = Math.max(0, Math.min(1, game.health / game.maxHealth));
+    playerHPBarInner.style.width = (healthPctBar * 100).toFixed(1) + '%';
+    
+    const hpLabel = getLang('ui_hud_hp_name') || 'HP';
+    const xpLabel = getLang('ui_hud_xp_name') || 'XP';
+    playerHPBarTxt.innerHTML = `${hpLabel}: ${Math.ceil(game.health)}/${game.maxHealth}`;
+    xpBarTxt.innerHTML = `${xpLabel}: ${Math.floor(game.xp)}/${Math.floor(game.xpNeeded)}`;
+
+    if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
+    if (hpBarOuterRef) { 
+        const isLowHealth = healthPctBar <= UI_CONFIG.LOW_HEALTH_THRESHOLD && game.health > 0;
+        if (isLowHealth) {
+            hpBarOuterRef.classList.add('low-health-pulse');
+        } else {
+            hpBarOuterRef.classList.remove('low-health-pulse');
+        }
+        if (game.hunger <= 0) {
+            hpBarOuterRef.classList.add('hp-bar-starving');
+        } else {
+            hpBarOuterRef.classList.remove('hp-bar-starving');
+        }
+    }
+    
+    if (hungerFill) {
+        const hungerPct = Math.max(0, Math.min(1, game.hunger / game.maxHunger));
+        const topCut = (1 - hungerPct) * 100;
+        hungerFill.style.clipPath = `inset(${topCut}% 0 0 0)`;
+    }
+    
+    if (hungerWidget) {
+        if (game.hunger <= 0) {
+            hungerWidget.classList.add('starving');
+        } else {
+            hungerWidget.classList.remove('starving');
+        }
+    }
+    
+    let bonusHTML = '';
+    const bonusAssets = { magnet: 'icon_hud_magnet', shield: 'icon_hud_shield', speed: 'icon_hud_speed', freeze: 'icon_hud_freeze' };
+    const createBonusEntry = (type, time) => {
+        const asset = getAsset(bonusAssets[type]);
+        const iconHtml = asset ? `<img src="${asset.src}" class="bonus-icon-img">` : `<span class="bonus-emoji">❓</span>`;
+        return `<div class="bonus-entry">${iconHtml}<span class="bonus-txt">${Math.ceil(time)}s</span></div>`;
+    };
+    if (game.magnetT > 0) bonusHTML += createBonusEntry('magnet', game.magnetT);
+    if (game.shieldT > 0) bonusHTML += createBonusEntry('shield', game.shieldT);
+    if (game.speedT > 0) bonusHTML += createBonusEntry('speed', game.speedT);
+    if (game.freezeT > 0) bonusHTML += createBonusEntry('freeze', game.freezeT);
+    bonusPanel.innerHTML = bonusHTML;
+}
+
+export function showMenu(game, resetAll, uiData, allowContinue = false) {
+    devSettings.presetLoaded = false; 
+    if (!allowContinue) { resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); uiData.savedGameState = null; }
+    if (uiData.savedGameState && allowContinue) btnContinue.style.display = 'block'; else btnContinue.style.display = 'none';
+    switchView('view-main');
+    menuOverlay.style.display = 'flex';
+    
+    updateStaticTranslations(); 
+    
+    const verTag = document.getElementById('menuVersionTag');
+    if(verTag) verTag.textContent = `v${VERSION}`;
+    game.inMenu = true; game.paused = true; game.running = false;
+    initAudio(); playSound('MusicMenu');
+    if (uiData.animationFrameId !== null) { cancelAnimationFrame(uiData.animationFrameId); uiData.animationFrameId = null; }
+    if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
+    initRetroToggles(game, uiData);
+    window.wrappedGenerateGuide();
+    updateUI(game, uiData.player, uiData.settings, null); 
+    uiData.ctx.clearRect(0, 0, uiData.canvas.width, uiData.canvas.height);
+    uiData.drawCallback(); 
+    
+    currentLeaderboardMode = 'local';
+    displayScores('scoresBodyMenu');
+    attachClearScoresListeners();
+}
+
+export function startRun(game, resetAll, uiData) {
+    if (devSettings.presetLoaded && !devSettings.justStartedFromMenu) { 
+        retryLastScenario(); 
+    }
+    devSettings.justStartedFromMenu = false;
+
+    const startOffset = devStartTime;
+    resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); 
+    uiData.savedGameState = null;
+    menuOverlay.style.display = 'none';
+    
+    initAudio(); playSound('MusicGameplay');
+    if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
+
+    game.inMenu = false; 
+    game.running = true;
+    
+    const currentTime = performance.now();
+    game.time = startOffset; 
+    uiData.startTime = currentTime - startOffset * 1000;
+    uiData.lastTime = currentTime;
+    uiData.settings.lastElite = game.time;
+    uiData.settings.lastSiegeEvent = game.time; 
+    if (uiData.settings.currentSiegeInterval < startOffset) uiData.settings.currentSiegeInterval = startOffset + 10.0; 
+    
+    console.log("[UI] startRun: Gra uruchomiona.", { time: game.time, enemies: devSettings.allowedEnemies });
+
+    const tutorialSeen = localStorage.getItem('szkeletal_tutorial_seen');
+    if (!tutorialSeen) {
+        const overlay = document.getElementById('tutorialOverlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            updateTutorialTexts();
+            game.paused = true; 
+        }
+    } else {
+        game.paused = false; 
+    }
+}
+
+export function resetAll(canvas, settings, perkLevels, uiData, camera) {
+    if (uiData.animationFrameId !== null) { cancelAnimationFrame(uiData.animationFrameId); uiData.animationFrameId = null; }
+    uiData.lastTime = 0; uiData.startTime = 0;
+    const game = uiData.game; 
+    if (devSettings.presetLoaded === false) {
+        game.score = 0; game.level = 1; game.health = PLAYER_CONFIG.INITIAL_HEALTH; game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH; game.time = 0; 
+        game.xp = 0; game.xpNeeded = GAME_CONFIG.INITIAL_XP_NEEDED; game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
+        Object.assign(settings, { spawn: GAME_CONFIG.INITIAL_SPAWN_RATE, maxEnemies: GAME_CONFIG.MAX_ENEMIES, eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL, lastHazardSpawn: 0, lastSiegeEvent: 0, currentSiegeInterval: SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME });
+        settings.lastFire = 0; settings.lastElite = 0;
+        game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.seenEnemyTypes = [];
+        game.totalKills = 0; 
+        game.gameplayQuoteTimer = 60; 
+        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
+        uiData.player.reset(worldWidth, worldHeight);
+        for (let key in perkLevels) delete perkLevels[key];
+    } else {
+        game.score = 0; settings.lastFire = 0; settings.lastElite = 0; settings.lastHazardSpawn = 0; settings.lastSiegeEvent = 0; settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
+        game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.totalKills = 0; 
+        game.gameplayQuoteTimer = 60; 
+        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
+        uiData.player.x = worldWidth / 2; uiData.player.y = worldHeight / 2;
+        camera.offsetX = (worldWidth / 2) - (canvas.width / 2); camera.offsetY = (worldHeight / 2) - (canvas.height / 2);
+    }
+    game.magnet = false; game.magnetT = 0; game.shield = false; game.shieldT = 0; game.speedT = 0; game.freezeT = 0; game.shakeT = 0;
+    game.shakeMag = 0; game.manualPause = false; game.collisionSlowdown = 0; game.dynamicEnemyLimit = GAME_CONFIG.INITIAL_MAX_ENEMIES;
+    
+    game.hunger = GAME_CONFIG.MAX_HUNGER || 100;
+    
+    uiData.enemies.length = 0; uiData.chests.length = 0; uiData.pickups.length = 0; uiData.bombIndicators.length = 0; uiData.hazards.length = 0; 
+    if (uiData.siegeSpawnQueue) uiData.siegeSpawnQueue.length = 0;
+    if (uiData.bulletsPool) uiData.bulletsPool.releaseAll();
+    if (uiData.eBulletsPool) uiData.eBulletsPool.releaseAll();
+    if (uiData.gemsPool) uiData.gemsPool.releaseAll();
+    if (uiData.particlePool) uiData.particlePool.releaseAll();
+    if (uiData.hitTextPool) uiData.hitTextPool.releaseAll();
+    xpBarFill.style.width = '0%';
+    if (uiData.initStarsCallback) uiData.initStarsCallback();
+    if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
+    if (hpBarOuterRef) hpBarOuterRef.classList.remove('low-health-pulse');
+    if (hpBarOuterRef) hpBarOuterRef.classList.remove('hp-bar-starving');
+    bonusPanel.innerHTML = '';
+}
+
+export function pauseGame(game, settings, weapons, player) {
+    if (game.isDying) return;
+    if (game.paused || game.inMenu) return;
+    game.manualPause = true; game.paused = true;
+    pauseOverlay.style.display = 'flex'; resumeOverlay.style.display = 'none';
+    try { if (statsDisplayPause) updateStatsUI(game, player, settings, weapons, statsDisplayPause); } catch (e) {}
+    updateStaticTranslations(); 
+}
+
+// ZMIANA: Dodano playSound('MusicGameplay') w resumeGame (naprawa buga z muzyką)
+export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
+    game.manualPause = false;
+    pauseOverlay.style.display = 'none'; levelUpOverlay.style.display = 'none'; chestOverlay.style.display = 'none'; 
+    if (timerDuration <= 0) { 
+        resumeOverlay.style.display = 'none'; 
+        game.paused = false; 
+        playSound('MusicGameplay'); 
+        return; 
+    }
+    let t = timerDuration;
+    resumeOverlay.style.display = 'flex';
+    const titleEl = document.getElementById('resumeTitle');
+    const id = setInterval(() => {
+        t = Math.max(0, t - 0.05);
+        resumeText.textContent = `${getLang('ui_resume_text')} ${t.toFixed(2)} s`;
+        if(titleEl) titleEl.textContent = Math.ceil(t);
+        if (t <= 0) { 
+            clearInterval(id); 
+            resumeOverlay.style.display = 'none'; 
+            game.paused = false; 
+            playSound('MusicGameplay'); 
+        }
+    }, 50);
+}
+
+export function gameOver(game, uiData) {
+    game.running = false; game.paused = true; uiData.savedGameState = null;
+    const finalTimeValue = Math.floor(game.time);
+    
+    const currentRun = { 
+        score: game.score, 
+        level: game.level, 
+        time: finalTimeValue, 
+        kills: game.totalKills || 0,
+        date: new Date().toISOString()
+    };
+    
+    finalScore.textContent = currentRun.score; 
+    finalLevel.textContent = currentRun.level; 
+    finalTime.textContent = formatTime(currentRun.time); 
+    
+    const gameOverKillsLabel = document.getElementById('totalKillsSpanGO');
+    if (gameOverKillsLabel) gameOverKillsLabel.textContent = game.totalKills || 0;
+
+    const playerNick = localStorage.getItem('szkeletal_player_nick') || "GRACZ";
+    saveScore(currentRun, playerNick); 
+    
+    playSound('MusicMenu');
+    
+    const btnSubmit = document.getElementById('btnSubmitScore');
+    const msgDiv = document.getElementById('submitMsg');
+    if(btnSubmit) {
+        if(game.score > 0) {
+            btnSubmit.style.display = 'inline-block';
+            msgDiv.textContent = "";
+        } else {
+            btnSubmit.style.display = 'none';
+        }
+    }
+
+    attachClearScoresListeners();
+    gameOverOverlay.style.display = 'flex';
+    
+    initGameOverTabs(); 
+
+    if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
+    if (hpBarOuterRef) hpBarOuterRef.classList.remove('low-health-pulse');
+    if (hpBarOuterRef) hpBarOuterRef.classList.remove('hp-bar-starving');
+    updateStaticTranslations(); 
+}
+
 export function switchView(viewId) {
     document.querySelectorAll('.menu-view').forEach(el => { el.classList.remove('active'); });
     const target = document.getElementById(viewId);
     if (target) { target.classList.add('active'); playSound('Click'); }
     if (viewId === 'view-scores') {
-        displayScores('scoresBodyMenu');
-        const tableBody = document.getElementById('scoresBodyMenu');
-        const emptyMsg = document.getElementById('scoresEmptyMsg');
-        if (tableBody && tableBody.children.length === 0) { if(emptyMsg) emptyMsg.style.display = 'block'; } else { if(emptyMsg) emptyMsg.style.display = 'none'; }
+        if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard();
+        else displayScores('scoresBodyMenu');
     }
     if (viewId === 'view-guide') { if (window.wrappedGenerateGuide) window.wrappedGenerateGuide(); }
 }
@@ -234,7 +863,6 @@ export function initRetroToggles(game, uiData) {
     if (btnClose && overlay) {
         btnClose.onclick = () => {
             overlay.style.display = 'none';
-            // FIX: Wznów grę TYLKO jeśli nie jesteśmy w menu głównym (gra faktycznie trwa)
             if (!game.inMenu) {
                 game.paused = false;
             }
@@ -248,7 +876,6 @@ export function initRetroToggles(game, uiData) {
             overlay.style.display = 'flex';
             updateTutorialTexts();
             playSound('Click');
-            // FIX: ZAWSZE wymuś pauzę przy ręcznym otwarciu (żeby gra nie "toczyła się pod spodem")
             game.paused = true;
         };
     }
@@ -257,6 +884,25 @@ export function initRetroToggles(game, uiData) {
     if (volMusic) { if (MUSIC_CONFIG && typeof MUSIC_CONFIG.VOLUME !== 'undefined') { volMusic.value = Math.floor(MUSIC_CONFIG.VOLUME * 100); } volMusic.oninput = (e) => { const val = parseInt(e.target.value) / 100; setMusicVolume(val); }; }
     const volSFX = document.getElementById('volSFX');
     if (volSFX) { volSFX.oninput = (e) => { const val = parseInt(e.target.value) / 100; setSfxVolume(val); }; }
+    
+    // ZMIANA: Obsługa flag z setLanguage
+    const btnPL = document.getElementById('btnLangPL');
+    const btnEN = document.getElementById('btnLangEN');
+    const btnRO = document.getElementById('btnLangRO');
+
+    const doSwitch = (lang) => {
+        setLanguage(lang);
+        updateStaticTranslations();
+        initLanguageSelector(); // Aktualizacja kropek w menu Opcji po zmianie flagą
+        playSound('Click');
+    };
+
+    if(btnPL) btnPL.onclick = () => doSwitch('pl');
+    if(btnEN) btnEN.onclick = () => doSwitch('en');
+    if(btnRO) btnRO.onclick = () => doSwitch('ro');
+
+    initLeaderboardUI();
+    initLanguageSelector(); // Inicjalizacja kropek przy starcie
 }
 
 function updateToggleVisual(btn, isOn) {
@@ -326,237 +972,10 @@ function generateGuide() {
 }
 
 window.wrappedGenerateGuide = generateGuide;
-
-export function updateEnemyCounter(game, enemies) {
-    if (!game.running || game.paused) return;
-    const nonWallEnemiesCount = enemies.filter(e => e.type !== 'wall').length;
-    const limit = game.dynamicEnemyLimit;
-    const cntSpan = document.getElementById('enemyCountSpan');
-    const limSpan = document.getElementById('enemyLimitSpan');
-    const killsSpan = document.getElementById('totalKillsSpan'); 
-    if (cntSpan) cntSpan.textContent = nonWallEnemiesCount;
-    if (limSpan) limSpan.textContent = limit;
-    if (killsSpan) killsSpan.textContent = game.totalKills || 0; 
-}
-
-export function updateUI(game, player, settings, weapons, enemies = []) {
-    document.getElementById('score').textContent = game.score;
-    document.getElementById('level').textContent = game.level;
-    document.getElementById('xp').textContent = game.xp;
-    document.getElementById('xpNeeded').textContent = game.xpNeeded;
-    const healthTxt = document.getElementById('health');
-    if(healthTxt) healthTxt.textContent = `${Math.max(0, Math.floor(game.health))}/${game.maxHealth}`;
-    document.getElementById('time').textContent = formatTime(Math.floor(game.time));
-    const xpPct = Math.max(0, Math.min(1, game.xp / game.xpNeeded));
-    xpBarFill.style.width = (xpPct * 100).toFixed(1) + '%';
-    const healthPctBar = Math.max(0, Math.min(1, game.health / game.maxHealth));
-    playerHPBarInner.style.width = (healthPctBar * 100).toFixed(1) + '%';
-    
-    const hpLabel = getLang('ui_hud_hp_name') || 'HP';
-    const xpLabel = getLang('ui_hud_xp_name') || 'XP';
-    playerHPBarTxt.innerHTML = `${hpLabel}: ${Math.ceil(game.health)}/${game.maxHealth}`;
-    xpBarTxt.innerHTML = `${xpLabel}: ${Math.floor(game.xp)}/${Math.floor(game.xpNeeded)}`;
-
-    if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
-    if (hpBarOuterRef) { 
-        // FIX: Dodano warunek na głód do migania paska
-        const isLowHealth = healthPctBar <= UI_CONFIG.LOW_HEALTH_THRESHOLD && game.health > 0;
-        
-        if (isLowHealth) {
-            hpBarOuterRef.classList.add('low-health-pulse');
-        } else {
-            hpBarOuterRef.classList.remove('low-health-pulse');
-        }
-
-        if (game.hunger <= 0) {
-            hpBarOuterRef.classList.add('hp-bar-starving');
-        } else {
-            hpBarOuterRef.classList.remove('hp-bar-starving');
-        }
-    }
-    
-    if (hungerFill) {
-        const hungerPct = Math.max(0, Math.min(1, game.hunger / game.maxHunger));
-        const topCut = (1 - hungerPct) * 100;
-        hungerFill.style.clipPath = `inset(${topCut}% 0 0 0)`;
-    }
-    
-    if (hungerWidget) {
-        if (game.hunger <= 0) {
-            hungerWidget.classList.add('starving');
-        } else {
-            hungerWidget.classList.remove('starving');
-        }
-    }
-    
-    let bonusHTML = '';
-    const bonusAssets = { magnet: 'icon_hud_magnet', shield: 'icon_hud_shield', speed: 'icon_hud_speed', freeze: 'icon_hud_freeze' };
-    const createBonusEntry = (type, time) => {
-        const asset = getAsset(bonusAssets[type]);
-        const iconHtml = asset ? `<img src="${asset.src}" class="bonus-icon-img">` : `<span class="bonus-emoji">❓</span>`;
-        return `<div class="bonus-entry">${iconHtml}<span class="bonus-txt">${Math.ceil(time)}s</span></div>`;
-    };
-    if (game.magnetT > 0) bonusHTML += createBonusEntry('magnet', game.magnetT);
-    if (game.shieldT > 0) bonusHTML += createBonusEntry('shield', game.shieldT);
-    if (game.speedT > 0) bonusHTML += createBonusEntry('speed', game.speedT);
-    if (game.freezeT > 0) bonusHTML += createBonusEntry('freeze', game.freezeT);
-    bonusPanel.innerHTML = bonusHTML;
-}
-
-export function showMenu(game, resetAll, uiData, allowContinue = false) {
-    devSettings.presetLoaded = false; 
-    if (!allowContinue) { resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); uiData.savedGameState = null; }
-    if (uiData.savedGameState && allowContinue) btnContinue.style.display = 'block'; else btnContinue.style.display = 'none';
-    switchView('view-main');
-    menuOverlay.style.display = 'flex';
-    
-    updateStaticTranslations(); 
-    
-    const verTag = document.getElementById('menuVersionTag');
-    if(verTag) verTag.textContent = `v${VERSION}`;
-    game.inMenu = true; game.paused = true; game.running = false;
-    initAudio(); playSound('MusicMenu');
-    if (uiData.animationFrameId !== null) { cancelAnimationFrame(uiData.animationFrameId); uiData.animationFrameId = null; }
-    if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
-    initRetroToggles(game, uiData);
-    window.wrappedGenerateGuide();
-    updateUI(game, uiData.player, uiData.settings, null); 
-    uiData.ctx.clearRect(0, 0, uiData.canvas.width, uiData.canvas.height);
-    uiData.drawCallback(); 
-    displayScores('scoresBodyMenu');
-    attachClearScoresListeners();
-}
-
-export function startRun(game, resetAll, uiData) {
-    if (devSettings.presetLoaded && !devSettings.justStartedFromMenu) { 
-        retryLastScenario(); 
-    }
-    devSettings.justStartedFromMenu = false;
-
-    const startOffset = devStartTime;
-    resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); 
-    uiData.savedGameState = null;
-    menuOverlay.style.display = 'none';
-    
-    // Inicjalizacja dźwięku i pętli
-    initAudio(); playSound('MusicGameplay');
-    if (uiData.animationFrameId === null) uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
-
-    game.inMenu = false; 
-    game.running = true;
-    
-    const currentTime = performance.now();
-    game.time = startOffset; 
-    uiData.startTime = currentTime - startOffset * 1000;
-    uiData.lastTime = currentTime;
-    uiData.settings.lastElite = game.time;
-    uiData.settings.lastSiegeEvent = game.time; 
-    if (uiData.settings.currentSiegeInterval < startOffset) uiData.settings.currentSiegeInterval = startOffset + 10.0; 
-    
-    console.log("[UI] startRun: Gra uruchomiona.", { time: game.time, enemies: devSettings.allowedEnemies });
-
-    // --- SAMOUCZEK (Auto-Start) ---
-    const tutorialSeen = localStorage.getItem('szkeletal_tutorial_seen');
-    if (!tutorialSeen) {
-        const overlay = document.getElementById('tutorialOverlay');
-        if (overlay) {
-            overlay.style.display = 'flex';
-            // Wypełnij tekstem
-            updateTutorialTexts();
-            game.paused = true; 
-        }
-    } else {
-        game.paused = false; 
-    }
-}
-
-export function resetAll(canvas, settings, perkLevels, uiData, camera) {
-    if (uiData.animationFrameId !== null) { cancelAnimationFrame(uiData.animationFrameId); uiData.animationFrameId = null; }
-    uiData.lastTime = 0; uiData.startTime = 0;
-    const game = uiData.game; 
-    if (devSettings.presetLoaded === false) {
-        game.score = 0; game.level = 1; game.health = PLAYER_CONFIG.INITIAL_HEALTH; game.maxHealth = PLAYER_CONFIG.INITIAL_HEALTH; game.time = 0; 
-        game.xp = 0; game.xpNeeded = GAME_CONFIG.INITIAL_XP_NEEDED; game.pickupRange = PLAYER_CONFIG.INITIAL_PICKUP_RANGE;
-        Object.assign(settings, { spawn: GAME_CONFIG.INITIAL_SPAWN_RATE, maxEnemies: GAME_CONFIG.MAX_ENEMIES, eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL, lastHazardSpawn: 0, lastSiegeEvent: 0, currentSiegeInterval: SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME });
-        settings.lastFire = 0; settings.lastElite = 0;
-        game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.seenEnemyTypes = [];
-        game.totalKills = 0; 
-        // NOWOŚĆ: Timer cytatów
-        game.gameplayQuoteTimer = 60; 
-        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
-        uiData.player.reset(worldWidth, worldHeight);
-        for (let key in perkLevels) delete perkLevels[key];
-    } else {
-        game.score = 0; settings.lastFire = 0; settings.lastElite = 0; settings.lastHazardSpawn = 0; settings.lastSiegeEvent = 0; settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
-        game.newEnemyWarningT = 0; game.newEnemyWarningType = null; game.totalKills = 0; 
-        // NOWOŚĆ: Timer cytatów
-        game.gameplayQuoteTimer = 60; 
-        const worldWidth = canvas.width * WORLD_CONFIG.SIZE; const worldHeight = canvas.height * WORLD_CONFIG.SIZE; 
-        uiData.player.x = worldWidth / 2; uiData.player.y = worldHeight / 2;
-        camera.offsetX = (worldWidth / 2) - (canvas.width / 2); camera.offsetY = (worldHeight / 2) - (canvas.height / 2);
-    }
-    game.magnet = false; game.magnetT = 0; game.shield = false; game.shieldT = 0; game.speedT = 0; game.freezeT = 0; game.shakeT = 0;
-    game.shakeMag = 0; game.manualPause = false; game.collisionSlowdown = 0; game.dynamicEnemyLimit = GAME_CONFIG.INITIAL_MAX_ENEMIES;
-    
-    game.hunger = GAME_CONFIG.MAX_HUNGER || 100;
-    
-    uiData.enemies.length = 0; uiData.chests.length = 0; uiData.pickups.length = 0; uiData.bombIndicators.length = 0; uiData.hazards.length = 0; 
-    if (uiData.siegeSpawnQueue) uiData.siegeSpawnQueue.length = 0;
-    if (uiData.bulletsPool) uiData.bulletsPool.releaseAll();
-    if (uiData.eBulletsPool) uiData.eBulletsPool.releaseAll();
-    if (uiData.gemsPool) uiData.gemsPool.releaseAll();
-    if (uiData.particlePool) uiData.particlePool.releaseAll();
-    if (uiData.hitTextPool) uiData.hitTextPool.releaseAll();
-    xpBarFill.style.width = '0%';
-    if (uiData.initStarsCallback) uiData.initStarsCallback();
-    if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
-    if (hpBarOuterRef) hpBarOuterRef.classList.remove('low-health-pulse');
-    if (hpBarOuterRef) hpBarOuterRef.classList.remove('hp-bar-starving');
-    bonusPanel.innerHTML = '';
-}
-
-export function pauseGame(game, settings, weapons, player) {
-    if (game.isDying) return;
-    if (game.paused || game.inMenu) return;
-    game.manualPause = true; game.paused = true;
-    pauseOverlay.style.display = 'flex'; resumeOverlay.style.display = 'none';
-    try { if (statsDisplayPause) updateStatsUI(game, player, settings, weapons, statsDisplayPause); } catch (e) {}
-    updateStaticTranslations(); 
-}
-
-export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
-    game.manualPause = false;
-    pauseOverlay.style.display = 'none'; levelUpOverlay.style.display = 'none'; chestOverlay.style.display = 'none'; 
-    if (timerDuration <= 0) { resumeOverlay.style.display = 'none'; game.paused = false; return; }
-    let t = timerDuration;
-    resumeOverlay.style.display = 'flex';
-    const titleEl = document.getElementById('resumeTitle');
-    const id = setInterval(() => {
-        t = Math.max(0, t - 0.05);
-        resumeText.textContent = `${getLang('ui_resume_text')} ${t.toFixed(2)} s`;
-        if(titleEl) titleEl.textContent = Math.ceil(t);
-        if (t <= 0) { clearInterval(id); resumeOverlay.style.display = 'none'; game.paused = false; }
-    }, 50);
-}
-
-export function gameOver(game, uiData) {
-    game.running = false; game.paused = true; uiData.savedGameState = null;
-    const finalTimeValue = Math.floor(game.time);
-    const currentRun = { score: game.score, level: game.level, time: finalTimeValue, kills: game.totalKills || 0 };
-    finalScore.textContent = currentRun.score; finalLevel.textContent = currentRun.level; finalTime.textContent = formatTime(currentRun.time); 
-    
-    // FIX: Teraz na pewno wyświetli aktualną ilość zabitych
-    const gameOverKillsLabel = document.getElementById('totalKillsSpanGO');
-    if (gameOverKillsLabel) gameOverKillsLabel.textContent = game.totalKills || 0;
-
-    saveScore(currentRun); playSound('MusicMenu');
-    displayScores('scoresBodyGameOver', currentRun); 
-    attachClearScoresListeners();
-    gameOverOverlay.style.display = 'flex';
-    if (!hpBarOuterRef) hpBarOuterRef = document.getElementById('playerHPBarOuter');
-    if (hpBarOuterRef) hpBarOuterRef.classList.remove('low-health-pulse');
-    if (hpBarOuterRef) hpBarOuterRef.classList.remove('hp-bar-starving');
-    updateStaticTranslations(); 
-}
-
-window.wrappedDisplayScores = () => displayScores('scoresBodyMenu');
+window.wrappedDisplayScores = () => {
+    if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard();
+    else displayScores('scoresBodyMenu');
+};
+window.wrappedGameOver = () => gameOver(gameStateRef.game, uiDataRef);
+window.wrappedPauseGame = () => pauseGame(gameStateRef.game, gameStateRef.settings, gameStateRef.player.weapons, gameStateRef.player);
+window.wrappedResumeGame = () => resumeGame(gameStateRef.game);

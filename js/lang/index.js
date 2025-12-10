@@ -1,14 +1,8 @@
 // ==============
-// INDEX.JS (v0.97 - Language Registry)
+// INDEX.JS (v0.99c - Lang Exports)
 // Lokalizacja: /js/lang/index.js
 // ==============
 
-import { LANG_PL } from './polish.js';
-import { LANG_EN } from './english.js';
-import { LANG_RO } from './romanian.js';
-
-export const LANG_MAP = {
-  'Polski': LANG_PL,
-  'English': LANG_EN,
-  'Română': LANG_RO
-};
+export * from './polish.js';
+export * from './english.js';
+export * from './romanian.js';

@@ -1,16 +1,22 @@
 // ==============
-// POLISH.JS (v1.12 - Gameplay Quotes)
+// POLISH.JS (v0.99g - Nick Translations)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
 export const LANG_PL = {
-  // UI / HUD
+  // ... (poprzednie klucze bez zmian) ...
   ui_on: "WŁ",
   ui_off: "WYŁ",
   ui_warning_new_enemy: "NADCHODZI",
   ui_hud_new_enemy: "NADCHODZI",
   
-  // Dev Tools
+  // ZMIANA: Nowe klucze do modala
+  ui_nick_modal_title: "PODPISZ SIĘ",
+  ui_nick_modal_text: "Zanim wyślesz wynik, podaj ksywkę:",
+  ui_nick_modal_confirm: "ZATWIERDŹ",
+  ui_nick_modal_cancel: "ANULUJ",
+  ui_nick_limit_info: "(Max 20 znaków, A-Z, 0-9)",
+  
   ui_dev_scen_min: "MIN",
   ui_dev_scen_high: "HIGH",
   ui_dev_scen_max: "MAX",
@@ -33,30 +39,24 @@ export const LANG_PL = {
   ui_config_sfx: "EFEKTY",
   
   ui_nav_back: "POWRÓT",
+  
   ui_ready_title: "PRZYGOTUJ SIĘ",
   
   ui_game_title: "Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula",
   ui_player_name: "Drakul",
   
-  // --- SAMOUCZEK ---
   ui_tutorial_title: "PROTOKÓŁ WSTĘPNY",
   ui_tutorial_intro: "Witaj w symulacji ziemniaczkowego łakomstwa. Wcielasz się w Hrabiego Drakula, który po ucieczce z Res-krainy popadł w ludologiczny obłęd i cierpi na ciągły popęd do pysznych ziemniaczków [XP], w imię których jest gotów poświęcić każdego na swej drodze.",
-  
   ui_tutorial_ctrl_title: "🕹️ Interfejs Kinestetyczny",
   ui_tutorial_ctrl_desc: "Smyraj ekran (urządzenia dotykowe) lub duś klawisze (WSAD). Przemoc jest zautomatyzowana – Twój awatar sam dobiera najbliższe ofiary.",
-  
   ui_tutorial_hunger_title: "🥔 Imperatyw Sytości",
   ui_tutorial_hunger_desc: "Symbol Ziemniaka to Twój wskaźnik homeostazy żołądkowej. Ciągle spada. Musisz konsumować ziemniaczki, by resetować entropię żołądka, gdyż pusty trzewiostan oznacza głód i bolesną dekompozycję sytości. A gdy i ta spadnie do zera, sam Drakul doświadczy swej agonii.",
-  
   ui_tutorial_prog_title: "💰 Akumulacja Kapitału",
   ui_tutorial_prog_desc: "Zbieraj ziemniaczki i inne ustrojstwa z pokonanych adwersarzy. Pozwoli Ci to nie tylko dłużej przetrwać, ale też wznieść się na nowe poziomy wertykalności (Perki), otwierając drogę do potężniejszego arsenału.",
-  
   ui_tutorial_boss_title: "👾 Oponenci i Dysydenci",
   ui_tutorial_boss_desc: "Interesariusz czy wróg? Każdy chce odebrać Ci sytość, bez której zezgnonisz niczym menel na bulwarowej ławce. Przerabiaj ich na kartofle, by nie ulec przytłoczeniu. Z najsilniejszych dysydentów wypadają Ludoboxy (automatyczne losowe wzmocnienie).",
-  
   ui_tutorial_btn_close: "ZACZYNAJMY",
   
-  // --- TEKSTY GŁODU ---
   quote_hunger_1: "Ziemniaczki jeść muszę, bo się uduszę!",
   quote_hunger_2: "Gdy głód doskwiera, to mi sytość odbiera!",
   quote_hunger_3: "Gdy nie zjem mych pyszności, to braknie mi sytości!",
@@ -66,7 +66,6 @@ export const LANG_PL = {
   warning_hunger: "GŁÓD!",
   shrine_text: "Rzyć umyta, sytość zdobyta",
   
-  // --- CYTATY GAMEPLAY (NOWOŚĆ v0.98) ---
   quote_gameplay_1: "Jebać wszystkich Dadgamerów i chuj wam w dupę",
   quote_gameplay_2: "Mam wyjebane na was melepetów",
   quote_gameplay_3: "Casuale się zesrali",
@@ -127,10 +126,8 @@ export const LANG_PL = {
   ui_config_style: "Styl:",
   ui_config_style_circle: "🔵 Kółka",
   ui_config_style_emoji: "😀 Emoji",
-  
   ui_config_title_lang: "Język",
   
-  // --- PRZEWODNIK ---
   ui_guide_title: "Przewodnik Hrabiego",
   ui_guide_intro: "Bądź Hrabią. Jedz ziemniaki. Biczuj wrogów.",
   ui_guide_basics_title: "🎮 Zasady",
@@ -169,14 +166,19 @@ export const LANG_PL = {
   ui_gameover_kills: "⚔️ Zabici:",
   ui_gameover_retry: "Restart",
   ui_gameover_menu: "Menu",
+  ui_gameover_submit: "WYŚLIJ WYNIK",
+  ui_gameover_sent: "WYSŁANO!",
+  ui_gameover_error: "BŁĄD SIECI",
   
-  ui_scores_title: "🏆 Wyniki",
+  ui_scores_title: "REJESTR PRZEGRYWÓW",
   ui_scores_clear: "🗑️ Wyczyść",
   ui_scores_col_rank: "#",
-  ui_scores_col_score: "Pkt",
-  ui_scores_col_kills: "Kills",
-  ui_scores_col_level: "Lvl",
-  ui_scores_col_time: "Czas",
+  ui_scores_col_nick: "KSYWKA",
+  ui_scores_col_score: "PKT",
+  ui_scores_col_kills: "ZAB",
+  ui_scores_col_level: "LVL",
+  ui_scores_col_time: "CZAS",
+  ui_scores_col_date: "DATA",
   
   ui_confirm_title: "Potwierdź",
   ui_confirm_clear_scores: "Usunąć wyniki?",
@@ -188,7 +190,6 @@ export const LANG_PL = {
   ui_intro_next: "Dalej",
   ui_intro_finish: "Menu ▶️",
   
-  // --- PICKUPY ---
   pickup_heal_name: "Talerz Hrabianki",
   pickup_heal_desc: "Relikt utraconej miłości. Natychmiast przywraca +30 punktów Sytości.",
   pickup_magnet_name: "Łakomstwo",
@@ -204,7 +205,6 @@ export const LANG_PL = {
   pickup_chest_name: "LudoBox",
   pickup_chest_desc: "Zaproszenie do ludologicznej ruletki. Gwarantuje jeden losowy atrybut/perk. Wypada z Bossów.",
   
-  // --- WROGOWIE ---
   enemy_standard_name: "Dadgamer",
   enemy_standard_desc: "Podstawowy hejter, plaga gamingu. Porusza się ruchem sinusoidalnym, utrudniając celowanie.",
   enemy_horde_name: "Maciek z czatu",
@@ -231,7 +231,6 @@ export const LANG_PL = {
   enemy_megahazard_name: "Pole Dramy",
   enemy_megahazard_desc: "Wersja Mega. Znacznie większy obszar Szamba, zadający zwiększone obrażenia.",
   
-  // --- PERKI ---
   perk_whip_name: "Tłuczek",
   perk_whip_desc: "Broń startowa. Biczuje horyzontalnie. Przebija wszystkich wrogów. Kolejne poziomy zwiększają liczbę uderzeń (przód/tył).",
   perk_autogun_name: "Plujko Jad",

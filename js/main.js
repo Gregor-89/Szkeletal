@@ -1,13 +1,13 @@
 // ==============
-// MAIN.JS (v1.03a - Tutorial Pause Fix)
+// MAIN.JS (v0.99 - Leaderboard Init)
 // Lokalizacja: /js/main.js
 // ==============
 
 import './services/i18n.js'; 
 
+// ... (reszta importów bez zmian)
 import { ObjectPool } from './core/objectPool.js';
 import { Player } from './entities/player.js';
-// ZMIANA: Import HUNGER_CONFIG
 import { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG, HUNGER_CONFIG } from './config/gameData.js';
 import { draw } from './core/draw.js';
 
@@ -31,6 +31,7 @@ import { displayScores } from './services/scoreManager.js';
 import { getLang } from './services/i18n.js';
 import { generateMap } from './managers/mapManager.js'; 
 
+// ... (Klasa Camera, zmienne canvas, context, game, settings bez zmian)
 class Camera {
     constructor(worldWidth, worldHeight, viewWidth, viewHeight) {
         this.worldWidth = worldWidth;
@@ -47,7 +48,6 @@ let ctx = null;
 const splashOverlay = document.getElementById('splashOverlay');
 const loadingOverlay = document.getElementById('loadingOverlay'); 
 const loadingBarFill = document.getElementById('loadingBarFill'); 
-// ZMIANA: Pobranie referencji do samouczka i intro dla globalnej blokady
 const tutorialOverlay = document.getElementById('tutorialOverlay');
 const introOverlay = document.getElementById('introOverlay');
 
@@ -75,7 +75,6 @@ const game={
   introSeen: false,
   isDying: false,
   totalKills: 0,
-  // ZMIANA: Inicjalizacja zmiennych głodu
   hunger: HUNGER_CONFIG.MAX_HUNGER,
   maxHunger: HUNGER_CONFIG.MAX_HUNGER,
   starvationTimer: 0,
@@ -121,10 +120,11 @@ let hitTexts = [];
 let gameStateRef = {};
 
 function updateGameTitle() {
-    const fullTitle = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${VERSION}`;
+    // ZMIANA: v0.99
+    const fullTitle = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v0.99`;
     document.title = fullTitle;
     const menuVer = document.getElementById('menuVersionTag');
-    if (menuVer) menuVer.textContent = `v${VERSION}`;
+    if (menuVer) menuVer.textContent = `v0.99`;
 }
 
 function initializeCanvas() {
@@ -166,11 +166,11 @@ function initializeCanvas() {
       obstacles: obstacles 
     };
 
-    console.log(`[DEBUG-v${VERSION}] js/main.js: Inicjalizacja zakończona.`);
+    console.log(`[DEBUG-v0.99] js/main.js: Inicjalizacja zakończona.`);
 }
 
 const uiData = {
-    VERSION: VERSION, 
+    VERSION: '0.99', 
     game, player: null, settings, weapons: null, perkLevels, 
     enemies, 
     chests, pickups, stars, bombIndicators, hazards: null, 
@@ -262,7 +262,6 @@ function loop(currentTime){
             lastFrameTime = currentTime;
         }
         
-        // ZMIANA: Globalne wymuszenie pauzy, jeśli nakładki są widoczne
         if ((tutorialOverlay && tutorialOverlay.style.display !== 'none') || 
             (introOverlay && introOverlay.style.display === 'flex')) {
             game.paused = true;
@@ -360,6 +359,12 @@ function initMenuAndEvents() {
         initTabSwitching();
         const { initEvents, wrappedLoadConfig, wrappedStartRun } = initializeMainEvents(gameStateRef, uiData);
         initEvents();
+        
+        // ZMIANA: Zapisujemy referencje do globalnych wrapperów
+        window.wrappedGameOver = () => gameOver(game, uiData);
+        window.wrappedPauseGame = () => pauseGame(game, settings, player.weapons, player);
+        window.wrappedResumeGame = () => resumeGame(game);
+
         displayScores('scoresBodyMenu');
         return { wrappedLoadConfig, wrappedStartRun };
     } catch (err) {
@@ -444,7 +449,6 @@ function finishSplashSequence() {
     splashOverlay.classList.add('fade-out');
     setTimeout(() => {
         splashOverlay.style.display = 'none';
-        // FIX v0.97h: Jeśli gra już trwa (user kliknął przez fade-out), NIE resetuj do menu!
         if (!game.running) {
             initializeIntro(gameStateRef); 
         }
