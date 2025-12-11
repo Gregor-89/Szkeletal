@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.0c - Set Last Run)
+// UI.JS (v1.0d - Game Ref Passed)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -17,14 +17,11 @@ import { formatTime, saveScore, attachClearScoresListeners, displayScores } from
 import { updateStatsUI } from '../managers/levelManager.js';
 import { VERSION } from '../config/version.js'; 
 
-// Importy z nowych modułów
 import * as Hud from './hud.js';
 import * as Menus from './menus.js';
 import * as LeaderboardUI from './leaderboardUI.js';
 
 let hpBarOuterRef = null;
-
-// --- EXPORTS ---
 
 export function updateEnemyCounter(game, enemies) {
     Hud.updateEnemyCounter(game, enemies);
@@ -37,6 +34,9 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
 export function showMenu(game, resetAllFn, uiData, allowContinue = false) {
     devSettings.presetLoaded = false; 
     
+    // ZMIANA: Ustawiamy referencję gry w LeaderboardUI
+    LeaderboardUI.setGameRef(game);
+
     if (!allowContinue) { 
         if (resetAllFn) {
             resetAllFn();
@@ -91,6 +91,9 @@ export function showMenu(game, resetAllFn, uiData, allowContinue = false) {
 }
 
 export function startRun(game, resetAllFn, uiData) {
+    // ZMIANA: Upewniamy się, że referencja jest świeża
+    LeaderboardUI.setGameRef(game);
+
     if (devSettings.presetLoaded && !devSettings.justStartedFromMenu) { 
         retryLastScenario(); 
     }
@@ -321,7 +324,6 @@ export function gameOver(game, uiData) {
     attachClearScoresListeners();
     if(gameOverOverlay) gameOverOverlay.style.display = 'flex';
     
-    // ZMIANA: Przekazujemy ostatnią grę do LeaderboardUI
     LeaderboardUI.setLastRun(currentRun);
     LeaderboardUI.initGameOverTabs(); 
 

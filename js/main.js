@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.99a - Refactor Sync)
+// MAIN.JS (v1.0 - Anti-Cheat Shadows)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -56,8 +56,22 @@ let frameCount = 0;
 let lastEnemyCounterUpdate = 0;
 const ENEMY_COUNTER_UPDATE_INTERVAL = 200;
 
-const game={
-  score:0, level:1, health: PLAYER_CONFIG.INITIAL_HEALTH, maxHealth: PLAYER_CONFIG.INITIAL_HEALTH, 
+// --- ANTI-CHEAT SETUP ---
+const SALT = 7492; // Losowa liczba "sól"
+const encrypt = (val) => Math.floor((val * 17 + SALT) ^ 0xDEADBEEF); // Prosta funkcja haszująca
+
+// Obiekt wewnętrzny przechowujący prawdziwe wartości
+const _gState = {
+    score: 0,
+    health: PLAYER_CONFIG.INITIAL_HEALTH,
+    _sShadow: encrypt(0), // Cień wyniku
+    _hShadow: encrypt(PLAYER_CONFIG.INITIAL_HEALTH), // Cień zdrowia
+    _cheater: false // Flaga "Brudnej Gry"
+};
+
+// Obiekt game jako publiczny interfejs z "pułapkami" (Gettery/Settery)
+const game = {
+  level:1, maxHealth: PLAYER_CONFIG.INITIAL_HEALTH, 
   time:0, running:false, paused:true, inMenu:true,
   xp:0, xpNeeded: GAME_CONFIG.INITIAL_XP_NEEDED, 
   pickupRange: PLAYER_CONFIG.INITIAL_PICKUP_RANGE, 
@@ -77,6 +91,58 @@ const game={
   maxHunger: HUNGER_CONFIG.MAX_HUNGER,
   starvationTimer: 0,
   quoteTimer: 0
+};
+
+// Zabezpieczenie SCORE
+Object.defineProperty(game, 'score', {
+    get: () => _gState.score,
+    set: (val) => {
+        // Jeśli aktualna wartość nie zgadza się z cieniem, ktoś grzebał w pamięci/konsoli
+        if (encrypt(_gState.score) !== _gState._sShadow) {
+            _gState._cheater = true;
+            console.warn("Integrity Check Fail: Score corrupted!");
+        }
+        _gState.score = val;
+        _gState._sShadow = encrypt(val); // Aktualizacja cienia
+    },
+    enumerable: true
+});
+
+// Zabezpieczenie HEALTH
+Object.defineProperty(game, 'health', {
+    get: () => _gState.health,
+    set: (val) => {
+        if (encrypt(_gState.health) !== _gState._hShadow) {
+            _gState._cheater = true;
+            console.warn("Integrity Check Fail: Health corrupted!");
+        }
+        _gState.health = val;
+        _gState._hShadow = encrypt(val);
+    },
+    enumerable: true
+});
+
+// Zabezpieczenie FLAGI (tylko do odczytu publicznie, zapis przez metodę)
+Object.defineProperty(game, 'isCheated', {
+    get: () => _gState._cheater,
+    set: (val) => { 
+        if(val === true) _gState._cheater = true; 
+    },
+    enumerable: true
+});
+
+// Helper dla systemu zapisu, aby wyciągnąć cienie
+game._getShadows = () => ({ s: _gState._sShadow, h: _gState._hShadow, c: _gState._cheater });
+// Helper dla systemu odczytu, aby przywrócić cienie
+game._setShadows = (s, h, c) => {
+    _gState._sShadow = s;
+    _gState._hShadow = h;
+    _gState._cheater = c;
+    // Weryfikacja po wczytaniu
+    if (encrypt(game.score) !== s || encrypt(game.health) !== h) {
+        _gState._cheater = true;
+        console.warn("Save File Integrity Check Failed!");
+    }
 };
 
 const settings={ 
@@ -232,6 +298,12 @@ function update(dt){
       const roundedX = Math.round(camera.offsetX);
       const roundedY = Math.round(camera.offsetY);
       canvas.style.backgroundPosition = `${-roundedX}px ${-roundedY}px`;
+  }
+  
+  // Weryfikacja integralności w pętli (co jakiś czas, np. losowo)
+  if (Math.random() < 0.01) {
+      if (encrypt(game.score) !== _gState._sShadow) game.isCheated = true;
+      if (encrypt(game.health) !== _gState._hShadow) game.isCheated = true;
   }
 }
 

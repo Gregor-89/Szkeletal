@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v1.03 - XP Calculation Fix)
+// DEV.JS (v1.04 - Anti-Cheat Dirty Flag)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -55,8 +55,13 @@ let gameState = {};
 let loadConfigCallback = () => {};
 let startRunCallback = () => {};
 
-// ZMIANA: Zaktualizowano logikę obliczania XP, aby pasowała do hybrydowego systemu z gameData.js
-// Wcześniej używano nieistniejącego XP_GROWTH_FACTOR, co powodowało NaN przy poziomach > 1
+// ZMIANA: Dodano flagowanie oszusta przy użyciu dev tools
+function markAsCheated() {
+    if (gameState && gameState.game) {
+        gameState.game.isCheated = true;
+    }
+}
+
 function calculateXpNeeded(level) {
     let xp = GAME_CONFIG.INITIAL_XP_NEEDED || 5;
     const threshold = GAME_CONFIG.XP_THRESHOLD_LEVEL || 10;
@@ -105,6 +110,9 @@ function callStartRun() {
         devSettings.presetLoaded = true;
         devSettings.justStartedFromMenu = true; 
         
+        // Każdy scenariusz = oszustwo w kontekście rankingu
+        markAsCheated();
+        
         const menuOverlay = document.getElementById('menuOverlay');
         if (menuOverlay) menuOverlay.style.display = 'none';
         
@@ -152,7 +160,6 @@ function devPresetEnemy(enemyType, autoStart = true) {
             }
         }
         if (!found && enemyType === 'lumberjack') {
-            // Jeśli brakuje opcji w HTML, wymuś w pamięci
             devSettings.allowedEnemies = ['lumberjack'];
         }
     }
@@ -171,10 +178,8 @@ function devPresetEnemy(enemyType, autoStart = true) {
     setVal('devMaxEnemies', 100);
     setVal('devTime', jumpTime);
 
-    // Aplikacja ustawień (bezpieczna)
     applyDevSettings(true); 
     
-    // Wymuszenie, na wypadek błędu w UI
     devSettings.allowedEnemies = [enemyType];
     devStartTime = jumpTime;
 
@@ -199,7 +204,6 @@ function devPresetEnemy(enemyType, autoStart = true) {
                 }
             }
             
-            // Reset timerów
             if (enemyType === 'wall') {
                 gameState.settings.lastSiegeEvent = -999999; 
             } else {
@@ -340,6 +344,9 @@ function devStartPeaceful() {
     setVal('devSpawnRate', 0);
     setVal('devMaxEnemies', 0);
     
+    // Użycie trybu spacerowego = oszustwo
+    markAsCheated();
+    
     if (gameState.settings) {
         gameState.settings.spawn = 0;
         gameState.settings.maxEnemies = 0;
@@ -371,9 +378,11 @@ function devStartScenario(type, autoStart = true) {
 export function applyDevSettings(silent = false) {
     if (!gameState.game) return;
     
+    // Każde zastosowanie ustawień dev = oszustwo
+    markAsCheated();
+    
     const { game, settings, player, perkLevels } = gameState;
     
-    // Bezpieczne pobieranie wartości (helpery)
     devStartTime = getVal('devTime', 0);
     if (!game.inMenu || game.manualPause) {
         game.time = devStartTime;
@@ -382,7 +391,6 @@ export function applyDevSettings(silent = false) {
     }
     
     game.health = getVal('devHealth', PLAYER_CONFIG.INITIAL_HEALTH);
-    // FIX: Dodano fallback jeśli devMaxHealth nie istnieje w HTML
     game.maxHealth = getVal('devMaxHealth', PLAYER_CONFIG.INITIAL_HEALTH);
     
     game.level = getVal('devLevel', 1);
@@ -457,7 +465,7 @@ export function applyDevSettings(silent = false) {
     }
     
     devSettings.presetLoaded = true;
-    console.log('[Dev] Ustawienia zastosowane.');
+    console.log('[Dev] Ustawienia zastosowane (Oszustwo oflagowane).');
     
     if (!silent) {
         showDevConfirmModal('✅ Ustawienia Dev zastosowane!');
@@ -468,6 +476,9 @@ function devSpawnPickup(type) {
     if (!gameState.game || !gameState.pickups || !gameState.player) return;
     const { game, pickups, player } = gameState;
     if (!game.running || game.paused) { alert('❌ Rozpocznij grę!'); return; }
+    
+    // Spawn itemu = oszustwo
+    markAsCheated();
     
     const pos = findFreeSpotForPickup(pickups, player.x, player.y);
     let p = null;
@@ -502,5 +513,5 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.retryLastScenario = retryLastScenario; 
     window.devStartPeaceful = devStartPeaceful; 
     
-    console.log('[DEBUG-v1.03] js/services/dev.js: Dev Tools loaded & exported.');
+    console.log('[DEBUG-v1.04] js/services/dev.js: Dev Tools loaded & exported.');
 }

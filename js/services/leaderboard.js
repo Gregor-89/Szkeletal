@@ -1,17 +1,27 @@
 // ==============
-// LEADERBOARD.JS (v0.99c - Nick Validation Update)
+// LEADERBOARD.JS (v1.0 - Anti-Cheat Security)
 // Lokalizacja: /js/services/leaderboard.js
 // ==============
 
-const PRIVATE_CODE = "Rk_e_q710UCvW1GYzvME3QcKYKhi6V50mA5sW-9traiQ";
+// Rozbity klucz, aby utrudnić proste wyszukiwanie (Ctrl+F) w kodzie źródłowym
+const _k_parts = ["Rk_e_q710U", "CvW1GYzvME", "3QcKYKhi6V", "50mA5sW-9t", "raiQ"];
+const getKey = () => _k_parts.join('');
+
 const PUBLIC_CODE = "693982968f40bb18648a3aab";
 const BASE_URL = "http://dreamlo.com/lb/";
+
+// Limity Sanity Check (Teoretyczne maksima)
+const MAX_SCORE_PER_SECOND = 3000; // Bardzo liberalny limit
+const MAX_KILLS_PER_SECOND = 25; // Limit zabójstw na sekundę
 
 let cache = {
   data: null,
   lastFetch: 0,
   CACHE_DURATION: 60000 // 60s
 };
+
+let lastSubmissionTime = 0;
+const SUBMISSION_COOLDOWN = 30000; // 30 sekund odstępu między wysyłkami
 
 export const LeaderboardService = {
   
@@ -20,20 +30,48 @@ export const LeaderboardService = {
     cache.lastFetch = 0;
   },
   
-  submitScore: async (nick, score, level, timeVal, kills) => {
+  submitScore: async (nick, score, level, timeVal, kills, isCheated = false) => {
+    // 1. Flood Protection
+    const now = Date.now();
+    if (now - lastSubmissionTime < SUBMISSION_COOLDOWN) {
+      return { success: false, msg: "Za często wysyłasz (odczekaj 30s)" };
+    }
+    lastSubmissionTime = now;
+    
+    // 2. Podstawowa walidacja danych
     if (!nick || nick.trim() === "") return { success: false, msg: "Brak nicku" };
-    
-    // ZMIANA: Walidacja - dopuszczamy polskie znaki i spacje, limit 20
-    // Wycinamy wszystko co NIE jest literą (PL/EN), cyfrą, spacją, _ lub -
     const cleanNick = nick.replace(/[^a-zA-Z0-9_\- ąęćżźńłóśĄĘĆŻŹŃŁÓŚ]/g, '').substring(0, 20).trim();
-    
     if (cleanNick.length === 0) return { success: false, msg: "Niepoprawny nick" };
     
-    // Dreamlo wymaga zakodowania URL (spacje jako %20 itp.)
-    const safeNick = encodeURIComponent(cleanNick);
+    // 3. Fake Submit (Dla oflagowanych oszustów)
+    // Jeśli flaga jest true, udajemy sukces, ale nie wysyłamy requestu.
+    if (isCheated) {
+      console.warn("[Leaderboard] Cheater detected via Flag. Simulating submit.");
+      return { success: true, msg: "Wysłano pomyślnie!" }; // Kłamstwo w dobrej wierze ;)
+    }
     
+    // 4. Sanity Check (Dla modyfikatorów pamięci bez flagi)
+    // Pomijamy sprawdzenie dla bardzo krótkich gier (<5s) lub zerowych wyników
+    if (timeVal > 5 && score > 0) {
+      const scoreRatio = score / timeVal;
+      const killRatio = kills / timeVal;
+      
+      if (scoreRatio > MAX_SCORE_PER_SECOND) {
+        console.warn(`[Leaderboard] Sanity Check Fail: Score Ratio ${scoreRatio.toFixed(1)}`);
+        return { success: true }; // Fake success
+      }
+      if (killRatio > MAX_KILLS_PER_SECOND) {
+        console.warn(`[Leaderboard] Sanity Check Fail: Kill Ratio ${killRatio.toFixed(1)}`);
+        return { success: true }; // Fake success
+      }
+    }
+    
+    // 5. Właściwe wysłanie (tylko jeśli przeszło powyższe)
+    const safeNick = encodeURIComponent(cleanNick);
     const extraData = `${level}|${kills}`;
-    const url = `${BASE_URL}${PRIVATE_CODE}/add/${safeNick}/${score}/${timeVal}/${extraData}`;
+    const privateKey = getKey(); // Składamy klucz w locie
+    
+    const url = `${BASE_URL}${privateKey}/add/${safeNick}/${score}/${timeVal}/${extraData}`;
     
     try {
       const response = await fetch(url);
@@ -85,11 +123,8 @@ export const LeaderboardService = {
           let entryDate = new Date(dateStr);
           if (isNaN(entryDate.getTime())) entryDate = new Date();
           
-          // Dekodujemy nick z URL (np. spacje)
           let decodedName = entry.name;
-          try {
-            decodedName = decodeURIComponent(entry.name);
-          } catch (e) {}
+          try { decodedName = decodeURIComponent(entry.name); } catch (e) {}
           
           return {
             name: decodedName,
@@ -102,7 +137,6 @@ export const LeaderboardService = {
         });
         
         entries.sort((a, b) => b.score - a.score);
-        entries.forEach((e, i) => e.originalRank = i + 1);
         
         cache.data = entries;
         cache.lastFetch = now;

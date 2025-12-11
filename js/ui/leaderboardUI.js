@@ -1,5 +1,5 @@
 // ==============
-// LEADERBOARDUI.JS (v1.02 - Rank & Highlight Logic Fix)
+// LEADERBOARDUI.JS (v1.03 - Anti-Cheat Integration)
 // Lokalizacja: /js/ui/leaderboardUI.js
 // ==============
 
@@ -9,11 +9,16 @@ import { displayScores } from '../services/scoreManager.js';
 import { LeaderboardService } from '../services/leaderboard.js';
 import { finalScore, finalLevel, finalTime } from './domElements.js';
 
-// Przechowujemy dane ostatniej rundy do podświetlenia
 let lastRunData = null;
+let gameRef = null; // Referencja do obiektu gry dla sprawdzania flagi Anti-Cheat
 
 export function setLastRun(runData) {
     lastRunData = runData;
+}
+
+// ZMIANA: Setter dla referencji gry (używany przez ui.js)
+export function setGameRef(gameInstance) {
+    gameRef = gameInstance;
 }
 
 // --- STAN LEADERBOARD MENU ---
@@ -45,7 +50,6 @@ function sortData(data, column, dir) {
             valB = valB.toLowerCase();
         }
         
-        // Obsługa sortowania po rankingu (który jest liczbą)
         if (column === 'tempRank') {
             valA = a.tempRank || 0;
             valB = b.tempRank || 0;
@@ -57,14 +61,10 @@ function sortData(data, column, dir) {
     });
 }
 
-// Funkcja pomocnicza: Nadaje rangi na podstawie wyniku (Score Descending)
-// Dzięki temu ranga jest "przyklejona" do wyniku, niezależnie od późniejszego sortowania wizualnego
 function assignRanks(data) {
     if (!data) return [];
-    // Kopia do ustalenia rankingu
     const ranked = [...data].sort((a, b) => b.score - a.score);
     ranked.forEach((item, index) => {
-        // Modyfikujemy obiekt w oryginalnej tablicy (lub kopii, jeśli referencje są te same)
         item.tempRank = index + 1;
     });
     return data;
@@ -77,9 +77,7 @@ function setupTableSorting(tableId, callback) {
     headers.forEach(th => {
         th.onclick = () => {
             let col = th.dataset.sort;
-            // Jeśli kliknięto w kolumnę # (Rank), sortujemy po obliczonej randze
             if (col === 'rank' || th.innerText.includes('#')) col = 'tempRank';
-            
             callback(col);
             playSound('Click');
         };
@@ -100,8 +98,8 @@ export function initLeaderboardUI() {
             currentSortDir = currentSortDir === 'desc' ? 'asc' : 'desc';
         } else {
             currentSortColumn = col;
-            currentSortDir = 'desc'; // Domyślnie malejąco dla nowej kolumny
-            if (col === 'tempRank' || col === 'originalRank') currentSortDir = 'asc'; // Dla rangi rosnąco (1, 2, 3...)
+            currentSortDir = 'desc'; 
+            if (col === 'tempRank' || col === 'originalRank') currentSortDir = 'asc'; 
         }
         updateView();
     });
@@ -134,13 +132,8 @@ export function initLeaderboardUI() {
             rawData = cachedOnlineScores;
         }
         
-        // 1. Nadaj rangi (1, 2, 3...) na podstawie wyniku
         assignRanks(rawData);
-        
-        // 2. Posortuj wizualnie według wybranej kolumny
         const sortedScores = sortData([...rawData], currentSortColumn, currentSortDir);
-        
-        // 3. Wyświetl (przekazując null jako currentRun w menu, chyba że chcemy podświetlać ostatnią grę też tutaj)
         displayScores('scoresBodyMenu', null, sortedScores); 
         
         if (tableBody && tableBody.children.length === 0 && emptyMsg) emptyMsg.style.display = 'block';
@@ -220,7 +213,10 @@ function initSubmitButtonLogic() {
         const seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
         const kills = parseInt(document.getElementById('totalKillsSpanGO').textContent) || 0;
 
-        const result = await LeaderboardService.submitScore(nickToUse, score, level, seconds, kills);
+        // ZMIANA: Pobranie flagi oszusta z referencji gry
+        const isCheated = (gameRef && gameRef.isCheated === true);
+
+        const result = await LeaderboardService.submitScore(nickToUse, score, level, seconds, kills, isCheated);
         
         if (result.success) {
             if(msgDiv) {
@@ -228,7 +224,6 @@ function initSubmitButtonLogic() {
                 msgDiv.textContent = getLang('ui_gameover_sent') || "WYSŁANO!";
             }
             playSound('LevelUp');
-            // Odśwież widok online po wysłaniu
             cachedGOOnlineScores = [];
             const tabGOOnline = document.getElementById('tabGOOnline');
             if(tabGOOnline) tabGOOnline.click();
@@ -327,13 +322,8 @@ export function initGameOverTabs() {
             rawData = cachedGOOnlineScores;
         }
         
-        // 1. Nadaj rangi
         assignRanks(rawData);
-
-        // 2. Sortuj wizualnie
         const sortedData = sortData([...rawData], currentGOSortColumn, currentGOSortDir);
-        
-        // 3. Wyświetl z podświetleniem (lastRunData)
         displayScores('scoresBodyGameOver', lastRunData, sortedData); 
     };
 
@@ -368,9 +358,6 @@ export function initGameOverTabs() {
         });
     }
     
-    // Reset przy otwarciu (domyślnie sortuj po wyniku)
-    // Nie resetujemy goMode/Filter, żeby gracz nie tracił kontekstu jak przełącza, ale można resetować.
-    // Tutaj resetujemy tylko kolumnę sortowania.
     currentGOSortColumn = 'score';
     currentGOSortDir = 'desc';
     

@@ -1,5 +1,5 @@
 // ==============
-// SAVEMANAGER.JS (v1.04 - Crash Fix)
+// SAVEMANAGER.JS (v1.05 - Anti-Cheat Shadows Persistence)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
@@ -21,7 +21,6 @@ import { ChainLightningWeapon } from '../config/weapons/chainLightningWeapon.js'
 
 import { ENEMY_CLASS_MAP } from '../managers/enemyManager.js';
 import { initAudio, playSound } from './audio.js';
-// ZMIANA: Usunięto wadliwy import 'docTitle'
 import { titleDiv } from '../ui/domElements.js';
 
 const PICKUP_CLASS_MAP = {
@@ -48,12 +47,19 @@ export function saveGame(state) {
         pickups, chests, hazards, enemyIdCounter 
     } = state;
     
+    // ZMIANA: Pobranie wartości Shadow do zapisu
+    let shadowData = {};
+    if (game._getShadows) shadowData = game._getShadows();
+
     const activeBullets = bulletsPool.activeItems.map(b => ({ ...b }));
     const activeEBullets = eBulletsPool.activeItems.map(eb => ({ ...eb }));
     const activeGems = gemsPool.activeItems.map(g => ({ ...g }));
 
     const savedState = { 
         game: {...game},
+        // Zapisujemy cienie (integrity check)
+        integrity: shadowData,
+        
         player: { 
             x: player.x, 
             y: player.y, 
@@ -106,6 +112,15 @@ export function loadGame(savedState, state, uiData) {
     Object.assign(settings, savedState.settings);
     Object.keys(perkLevels).forEach(key => delete perkLevels[key]);
     Object.assign(perkLevels, savedState.perkLevels);
+    
+    // ZMIANA: Przywracanie cieni i weryfikacja
+    if (savedState.integrity && game._setShadows) {
+        game._setShadows(
+            savedState.integrity.s, 
+            savedState.integrity.h, 
+            savedState.integrity.c
+        );
+    }
 
     player.x = savedState.player.x;
     player.y = savedState.player.y;
@@ -191,13 +206,11 @@ export function loadGame(savedState, state, uiData) {
     
     const newTitle = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${uiData.VERSION}`;
     
-    // ZMIANA: Bezpośrednie użycie document.title zamiast wadliwego importu
     document.title = newTitle;
     if(titleDiv) titleDiv.textContent = newTitle;
     
     initAudio();
     
-    // ZMIANA: Twardy reset muzyki - teraz kod dojdzie do tego miejsca!
     playSound('MusicStop');
     
     setTimeout(() => {
