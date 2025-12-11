@@ -1,15 +1,9 @@
 // ==============
-// ENGLISH.JS (v0.99g - Nick Limit Translation)
+// ENGLISH.JS (v1.0 - Filters & Caps)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
 export const LANG_EN = {
-  // ... (Wszystkie poprzednie klucze zachowane) ...
-  
-  // DODANO NOWY KLUCZ:
-  ui_nick_limit_info: "(Max 20 chars, A-Z, 0-9)",
-  
-  // (Reszta pliku bez zmian, upewnij się że masz wersję v0.99f i dopisz tylko ten klucz na końcu obiektu)
   ui_on: "ON",
   ui_off: "OFF",
   
@@ -141,14 +135,14 @@ export const LANG_EN = {
   ui_gameover_error: "NETWORK ERROR",
   
   ui_scores_title: "REGISTRY OF LOSERS",
-  ui_scores_clear: "🗑️ Clear",
+  ui_scores_clear: "🗑️ CLEAR",
   ui_scores_col_rank: "#",
   ui_scores_col_nick: "NICK",
-  ui_scores_col_score: "Score",
-  ui_scores_col_kills: "Kills",
-  ui_scores_col_level: "Lvl",
-  ui_scores_col_time: "Time",
-  ui_scores_col_date: "Date",
+  ui_scores_col_score: "SCORE", // CAPS
+  ui_scores_col_kills: "KILLS", // CAPS
+  ui_scores_col_level: "LVL", // CAPS
+  ui_scores_col_time: "TIME", // CAPS
+  ui_scores_col_date: "DATE", // CAPS
   
   ui_confirm_title: "Confirmation",
   ui_confirm_clear_scores: "Are you sure you want to clear the high scores? This operation cannot be undone.",
@@ -159,6 +153,7 @@ export const LANG_EN = {
   ui_nick_modal_text: "Before sending, enter your nickname:",
   ui_nick_modal_confirm: "CONFIRM",
   ui_nick_modal_cancel: "CANCEL",
+  ui_nick_limit_info: "(Max 20 chars, A-Z, 0-9)",
   
   ui_intro_prev: "Back",
   ui_intro_skip: "Skip (Close)",
@@ -231,5 +226,18 @@ export const LANG_EN = {
   ui_stat_health: "HP",
   ui_stat_speed: "Speed",
   ui_stat_enemies: "Kills",
-  ui_stat_time: "Time"
+  ui_stat_time: "Time",
+  
+  // NOWE KLUCZE (v0.99)
+  ui_scores_local: "LOCAL",
+  ui_scores_online: "ONLINE",
+  ui_filter_today: "TODAY",
+  ui_filter_weekly: "WEEKLY",
+  ui_filter_monthly: "MONTHLY",
+  ui_filter_all: "ALL",
+  
+  ui_gameover_score_label: "YOUR SCORE",
+  ui_gameover_time_label: "TIME",
+  ui_gameover_level_label: "LEVEL",
+  ui_gameover_kills_label: "KILLS"
 };

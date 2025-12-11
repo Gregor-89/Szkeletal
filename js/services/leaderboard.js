@@ -1,5 +1,5 @@
 // ==============
-// LEADERBOARD.JS (v1.0 - Anti-Cheat Security)
+// LEADERBOARD.JS (v1.02 - Multi-Entry Shadow Ban)
 // Lokalizacja: /js/services/leaderboard.js
 // ==============
 
@@ -9,10 +9,11 @@ const getKey = () => _k_parts.join('');
 
 const PUBLIC_CODE = "693982968f40bb18648a3aab";
 const BASE_URL = "http://dreamlo.com/lb/";
+const SHADOW_BAN_KEY = "szkeletal_shadow_entry"; // Klucz lokalny dla oszusta
 
 // Limity Sanity Check (Teoretyczne maksima)
-const MAX_SCORE_PER_SECOND = 3000; // Bardzo liberalny limit
-const MAX_KILLS_PER_SECOND = 25; // Limit zabójstw na sekundę
+const MAX_SCORE_PER_SECOND = 3000;
+const MAX_KILLS_PER_SECOND = 25;
 
 let cache = {
   data: null,
@@ -31,45 +32,86 @@ export const LeaderboardService = {
   },
   
   submitScore: async (nick, score, level, timeVal, kills, isCheated = false) => {
-    // 1. Flood Protection
     const now = Date.now();
+    
+    // 1. Walidacja podstawowa
+    if (!nick || nick.trim() === "") return { success: false, msg: "Brak nicku" };
+    const cleanNick = nick.replace(/[^a-zA-Z0-9_\- ąęćżźńłóśĄĘĆŻŹŃŁÓŚ]/g, '').substring(0, 20).trim();
+    if (cleanNick.length === 0) return { success: false, msg: "Niepoprawny nick" };
+    
+    // 2. Flood Protection (symulujemy też dla czitera, żeby było realistycznie)
     if (now - lastSubmissionTime < SUBMISSION_COOLDOWN) {
       return { success: false, msg: "Za często wysyłasz (odczekaj 30s)" };
     }
     lastSubmissionTime = now;
     
-    // 2. Podstawowa walidacja danych
-    if (!nick || nick.trim() === "") return { success: false, msg: "Brak nicku" };
-    const cleanNick = nick.replace(/[^a-zA-Z0-9_\- ąęćżźńłóśĄĘĆŻŹŃŁÓŚ]/g, '').substring(0, 20).trim();
-    if (cleanNick.length === 0) return { success: false, msg: "Niepoprawny nick" };
+    // 3. Wykrywanie oszustwa (Flag & Sanity)
+    let cheatDetected = isCheated;
     
-    // 3. Fake Submit (Dla oflagowanych oszustów)
-    // Jeśli flaga jest true, udajemy sukces, ale nie wysyłamy requestu.
-    if (isCheated) {
-      console.warn("[Leaderboard] Cheater detected via Flag. Simulating submit.");
-      return { success: true, msg: "Wysłano pomyślnie!" }; // Kłamstwo w dobrej wierze ;)
-    }
-    
-    // 4. Sanity Check (Dla modyfikatorów pamięci bez flagi)
-    // Pomijamy sprawdzenie dla bardzo krótkich gier (<5s) lub zerowych wyników
-    if (timeVal > 5 && score > 0) {
+    // Sanity Check (jeśli flaga jeszcze nie została podniesiona)
+    if (!cheatDetected && timeVal > 5 && score > 0) {
       const scoreRatio = score / timeVal;
       const killRatio = kills / timeVal;
       
-      if (scoreRatio > MAX_SCORE_PER_SECOND) {
-        console.warn(`[Leaderboard] Sanity Check Fail: Score Ratio ${scoreRatio.toFixed(1)}`);
-        return { success: true }; // Fake success
-      }
-      if (killRatio > MAX_KILLS_PER_SECOND) {
-        console.warn(`[Leaderboard] Sanity Check Fail: Kill Ratio ${killRatio.toFixed(1)}`);
-        return { success: true }; // Fake success
+      if (scoreRatio > MAX_SCORE_PER_SECOND || killRatio > MAX_KILLS_PER_SECOND) {
+        console.warn(`[Leaderboard] Sanity Check Fail. ScoreRatio: ${scoreRatio.toFixed(1)}, KillRatio: ${killRatio.toFixed(1)}`);
+        cheatDetected = true;
       }
     }
     
-    // 5. Właściwe wysłanie (tylko jeśli przeszło powyższe)
+    // 4. SHADOW BAN / FAKE SUBMIT
+    if (cheatDetected) {
+      console.warn("[Leaderboard] Cheater detected. Performing Shadow Ban submit.");
+      
+      const shadowEntry = {
+        name: cleanNick,
+        score: score,
+        time: timeVal,
+        level: level,
+        kills: kills,
+        date: new Date().toISOString()
+      };
+      
+      // --- ZMIANA: Obsługa historii wyników czitera ---
+      let shadowHistory = [];
+      try {
+        const stored = localStorage.getItem(SHADOW_BAN_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          // Kompatybilność: Jeśli stary zapis był pojedynczym obiektem, zamień na tablicę
+          if (Array.isArray(parsed)) {
+            shadowHistory = parsed;
+          } else if (typeof parsed === 'object') {
+            shadowHistory = [parsed];
+          }
+        }
+      } catch (e) {
+        console.error("Shadow History Parse Error", e);
+        shadowHistory = [];
+      }
+      
+      // Dodajemy nowy wynik do historii
+      shadowHistory.push(shadowEntry);
+      
+      // Opcjonalnie: Limit np. 50 ostatnich oszustw, żeby nie zapchać localStorage
+      if (shadowHistory.length > 50) {
+        shadowHistory.shift(); // Usuń najstarszy
+      }
+      
+      // Zapisz z powrotem
+      localStorage.setItem(SHADOW_BAN_KEY, JSON.stringify(shadowHistory));
+      // ------------------------------------------------
+      
+      // Czyścimy cache, żeby cziter od razu zobaczył swój "sukces" na liście
+      LeaderboardService.clearCache();
+      
+      return { success: true, msg: "Wysłano pomyślnie!" };
+    }
+    
+    // 5. Właściwe wysłanie (Uczciwy gracz)
     const safeNick = encodeURIComponent(cleanNick);
     const extraData = `${level}|${kills}`;
-    const privateKey = getKey(); // Składamy klucz w locie
+    const privateKey = getKey();
     
     const url = `${BASE_URL}${privateKey}/add/${safeNick}/${score}/${timeVal}/${extraData}`;
     
@@ -136,18 +178,51 @@ export const LeaderboardService = {
           };
         });
         
-        entries.sort((a, b) => b.score - a.score);
-        
         cache.data = entries;
         cache.lastFetch = now;
         
       } catch (e) {
         console.error("Leaderboard Fetch Error:", e);
-        return [];
+        entries = [];
       }
     }
     
-    let filteredScores = [...entries];
+    // --- SHADOW BAN INJECTION (MULTI) ---
+    let displayEntries = [...entries];
+    
+    const shadowString = localStorage.getItem(SHADOW_BAN_KEY);
+    if (shadowString) {
+      try {
+        const parsed = JSON.parse(shadowString);
+        
+        // Obsługa zarówno starego formatu (obiekt) jak i nowego (tablica)
+        let shadowList = [];
+        if (Array.isArray(parsed)) {
+          shadowList = parsed;
+        } else if (typeof parsed === 'object') {
+          shadowList = [parsed];
+        }
+        
+        // Wstrzykujemy wszystkie wyniki z historii cienia
+        shadowList.forEach(item => {
+          // Musimy odtworzyć obiekt Date, bo z JSON-a wrócił jako string
+          const injectedEntry = {
+            ...item,
+            date: new Date(item.date)
+          };
+          displayEntries.push(injectedEntry);
+        });
+        
+        // Ponowne sortowanie całej zmieszanej listy
+        displayEntries.sort((a, b) => b.score - a.score);
+        
+      } catch (e) {
+        console.error("Shadow Entry Parse Error", e);
+      }
+    }
+    // -----------------------------
+    
+    let filteredScores = [...displayEntries];
     const dateNow = new Date();
     const startOfDay = new Date(dateNow.getFullYear(), dateNow.getMonth(), dateNow.getDate());
     
@@ -161,6 +236,7 @@ export const LeaderboardService = {
       filteredScores = filteredScores.filter(s => s.date >= monthAgo);
     }
     
+    // Przycinamy listę do np. 100 wyników, żeby nie była za długa (oszust może mieć dużo wpisów)
     return filteredScores.slice(0, 100);
   }
 };

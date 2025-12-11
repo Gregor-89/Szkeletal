@@ -1,15 +1,9 @@
 // ==============
-// ROMANIAN.JS (v0.99g - Nick Limit Translation)
+// ROMANIAN.JS (v1.0 - Filters & Caps)
 // Lokalizacja: /js/lang/romanian.js
 // ==============
 
 export const LANG_RO = {
-  // ... (Wszystkie poprzednie klucze zachowane) ...
-  
-  // DODANO NOWY KLUCZ:
-  ui_nick_limit_info: "(Max 20 caractere, A-Z, 0-9)",
-  
-  // (Reszta pliku bez zmian, upewnij się że masz wersję v0.99f i dopisz tylko ten klucz na końcu obiektu)
   ui_on: "PORNIT",
   ui_off: "OPRIT",
   
@@ -140,14 +134,14 @@ export const LANG_RO = {
   ui_gameover_error: "EROARE REȚEA",
   
   ui_scores_title: "REGISTRUL PIERZĂTORILOR",
-  ui_scores_clear: "🗑️ Șterge",
+  ui_scores_clear: "🗑️ ȘTERGE", // CAPS
   ui_scores_col_rank: "#",
   ui_scores_col_nick: "NICK",
-  ui_scores_col_score: "Scor",
-  ui_scores_col_kills: "Kills",
-  ui_scores_col_level: "Lvl",
-  ui_scores_col_time: "Timp",
-  ui_scores_col_date: "Data",
+  ui_scores_col_score: "SCOR", // CAPS
+  ui_scores_col_kills: "UCI", // CAPS
+  ui_scores_col_level: "NIV", // CAPS
+  ui_scores_col_time: "TIMP", // CAPS
+  ui_scores_col_date: "DATA", // CAPS
   
   ui_confirm_title: "Confirmare",
   ui_confirm_clear_scores: "Sigur vrei să ștergi scorurile? Această acțiune este ireversibilă.",
@@ -230,5 +224,18 @@ export const LANG_RO = {
   ui_stat_health: "HP",
   ui_stat_speed: "Viteză",
   ui_stat_enemies: "Kills",
-  ui_stat_time: "Timp"
+  ui_stat_time: "Timp",
+  
+  // NOWE KLUCZE (v0.99)
+  ui_scores_local: "LOCAL",
+  ui_scores_online: "ONLINE",
+  ui_filter_today: "AZI",
+  ui_filter_weekly: "SĂPT",
+  ui_filter_monthly: "LUNĂ",
+  ui_filter_all: "TOT",
+  
+  ui_gameover_score_label: "SCORUL TĂU",
+  ui_gameover_time_label: "TIMP",
+  ui_gameover_level_label: "NIVEL",
+  ui_gameover_kills_label: "UCIDERI"
 };

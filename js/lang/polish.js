@@ -1,16 +1,14 @@
 // ==============
-// POLISH.JS (v0.99g - Nick Translations)
+// POLISH.JS (v1.0 - Filters & Caps)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
 export const LANG_PL = {
-  // ... (poprzednie klucze bez zmian) ...
   ui_on: "WŁ",
   ui_off: "WYŁ",
   ui_warning_new_enemy: "NADCHODZI",
   ui_hud_new_enemy: "NADCHODZI",
   
-  // ZMIANA: Nowe klucze do modala
   ui_nick_modal_title: "PODPISZ SIĘ",
   ui_nick_modal_text: "Zanim wyślesz wynik, podaj ksywkę:",
   ui_nick_modal_confirm: "ZATWIERDŹ",
@@ -171,7 +169,7 @@ export const LANG_PL = {
   ui_gameover_error: "BŁĄD SIECI",
   
   ui_scores_title: "REJESTR PRZEGRYWÓW",
-  ui_scores_clear: "🗑️ Wyczyść",
+  ui_scores_clear: "🗑️ WYCZYŚĆ",
   ui_scores_col_rank: "#",
   ui_scores_col_nick: "KSYWKA",
   ui_scores_col_score: "PKT",
@@ -256,9 +254,22 @@ export const LANG_PL = {
   perk_health_name: "Zdrowie",
   perk_health_desc: "Większy żołądek na hejt. Zwiększa Max Sytość o +20 i leczy 20 HP.",
   
-  ui_stat_level: "Lvl",
-  ui_stat_health: "HP",
+  ui_stat_level: "Poziom",
+  ui_stat_health: "Zdrowie",
   ui_stat_speed: "Spd",
   ui_stat_enemies: "Kill",
-  ui_stat_time: "Czas"
+  ui_stat_time: "Czas",
+  
+  // NOWE KLUCZE (v0.99)
+  ui_scores_local: "LOKALNE",
+  ui_scores_online: "ONLINE",
+  ui_filter_today: "DZIŚ",
+  ui_filter_weekly: "TYDZIEŃ",
+  ui_filter_monthly: "MIESIĄC",
+  ui_filter_all: "WSZYSTKIE",
+  
+  ui_gameover_score_label: "TWÓJ WYNIK",
+  ui_gameover_time_label: "CZAS",
+  ui_gameover_level_label: "POZIOM",
+  ui_gameover_kills_label: "ZABICI"
 };

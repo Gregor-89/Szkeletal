@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.01 - Time Column Header)
+// MENUS.JS (v1.03 - Dynamic Translation Fix)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -11,7 +11,6 @@ import { initLeaderboardUI } from './leaderboardUI.js';
 import { VERSION } from '../config/version.js';
 import { MUSIC_CONFIG } from '../config/gameData.js';
 
-// Stan lokalny joysticka (tylko dla UI toggla)
 let currentJoyMode = 'right';
 
 const STATIC_TRANSLATION_MAP = {
@@ -96,7 +95,18 @@ const STATIC_TRANSLATION_MAP = {
     'btnCancelNick': 'ui_nick_modal_cancel',
     
     'lblNickLimit': 'ui_nick_limit_info',
-    'lblNickLimitConfig': 'ui_nick_limit_info'
+    'lblNickLimitConfig': 'ui_nick_limit_info',
+
+    'lblGOScore': 'ui_gameover_score_label',
+    'lblGOTime': 'ui_gameover_time_label',
+    'lblGOLevel': 'ui_gameover_level_label',
+    'lblGOKills': 'ui_gameover_kills_label',
+    
+    // Zakładki (zmapowane bezpośrednio po ID)
+    'tabLocalScores': 'ui_scores_local',
+    'tabOnlineScores': 'ui_scores_online',
+    'tabGOLocal': 'ui_scores_local',
+    'tabGOOnline': 'ui_scores_online'
 };
 
 export function updateStaticTranslations() {
@@ -113,14 +123,22 @@ export function updateStaticTranslations() {
         btnSubmit.textContent = getLang('ui_gameover_submit') || "WYŚLIJ WYNIK";
     }
     
+    // Tłumaczenie przycisków filtrów (dynamicznie po klasie)
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const period = btn.dataset.period; // today, weekly, monthly, all
+        if (period) {
+            const key = `ui_filter_${period}`;
+            const txt = getLang(key);
+            if (txt) btn.innerText = txt;
+        }
+    });
+    
     updateTutorialTexts();
     
     const backText = getLang('ui_nav_back') || 'POWRÓT';
     document.querySelectorAll('.nav-back').forEach(el => el.innerText = backText);
 
     const headers = document.querySelectorAll('#retroScoreTable th, #goScoreTable th');
-    
-    // ZMIANA: Obsługa 7 kolumn (Rank, Nick, Score, Kills, Level, Time, Date)
     if (headers.length >= 6) {
         headers.forEach((th, index) => {
             const mod = index % 7; 
@@ -129,7 +147,7 @@ export function updateStaticTranslations() {
             if (mod === 2) th.innerText = getLang('ui_scores_col_score');
             if (mod === 3) th.innerText = getLang('ui_scores_col_kills');
             if (mod === 4) th.innerText = getLang('ui_scores_col_level');
-            if (mod === 5) th.innerText = "CZAS"; // Fallback, bo brak klucza w lang
+            if (mod === 5) th.innerText = getLang('ui_scores_col_time');
             if (mod === 6) th.innerText = getLang('ui_scores_col_date');
         });
     }
@@ -233,7 +251,6 @@ export function switchView(viewId) {
     }
 }
 
-// Obsługa Settings (Toggles)
 function updateToggleVisual(btn, isOn) {
     const onTxt = getLang('ui_on') || "WŁ";
     const offTxt = getLang('ui_off') || "WYŁ";
@@ -279,7 +296,6 @@ export function initRetroToggles(game, uiData) {
         });
     }
 
-    // Tutorial Toggles
     const overlay = document.getElementById('tutorialOverlay');
     const btnClose = document.getElementById('btnCloseTutorial');
     const btnShowTutorial = document.getElementById('btnShowTutorialConfig');
@@ -304,7 +320,6 @@ export function initRetroToggles(game, uiData) {
         };
     }
 
-    // Audio Sliders
     const volMusic = document.getElementById('volMusic');
     if (volMusic) { 
         if (MUSIC_CONFIG && typeof MUSIC_CONFIG.VOLUME !== 'undefined') { volMusic.value = Math.floor(MUSIC_CONFIG.VOLUME * 100); } 
@@ -313,7 +328,6 @@ export function initRetroToggles(game, uiData) {
     const volSFX = document.getElementById('volSFX');
     if (volSFX) { volSFX.oninput = (e) => { const val = parseInt(e.target.value) / 100; setSfxVolume(val); }; }
     
-    // Language Flags
     const btnPL = document.getElementById('btnLangPL');
     const btnEN = document.getElementById('btnLangEN');
     const btnRO = document.getElementById('btnLangRO');
@@ -329,7 +343,6 @@ export function initRetroToggles(game, uiData) {
     if(btnEN) btnEN.onclick = () => doSwitch('en');
     if(btnRO) btnRO.onclick = () => doSwitch('ro');
 
-    // Inicjalizacja podmodułów
     initLeaderboardUI();
     initLanguageSelector(); 
 }
@@ -388,7 +401,6 @@ export function generateGuide() {
     guideContainer.innerHTML = html;
 }
 
-// Global Wrappers dla Event Managera
 window.wrappedGenerateGuide = generateGuide;
 window.wrappedDisplayScores = () => {
     if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard();

@@ -6,6 +6,49 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ---
 
+## [v0.99] - 2025-12-11
+**"The Architect & The Judge Update"**
+
+### 🛡️ System Anty-Cheat (Security)
+- **Shadow Ban (Bańka Oszusta)**: Wprowadzono zaawansowany system izolacji oszustów.
+  - Gracze używający narzędzi deweloperskich lub modyfikujący pamięć gry otrzymują cichą flagę "Brudnej Gry".
+  - Próba wysłania wyniku kończy się fałszywym komunikatem sukcesu.
+  - Oszukany wynik jest zapisywany lokalnie i "wstrzykiwany" w pobraną listę online, tworząc iluzję, że gracz jest na liście, podczas gdy inni go nie widzą.
+- **Shadow Variables (Cienie)**: Zmienne `score` i `health` posiadają teraz ukryte, zaszyfrowane kopie. Wykrycie niezgodności między jawną a ukrytą wartością (np. edycja w konsoli) automatycznie flaguje gracza.
+- **Sanity Checks**: System odrzuca wyniki matematycznie niemożliwe do osiągnięcia (np. zbyt wysoki wynik/zabójstwa w stosunku do czasu gry).
+- **Ochrona API**: Klucze do bazy danych zostały rozbite i ukryte przed prostymi skryptami skanującymi.
+- **Flood Protection**: Dodano blokadę wysyłania wyników częściej niż raz na 30 sekund.
+
+### 🏆 Tabele Wyników 2.0 (Leaderboards)
+- **Pełna Obsługa Online**: Zaimplementowano działający system rankingów globalnych (Dreamlo).
+- **Filtrowanie i Sortowanie**:
+  - Zakładki: Lokalne / Online.
+  - Filtry Czasowe: Dziś / Tydzień / Miesiąc / Wszystkie.
+  - Sortowanie: Możliwość sortowania po każdej kolumnie (Nick, Wynik, Zabójstwa, Poziom, Czas, Data).
+- **Kolumna Czasu**: Dodano śledzenie i wyświetlanie czasu trwania rozgrywki w tabelach.
+- **Podświetlanie (Highlight)**: Aktualny wynik gracza jest teraz wyraźnie wyróżniony na złoto na liście (zarówno lokalnej, jak i online).
+- **System Nicków**: Dodano modal pozwalający podpisać się przed wysłaniem wyniku (z walidacją znaków i cenzurą).
+
+### 🏗️ Architektura i Kod (Refactor)
+- **Wielka Refaktoryzacja UI**: Rozbito gigantyczny plik `ui.js` (1000+ linii) na dedykowane moduły:
+  - `hud.js`: Obsługa paska życia, XP i liczników w trakcie gry.
+  - `menus.js`: Obsługa nawigacji, konfiguracji i przewodnika.
+  - `leaderboardUI.js`: Logika tabel wyników.
+  - `ui.js`: Pozostał jako lekki kontroler (Orchestrator).
+
+### 🌍 Lokalizacja (i18n)
+- Zaktualizowano pliki językowe (PL, EN, RO) o wszystkie nowe frazy związane z tabelami wyników i zabezpieczeniami.
+- Ujednolicono nagłówki tabel (ALL CAPS).
+- Dodano dynamiczne tłumaczenie filtrów (Dziś, Tydzień, etc.).
+
+### 🐛 Poprawki (Fixes)
+- **Muzyka**: Naprawiono błąd, przez który po wczytaniu gry ("Kontynuuj") nadal grała muzyka z menu. Zastosowano "twardy reset" audio.
+- **Dev Tools**: Naprawiono błędy `NaN` przy obliczaniu XP dla wysokich poziomów w scenariuszach testowych.
+- **Save System**: Naprawiono krytyczny błąd (`docTitle`) w menedżerze zapisu, który mógł przerywać wczytywanie gry.
+- **UI Glitch**: Naprawiono wyświetlanie licznika wznawiania gry (cyfra nie nadpisuje już tytułu "PRZYGOTUJ SIĘ").
+
+---
+
 ## [v0.98] - 2025-12-06
 **"Szkeletal Reforged: Hunger & Axes Update"**
 
