@@ -1,15 +1,18 @@
 // ==============
-// MENUS.JS (v0.99h_fix - With Guide)
+// MENUS.JS (v1.01 - Time Column Header)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
-import { menuOverlay, btnContinue, tutorialOverlay } from './domElements.js';
 import { getLang, setLanguage, getAvailableLanguages, getCurrentLangCode } from '../services/i18n.js';
 import { playSound, setMusicVolume, setSfxVolume } from '../services/audio.js';
-import { setJoystickSide } from './input.js';
 import { get as getAsset } from '../services/assets.js';
+import { setJoystickSide } from './input.js';
+import { initLeaderboardUI } from './leaderboardUI.js'; 
 import { VERSION } from '../config/version.js';
-import { initLeaderboardUI } from './leaderboardUI.js';
+import { MUSIC_CONFIG } from '../config/gameData.js';
+
+// Stan lokalny joysticka (tylko dla UI toggla)
+let currentJoyMode = 'right';
 
 const STATIC_TRANSLATION_MAP = {
     'btnStart': 'ui_menu_start', 
@@ -91,6 +94,7 @@ const STATIC_TRANSLATION_MAP = {
     'lblNickText': 'ui_nick_modal_text',
     'btnConfirmNick': 'ui_nick_modal_confirm',
     'btnCancelNick': 'ui_nick_modal_cancel',
+    
     'lblNickLimit': 'ui_nick_limit_info',
     'lblNickLimitConfig': 'ui_nick_limit_info'
 };
@@ -115,24 +119,30 @@ export function updateStaticTranslations() {
     document.querySelectorAll('.nav-back').forEach(el => el.innerText = backText);
 
     const headers = document.querySelectorAll('#retroScoreTable th, #goScoreTable th');
-    if (headers.length >= 5) {
+    
+    // ZMIANA: Obsługa 7 kolumn (Rank, Nick, Score, Kills, Level, Time, Date)
+    if (headers.length >= 6) {
         headers.forEach((th, index) => {
-            const mod = index % 6; 
+            const mod = index % 7; 
             if (mod === 0) th.innerText = getLang('ui_scores_col_rank');
             if (mod === 1) th.innerText = getLang('ui_scores_col_nick');
             if (mod === 2) th.innerText = getLang('ui_scores_col_score');
             if (mod === 3) th.innerText = getLang('ui_scores_col_kills');
             if (mod === 4) th.innerText = getLang('ui_scores_col_level');
-            if (mod === 5) th.innerText = getLang('ui_scores_col_date');
+            if (mod === 5) th.innerText = "CZAS"; // Fallback, bo brak klucza w lang
+            if (mod === 6) th.innerText = getLang('ui_scores_col_date');
         });
     }
     
     const pageTitle = getLang('ui_game_title');
     if (pageTitle) document.title = `${pageTitle} v${VERSION}`;
-    
+
     if (document.getElementById('view-guide') && document.getElementById('view-guide').classList.contains('active')) {
         generateGuide();
     }
+    
+    updateJoystickToggleLabel();
+    updateToggleLabels();
 }
 
 function updateTutorialTexts() {
@@ -155,29 +165,60 @@ function updateTutorialTexts() {
     }
 }
 
-export function showMenu(game, resetAllCallback, uiData, allowContinue = false) {
-    if (!allowContinue) { 
-        resetAllCallback(); 
-        uiData.savedGameState = null; 
-    }
-    if (uiData.savedGameState && allowContinue) btnContinue.style.display = 'block'; else btnContinue.style.display = 'none';
-    switchView('view-main');
-    menuOverlay.style.display = 'flex';
+function updateJoystickToggleLabel() {
+    const btn = document.getElementById('toggleJoy');
+    if(!btn) return;
+    let label = "JOY";
+    if (currentJoyMode === 'left') label = getLang('ui_config_joy_left');
+    else if (currentJoyMode === 'right') label = getLang('ui_config_joy_right');
+    else if (currentJoyMode === 'off') label = getLang('ui_config_joy_off');
+    btn.textContent = label;
+}
+
+function updateToggleLabels() {
+    const onTxt = getLang('ui_on') || "WŁ";
+    const offTxt = getLang('ui_off') || "WYŁ";
+    document.querySelectorAll('.retro-toggle').forEach(btn => {
+        if(btn.id !== 'toggleJoy') {
+            if (btn.classList.contains('on')) btn.textContent = onTxt;
+            else if (btn.classList.contains('off')) btn.textContent = offTxt;
+        }
+    });
+}
+
+function initLanguageSelector() {
+    const container = document.getElementById('lang-selector-container');
+    if (!container) return;
     
-    const verTag = document.getElementById('menuVersionTag');
-    if(verTag) verTag.textContent = `v${VERSION}`;
+    const langs = getAvailableLanguages();
+    const current = getCurrentLangCode();
     
-    game.inMenu = true; 
-    game.paused = true; 
-    game.running = false;
+    container.innerHTML = '';
     
-    initAudio(); 
-    playSound('MusicMenu');
-    
-    initRetroToggles(game, uiData);
-    initLanguageSelector();
-    initLeaderboardUI();
-    updateStaticTranslations();
+    langs.forEach(lang => {
+        const label = document.createElement('label');
+        label.style.marginRight = '15px';
+        label.style.cursor = 'pointer';
+        
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'lang-select';
+        radio.value = lang.code;
+        radio.checked = (lang.code === current);
+        
+        radio.onchange = () => {
+            setLanguage(lang.code);
+            updateStaticTranslations();
+            playSound('Click');
+        };
+        
+        const span = document.createElement('span');
+        span.textContent = ` ${lang.name}`;
+        
+        label.appendChild(radio);
+        label.appendChild(span);
+        container.appendChild(label);
+    });
 }
 
 export function switchView(viewId) {
@@ -187,7 +228,16 @@ export function switchView(viewId) {
     if (viewId === 'view-scores') {
         if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard();
     }
-    if (viewId === 'view-guide') { generateGuide(); }
+    if (viewId === 'view-guide') { 
+        generateGuide(); 
+    }
+}
+
+// Obsługa Settings (Toggles)
+function updateToggleVisual(btn, isOn) {
+    const onTxt = getLang('ui_on') || "WŁ";
+    const offTxt = getLang('ui_off') || "WYŁ";
+    if (isOn) { btn.textContent = onTxt; btn.className = "retro-toggle on"; } else { btn.textContent = offTxt; btn.className = "retro-toggle off"; }
 }
 
 export function initRetroToggles(game, uiData) {
@@ -195,12 +245,12 @@ export function initRetroToggles(game, uiData) {
         const btn = document.getElementById(btnId);
         const chk = document.getElementById(chkId);
         if(btn && chk) {
-            btn.onclick = () => { 
+            btn.addEventListener('click', () => {
                 chk.checked = !chk.checked;
                 updateToggleVisual(btn, chk.checked);
                 playSound('Click');
                 if(callback) callback();
-            };
+            });
         }
     };
 
@@ -216,37 +266,20 @@ export function initRetroToggles(game, uiData) {
 
     const joyBtn = document.getElementById('toggleJoy');
     if(joyBtn) {
-        joyBtn.onclick = () => {
-             let currentJoyMode = localStorage.getItem('szkeletal_joy') || 'right';
-             const modes = ['right', 'left', 'off'];
-             let idx = modes.indexOf(currentJoyMode);
-             idx = (idx + 1) % modes.length;
-             setJoystickSide(modes[idx]);
-             updateStaticTranslations(); 
-             playSound('Click');
-        };
+        const joyOpts = ['right', 'left', 'off'];
+        let joyIdx = 0;
+        updateStaticTranslations(); 
+
+        joyBtn.addEventListener('click', () => {
+            joyIdx = (joyIdx + 1) % joyOpts.length;
+            currentJoyMode = joyOpts[joyIdx]; 
+            updateStaticTranslations();
+            setJoystickSide(currentJoyMode);
+            playSound('Click');
+        });
     }
-    
-    const btnPL = document.getElementById('btnLangPL');
-    const btnEN = document.getElementById('btnLangEN');
-    const btnRO = document.getElementById('btnLangRO');
 
-    const doSwitch = (lang) => {
-        setLanguage(lang);
-        updateStaticTranslations();
-        initLanguageSelector(); 
-        playSound('Click');
-    };
-
-    if(btnPL) btnPL.onclick = () => doSwitch('pl');
-    if(btnEN) btnEN.onclick = () => doSwitch('en');
-    if(btnRO) btnRO.onclick = () => doSwitch('ro');
-    
-    const volMusic = document.getElementById('volMusic');
-    if (volMusic) { volMusic.oninput = (e) => { const val = parseInt(e.target.value) / 100; setMusicVolume(val); }; }
-    const volSFX = document.getElementById('volSFX');
-    if (volSFX) { volSFX.oninput = (e) => { const val = parseInt(e.target.value) / 100; setSfxVolume(val); }; }
-    
+    // Tutorial Toggles
     const overlay = document.getElementById('tutorialOverlay');
     const btnClose = document.getElementById('btnCloseTutorial');
     const btnShowTutorial = document.getElementById('btnShowTutorialConfig');
@@ -270,33 +303,37 @@ export function initRetroToggles(game, uiData) {
             game.paused = true;
         };
     }
+
+    // Audio Sliders
+    const volMusic = document.getElementById('volMusic');
+    if (volMusic) { 
+        if (MUSIC_CONFIG && typeof MUSIC_CONFIG.VOLUME !== 'undefined') { volMusic.value = Math.floor(MUSIC_CONFIG.VOLUME * 100); } 
+        volMusic.oninput = (e) => { const val = parseInt(e.target.value) / 100; setMusicVolume(val); }; 
+    }
+    const volSFX = document.getElementById('volSFX');
+    if (volSFX) { volSFX.oninput = (e) => { const val = parseInt(e.target.value) / 100; setSfxVolume(val); }; }
+    
+    // Language Flags
+    const btnPL = document.getElementById('btnLangPL');
+    const btnEN = document.getElementById('btnLangEN');
+    const btnRO = document.getElementById('btnLangRO');
+
+    const doSwitch = (lang) => {
+        setLanguage(lang);
+        updateStaticTranslations();
+        initLanguageSelector(); 
+        playSound('Click');
+    };
+
+    if(btnPL) btnPL.onclick = () => doSwitch('pl');
+    if(btnEN) btnEN.onclick = () => doSwitch('en');
+    if(btnRO) btnRO.onclick = () => doSwitch('ro');
+
+    // Inicjalizacja podmodułów
+    initLeaderboardUI();
+    initLanguageSelector(); 
 }
 
-function updateToggleVisual(btn, isOn) {
-    const onTxt = getLang('ui_on') || "WŁ";
-    const offTxt = getLang('ui_off') || "WYŁ";
-    if (isOn) { btn.textContent = onTxt; btn.className = "retro-toggle on"; } else { btn.textContent = offTxt; btn.className = "retro-toggle off"; }
-}
-
-function initLanguageSelector() {
-    const container = document.getElementById('lang-selector-container');
-    if (!container) return;
-    const langs = getAvailableLanguages();
-    const current = getCurrentLangCode();
-    container.innerHTML = '';
-    langs.forEach(lang => {
-        const label = document.createElement('label');
-        label.style.marginRight = '15px'; label.style.cursor = 'pointer';
-        const radio = document.createElement('input');
-        radio.type = 'radio'; radio.name = 'lang-select'; radio.value = lang.code; radio.checked = (lang.code === current);
-        radio.onchange = () => { setLanguage(lang.code); updateStaticTranslations(); playSound('Click'); };
-        const span = document.createElement('span'); span.textContent = ` ${lang.name}`;
-        label.appendChild(radio); label.appendChild(span);
-        container.appendChild(label);
-    });
-}
-
-// Funkcja generująca przewodnik (przeniesiona z ui.js)
 export function generateGuide() {
     const guideContainer = document.getElementById('guideContent');
     if (!guideContainer) return;
@@ -350,3 +387,9 @@ export function generateGuide() {
     });
     guideContainer.innerHTML = html;
 }
+
+// Global Wrappers dla Event Managera
+window.wrappedGenerateGuide = generateGuide;
+window.wrappedDisplayScores = () => {
+    if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard();
+};

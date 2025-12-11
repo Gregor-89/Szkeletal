@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v1.02 - Fix: Null Safety & Crash Prevention)
+// DEV.JS (v1.03 - XP Calculation Fix)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -55,10 +55,18 @@ let gameState = {};
 let loadConfigCallback = () => {};
 let startRunCallback = () => {};
 
+// ZMIANA: Zaktualizowano logikę obliczania XP, aby pasowała do hybrydowego systemu z gameData.js
+// Wcześniej używano nieistniejącego XP_GROWTH_FACTOR, co powodowało NaN przy poziomach > 1
 function calculateXpNeeded(level) {
     let xp = GAME_CONFIG.INITIAL_XP_NEEDED || 5;
+    const threshold = GAME_CONFIG.XP_THRESHOLD_LEVEL || 10;
+    const earlyFactor = GAME_CONFIG.XP_GROWTH_EARLY || 1.5;
+    const lateFactor = GAME_CONFIG.XP_GROWTH_LATE || 1.35;
+    const addVal = GAME_CONFIG.XP_GROWTH_ADD || 6;
+
     for (let i = 1; i < level; i++) {
-        xp = Math.floor(xp * GAME_CONFIG.XP_GROWTH_FACTOR) + GAME_CONFIG.XP_GROWTH_ADD;
+        let factor = (i <= threshold) ? earlyFactor : lateFactor;
+        xp = Math.floor(xp * factor) + addVal;
     }
     return xp;
 }
@@ -494,5 +502,5 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.retryLastScenario = retryLastScenario; 
     window.devStartPeaceful = devStartPeaceful; 
     
-    console.log('[DEBUG-v1.02] js/services/dev.js: Dev Tools loaded & exported.');
+    console.log('[DEBUG-v1.03] js/services/dev.js: Dev Tools loaded & exported.');
 }

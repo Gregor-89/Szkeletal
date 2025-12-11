@@ -1,9 +1,12 @@
 // ==============
-// EVENTMANAGER.JS (v0.99e - Fix Start Crash)
+// EVENTMANAGER.JS (v1.0 - Imports Update)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
-import { showMenu, resetAll, pauseGame, resumeGame, gameOver, startRun, switchView, updateStaticTranslations } from '../ui/ui.js';
+// ZMIANA: Bezpośredni import switchView i updateStaticTranslations z menus.js
+import { switchView, updateStaticTranslations } from '../ui/menus.js';
+import { showMenu, resetAll, pauseGame, resumeGame, gameOver, startRun } from '../ui/ui.js';
+
 import { levelUp, pickPerk, openChest } from '../managers/levelManager.js';
 import { saveGame, loadGame } from '../services/saveManager.js';
 import { playSound } from '../services/audio.js';
@@ -89,8 +92,6 @@ function updateAllStaticText() {
     if (updateStaticTranslations) updateStaticTranslations();
 }
 
-// USUNIĘTO: buildLanguageSelector (powodował konflikt i crash)
-
 export function initializeMainEvents(stateRef, uiRef) {
     gameStateRef = stateRef;
     uiDataRef = uiRef;
@@ -116,7 +117,6 @@ export function initializeMainEvents(stateRef, uiRef) {
 }
 
 function initEvents() {
-    // buildLanguageSelector(); // USUNIĘTE - UI zajmuje się tym teraz
     updateStaticTranslations();
     
     document.getElementById('btnStart').addEventListener('click', () => {

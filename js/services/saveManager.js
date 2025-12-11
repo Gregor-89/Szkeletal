@@ -1,13 +1,11 @@
 // ==============
-// SAVEMANAGER.JS (v0.88 - Nowa Nazwa Gry)
+// SAVEMANAGER.JS (v1.04 - Crash Fix)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
-// Import klas bytów potrzebnych do rekonstrukcji stanu
 import { Hazard } from '../entities/hazard.js';
 import { Chest } from '../entities/chest.js';
 
-// POPRAWKA v0.71: Import 6 podklas pickupów z nowego folderu
 import { HealPickup } from '../entities/pickups/healPickup.js';
 import { MagnetPickup } from '../entities/pickups/magnetPickup.js';
 import { ShieldPickup } from '../entities/pickups/shieldPickup.js';
@@ -15,21 +13,17 @@ import { SpeedPickup } from '../entities/pickups/speedPickup.js';
 import { BombPickup } from '../entities/pickups/bombPickup.js';
 import { FreezePickup } from '../entities/pickups/freezePickup.js';
 
-// POPRAWKA v0.71: Import 3 podklas broni z nowego folderu
 import { AutoGun } from '../config/weapons/autoGun.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
 import { NovaWeapon } from '../config/weapons/novaWeapon.js';
 import { WhipWeapon } from '../config/weapons/whipWeapon.js'; 
-// NOWY IMPORT v0.82a
 import { ChainLightningWeapon } from '../config/weapons/chainLightningWeapon.js';
 
-// Import mapy wrogów (zrefaktoryzowane w v0.71)
 import { ENEMY_CLASS_MAP } from '../managers/enemyManager.js';
-import { initAudio } from './audio.js';
-// POPRAWKA v0.77p: Import referencji DOM do tytułu
-import { docTitle, titleDiv } from '../ui/domElements.js';
+import { initAudio, playSound } from './audio.js';
+// ZMIANA: Usunięto wadliwy import 'docTitle'
+import { titleDiv } from '../ui/domElements.js';
 
-// Mapy klas (przeniesione z main.js)
 const PICKUP_CLASS_MAP = {
     heal: HealPickup,
     magnet: MagnetPickup,
@@ -39,18 +33,14 @@ const PICKUP_CLASS_MAP = {
     freeze: FreezePickup
 };
 
-// Mapa klas broni (działa bez zmian)
 const WEAPON_CLASS_MAP = {
     AutoGun: AutoGun,
     OrbitalWeapon: OrbitalWeapon,
     NovaWeapon: NovaWeapon,
     WhipWeapon: WhipWeapon,
-    ChainLightningWeapon: ChainLightningWeapon // NOWA LINIA v0.82a
+    ChainLightningWeapon: ChainLightningWeapon 
 };
 
-/**
- * Zapisuje aktualny stan gry do obiektu.
- */
 export function saveGame(state) {
     const { 
         game, player, settings, perkLevels, enemies, 
@@ -86,12 +76,9 @@ export function saveGame(state) {
     return savedState;
 }
 
-/**
- * Wczytuje zapisany stan gry do aktualnego stanu.
- */
 export function loadGame(savedState, state, uiData) {
     if (!savedState) {
-        console.error("[saveManager.js] Błąd: Próbowano wczytać pusty stan (savedState is null).");
+        console.error("[saveManager.js] Błąd: Próbowano wczytać pusty stan.");
         return;
     }
 
@@ -104,7 +91,6 @@ export function loadGame(savedState, state, uiData) {
         pickups, chests, hazards, bombIndicators
     } = state;
 
-    // 1. Resetuj stan (pule i tablice)
     enemies.length = 0;
     pickups.length = 0;
     chests.length = 0;
@@ -116,13 +102,11 @@ export function loadGame(savedState, state, uiData) {
     particlePool.releaseAll();
     hitTextPool.releaseAll();
 
-    // 2. Wczytaj proste obiekty
     Object.assign(game, savedState.game);
     Object.assign(settings, savedState.settings);
     Object.keys(perkLevels).forEach(key => delete perkLevels[key]);
     Object.assign(perkLevels, savedState.perkLevels);
 
-    // 3. Wczytaj Gracza i Bronie
     player.x = savedState.player.x;
     player.y = savedState.player.y;
     player.speed = savedState.player.speed;
@@ -137,7 +121,6 @@ export function loadGame(savedState, state, uiData) {
         }
     }
 
-    // 4. Wczytaj Byty (Deserializacja)
     const loadedEnemies = savedState.enemies || [];
     for (const savedEnemy of loadedEnemies) {
         const EnemyClass = ENEMY_CLASS_MAP[savedEnemy.type];
@@ -201,18 +184,27 @@ export function loadGame(savedState, state, uiData) {
     
     state.enemyIdCounter = savedState.enemyIdCounter || 0;
     
-    // 5. Uruchom grę
     document.getElementById('menuOverlay').style.display='none';
     game.inMenu = false; 
     game.paused = false; 
     game.running = true; 
     
-    // POPRAWKA v0.88: Ustawienie nowej nazwy gry
     const newTitle = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${uiData.VERSION}`;
-    docTitle.textContent = newTitle;
-    titleDiv.textContent = newTitle;
+    
+    // ZMIANA: Bezpośrednie użycie document.title zamiast wadliwego importu
+    document.title = newTitle;
+    if(titleDiv) titleDiv.textContent = newTitle;
     
     initAudio();
+    
+    // ZMIANA: Twardy reset muzyki - teraz kod dojdzie do tego miejsca!
+    playSound('MusicStop');
+    
+    setTimeout(() => {
+        if (game.running && !game.inMenu) {
+            playSound('MusicGameplay');
+        }
+    }, 100);
     
     if (uiData.animationFrameId === null) {
       uiData.startTime = performance.now() - game.time * 1000; 
@@ -223,5 +215,4 @@ export function loadGame(savedState, state, uiData) {
     console.log("[DEBUG-v0.70] saveManager.js: Wczytywanie zakończone.");
 }
 
-// LOG DIAGNOSTYCZNY
 console.log('[DEBUG-v0.82a] js/services/saveManager.js: Zarejestrowano ChainLightningWeapon.');

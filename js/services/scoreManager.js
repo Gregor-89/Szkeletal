@@ -1,7 +1,9 @@
 // ==============
-// SCOREMANAGER.JS (v0.99d - Date Crash Fix)
+// SCOREMANAGER.JS (v1.03 - Perfect Highlight & Rank)
 // Lokalizacja: /js/services/scoreManager.js
 // ==============
+
+import { confirmOverlay, btnConfirmYes, btnConfirmNo } from '../ui/domElements.js';
 
 const SCORES_KEY = 'szkeletal_scores';
 
@@ -13,7 +15,6 @@ export function getScores() {
 export function saveScore(runData, nick = "GRACZ") {
     const scores = getScores();
     
-    // Generowanie daty: YYYY/MM/DD HH:MM
     const now = new Date();
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -51,12 +52,15 @@ export function displayScores(tableBodyId, currentRun = null, onlineData = null)
     const tbody = document.getElementById(tableBodyId);
     if (!tbody) return;
     
-    let scores = [];
-    if (onlineData) {
-        scores = onlineData;
-    } else {
-        scores = getScores();
-        scores.forEach((e, i) => e.originalRank = i + 1);
+    // Dane przychodzą już posortowane wizualnie i z nadaną rangą (tempRank)
+    let scores = onlineData || getScores(); // Fallback dla lokalnych jeśli nie przekazano
+    
+    // Jeśli to lokalne i nie przekazano onlineData, to 'scores' to surowe dane z localStorage
+    // Musimy upewnić się, że mają tempRank, jeśli wywołano to spoza leaderboardUI (np. bezpośrednio)
+    if (!onlineData && (!scores[0] || typeof scores[0].tempRank === 'undefined')) {
+        // Szybki fallback dla rankingu lokalnego (Score Desc)
+        scores.sort((a, b) => b.score - a.score);
+        scores.forEach((e, i) => e.tempRank = i + 1);
     }
     
     tbody.innerHTML = '';
@@ -65,28 +69,48 @@ export function displayScores(tableBodyId, currentRun = null, onlineData = null)
         return;
     }
     
+    // Pobierz aktualny nick do porównania
+    const currentNick = (localStorage.getItem('szkeletal_player_nick') || "GRACZ").toUpperCase();
+    
     scores.forEach((entry, index) => {
         const tr = document.createElement('tr');
         
-        // Podświetlenie (lokalne)
-        if (!onlineData && currentRun &&
-            entry.score === currentRun.score &&
-            entry.time === currentRun.time &&
-            entry.date === currentRun.date) {
-            tr.style.color = '#FFD700';
-            tr.style.fontWeight = 'bold';
-            tr.style.backgroundColor = 'rgba(255, 215, 0, 0.1)';
+        // --- LOGIKA PODŚWIETLANIA ---
+        let isHighlight = false;
+        
+        if (currentRun) {
+            // Sprawdzamy czy to "ten" wynik
+            // 1. Wynik punktowy musi się zgadzać
+            if (entry.score === currentRun.score) {
+                // 2. Jeśli mamy imię, musi się zgadzać (dla Online)
+                if (entry.name && entry.name.toUpperCase() === currentNick) {
+                    // 3. Dla pewności sprawdźmy też czas gry (sekundy)
+                    if (entry.time === currentRun.time) {
+                        isHighlight = true;
+                    }
+                }
+                // Fallback dla lokalnych (pełna zgodność obiektu daty)
+                if (entry.date === currentRun.date) {
+                    isHighlight = true;
+                }
+            }
         }
         
-        const nick = entry.name || "Anonim";
-        const cleanNick = nick.length > 15 ? nick.substring(0, 15) + "..." : nick;
+        const rowBg = isHighlight ? 'rgba(255, 215, 0, 0.15)' : 'transparent';
+        // Kolory: Złoty jeśli highlight, w przeciwnym razie standardowe palety
+        const cCommon = isHighlight ? '#FFD700' : null;
         
-        // --- FIX BŁĘDU DATY ---
+        tr.style.backgroundColor = rowBg;
+        if (isHighlight) tr.style.fontWeight = 'bold';
+        
+        const nick = entry.name || "Anonim";
+        const cleanNick = nick.length > 20 ? nick.substring(0, 20) + "..." : nick;
+        
+        const timeDisplay = formatTime(entry.time || 0);
+        
         let dateDisplay = "--/--/--";
         const rawDate = entry.date;
-        
         if (rawDate) {
-            // Jeśli to obiekt Date (z online)
             if (rawDate instanceof Date) {
                 const yyyy = rawDate.getFullYear();
                 const mm = String(rawDate.getMonth() + 1).padStart(2, '0');
@@ -95,11 +119,8 @@ export function displayScores(tableBodyId, currentRun = null, onlineData = null)
                 const min = String(rawDate.getMinutes()).padStart(2, '0');
                 dateDisplay = `${yyyy}/${mm}/${dd} <span style="opacity:0.6; font-size:0.85em;">${hh}:${min}</span>`;
             }
-            // Jeśli to string (z local storage)
             else if (typeof rawDate === 'string') {
-                // Jeśli to format ISO z Dreamlo
                 if (rawDate.includes('T') || rawDate.includes('-')) {
-                    // Próbujemy parsować
                     const d = new Date(rawDate);
                     if (!isNaN(d.getTime())) {
                         const yyyy = d.getFullYear();
@@ -109,10 +130,9 @@ export function displayScores(tableBodyId, currentRun = null, onlineData = null)
                         const min = String(d.getMinutes()).padStart(2, '0');
                         dateDisplay = `${yyyy}/${mm}/${dd} <span style="opacity:0.6; font-size:0.85em;">${hh}:${min}</span>`;
                     } else {
-                        dateDisplay = rawDate; // Fallback
+                        dateDisplay = rawDate;
                     }
                 } else {
-                    // Nasz format YYYY/MM/DD HH:MM
                     const parts = rawDate.split(' ');
                     if (parts.length === 2) {
                         dateDisplay = `${parts[0]} <span style="opacity:0.6; font-size:0.85em;">${parts[1]}</span>`;
@@ -123,21 +143,21 @@ export function displayScores(tableBodyId, currentRun = null, onlineData = null)
             }
         }
         
-        const rankDisplay = entry.originalRank || (index + 1);
+        // ZMIANA: Używamy tempRank (dynamicznie obliczony) zamiast indexu
+        const rankDisplay = entry.tempRank || (index + 1);
         
         tr.innerHTML = `
-            <td>${rankDisplay}.</td>
-            <td style="color:#BBDEFB">${cleanNick}</td>
-            <td style="color:#4CAF50; font-weight:bold;">${entry.score}</td>
-            <td style="color:#FF5252">${entry.kills || 0}</td>
-            <td>${entry.level}</td>
-            <td>${dateDisplay}</td>
+            <td style="color:${cCommon || '#888'}">${rankDisplay}.</td>
+            <td style="color:${cCommon || '#BBDEFB'}">${cleanNick}</td>
+            <td style="color:${cCommon || '#4CAF50'}; font-weight:bold;">${entry.score}</td>
+            <td style="color:${cCommon || '#FF5252'}">${entry.kills || 0}</td>
+            <td style="color:${cCommon || '#eee'}">${entry.level}</td>
+            <td style="color:${cCommon || '#FFD700'}">${timeDisplay}</td>
+            <td style="color:${cCommon || '#888'}">${dateDisplay}</td>
         `;
         tbody.appendChild(tr);
     });
 }
-
-import { confirmOverlay, btnConfirmYes, btnConfirmNo } from '../ui/domElements.js';
 
 export function attachClearScoresListeners() {
     const btnMenu = document.getElementById('btnClearScoresMenu');
