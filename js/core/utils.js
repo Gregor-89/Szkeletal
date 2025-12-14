@@ -1,5 +1,5 @@
 // ==============
-// UTILS.JS (v0.99 - HitText Offset Support)
+// UTILS.JS (v1.00 - Optimization Update)
 // Lokalizacja: /js/core/utils.js
 // ==============
 
@@ -10,11 +10,14 @@ import { playSound } from '../services/audio.js';
 
 // --- FIZYKA I KOLIZJE ---
 
+// OPTYMALIZACJA: Usunięto Math.hypot na rzecz porównywania kwadratów (Distance Squared).
+// Jest to znacznie szybsze, a daje ten sam logiczny wynik.
 export function checkCircleCollision(x1, y1, r1, x2, y2, r2) {
     const dx = x1 - x2;
     const dy = y1 - y2;
-    const distance = Math.hypot(dx, dy);
-    return distance < (r1 + r2);
+    const distSq = dx * dx + dy * dy;
+    const rSum = r1 + r2;
+    return distSq < (rSum * rSum);
 }
 
 export function findFreeSpotForPickup(pickups, cx, cy, range = 50) {
@@ -24,8 +27,14 @@ export function findFreeSpotForPickup(pickups, cx, cy, range = 50) {
         const tx = cx + Math.cos(ang) * dist;
         const ty = cy + Math.sin(ang) * dist;
         let ok = true;
+        // Tutaj też optymalizacja na piechotę
         for (const p of pickups) {
-            if (Math.hypot(p.x - tx, p.y - ty) < 20) { ok = false; break; }
+            const dx = p.x - tx;
+            const dy = p.y - ty;
+            if ((dx*dx + dy*dy) < 400) { // 20^2 = 400
+                ok = false; 
+                break; 
+            }
         }
         if (ok) return { x: tx, y: ty };
     }
@@ -34,7 +43,6 @@ export function findFreeSpotForPickup(pickups, cx, cy, range = 50) {
 
 // --- EFEKTY WIZUALNE I TEKSTOWE ---
 
-// FIX v0.99: Dodano parametr 'offsetY' (domyślnie -60)
 export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f', overrideText = null, duration = 0.66, target = null, offsetY = -60) {
     const now = performance.now() / 1000;
     let merged = false;
@@ -44,14 +52,17 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
         return value.toFixed(0);
     }
     
-    // Mergowanie tylko dla standardowych obrażeń (bez override, bez targetu)
     if (damage > 0 && overrideText === null && target === null) {
         for (let i = hitTexts.length - 1; i >= 0; i--) {
             const ht = hitTexts[i];
             if (ht.overrideText === null && ht.target === null) {
-                const dist = Math.hypot(x - ht.x, y - ht.y);
+                // Optymalizacja dystansu
+                const dx = x - ht.x;
+                const dy = y - ht.y;
+                const distSq = dx*dx + dy*dy;
                 const timeDiff = now - (ht.spawnTime || 0);
-                if (dist < 25 && timeDiff < 0.15) {
+                
+                if (distSq < 625 && timeDiff < 0.15) { // 25^2 = 625
                     ht.damage += damage;
                     ht.text = '-' + formatDamage(ht.damage); 
                     ht.life = duration; 
@@ -70,7 +81,6 @@ export function addHitText(hitTextPool, hitTexts, x, y, damage, color = '#ffd54f
             const dmgText = (damage >= 0 ? '-' + formatDamage(damage) : '+' + formatDamage(Math.abs(damage)));
             const text = overrideText !== null ? overrideText : dmgText;
             
-            // Przekazujemy wszystkie parametry, w tym nowy offsetY
             ht.init(x, y - 10, text, color, duration, -0.6 * 60, target, offsetY); 
             
             ht.spawnTime = now;
@@ -112,10 +122,14 @@ export function applyPickupSeparation(pickups, canvas) {
             const p2 = pickups[j];
             const dx = p1.x - p2.x;
             const dy = p1.y - p2.y;
-            const dist = Math.hypot(dx, dy);
-            const minDist = 20;
-            if (dist < minDist && dist > 0.1) {
-                const force = (minDist - dist) / dist;
+            // Tutaj musi zostać Math.hypot lub sqrt, bo potrzebujemy dokładnego dystansu do obliczenia siły (force)
+            // Ale możemy dodać wstępne sprawdzenie (broadphase) na kwadratach
+            const distSq = dx*dx + dy*dy;
+            if (distSq >= 400) continue; // 20^2, jeśli dalej niż 20px to skip
+
+            const dist = Math.sqrt(distSq);
+            if (dist > 0.1) {
+                const force = (20 - dist) / dist;
                 const pushX = dx * force * 0.5;
                 const pushY = dy * force * 0.5;
                 p1.x += pushX; p1.y += pushY;
@@ -167,10 +181,13 @@ export function areaNuke(cx, cy, r, onlyXP = false, game, settings, enemies, gem
         maxLife: duration 
     });
 
+    // Optymalizacja pętli gems
+    const rSq = r * r;
     for (let i = gemsPool.activeItems.length - 1; i >= 0; i--) {
         const g = gemsPool.activeItems[i];
-        const d = Math.hypot(cx - g.x, cy - g.y);
-        if (d <= r) {
+        const dx = cx - g.x;
+        const dy = cy - g.y;
+        if ((dx*dx + dy*dy) <= rSq) {
             if (isWallNuke) g.release(); 
         }
     }

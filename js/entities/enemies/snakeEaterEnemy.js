@@ -1,5 +1,5 @@
 // ==============
-// SNAKEEATERENEMY.JS (v1.18 - Longer Heal Anim)
+// SNAKEEATERENEMY.JS (v1.19 - Performance Optimization)
 // Lokalizacja: /js/entities/enemies/snakeEaterEnemy.js
 // ==============
 
@@ -50,7 +50,6 @@ export class SnakeEaterEnemy extends Enemy {
     return super.getSpeed(game);
   }
   
-  // NADPISANIE metody takeDamage, aby obsłużyć customowy offset dla hittextu
   takeDamage(amount, hitTextPool, hitTexts) {
     return super.takeDamage(amount);
   }
@@ -136,7 +135,6 @@ export class SnakeEaterEnemy extends Enemy {
       this.healTimer = this.healCooldownMax;
       this.isHealingAnim = true;
       
-      // ZMIANA: Wydłużenie animacji do 3 cykli (zamiast 2)
       const frameTime = this.frameTime || 0.1;
       this.healAnimTimer = (16 * frameTime) * 3;
       
@@ -167,7 +165,7 @@ export class SnakeEaterEnemy extends Enemy {
     ctx.save();
     ctx.translate(this.x, this.y);
     
-    // 1. FAKTYCZNY CIEŃ
+    // 1. FAKTYCZNY CIEŃ (Manualny)
     const shadowY = this.stats.shadowOffsetY || 40;
     ctx.save();
     ctx.translate(0, shadowY);
@@ -189,10 +187,38 @@ export class SnakeEaterEnemy extends Enemy {
       ctx.scale(-1, 1);
     }
     
-    // 2. Rysowanie MOCNEJ POŚWIATY (Glow)
+    // 2. Rysowanie MOCNEJ POŚWIATY (Glow) - OPTYMALIZACJA
+    // Zastąpiono shadowBlur (kosztowne) gradientem radialnym (tanie)
     if (this.healTimer <= 0) {
-      const pulse = 15 * Math.sin(game.time * 6);
+      const pulse = 0.8 + 0.2 * Math.sin(game.time * 6);
+      const glowSize = (this.size * this.visualScale) * 0.8 * pulse; // Rozmiar poświaty
       
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen'; // Lepsze mieszanie kolorów dla poświaty
+      
+      const grad = ctx.createRadialGradient(0, 0, glowSize * 0.2, 0, 0, glowSize);
+      grad.addColorStop(0, 'rgba(102, 187, 106, 0.8)'); // Jasny środek (#66BB6A)
+      grad.addColorStop(0.5, 'rgba(102, 187, 106, 0.3)');
+      grad.addColorStop(1, 'rgba(102, 187, 106, 0.0)'); // Przezroczyste krawędzie
+      
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(0, 0, glowSize, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Dodatkowy "Hot Core" (opcjonalnie, dla intensywności)
+      const coreGrad = ctx.createRadialGradient(0, 0, glowSize * 0.1, 0, 0, glowSize * 0.4);
+      coreGrad.addColorStop(0, 'rgba(178, 255, 89, 0.6)'); // Limonkowy środek
+      coreGrad.addColorStop(1, 'rgba(178, 255, 89, 0.0)');
+      
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, glowSize * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.restore();
+      
+      // Rysowanie Sprite'a (bez shadowBlur)
       const sheetW = this.sprite.naturalWidth;
       const sheetH = this.sprite.naturalHeight;
       const frameW = sheetW / this.cols;
@@ -206,43 +232,29 @@ export class SnakeEaterEnemy extends Enemy {
       const aspectRatio = frameW / frameH;
       const destW = destH * aspectRatio;
       
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      
-      // Warstwa 1
-      ctx.shadowBlur = 80 + pulse;
-      ctx.shadowColor = '#66BB6A';
       ctx.drawImage(this.sprite, sx, sy, frameW, frameH, -destW / 2, -destH / 2, destW, destH);
+    } else {
+      // 3. Rysowanie Sprite'a (zwykłe)
+      const sheetW = this.sprite.naturalWidth;
+      const sheetH = this.sprite.naturalHeight;
+      const frameW = sheetW / this.cols;
+      const frameH = sheetH / this.rows;
       
-      // Warstwa 2
-      ctx.shadowBlur = 30 + (pulse * 0.5);
-      ctx.shadowColor = '#B2FF59';
-      ctx.globalAlpha = 0.6;
+      const safeFrame = Math.floor(this.currentFrame) % (this.cols * this.rows);
+      const col = safeFrame % this.cols;
+      const row = Math.floor(safeFrame / this.cols);
+      
+      const sx = col * frameW;
+      const sy = row * frameH;
+      
+      const destH = this.size * this.visualScale;
+      const aspectRatio = frameW / frameH;
+      const destW = destH * aspectRatio;
+      
+      ctx.imageSmoothingEnabled = false;
+      
       ctx.drawImage(this.sprite, sx, sy, frameW, frameH, -destW / 2, -destH / 2, destW, destH);
-      
-      ctx.restore();
     }
-    
-    // 3. Rysowanie Sprite'a
-    const sheetW = this.sprite.naturalWidth;
-    const sheetH = this.sprite.naturalHeight;
-    const frameW = sheetW / this.cols;
-    const frameH = sheetH / this.rows;
-    
-    const safeFrame = Math.floor(this.currentFrame) % (this.cols * this.rows);
-    const col = safeFrame % this.cols;
-    const row = Math.floor(safeFrame / this.cols);
-    
-    const sx = col * frameW;
-    const sy = row * frameH;
-    
-    const destH = this.size * this.visualScale;
-    const aspectRatio = frameW / frameH;
-    const destW = destH * aspectRatio;
-    
-    ctx.imageSmoothingEnabled = false;
-    
-    ctx.drawImage(this.sprite, sx, sy, frameW, frameH, -destW / 2, -destH / 2, destW, destH);
     
     ctx.restore();
     
