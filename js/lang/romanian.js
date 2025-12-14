@@ -1,5 +1,5 @@
 // ==============
-// ROMANIAN.JS (v1.02 - Snake Eater & Quotes)
+// ROMANIAN.JS (v1.03 - Snake Heal Quote)
 // Lokalizacja: /js/lang/romanian.js
 // ==============
 
@@ -191,6 +191,33 @@ export const LANG_RO = {
   enemy_wall_desc: "Apare într-un inel perfect. Foarte lent și durabil. După un timp (aprox. 34-40s), detonează, distrugând totul în jur.",
   enemy_lumberjack_name: "Tăietor Zjebadlo",
   enemy_lumberjack_desc: "Un boss puternic din pădure. Aruncă topoare curcubeu care se rotesc. Atenție la \"Urma Curcubeu\"!",
+  // ZMIANA: Tłumaczenia Wężojada (v1.02)
+  enemy_snakeEater_name: "Mâncător de Șerpi",
+  enemy_snakeEater_desc: "Altar Mobil. Nu atacă. Îl urmează pe Conte. Te vindecă o dată pe minut dacă îl atingi.",
+  snake_heal_text: "Fund lins, sațietate recuperată",
+  
+  // NOWOŚĆ: Cytat Wężojada (RO)
+  snake_heal_quote_enemy: "Mmm, eu fac bine Domnului, HAM HAM!",
+  
+  // ZMIANA: Cytaty Wężojada (RO)
+  quote_snake_1: "HAM HAM!",
+  quote_snake_2: "Știi cum latră câinii în română? HAM HAM!",
+  quote_snake_3: "Nu ai nevoie de skill să joci jocuri stealth.",
+  quote_snake_4: "Știu harta asta pe de rost.",
+  quote_snake_5: "Contele meu, nici eu nu am skill.",
+  quote_snake_6: "Joc ca Domnul meu Conte, adică fără skill.",
+  quote_snake_7: "Unde ești, Domnul meu?",
+  quote_snake_8: "Trebuie să ling fundul, altfel mă sufoc.",
+  quote_snake_9: "Voi linge fundul pentru Domnul și sațietatea va fi recuperată.",
+  quote_snake_10: "Trebuie să-mi apăr ludologii, altfel mă sufoc.",
+  quote_snake_11: "De ce să joci jocuri când le poți termina pe YouTube?",
+  quote_snake_12: "Sunt un băiat bun? HAM HAM",
+  quote_snake_13: "Nu-mi spune că n-am bacul, când nici nu m-am prezentat!",
+  quote_snake_14: "Domnul meu, pot primi un minim de atenție?",
+  quote_snake_15: "Uite, Domnul meu, cum fac HAM HAM!",
+  quote_snake_16: "Sunt un băiat deștept, HAM",
+  quote_snake_17: "Poate vorbim despre fapte?",
+  quote_snake_18: "Pot primi un cartof, Domnul meu?",
   
   enemy_hazard_name: "Canalizarea",
   enemy_hazard_desc: "Încetinește Contele și provoacă daune. Rănește și haterii (cu excepția Szkeletal). Cartofii lăsați aici se strică.",
@@ -252,30 +279,5 @@ export const LANG_RO = {
   quote_gameover_11: "Ești praf la jocul ăsta...",
   quote_gameover_12: "Chiar și Dadgamerii rezistă mai mult decât sațietatea ta...",
   quote_gameover_13: "Ești gamer cum e Kiszczak ludolog.",
-  quote_gameover_14: "Se pare că azi nu primești cartofi...",
-  
-  // ZMIANA: Tłumaczenia Wężojada (v1.02)
-  enemy_snakeEater_name: "Mâncător de Șerpi",
-  enemy_snakeEater_desc: "Altar Mobil. Nu atacă. Îl urmează pe Conte. Te vindecă o dată pe minut dacă îl atingi.",
-  snake_heal_text: "Fund lins, sațietate recuperată",
-  
-  // ZMIANA: Cytaty Wężojada (RO)
-  quote_snake_1: "HAM HAM!",
-  quote_snake_2: "Știi cum latră câinii în română? HAM HAM!",
-  quote_snake_3: "Nu ai nevoie de skill să joci jocuri stealth.",
-  quote_snake_4: "Știu harta asta pe de rost.",
-  quote_snake_5: "Contele meu, nici eu nu am skill.",
-  quote_snake_6: "Joc ca Domnul meu Conte, adică fără skill.",
-  quote_snake_7: "Unde ești, Domnul meu?",
-  quote_snake_8: "Trebuie să ling fundul, altfel mă sufoc.",
-  quote_snake_9: "Voi linge fundul pentru Domnul și sațietatea va fi recuperată.",
-  quote_snake_10: "Trebuie să-mi apăr ludologii, altfel mă sufoc.",
-  quote_snake_11: "De ce să joci jocuri când le poți termina pe YouTube?",
-  quote_snake_12: "Sunt un băiat bun? HAM HAM",
-  quote_snake_13: "Nu-mi spune că n-am bacul, când nici nu m-am prezentat!",
-  quote_snake_14: "Domnul meu, pot primi un minim de atenție?",
-  quote_snake_15: "Uite, Domnul meu, cum fac HAM HAM!",
-  quote_snake_16: "Sunt un băiat deștept, HAM",
-  quote_snake_17: "Poate vorbim despre fapte?",
-  quote_snake_18: "Pot primi un cartof, Domnul meu?"
+  quote_gameover_14: "Se pare că azi nu primești cartofi..."
 };

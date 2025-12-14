@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v1.08 - Snake Eater Healing)
+// COLLISIONS.JS (v1.10 - No Knockback for SnakeEater)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -245,23 +245,20 @@ export function checkCollisions(state) {
             const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
             const isInvulnerable = game.shield || devSettings.godMode;
 
-            // --- NOWOŚĆ: Logika Wężojada ---
+            // --- Logika Wężojada ---
             if (enemy.type === 'snakeEater') {
                 if (enemy.tryHealPlayer(game, player, hitTextPool, hitTexts)) {
-                    playSound('HealPickup'); // Lub inny dźwięk
-                    
-                    // Odpalamy confetti
+                    playSound('HealPickup'); 
                     spawnConfetti(particlePool, enemy.x, enemy.y);
                 }
                 
-                // Fizyka odpychania (żeby gracz nie "wchodził" w bossa)
-                game.collisionSlowdown = 0.5;
-                const pushForce = 5;
-                player.x += Math.cos(angle) * pushForce;
-                player.y += Math.sin(angle) * pushForce;
+                // ZMIANA: Wyłączono fizykę (Wężojad nie blokuje/odpycha gracza)
+                // game.collisionSlowdown = 0.5;
+                // const pushForce = 5;
+                // player.x += Math.cos(angle) * pushForce;
+                // player.y += Math.sin(angle) * pushForce;
                 
             } else {
-                // --- Logika standardowych wrogów ---
                 if (!isInvulnerable) {
                     const now = performance.now();
                     if (!enemy.lastPlayerCollision || now - enemy.lastPlayerCollision > 500) {
@@ -299,14 +296,13 @@ export function checkCollisions(state) {
         }
     }
     
-    // ... (Reszta funkcji bez zmian - kolizje pocisków, pickupów, hazardów) ...
-    // Kopiuję resztę oryginalnego kodu dla pewności kompletności
-    
+    // KOLIZJE POCISKÓW GRACZA
     for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         if (!b) continue;
         if (typeof b.isOffScreen === 'function' && b.isOffScreen(state.camera)) { b.release(); continue; }
         
+        // ... (Kolizje z przeszkodami - bez zmian) ...
         if (obstacles) {
             let hitObs = false;
             for (const obs of obstacles) {
@@ -356,9 +352,12 @@ export function checkCollisions(state) {
                 hitEnemy = true;
                 const isDead = e.takeDamage(b.damage, 'player');
                 
+                // --- FIX: Obsługa hitTextOffsetY (np. dla Wężojada) ---
                 let hitY = e.y;
-                if (['wall', 'tank', 'elite', 'lumberjack', 'snakeEater'].includes(e.type)) {
-                    hitY = e.y - e.size * 0.8; 
+                if (e.stats && e.stats.hitTextOffsetY !== undefined) {
+                    hitY = e.y + e.stats.hitTextOffsetY; // Użyj offsetu z configu
+                } else if (['wall', 'tank', 'elite', 'lumberjack', 'snakeEater'].includes(e.type)) {
+                    hitY = e.y - e.size * 0.8; // Domyślny offset dla dużych wrogów
                 }
                 
                 addHitText(hitTextPool, hitTexts, e.x, hitY, b.damage);
@@ -397,6 +396,8 @@ export function checkCollisions(state) {
         if (hitEnemy) b.release(); 
     }
 
+    // ... (Reszta funkcji bez zmian - kolizje pocisków wroga, pickupów, hazardów) ...
+    // Kopiuję resztę oryginalnego kodu
     if (!game.shield && !devSettings.godMode) {
         for (let i = eBullets.length - 1; i >= 0; i--) {
             const eb = eBullets[i];
@@ -429,9 +430,7 @@ export function checkCollisions(state) {
         if (dist < collectionRadius + g.r) {
             const collectedXP = Math.floor(g.val * (game.level >= 20 ? 1.2 : 1));
             game.xp += collectedXP; 
-            
             game.hunger = game.maxHunger;
-            
             playSound('XPPickup');
             g.collect(); 
         }

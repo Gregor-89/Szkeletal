@@ -2,7 +2,28 @@
 
 Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Szkeletal: Estrone Kiszok".
 
+---
 
+## [v0.101] - 2025-12-14
+**"The Snake Eater & The Shadow Update"**
+
+### 🐍 Nowy Boss: Wężojad (Snake Eater)
+- **Nowy Typ Wroga**: Wężojad – unikalny "Boss wsparcia". Nie atakuje gracza, lecz podąża za nim.
+- **Mechanika Leczenia**: Kontakt z Wężojadem leczy gracza (100 HP) raz na 60 sekund. Towarzyszy temu soczysty tekst ("Rzyć wylizana...").
+- **Cytaty**: Wężojad rzuca losowymi, "pieskowymi" tekstami w 3 językach (PL, EN, RO).
+- **Spawn**: Pojawia się jako rzadki gość po 4. minucie gry (Singleton – tylko jeden na mapie).
+
+### 🎨 Wizualia i UI (Visuals & UI)
+- **System Cieni 2.0**: Wprowadzono manualną kontrolę cieni dla bossów.
+  - Dodano parametry offsetów (`shadowOffsetY`, `healthBarOffsetY`, `quoteOffsetY`) w `gameData.js`.
+  - Naprawiono problem "podwójnych cieni" (wyłączenie systemowego cienia flagą `hasShadow: false`).
+- **Indykatory Bossów**: Dodano strzałki na krawędziach ekranu wskazujące kierunek do Bossów (Elita, Drwal, Wężojad), gdy są poza widokiem.
+- **Animacje**: Naprawiono błąd "zamrożonej klatki" dla bardzo wolnych lub stojących wrogów (niezależne od prędkości ruchu).
+- **Poświata**: Wężojad posiada unikalny, zielony efekt świetlny ("Glow") renderowany bezpośrednio na spricie.
+
+### 🔧 Silnik (Engine)
+- **Ostrzeżenia**: Wymuszono wyświetlanie komunikatu "NADCHODZI..." przy spawnie Wężojada.
+- **Przewodnik**: Zaktualizowano in-game Guide o wpis dla Wężojada.
 
 ---
 
@@ -490,19 +511,3 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ## [v0.43 i wcześniejsze] - Wersja Monolityczna
 * **Info:** Cała logika gry znajdowała się w jednym, dużym pliku `main.js`.
-}
-
-{
-type: uploaded file
-fileName: gregor-89/szkeletal/Szkeletal-855b15aed0653a53b68914660ee77b940a848854/js/config/version.js
-fullContent:
-// ==============
-// VERSION.JS
-// Lokalizacja: /js/config/version.js
-// ==============
-
-export const VERSION = '0.100';
-
-// Log diagnostyczny startu
-console.log(`[Szkeletal] Inicjalizacja wersji v${VERSION}`);
-}

@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v1.0 - Anti-Cheat Shadows)
+// MAIN.JS (v1.01 - Loading Count & Anti-Cheat)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -46,6 +46,7 @@ let ctx = null;
 const splashOverlay = document.getElementById('splashOverlay');
 const loadingOverlay = document.getElementById('loadingOverlay'); 
 const loadingBarFill = document.getElementById('loadingBarFill'); 
+const loadingText = document.getElementById('loadingText'); // Referencja do tekstu
 const tutorialOverlay = document.getElementById('tutorialOverlay');
 const introOverlay = document.getElementById('introOverlay');
 
@@ -466,7 +467,13 @@ function launchApp() {
     const updateProgress = () => {
         loadedCount++;
         const pct = Math.min(100, Math.floor((loadedCount / totalAssets) * 100));
+        
         if(loadingBarFill) loadingBarFill.style.width = `${pct}%`;
+        
+        // ZMIANA: Aktualizacja tekstu ładowania o licznik
+        if(loadingText) {
+            loadingText.textContent = `WCZYTYWANIE ZASOBÓW... (${loadedCount}/${totalAssets})`;
+        }
     };
 
     Promise.all([

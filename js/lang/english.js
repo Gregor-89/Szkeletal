@@ -1,5 +1,5 @@
 // ==============
-// ENGLISH.JS (v1.02 - Snake Eater & Quotes)
+// ENGLISH.JS (v1.03 - Snake Heal Quote)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
@@ -198,7 +198,9 @@ export const LANG_EN = {
   enemy_snakeEater_desc: "Mobile Shrine. Does not attack. Follows the Count. Heals you once per minute if you touch him.",
   snake_heal_text: "Ass licked, satiety recovered",
   
-  // ZMIANA: Cytaty Wężojada po angielsku
+  // NOWOŚĆ: Angielski cytat wężojada
+  snake_heal_quote_enemy: "Mmm, I make Master feel good, WOOF WOOF!",
+  
   quote_snake_1: "WOOF WOOF!",
   quote_snake_2: "You know how dogs bark in Romanian? HAM HAM!",
   quote_snake_3: "You don't need skill to play stealth games.",

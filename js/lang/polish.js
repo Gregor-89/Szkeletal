@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v1.03 - Snake Eater Quotes)
+// POLISH.JS (v1.04 - Snake Heal Quote)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -63,9 +63,11 @@ export const LANG_PL = {
   
   warning_hunger: "GŁÓD!",
   shrine_text: "Rzyć umyta, sytość zdobyta",
-  snake_heal_text: "Rzyć wylizana, sytość odzyskana",
   
-  // NOWOŚĆ: Cytaty Wężojada
+  // NOWOŚĆ: Teksty leczenia
+  snake_heal_text: "Rzyć wylizana, sytość odzyskana",
+  snake_heal_quote_enemy: "Mmm, ja zrobić Panu dobrze, HAU HAU!",
+  
   quote_snake_1: "HAU HAU!",
   quote_snake_2: "Wiesz jak psy szczekają pu rumuńsku? HAM HAM!",
   quote_snake_3: "Nie trzeba skilla by grać w skradanki",
@@ -156,7 +158,7 @@ export const LANG_PL = {
   ui_guide_basics_4: "Progres: Każdy Poziom Wertykalności = wybór jednego z trzech ulepszeń 🎁",
   ui_guide_basics_5: "Wrogowie: Z czasem Hejterzy stają się coraz twardsi 👾 ⏱️",
   
-  ui_guide_pickups_title: "🎁 Pickupy",
+  ui_guide_pickups_title: "🎁 Pickups",
   ui_guide_enemies_title: "👾 Hejterzy",
   ui_guide_hazards_title: "☢️ Zagrożenia",
   ui_guide_weapons_title: "⚔️ Arsenał",

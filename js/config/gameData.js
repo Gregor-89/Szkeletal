@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v1.13 - User Tuning & Shadow Fix)
+// GAMEDATA.JS (v1.16 - Bigger Bomb)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -136,7 +136,15 @@ export const WEAPON_CONFIG = {
 
 const BASE_DROP_RATES = { heal: 0.02, magnet: 0.012, speed: 0.01, shield: 0.007, bomb: 0.005, freeze: 0.005 };
 
-export const PICKUP_CONFIG = { BASE_LIFE: 14, MAGNET_DURATION: 3.0, SHIELD_DURATION: 8.0, SPEED_DURATION: 8.0, FREEZE_DURATION: 5.0, BOMB_RADIUS: 200 };
+export const PICKUP_CONFIG = { 
+    BASE_LIFE: 14, 
+    MAGNET_DURATION: 3.0, 
+    SHIELD_DURATION: 8.0, 
+    SPEED_DURATION: 8.0, 
+    FREEZE_DURATION: 5.0, 
+    // ZMIANA: Zwiększono zasięg bomby dwukrotnie (200 -> 400)
+    BOMB_RADIUS: 400 
+};
 
 export const GEM_CONFIG = { BASE_LIFE: 35.0, FADE_TIME: 5.0 };
 
@@ -186,11 +194,10 @@ export const ENEMY_STATS = {
     shadowOffset: 0.15 
   },
   
-  // ZMIANA: User Fine Tuning v1.13 + FIX na dwa cienie (hasShadow: false)
   snakeEater: { 
     type: 'snakeEater', 
     hp: 200, 
-    speed: 35, 
+    speed: 30, 
     size: 120, 
     damage: 0, 
     color: '#4CAF50', 
@@ -205,11 +212,13 @@ export const ENEMY_STATS = {
 
     // OFFSETY (regulacja):
     // Cień: Wartość dodatnia = w dół. 100 to dużo, ale tak chciałeś.
-    shadowOffsetY: 100,      
+    shadowOffsetY: 50,      
     // Pasek HP: Wartość dodatnia = w dół. 40 obniży go pod postać.
-    healthBarOffsetY: 40,   
+    healthBarOffsetY: -125,   
     // Cytaty: Wartość UJEMNA = W GÓRĘ. -150 podniesie je nad głowę.
-    quoteOffsetY: -150      
+    quoteOffsetY: -100,
+    // HitText: 0 = środek (domyślny -20 jest za wysoko)
+    hitTextOffsetY: 0
   }
 };
 

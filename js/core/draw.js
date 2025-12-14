@@ -243,7 +243,10 @@ export function draw(ctx, state, ui, fps) {
             obj.draw(ctx, game);
         } else if (obj.stats) { 
             if (!obj.isDead) {
-                drawShadow(ctx, obj.x, obj.y, obj.size, obj.visualScale || 1.0, obj.type);
+                // ZMIANA: Sprawdzamy, czy cień nie jest wyłączony w statystykach (np. dla SnakeEater)
+                if (obj.stats.hasShadow !== false) {
+                    drawShadow(ctx, obj.x, obj.y, obj.size, obj.visualScale || 1.0, obj.type);
+                }
                 obj.draw(ctx, game);
                 drawEnemyHealthBar(ctx, obj);
             }

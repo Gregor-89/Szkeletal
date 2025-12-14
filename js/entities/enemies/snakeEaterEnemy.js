@@ -1,5 +1,5 @@
 // ==============
-// SNAKEEATERENEMY.JS (v1.11 - Single Shadow & Tuning)
+// SNAKEEATERENEMY.JS (v1.18 - Longer Heal Anim)
 // Lokalizacja: /js/entities/enemies/snakeEaterEnemy.js
 // ==============
 
@@ -15,8 +15,8 @@ export class SnakeEaterEnemy extends Enemy {
     this.healCooldownMax = stats.healCooldown || 60.0;
     this.healTimer = 0;
     
-    this.quoteTimer = 20.0;
-    this.quoteInterval = 20.0;
+    this.quoteTimer = 15.0;
+    this.quoteInterval = 15.0;
     
     this.spriteIdle = getAsset('enemy_snakeEater');
     this.spriteWalk = getAsset('enemy_snakeEater_walk');
@@ -48,6 +48,11 @@ export class SnakeEaterEnemy extends Enemy {
       return 0;
     }
     return super.getSpeed(game);
+  }
+  
+  // NADPISANIE metody takeDamage, aby obsłużyć customowy offset dla hittextu
+  takeDamage(amount, hitTextPool, hitTexts) {
+    return super.takeDamage(amount);
   }
   
   update(dt, player, game, state) {
@@ -105,10 +110,24 @@ export class SnakeEaterEnemy extends Enemy {
       game.health = Math.min(game.maxHealth, game.health + healVal);
       const actualHealed = game.health - oldHp;
       
-      const text = getLang('snake_heal_text') || "Rzyć wylizana, sytość odzyskana";
-      
+      const enemyText = getLang('snake_heal_quote_enemy') || "Mmm, ja zrobić Panu dobrze, HAU HAU!";
       const offset = this.stats.quoteOffsetY || -120;
-      addHitText(hitTextPool, hitTexts, this.x, this.y + offset + 20, 0, '#4CAF50', text, 4.0, null, 0, 24);
+      
+      addHitText(
+        hitTextPool, hitTexts,
+        this.x, this.y + offset,
+        0, '#4CAF50', enemyText, 7.0,
+        this, offset, 24
+      );
+      
+      const playerText = getLang('snake_heal_text') || "Rzyć wylizana, sytość odzyskana";
+      
+      addHitText(
+        hitTextPool, hitTexts,
+        player.x, player.y - 65,
+        0, '#FFD700', playerText, 5.0,
+        player, -65
+      );
       
       if (actualHealed > 0) {
         addHitText(hitTextPool, hitTexts, player.x, player.y - 30, actualHealed, "#00FF00", "+HP", 2.0);
@@ -117,8 +136,9 @@ export class SnakeEaterEnemy extends Enemy {
       this.healTimer = this.healCooldownMax;
       this.isHealingAnim = true;
       
+      // ZMIANA: Wydłużenie animacji do 3 cykli (zamiast 2)
       const frameTime = this.frameTime || 0.1;
-      this.healAnimTimer = (16 * frameTime) * 2;
+      this.healAnimTimer = (16 * frameTime) * 3;
       
       return true;
     }
@@ -132,7 +152,12 @@ export class SnakeEaterEnemy extends Enemy {
     
     if (text) {
       const offset = this.stats.quoteOffsetY || -120;
-      addHitText(hitTextPool, hitTexts, this.x, this.y + offset, 0, '#FFD700', text, 3.5, this, 0, 20);
+      addHitText(
+        hitTextPool, hitTexts,
+        this.x, this.y + offset,
+        0, '#FFD700', text, 7.0,
+        this, offset, 20
+      );
     }
   }
   
@@ -142,14 +167,14 @@ export class SnakeEaterEnemy extends Enemy {
     ctx.save();
     ctx.translate(this.x, this.y);
     
-    // 1. FAKTYCZNY CIEŃ (Manualny - JEDYNY, bo hasShadow: false w gameData)
+    // 1. FAKTYCZNY CIEŃ
     const shadowY = this.stats.shadowOffsetY || 40;
     ctx.save();
     ctx.translate(0, shadowY);
     ctx.scale(1, 0.4);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
     ctx.beginPath();
-    ctx.arc(0, 0, this.size * 0.7, 0, Math.PI * 2);
+    ctx.arc(0, 0, 48, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
     
@@ -166,10 +191,7 @@ export class SnakeEaterEnemy extends Enemy {
     
     // 2. Rysowanie MOCNEJ POŚWIATY (Glow)
     if (this.healTimer <= 0) {
-      ctx.save();
-      ctx.shadowBlur = 40;
-      ctx.shadowColor = '#66BB6A';
-      ctx.globalCompositeOperation = 'lighter';
+      const pulse = 15 * Math.sin(game.time * 6);
       
       const sheetW = this.sprite.naturalWidth;
       const sheetH = this.sprite.naturalHeight;
@@ -184,7 +206,20 @@ export class SnakeEaterEnemy extends Enemy {
       const aspectRatio = frameW / frameH;
       const destW = destH * aspectRatio;
       
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      
+      // Warstwa 1
+      ctx.shadowBlur = 80 + pulse;
+      ctx.shadowColor = '#66BB6A';
       ctx.drawImage(this.sprite, sx, sy, frameW, frameH, -destW / 2, -destH / 2, destW, destH);
+      
+      // Warstwa 2
+      ctx.shadowBlur = 30 + (pulse * 0.5);
+      ctx.shadowColor = '#B2FF59';
+      ctx.globalAlpha = 0.6;
+      ctx.drawImage(this.sprite, sx, sy, frameW, frameH, -destW / 2, -destH / 2, destW, destH);
+      
       ctx.restore();
     }
     
