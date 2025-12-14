@@ -1,5 +1,5 @@
 // ==============
-// INDICATORMANAGER.JS (v0.78 - Nowy plik)
+// INDICATORMANAGER.JS (v0.79 - Boss Update)
 // Lokalizacja: /js/managers/indicatorManager.js
 // ==============
 
@@ -75,17 +75,27 @@ export function updateIndicators(state, dt) {
     }
   }
   
-  // C. Wrogowie (Tylko Elita)
+  // C. Wrogowie (Bossowie: Elita, Drwal, Wężojad)
+  // Definicja kolorów dla poszczególnych typów bossów
+  const BOSS_COLORS = {
+    'elite': '#e91e63', // Różowy
+    'lumberjack': '#795548', // Brązowy
+    'snakeEater': '#4CAF50' // Zielony
+  };
+  
   for (const enemy of enemies) {
-    if (enemy.type !== 'elite') {
-      continue; // Pomiń wszystkich poza Elitą
+    const color = BOSS_COLORS[enemy.type];
+    
+    // Jeśli to nie jest jeden z bossów, pomiń
+    if (!color) {
+      continue;
     }
     
     if (isOffScreen(enemy, camera)) {
       activeIndicators.push({
         x: enemy.x,
         y: enemy.y,
-        color: '#e91e63', // Różowy (kolor Elity)
+        color: color,
         size: 8
       });
     }

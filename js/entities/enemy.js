@@ -1,5 +1,5 @@
 // ==============
-// ENEMY.JS (v1.02 - Dynamic Animation Speed)
+// ENEMY.JS (v1.03 - Snake Eater Health Bar)
 // Lokalizacja: /js/entities/enemy.js
 // ==============
 
@@ -16,7 +16,6 @@ export class Enemy {
         this.type = stats.type || 'standard';
         this.hp = Math.floor(stats.hp * (hpScale || 1));
         this.maxHp = this.hp;
-        // Przechowujemy bazową prędkość ze statystyk do obliczeń ratio
         this.baseSpeed = stats.speed;
         this.speed = this.baseSpeed;
         this.size = stats.size || 20;
@@ -62,20 +61,24 @@ export class Enemy {
         this.animTimer = 0;
         this.facingDir = 1;
         this.visualScale = 1.54;
+        
+        // Zapisz czas ostatniej kolizji (dla audio/dmg limiter)
+        this.lastPlayerCollision = 0;
     }
     
-    // NOWOŚĆ: Centralna metoda do animacji
     updateAnimation(dt, currentSpeed) {
         if (this.totalFrames > 1) {
-            // Obliczamy stosunek aktualnej prędkości do bazowej
-            // Jeśli wróg stoi (0), animacja stoi.
-            // Jeśli wróg szarżuje (200%), animacja jest 2x szybsza.
-            const speedRatio = currentSpeed / this.baseSpeed;
+            // Jeśli obiekt stoi (leczy się), wymuś animację z prędkością bazową (1.0),
+            // w przeciwnym razie skaluj prędkość animacji do prędkości ruchu.
+            let ratio = 1.0;
+            if (currentSpeed > 0.1) {
+                ratio = currentSpeed / this.baseSpeed;
+            } else {
+                // Dla animacji idle/heal, gdy speed=0
+                ratio = 1.0;
+            }
             
-            // Zabezpieczenie przed dzieleniem przez 0 lub bardzo małymi wartościami
-            const finalRatio = Math.max(0, speedRatio);
-            
-            this.animTimer += dt * finalRatio;
+            this.animTimer += dt * Math.max(0.1, ratio);
             
             if (this.animTimer >= this.frameTime) {
                 this.animTimer = 0;
@@ -99,14 +102,13 @@ export class Enemy {
             return;
         }
         
-        let currentSpeed = 0; // Do animacji
+        let currentSpeed = 0;
         
         if (Math.abs(this.knockback.x) > 0.1 || Math.abs(this.knockback.y) > 0.1) {
             this.x += this.knockback.x * dt;
             this.y += this.knockback.y * dt;
             this.knockback.x *= 0.9;
             this.knockback.y *= 0.9;
-            // Knockback nie wpływa na animację chodzenia (można ewentualnie zatrzymać)
         }
         else if (this.hitStun <= 0) {
             const dx = player.x - this.x;
@@ -115,7 +117,7 @@ export class Enemy {
             
             currentSpeed = this.getSpeed(game);
             
-            if (dist > 0.1) {
+            if (dist > 0.1 && currentSpeed > 0) {
                 const randomOffset = Math.sin(game.time * 3 + this.id * 7.3) * 0.15;
                 const targetAngle = Math.atan2(dy, dx) + randomOffset;
                 this.x += Math.cos(targetAngle) * currentSpeed * dt;
@@ -128,7 +130,6 @@ export class Enemy {
             this.y += this.separationY * 1.0 * dt;
         }
         
-        // ZMIANA: Użycie nowej metody
         this.updateAnimation(dt, currentSpeed);
     }
     
@@ -228,6 +229,10 @@ export class Enemy {
             ctx.strokeRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
         }
         
+        if (this.showHealthBar && this.hp < this.maxHp) {
+            this.drawHealthBar(ctx);
+        }
+        
         ctx.restore();
     }
     
@@ -235,7 +240,8 @@ export class Enemy {
         this.hp -= amount;
         this.hitFlashT = 0.15;
         
-        if (this.type === 'tank' || this.type === 'elite' || this.type === 'wall') {
+        // ZMIANA: Dodano snakeEater do listy
+        if (this.type === 'tank' || this.type === 'elite' || this.type === 'wall' || this.type === 'snakeEater') {
             this.showHealthBar = true;
         }
         
@@ -260,5 +266,22 @@ export class Enemy {
     
     getOutlineColor() { return colorForEnemy(this); }
     
-    drawHealthBar(ctx) {}
+    drawHealthBar(ctx) {
+        const barW = this.size;
+        const barH = 6;
+        const barX = this.x - barW / 2;
+        const barY = this.y - this.size * 0.8;
+        
+        const pct = Math.max(0, this.hp / this.maxHp);
+        
+        ctx.fillStyle = '#222';
+        ctx.fillRect(barX, barY, barW, barH);
+        
+        ctx.fillStyle = '#F44336';
+        ctx.fillRect(barX, barY, barW * pct, barH);
+        
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barW, barH);
+    }
 }

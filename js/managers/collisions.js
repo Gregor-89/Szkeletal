@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v1.07 - i18n Support)
+// COLLISIONS.JS (v1.08 - Snake Eater Healing)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -8,7 +8,6 @@ import { killEnemy } from './enemyManager.js';
 import { playSound } from '../services/audio.js';
 import { devSettings } from '../services/dev.js';
 import { COLLISION_CONFIG, HAZARD_CONFIG, MAP_CONFIG, WEAPON_CONFIG } from '../config/gameData.js'; 
-// NOWE: Import getLang
 import { getLang } from '../services/i18n.js';
 import { PICKUP_CLASS_MAP } from './effects.js';
 
@@ -75,9 +74,7 @@ export function checkCollisions(state) {
                             
                             playSound('HealPickup');
                             
-                            // FIX: Pobieranie tekstu z i18n
                             const shrineTxt = getLang('shrine_text') || "Rzyć umyta";
-                            // Offset nadal z konfigu
                             const offset = stats.textOffset || -85; 
                             addHitText(hitTextPool, hitTexts, player.x, player.y - 50, 0, "#FFD700", shrineTxt, 5.0, player, offset);
                             
@@ -187,7 +184,7 @@ export function checkCollisions(state) {
                         if (gem) {
                             gem.init(e.x + (Math.random() - 0.5) * 5, e.y + (Math.random() - 0.5) * 5, 4, (e.type === 'elite') ? 7 : 1, '#4FC3F7');
                         }
-                        game.score += (e.type === 'elite' || e.type === 'lumberjack') ? 80 : 10;
+                        game.score += (e.type === 'elite' || e.type === 'lumberjack' || e.type === 'snakeEater') ? 80 : 10;
 
                         if (!b.onlyXP) {
                             function maybe(type, prob) {
@@ -248,41 +245,62 @@ export function checkCollisions(state) {
             const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
             const isInvulnerable = game.shield || devSettings.godMode;
 
-            if (!isInvulnerable) {
-                const now = performance.now();
-                if (!enemy.lastPlayerCollision || now - enemy.lastPlayerCollision > 500) {
-                     enemy.lastPlayerCollision = now;
-                     const dmg = (enemy.type === 'kamikaze' ? 15 : enemy.damage);
-                     game.health -= dmg;
-                     game.playerHitFlashT = 0.15; 
-                     addHitText(hitTextPool, hitTexts, player.x, player.y - 20, dmg, '#FF0000');
-                     playSound('PlayerHurt');
-                     limitedShake(game, settings, 5, 100);
+            // --- NOWOŚĆ: Logika Wężojada ---
+            if (enemy.type === 'snakeEater') {
+                if (enemy.tryHealPlayer(game, player, hitTextPool, hitTexts)) {
+                    playSound('HealPickup'); // Lub inny dźwięk
+                    
+                    // Odpalamy confetti
+                    spawnConfetti(particlePool, enemy.x, enemy.y);
                 }
-            }
-
-            if (enemy.type === 'wall') {
-                game.collisionSlowdown = COLLISION_CONFIG.WALL_COLLISION_SLOWDOWN || 0.75;
-                player.x += Math.cos(angle) * 5; 
-                player.y += Math.sin(angle) * 5;
-            } else {
-                game.collisionSlowdown = 0.1; 
-                player.x += Math.cos(angle) * 2; 
-                player.y += Math.sin(angle) * 2;
                 
-                const pushForce = isInvulnerable ? 15 : 3;
-                enemy.x -= Math.cos(angle) * pushForce;
-                enemy.y -= Math.sin(angle) * pushForce;
-            }
+                // Fizyka odpychania (żeby gracz nie "wchodził" w bossa)
+                game.collisionSlowdown = 0.5;
+                const pushForce = 5;
+                player.x += Math.cos(angle) * pushForce;
+                player.y += Math.sin(angle) * pushForce;
+                
+            } else {
+                // --- Logika standardowych wrogów ---
+                if (!isInvulnerable) {
+                    const now = performance.now();
+                    if (!enemy.lastPlayerCollision || now - enemy.lastPlayerCollision > 500) {
+                        enemy.lastPlayerCollision = now;
+                        const dmg = (enemy.type === 'kamikaze' ? 15 : enemy.damage);
+                        game.health -= dmg;
+                        game.playerHitFlashT = 0.15; 
+                        addHitText(hitTextPool, hitTexts, player.x, player.y - 20, dmg, '#FF0000');
+                        playSound('PlayerHurt');
+                        limitedShake(game, settings, 5, 100);
+                    }
+                }
 
-            if (enemy.type === 'kamikaze') {
-                 spawnConfetti(particlePool, enemy.x, enemy.y); 
-                 playSound('Explosion'); 
-                 state.enemyIdCounter = killEnemy(i, enemy, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, false, false);
-                 continue; 
+                if (enemy.type === 'wall') {
+                    game.collisionSlowdown = COLLISION_CONFIG.WALL_COLLISION_SLOWDOWN || 0.75;
+                    player.x += Math.cos(angle) * 5; 
+                    player.y += Math.sin(angle) * 5;
+                } else {
+                    game.collisionSlowdown = 0.1; 
+                    player.x += Math.cos(angle) * 2; 
+                    player.y += Math.sin(angle) * 2;
+                    
+                    const pushForce = isInvulnerable ? 15 : 3;
+                    enemy.x -= Math.cos(angle) * pushForce;
+                    enemy.y -= Math.sin(angle) * pushForce;
+                }
+
+                if (enemy.type === 'kamikaze') {
+                    spawnConfetti(particlePool, enemy.x, enemy.y); 
+                    playSound('Explosion'); 
+                    state.enemyIdCounter = killEnemy(i, enemy, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, false, false);
+                    continue; 
+                }
             }
         }
     }
+    
+    // ... (Reszta funkcji bez zmian - kolizje pocisków, pickupów, hazardów) ...
+    // Kopiuję resztę oryginalnego kodu dla pewności kompletności
     
     for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
@@ -339,14 +357,14 @@ export function checkCollisions(state) {
                 const isDead = e.takeDamage(b.damage, 'player');
                 
                 let hitY = e.y;
-                if (['wall', 'tank', 'elite', 'lumberjack'].includes(e.type)) {
+                if (['wall', 'tank', 'elite', 'lumberjack', 'snakeEater'].includes(e.type)) {
                     hitY = e.y - e.size * 0.8; 
                 }
                 
                 addHitText(hitTextPool, hitTexts, e.x, hitY, b.damage);
                 playSound('Hit');
                 
-                if (e.type !== 'wall' && e.type !== 'tank') {
+                if (e.type !== 'wall' && e.type !== 'tank' && e.type !== 'snakeEater') {
                     const angle = Math.atan2(e.y - b.y, e.x - b.x);
                     const isOrbital = (b.type === 'orbital');
                     const kbMultiplier = isOrbital ? 3.0 : 1.0;
@@ -412,7 +430,6 @@ export function checkCollisions(state) {
             const collectedXP = Math.floor(g.val * (game.level >= 20 ? 1.2 : 1));
             game.xp += collectedXP; 
             
-            // ZMIANA: Odnawianie głodu
             game.hunger = game.maxHunger;
             
             playSound('XPPickup');
@@ -481,7 +498,7 @@ export function checkCollisions(state) {
         for (let i = enemies.length - 1; i >= 0; i--) {
             const e = enemies[i];
             if (!e || e.isDead) continue; 
-            if (e.type !== 'elite' && e.type !== 'wall') { 
+            if (e.type !== 'elite' && e.type !== 'wall' && e.type !== 'snakeEater') { 
                 if (h.checkCollision(e.x, e.y, e.size * 0.4)) {
                     e.hazardSlowdownT = 0.2; 
                     if (isMega) e.inMegaHazard = true; 

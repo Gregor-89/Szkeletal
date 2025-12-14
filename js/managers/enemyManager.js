@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v1.0 - Spawn Times Update)
+// ENEMYMANAGER.JS (v1.06 - Force Warning)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -19,6 +19,7 @@ import { RangedEnemy } from '../entities/enemies/rangedEnemy.js';
 import { EliteEnemy } from '../entities/enemies/eliteEnemy.js';
 import { WallEnemy } from '../entities/enemies/wallEnemy.js';
 import { LumberjackEnemy } from '../entities/enemies/lumberjackEnemy.js'; 
+import { SnakeEaterEnemy } from '../entities/enemies/snakeEaterEnemy.js';
 
 import { ENEMY_STATS, SIEGE_EVENT_CONFIG, WALL_DETONATION_CONFIG } from '../config/gameData.js';
 
@@ -41,7 +42,8 @@ export const ENEMY_CLASS_MAP = {
     ranged: RangedEnemy,
     elite: EliteEnemy,
     wall: WallEnemy,
-    lumberjack: LumberjackEnemy
+    lumberjack: LumberjackEnemy,
+    snakeEater: SnakeEaterEnemy
 };
 
 const PICKUP_CLASS_MAP = {
@@ -53,21 +55,21 @@ const PICKUP_CLASS_MAP = {
     freeze: FreezePickup
 };
 
-const BOSS_TYPES = ['elite', 'lumberjack'];
+const BOSS_TYPES = ['elite', 'lumberjack', 'snakeEater'];
 
 export function getAvailableEnemyTypes(game) {
     const t = game.time;
     const seen = game.seenEnemyTypes; 
 
-    // ZMIANA: Zaktualizowano czasy spawnu (+20%)
     const availableAtTime = [
         t > 0 ? 'standard' : null,
-        t > 36 ? 'horde' : null,      // Było 30
-        t > 72 ? 'aggressive' : null, // Było 60
-        t > 108 ? 'kamikaze' : null,  // Było 90
-        t > 144 ? 'splitter' : null,  // Było 120
-        t > 216 ? 'tank' : null,      // Było 180
-        t > 252 ? 'ranged' : null     // Było 210
+        t > 36 ? 'horde' : null,
+        t > 72 ? 'aggressive' : null,
+        t > 108 ? 'kamikaze' : null,
+        t > 144 ? 'splitter' : null,
+        t > 216 ? 'tank' : null,
+        t > 240 ? 'snakeEater' : null,
+        t > 252 ? 'ranged' : null
     ].filter(type => type !== null);
 
     let typesToSpawn = [];
@@ -130,9 +132,23 @@ function spawnHorde(enemies, x, y, hpScale, enemyIdCounter) {
 }
 
 export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
+    const availableTypes = getAvailableEnemyTypes(game);
+    
+    if (availableTypes.length === 0) {
+        return enemyIdCounter; 
+    }
+    
+    const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+
+    if (BOSS_TYPES.includes(type)) {
+        const alreadyExists = enemies.some(e => e.type === type);
+        if (alreadyExists) {
+            return enemyIdCounter; 
+        }
+    }
+
     let x, y;
     const margin = 100; 
-    
     const viewLeft = camera.offsetX;
     const viewRight = camera.offsetX + camera.viewWidth;
     const viewTop = camera.offsetY;
@@ -141,30 +157,14 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
     const worldHeight = camera.worldHeight;
 
     const edge = Math.random();
-    if (edge < 0.25) { 
-        x = viewLeft + Math.random() * camera.viewWidth;
-        y = viewTop - margin;
-    } else if (edge < 0.5) { 
-        x = viewLeft + Math.random() * camera.viewWidth;
-        y = viewBottom + margin;
-    } else if (edge < 0.75) { 
-        x = viewLeft - margin;
-        y = viewTop + Math.random() * camera.viewHeight;
-    } else { 
-        x = viewRight + margin;
-        y = viewTop + Math.random() * camera.viewHeight;
-    }
+    if (edge < 0.25) { x = viewLeft + Math.random() * camera.viewWidth; y = viewTop - margin; }
+    else if (edge < 0.5) { x = viewLeft + Math.random() * camera.viewWidth; y = viewBottom + margin; }
+    else if (edge < 0.75) { x = viewLeft - margin; y = viewTop + Math.random() * camera.viewHeight; }
+    else { x = viewRight + margin; y = viewTop + Math.random() * camera.viewHeight; }
 
     x = Math.max(0, Math.min(worldWidth, x));
     y = Math.max(0, Math.min(worldHeight, y));
 
-    const availableTypes = getAvailableEnemyTypes(game);
-    
-    if (availableTypes.length === 0) {
-        return enemyIdCounter; 
-    }
-    
-    const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
     const hpScale = 1 + 0.10 * (game.level - 1) + game.time / 90; 
 
     if (type === 'horde') {
@@ -180,11 +180,9 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
 export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     let bossType = null;
 
-    // 1. PRIORYTET DEV: Jeśli w devSettings jest wymuszony konkretny boss, spawnuj tylko jego
     if (devSettings.allowedEnemies.length === 1) {
         const forcedType = devSettings.allowedEnemies[0];
         if (BOSS_TYPES.includes(forcedType)) {
-            // Sprawdź czy już jest na mapie (Singleton w trybie dev też obowiązuje, żeby nie zlagowało)
             const alreadyExists = enemies.some(e => e.type === forcedType);
             if (alreadyExists) return enemyIdCounter;
             
@@ -192,9 +190,7 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
         }
     }
 
-    // 2. NORMALNA GRA: Losuj z dostępnych
     if (!bossType) {
-        // Sprawdź czy devSettings pozwala na bossów (jeśli nie jest 'all')
         if (devSettings.allowedEnemies.length > 0 && !devSettings.allowedEnemies.includes('all')) {
             const allowedBosses = BOSS_TYPES.filter(t => devSettings.allowedEnemies.includes(t));
             if (allowedBosses.length === 0) return enemyIdCounter;
@@ -213,7 +209,6 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
 
     let x, y;
     const margin = 150; 
-    
     const viewLeft = camera.offsetX;
     const viewRight = camera.offsetX + camera.viewWidth;
     const viewTop = camera.offsetY;
@@ -222,19 +217,10 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     const worldHeight = camera.worldHeight;
 
     const edge = Math.random();
-    if (edge < 0.25) { 
-        x = viewLeft + Math.random() * camera.viewWidth; 
-        y = viewTop - margin;
-    } else if (edge < 0.5) { 
-        x = viewLeft + Math.random() * camera.viewWidth; 
-        y = viewBottom + margin;
-    } else if (edge < 0.75) { 
-        x = viewLeft - margin;
-        y = viewTop + Math.random() * camera.viewHeight;
-    } else { 
-        x = viewRight + margin;
-        y = viewTop + Math.random() * camera.viewHeight;
-    }
+    if (edge < 0.25) { x = viewLeft + Math.random() * camera.viewWidth; y = viewTop - margin; }
+    else if (edge < 0.5) { x = viewLeft + Math.random() * camera.viewWidth; y = viewBottom + margin; }
+    else if (edge < 0.75) { x = viewLeft - margin; y = viewTop + Math.random() * camera.viewHeight; }
+    else { x = viewRight + margin; y = viewTop + Math.random() * camera.viewHeight; }
 
     x = Math.max(0, Math.min(worldWidth, x));
     y = Math.max(0, Math.min(worldHeight, y));
@@ -246,6 +232,12 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
         enemies.push(newEnemy);
         playSound('EliteSpawn');
         console.log(`[BOSS] Zespawnowano: ${bossType.toUpperCase()}`);
+        
+        // NOWOŚĆ: Wymuszenie ostrzeżenia "NADCHODZI WĘŻOJAD"
+        if (bossType === 'snakeEater') {
+            game.newEnemyWarningT = 3.0; 
+            game.newEnemyWarningType = getLang('enemy_snakeEater_name').toUpperCase();
+        }
     }
     
     return enemyIdCounter;
@@ -253,7 +245,6 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
 
 export function addSiegeIndicators(state) {
     const { bombIndicators, player } = state;
-    
     const count = SIEGE_EVENT_CONFIG.SIEGE_EVENT_COUNT;
     const radius = SIEGE_EVENT_CONFIG.SIEGE_EVENT_RADIUS;
     const maxLife = SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME;
@@ -280,52 +271,40 @@ export function addSiegeIndicators(state) {
 
 export function spawnWallEnemies(state) {
     const { enemies, game } = state;
-    
     const spawnQueue = state.siegeSpawnQueue || []; 
-    
     console.log(`[EVENT] Uruchamiam Wydarzenie Oblężenia! Spawnuję ${spawnQueue.length} wrogów 'wall'.`);
 
     for (let i = 0; i < spawnQueue.length; i++) {
         const { x, y } = spawnQueue[i];
-        
         const hpScale = 1 + 0.10 * (game.level - 1) + game.time / 90; 
-        
         const newEnemy = createEnemyInstance('wall', x, y, hpScale, state.enemyIdCounter++);
         if (newEnemy) {
             enemies.push(newEnemy);
         }
     }
-    
     state.siegeSpawnQueue = []; 
-    
     return state.enemyIdCounter;
 }
 
 export function spawnSiegeRing(state) {
     const { game } = state;
-    
     addSiegeIndicators(state);
-    
     if (!game.seenEnemyTypes.includes('wall')) {
         game.newEnemyWarningT = SIEGE_EVENT_CONFIG.SIEGE_WARNING_TIME;
         game.newEnemyWarningType = getLang('enemy_wall_name').toUpperCase(); 
         game.seenEnemyTypes.push('wall'); 
         playSound('EliteSpawn'); 
     }
-
     console.log('[EVENT] Wysłano ostrzeżenie o Oblężeniu.');
-    
     return state.enemyIdCounter;
 }
 
 export function findClosestEnemy(player, enemies) {
     let closestDist = Infinity;
     let closestEnemy = null;
-    
     if (!enemies || typeof enemies[Symbol.iterator] !== 'function') {
         return { enemy: null, distance: Infinity };
     }
-    
     for (const e of enemies) {
         const dist = Math.hypot(player.x - e.x, player.y - e.y);
         if (dist < closestDist) {
@@ -354,7 +333,6 @@ function spawnColorParticles(particlePool, x, y, color, count = 10, speed = 240,
 }
 
 export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital = false, preventDrops = false) {
-    
     if (e.dying && e.deathTimer < e.deathDuration) return enemyIdCounter;
 
     let spawnKnockback = false;
@@ -372,29 +350,13 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
                 let val = e.stats.xp;
                 let color = '#4FC3F7'; 
                 let size = 4;          
-                
-                if (Math.random() < 0.015) { 
-                    val *= 5; 
-                    color = '#81C784'; 
-                    size = 6;          
-                } 
-                else if (Math.random() < 0.001) { 
-                    val *= 20; 
-                    color = '#E57373'; 
-                    size = 8;          
-                } 
-
-                gem.init(
-                    e.x + (Math.random() - 0.5) * 5,
-                    e.y + (Math.random() - 0.5) * 5,
-                    size, 
-                    val,
-                    color
-                );
+                if (Math.random() < 0.015) { val *= 5; color = '#81C784'; size = 6; } 
+                else if (Math.random() < 0.001) { val *= 20; color = '#E57373'; size = 8; } 
+                gem.init(e.x + (Math.random() - 0.5) * 5, e.y + (Math.random() - 0.5) * 5, size, val, color);
             }
         }
 
-        if (e.type !== 'elite' && e.type !== 'lumberjack') {
+        if (e.type !== 'elite' && e.type !== 'lumberjack' && e.type !== 'snakeEater') {
             for (const [type, prob] of Object.entries(e.stats.drops)) {
                 if (devSettings.allowedEnemies.includes('all') || devSettings.allowedPickups.includes(type)) {
                     if (Math.random() < prob) {
@@ -409,42 +371,29 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
             }
         }
         
-        if (e.type === 'elite' || e.type === 'lumberjack') {
+        if (e.type === 'elite' || e.type === 'lumberjack' || e.type === 'snakeEater') {
             chests.push(new Chest(e.x, e.y));
         }
     }
 
     const particleCount = 40; 
     const explosionSpeed = 500; 
-    
     for (let k = 0; k < particleCount; k++) {
         const p = particlePool.get();
         if (p) {
             const chunkSize = 4 + Math.random() * 4; 
-            
-            p.init(
-                e.x, e.y,
-                (Math.random() - 0.5) * explosionSpeed, 
-                (Math.random() - 0.5) * explosionSpeed, 
-                0.4 + Math.random() * 0.3, 
-                e.color, 
-                0, 
-                0.95,
-                chunkSize 
-            );
+            p.init(e.x, e.y, (Math.random() - 0.5) * explosionSpeed, (Math.random() - 0.5) * explosionSpeed, 0.4 + Math.random() * 0.3, e.color, 0, 0.95, chunkSize);
         }
     }
 
     if (e.type === 'splitter') {
         const hpScale = (1 + 0.10 * (game.level - 1) + game.time / 90) * 0.8; 
-        
         const child1 = createEnemyInstance('horde', e.x - 5, e.y, hpScale, enemyIdCounter++);
         const child2 = createEnemyInstance('horde', e.x + 5, e.y, hpScale, enemyIdCounter++);
         
         if (child1) {
             child1.speed *= 1.1; 
             enemies.push(child1);
-            
             if (spawnKnockback) {
                 const angle = Math.atan2(child1.y - e.y, child1.x - e.x) + (Math.random() * 0.5 - 0.25);
                 child1.x += Math.cos(angle) * 15;
@@ -455,7 +404,6 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         if (child2) {
             child2.speed *= 1.1; 
             enemies.push(child2);
-            
             if (spawnKnockback) {
                 const angle = Math.atan2(child2.y - e.y, child2.x - e.x) + (Math.random() * 0.5 - 0.25);
                 child2.x += Math.cos(angle) * 15;
@@ -465,7 +413,7 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         }
     }
     
-    if ((e.type === 'elite' || e.type === 'lumberjack') && preventDrops) { 
+    if ((e.type === 'elite' || e.type === 'lumberjack' || e.type === 'snakeEater') && preventDrops) { 
         const color = ENEMY_STATS[e.type].color; 
         spawnColorParticles(particlePool, e.x, e.y, color, 20, 350, 0.6);
     }

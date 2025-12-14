@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.98a - Lumberjack Assets)
+// ASSETS.JS (v0.101 - Snake Eater Assets)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
@@ -47,8 +47,9 @@ const assetDefinitions = {
   'enemy_ranged': 'enemies/ranged/ranged_idle.png',
   'enemy_elite': 'enemies/elite/elite_idle.png',
   'enemy_wall': 'enemies/wall/wall_idle.png',
-  // NOWOŚĆ: Drwal
   'enemy_lumberjack': 'enemies/lumberjack/lumberjack_idle.png',
+  // NOWOŚĆ v0.101: Wężojad
+  'enemy_snakeEater': 'enemies/snakeEater/snake_idle.png',
   
   'enemy_standard_spritesheet': 'enemies/dadgamer/dadgamer_spritesheet.png',
   'enemy_horde_spritesheet': 'enemies/horde/horde_spritesheet.png',
@@ -60,9 +61,11 @@ const assetDefinitions = {
   'enemy_wall_spritesheet': 'enemies/wall/wall_spritesheet.png',
   'enemy_ranged_walk': 'enemies/ranged/ranged_walk.png',
   'enemy_ranged_attack': 'enemies/ranged/ranged_attack.png',
-  // NOWOŚĆ: Animacje Drwala
   'enemy_lumberjack_walk': 'enemies/lumberjack/lumberjack_walk.png',
   'enemy_lumberjack_attack': 'enemies/lumberjack/lumberjack_attack.png',
+  // NOWOŚĆ v0.101: Animacje Wężojada
+  'enemy_snakeEater_walk': 'enemies/snakeEater/snake_walk.png',
+  'enemy_snakeEater_heal': 'enemies/snakeEater/snake_heal.png',
   
   'env_tree_1': 'environment/tree_1.png',
   'env_tree_2': 'environment/tree_2.png',
@@ -94,7 +97,6 @@ const assetDefinitions = {
   
   'hazard_sewage': 'hazards/hazard_sewage.png',
   'enemy_ranged_projectile': 'projectiles/bottle.png',
-  // NOWOŚĆ: Siekiera
   'projectile_axe': 'projectiles/axe.png',
   
   'weapon_orbital_potato': 'weapons/orbital_potato.png',

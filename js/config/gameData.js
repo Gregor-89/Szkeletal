@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v1.02 - Intro Music Config)
+// GAMEDATA.JS (v1.13 - User Tuning & Shadow Fix)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -24,21 +24,17 @@ export const GAME_CONFIG = {
   INITIAL_MAX_ENEMIES: 3,
   ENEMY_LIMIT_GROWTH_PER_MINUTE: 20,
   
-  // BALANS XP (SYSTEM HYBRYDOWY)
+  // BALANS XP
   INITIAL_XP_NEEDED: 5,   
   XP_GROWTH_ADD: 6,
-  
-  // Do poziomu 10 rośnie szybciej (trudniej)
   XP_GROWTH_EARLY: 1.5, 
-  // Od poziomu 11 rośnie wolniej (łatwiej)
   XP_GROWTH_LATE: 1.35, 
-  // Próg zmiany mnożnika
   XP_THRESHOLD_LEVEL: 10 
 };
 
 export const HUNGER_CONFIG = {
   MAX_HUNGER: 100,
-  DECAY_RATE: 5.0, // 20 sekund życia
+  DECAY_RATE: 5.0, 
   STARVATION_DAMAGE: 1, 
   STARVATION_TICK: 1.0, 
   VIGNETTE_COLOR_START: 'rgba(255, 0, 0, 0.0)',
@@ -67,52 +63,30 @@ export const MAP_CONFIG = {
   
   OBSTACLE_STATS: {
     tree: { 
-      type: 'tree', 
-      variants: 6,
-      size: 96,
-      minScale: 2.5, maxScale: 5.0, 
-      hitboxScale: 0.15, spriteOffset: -0.4, 
-      hasShadow: true, shadowScale: 0.80, shadowOffsetY: 8,  
-      hp: Infinity, isSolid: true, canRotate: false
+        type: 'tree', variants: 6, size: 96, minScale: 2.5, maxScale: 5.0, 
+        hitboxScale: 0.15, spriteOffset: -0.4, hasShadow: true, shadowScale: 0.80, 
+        shadowOffsetY: 8, hp: Infinity, isSolid: true, canRotate: false 
     },
     rock: { 
-      type: 'rock', 
-      variants: 6,
-      size: 64, 
-      minScale: 1.0, maxScale: 3.5,
-      hitboxScale: 0.8, spriteOffset: 0,
-      hasShadow: true, shadowScale: 1.5, shadowOffsetY: 25, 
-      hp: Infinity, isSolid: true, canRotate: true
+        type: 'rock', variants: 6, size: 64, minScale: 1.0, maxScale: 3.5, 
+        hitboxScale: 0.8, spriteOffset: 0, hasShadow: true, shadowScale: 1.5, 
+        shadowOffsetY: 25, hp: Infinity, isSolid: true, canRotate: true 
     },
     hut: { 
-      type: 'hut', 
-      variants: 7,
-      size: 110, 
-      minScale: 3.5, maxScale: 3.5, 
-      hitboxScale: 0.7, spriteOffset: -0.25,
-      hasShadow: true, shadowScale: 1.4, shadowOffsetY: 12, 
-      hp: 1200, isSolid: true, dropChance: 0.4, canRotate: false 
+        type: 'hut', variants: 7, size: 110, minScale: 3.5, maxScale: 3.5, 
+        hitboxScale: 0.7, spriteOffset: -0.25, hasShadow: true, shadowScale: 1.4, 
+        shadowOffsetY: 12, hp: 1200, isSolid: true, dropChance: 0.4, canRotate: false 
     },
     water: { 
-      type: 'water', 
-      variants: 6,
-      size: 140,      
-      minScale: 0.7, maxScale: 2.2,
-      hitboxScale: 0.9, spriteOffset: 0,
-      hasShadow: false, shadowScale: 0, shadowOffsetY: 0,
-      hp: Infinity, isSolid: false, isSlow: true, slowFactor: 0.5, canRotate: true
+        type: 'water', variants: 6, size: 140, minScale: 0.7, maxScale: 2.2, 
+        hitboxScale: 0.9, spriteOffset: 0, hasShadow: false, shadowScale: 0, 
+        shadowOffsetY: 0, hp: Infinity, isSolid: false, isSlow: true, slowFactor: 0.5, canRotate: true 
     },
-    shrine: {
-      type: 'shrine',
-      variants: 1,
-      size: 180,
-      minScale: 1.4, maxScale: 1.4,
-      hitboxScale: 0.6, spriteOffset: -0.3,
-      hasShadow: true, shadowScale: 1.0, shadowOffsetY: 20,
-      hp: Infinity, isSolid: true, canRotate: false,
-      cooldown: 120, healAmount: 100,
-      text: "Rzyć umyta, sytość zdobyta",
-      textOffset: -85 
+    shrine: { 
+        type: 'shrine', variants: 1, size: 180, minScale: 1.4, maxScale: 1.4, 
+        hitboxScale: 0.6, spriteOffset: -0.3, hasShadow: true, shadowScale: 1.0, 
+        shadowOffsetY: 20, hp: Infinity, isSolid: true, canRotate: false, 
+        cooldown: 120, healAmount: 100, text: "Rzyć umyta, sytość zdobyta", textOffset: -85 
     }
   }
 };
@@ -154,57 +128,17 @@ export const HAZARD_CONFIG = {
 };
 
 export const WEAPON_CONFIG = {
-  AUTOGUN: {
-    BASE_SPEED: 800,
-    BASE_DAMAGE: 5,      
-    BASE_FIRE_RATE: 900, 
-    BASE_SIZE: 3,
-    SPRITE: 'projectile_venom',
-    SPRITE_SCALE: 4.0
-  },
-  NOVA: {
-    SPRITE: 'projectile_nova',
-    SPRITE_SCALE: 4.0
-  },
-  RANGED_ENEMY_BULLET: {
-    SPEED: 400,
-    DAMAGE: 10,
-    SIZE: 12,
-    SPRITE_WIDTH: 22,
-    SPRITE_HEIGHT: 64,
-    TRAIL_COLOR: '#29b6f6',
-    TRAIL_LIFE: 0.1,
-    TRAIL_SPEED: 80,
-    TRAIL_INTERVAL: 0.05
-  },
-  LUMBERJACK_AXE: {
-    SPEED: 550,
-    DAMAGE: 25,
-    SIZE: 48, 
-    SPRITE_WIDTH: 40, SPRITE_HEIGHT: 86,
-    TRAIL_INTERVAL: 0.015, TRAIL_SIZE: 20, TRAIL_OFFSET: 40, TRAIL_OPACITY: 0.40,
-    ROTATION_SPEED: 8, IMPACT_PARTICLE_COUNT: 60 
-  }
+  AUTOGUN: { BASE_SPEED: 800, BASE_DAMAGE: 5, BASE_FIRE_RATE: 900, BASE_SIZE: 3, SPRITE: 'projectile_venom', SPRITE_SCALE: 4.0 },
+  NOVA: { SPRITE: 'projectile_nova', SPRITE_SCALE: 4.0 },
+  RANGED_ENEMY_BULLET: { SPEED: 400, DAMAGE: 10, SIZE: 12, SPRITE_WIDTH: 22, SPRITE_HEIGHT: 64, TRAIL_COLOR: '#29b6f6', TRAIL_LIFE: 0.1, TRAIL_SPEED: 80, TRAIL_INTERVAL: 0.05 },
+  LUMBERJACK_AXE: { SPEED: 550, DAMAGE: 25, SIZE: 48, SPRITE_WIDTH: 40, SPRITE_HEIGHT: 86, TRAIL_INTERVAL: 0.015, TRAIL_SIZE: 20, TRAIL_OFFSET: 40, TRAIL_OPACITY: 0.40, ROTATION_SPEED: 8, IMPACT_PARTICLE_COUNT: 60 }
 };
 
-const BASE_DROP_RATES = {
-  heal: 0.02, magnet: 0.012, speed: 0.01,
-  shield: 0.007, bomb: 0.005, freeze: 0.005
-};
+const BASE_DROP_RATES = { heal: 0.02, magnet: 0.012, speed: 0.01, shield: 0.007, bomb: 0.005, freeze: 0.005 };
 
-export const PICKUP_CONFIG = {
-  BASE_LIFE: 14,
-  MAGNET_DURATION: 3.0,
-  SHIELD_DURATION: 8.0,
-  SPEED_DURATION: 8.0,
-  FREEZE_DURATION: 5.0,
-  BOMB_RADIUS: 200
-};
+export const PICKUP_CONFIG = { BASE_LIFE: 14, MAGNET_DURATION: 3.0, SHIELD_DURATION: 8.0, SPEED_DURATION: 8.0, FREEZE_DURATION: 5.0, BOMB_RADIUS: 200 };
 
-export const GEM_CONFIG = {
-  BASE_LIFE: 35.0,
-  FADE_TIME: 5.0
-};
+export const GEM_CONFIG = { BASE_LIFE: 35.0, FADE_TIME: 5.0 };
 
 export const PERK_CONFIG = {
   firerate: { value: 0.80, max: 6 },
@@ -212,67 +146,20 @@ export const PERK_CONFIG = {
   multishot: { value: 1, max: 4 },
   pierce: { value: 1, max: 4 },
   autogun: { max: 1 },
-  orbital: {
-    max: 5,
-    calculateDamage: (level) => (3 + level * 2),
-    calculateRadius: (level) => ((50 + 6 * level) * 2.25),
-    calculateSpeed: (level) => (1.2 + 0.2 * level)
-  },
-  nova: {
-    max: 6,
-    calculateDamage: (level) => (15 + level * 5),
-    calculateCooldown: (level) => Math.max(0.5, 3.0 - (level * 0.4)),
-    calculateCount: (level) => 2 + level,
-    calculatePierce: (level) => 1 + Math.floor(level / 3)
-  },
+  orbital: { max: 5, calculateDamage: (level) => (3 + level * 2), calculateRadius: (level) => ((50 + 6 * level) * 2.25), calculateSpeed: (level) => (1.2 + 0.2 * level) },
+  nova: { max: 6, calculateDamage: (level) => (15 + level * 5), calculateCooldown: (level) => Math.max(0.5, 3.0 - (level * 0.4)), calculateCount: (level) => 2 + level, calculatePierce: (level) => 1 + Math.floor(level / 3) },
   speed: { value: 1.10, max: 4 },
   pickup: { value: 1.25, max: 3 }, 
   health: { value: 30, max: 3 },
-  whip: {
-    max: 5,
-    HITBOX_RADIUS: 30,
-    calculateCooldown: (level) => (Math.max(1.0, 3.0 - 0.4 * level)),
-    // Start 10 (kills Dadgamer), wzrost +2.5
-    calculateDamage: (level) => (10 + (level - 1) * 2.5),
-    calculateDrawScale: (level) => (100 + 25 * (level - 1)),
-    calculateCount: (level) => {
-      const counts = [0, 1, 2, 3, 4, 4];
-      return counts[level] || 4;
-    }
-  },
-  chainLightning: {
-    max: 6,
-    VISUAL_DURATION: 0.25,
-    calculateCooldown: (level) => [0, 2.5, 2.3, 2.1, 1.9, 1.7, 1.6][level] || 1.6,
-    calculateDamage: (level) => (10 + level * 3), 
-    calculateTargets: (level) => [0, 1, 2, 3, 4, 5, 6][level] || 6,
-  }
+  whip: { max: 5, HITBOX_RADIUS: 30, calculateCooldown: (level) => (Math.max(1.0, 3.0 - 0.4 * level)), calculateDamage: (level) => (10 + (level - 1) * 2.5), calculateDrawScale: (level) => (100 + 25 * (level - 1)), calculateCount: (level) => { const counts = [0, 1, 2, 3, 4, 4]; return counts[level] || 4; } },
+  chainLightning: { max: 6, VISUAL_DURATION: 0.25, calculateCooldown: (level) => [0, 2.5, 2.3, 2.1, 1.9, 1.7, 1.6][level] || 1.6, calculateDamage: (level) => (10 + level * 3), calculateTargets: (level) => [0, 1, 2, 3, 4, 5, 6][level] || 6, }
 };
 
-export const UI_CONFIG = {
-  RESUME_TIMER: 0.75,
-  LEVEL_UP_PAUSE: 700,
-  LOW_HEALTH_THRESHOLD: 0.25
-};
+export const UI_CONFIG = { RESUME_TIMER: 0.75, LEVEL_UP_PAUSE: 700, LOW_HEALTH_THRESHOLD: 0.25 };
 
-export const WORLD_CONFIG = {
-  SIZE: 24
-};
+export const WORLD_CONFIG = { SIZE: 24 };
 
-export const EFFECTS_CONFIG = {
-  BOMB_INDICATOR_LIFE: 0.375,
-  CONFETTI_COUNT: 80,
-  CONFETTI_LIFE: 1.67,
-  CONFETTI_SPEED_MIN: 180,
-  CONFETTI_SPEED_MAX: 420,
-  CONFETTI_INITIAL_UP_VELOCITY: -210,
-  CONFETTI_GRAVITY: 6,
-  CONFETTI_FRICTION: 1.0,
-  CONFETTI_ROTATION_SPEED: 12,
-  NUKE_PARTICLE_COUNT: 40,
-  NUKE_PARTICLE_SPEED: 300,
-  NUKE_PARTICLE_LIFE: 0.6
-};
+export const EFFECTS_CONFIG = { BOMB_INDICATOR_LIFE: 0.375, CONFETTI_COUNT: 80, CONFETTI_LIFE: 1.67, CONFETTI_SPEED_MIN: 180, CONFETTI_SPEED_MAX: 420, CONFETTI_INITIAL_UP_VELOCITY: -210, CONFETTI_GRAVITY: 6, CONFETTI_FRICTION: 1.0, CONFETTI_ROTATION_SPEED: 12, NUKE_PARTICLE_COUNT: 40, NUKE_PARTICLE_SPEED: 300, NUKE_PARTICLE_LIFE: 0.6 };
 
 export const ENEMY_STATS = {
   standard: { type: 'standard', hp: 10, speed: 105, size: 60, damage: 10, color: '#D32F2F', score: 10, xp: 1, drops: BASE_DROP_RATES },
@@ -297,6 +184,32 @@ export const ENEMY_STATS = {
     attackRange: 350, 
     attackCooldown: 2.2,
     shadowOffset: 0.15 
+  },
+  
+  // ZMIANA: User Fine Tuning v1.13 + FIX na dwa cienie (hasShadow: false)
+  snakeEater: { 
+    type: 'snakeEater', 
+    hp: 200, 
+    speed: 35, 
+    size: 120, 
+    damage: 0, 
+    color: '#4CAF50', 
+    score: 150, 
+    xp: 3, 
+    drops: {}, 
+    healAmount: 100, 
+    healCooldown: 60.0, 
+    
+    // Kluczowe: Wyłączamy systemowy cień, żeby rysować tylko manualny
+    hasShadow: false,
+
+    // OFFSETY (regulacja):
+    // Cień: Wartość dodatnia = w dół. 100 to dużo, ale tak chciałeś.
+    shadowOffsetY: 100,      
+    // Pasek HP: Wartość dodatnia = w dół. 40 obniży go pod postać.
+    healthBarOffsetY: 40,   
+    // Cytaty: Wartość UJEMNA = W GÓRĘ. -150 podniesie je nad głowę.
+    quoteOffsetY: -150      
   }
 };
 
@@ -314,7 +227,6 @@ export const MUSIC_CONFIG = {
     'music_5.mp3',
     'music_6.mp3'
   ],
-  // ZMIANA: Nowa playlista dla Intro/HotCoffee
   INTRO_PLAYLIST: [
     'intro_1.mp3',
     'intro_2.mp3'

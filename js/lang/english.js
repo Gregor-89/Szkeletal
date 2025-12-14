@@ -1,5 +1,5 @@
 // ==============
-// ENGLISH.JS (v1.01 - Game Over Quotes)
+// ENGLISH.JS (v1.02 - Snake Eater & Quotes)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
@@ -193,6 +193,30 @@ export const LANG_EN = {
   enemy_wall_desc: "Appears in a perfect ring. Extremely slow, but durable. After a set time (approx. 34-40s), it detonates, destroying all nearby Potatoes and Pickups.",
   enemy_lumberjack_name: "Lumberjack Zjebadlo",
   enemy_lumberjack_desc: "A powerful boss from the forest. Throws spinning, rainbow axes. Features walk and attack animations. Beware of his \"Rainbow Trail\"!",
+  // ZMIANA: Dodano Wężojada
+  enemy_snakeEater_name: "Snake Eater",
+  enemy_snakeEater_desc: "Mobile Shrine. Does not attack. Follows the Count. Heals you once per minute if you touch him.",
+  snake_heal_text: "Ass licked, satiety recovered",
+  
+  // ZMIANA: Cytaty Wężojada po angielsku
+  quote_snake_1: "WOOF WOOF!",
+  quote_snake_2: "You know how dogs bark in Romanian? HAM HAM!",
+  quote_snake_3: "You don't need skill to play stealth games.",
+  quote_snake_4: "I know this map by heart.",
+  quote_snake_5: "My Count, I have no skill either.",
+  quote_snake_6: "I play like my Lord Count, meaning no skill.",
+  quote_snake_7: "Where are you, my Lord?",
+  quote_snake_8: "I must lick the ass, or I shall suffocate.",
+  quote_snake_9: "I shall lick the ass for the Lord, and satiety will be restored.",
+  quote_snake_10: "I must defend my ludologists, or I shall suffocate.",
+  quote_snake_11: "Why play games when you can beat them on YouTube?",
+  quote_snake_12: "Am I a good boy? WOOF WOOF",
+  quote_snake_13: "Don't tell me I don't have a diploma, I never even sat for the exam!",
+  quote_snake_14: "My Lord, may I have a crumb of attention?",
+  quote_snake_15: "Watch, my Lord, as I go WOOF WOOF!",
+  quote_snake_16: "I am a smart boy, WOOF.",
+  quote_snake_17: "Shall we discuss facts?",
+  quote_snake_18: "Can I have a potato, my Lord?",
   
   enemy_hazard_name: "The Sewer",
   enemy_hazard_desc: "Slows the Count and inflicts damage. Also wounds and slows haters (except for Szkeletal). Potatoes and Pickups left in \"The Sewer\" will depreciate.",

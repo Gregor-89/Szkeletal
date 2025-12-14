@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.04 - Hot Coffee Music)
+// MENUS.JS (v1.05 - Snake Eater Guide)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -381,6 +381,9 @@ export function generateGuide() {
         { asset: 'enemy_wall', nameKey: 'enemy_wall_name', descKey: 'enemy_wall_desc' },
         { asset: 'enemy_elite', nameKey: 'enemy_elite_name', descKey: 'enemy_elite_desc' },
         { asset: 'enemy_lumberjack', nameKey: 'enemy_lumberjack_name', descKey: 'enemy_lumberjack_desc' },
+        // ZMIANA: Dodano Wężojada do przewodnika
+        { asset: 'enemy_snakeEater', nameKey: 'enemy_snakeEater_name', descKey: 'enemy_snakeEater_desc' },
+        
         { header: getLang('ui_guide_weapons_title') || "Bronie" },
         { asset: 'icon_whip', nameKey: 'perk_whip_name', descKey: 'perk_whip_desc' },
         { asset: 'icon_autogun', nameKey: 'perk_autogun_name', descKey: 'perk_autogun_desc' },

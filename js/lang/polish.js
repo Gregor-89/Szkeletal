@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v1.01 - Game Over Quotes)
+// POLISH.JS (v1.03 - Snake Eater Quotes)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -63,6 +63,27 @@ export const LANG_PL = {
   
   warning_hunger: "GŁÓD!",
   shrine_text: "Rzyć umyta, sytość zdobyta",
+  snake_heal_text: "Rzyć wylizana, sytość odzyskana",
+  
+  // NOWOŚĆ: Cytaty Wężojada
+  quote_snake_1: "HAU HAU!",
+  quote_snake_2: "Wiesz jak psy szczekają pu rumuńsku? HAM HAM!",
+  quote_snake_3: "Nie trzeba skilla by grać w skradanki",
+  quote_snake_4: "Znam tę mapę na pamięć",
+  quote_snake_5: "Mój Hrabio, ja też nie mam skilla",
+  quote_snake_6: "Gram jak mój Pan Hrabia, czyli no skill",
+  quote_snake_7: "Gdzie jesteś mój Panie?",
+  quote_snake_8: "Wylizać rzyć muszę, bo się uduszę",
+  quote_snake_9: "Rzyć wyliże dla Pana i sytość będzie odzyskana",
+  quote_snake_10: "Bronić swych ludologów muszę, bo się uduszę",
+  quote_snake_11: "Po co grać w gry, gdy można je przejść na YouTube?",
+  quote_snake_12: "Am I a good boy? WOOF WOOF",
+  quote_snake_13: "Nie mów mi, że nie mam matury, gdy ja nawet do niej nie podszedłem!",
+  quote_snake_14: "Mój Panie, czy mogę o minimum atencji?",
+  quote_snake_15: "Patrz mój Panie jak robię HAU HAU!",
+  quote_snake_16: "Jestem mądrym chłopcem, HAU",
+  quote_snake_17: "Może porozmawiamy o faktach?",
+  quote_snake_18: "Mogę ziemniaczka mój Panie?",
   
   quote_gameplay_1: "Jebać wszystkich Dadgamerów i chuj wam w dupę",
   quote_gameplay_2: "Mam wyjebane na was melepetów",
@@ -223,6 +244,8 @@ export const LANG_PL = {
   enemy_wall_desc: "Pojawia się w idealnym pierścieniu. Bardzo wolny i twardy. Po ok. 34-40s detonuje, niszcząc wszystko w pobliżu.",
   enemy_lumberjack_name: "Drwal Zjebadło",
   enemy_lumberjack_desc: "Strażnik leśnego cringe'u. Rzuca wirującymi tęczowymi toporami i zostawia toksyczny 'Tęczowy Ślad'. Uważaj, bo Cię scanceluje!",
+  enemy_snakeEater_name: "Wężojad",
+  enemy_snakeEater_desc: "Mobilna Kapliczka. Nie atakuje. Podążą za Hrabią. Raz na minutę uleczy Cię, jeśli go dotkniesz.",
   
   enemy_hazard_name: "Szambo",
   enemy_hazard_desc: "Spowalnia Hrabiego i zadaje obrażenia. Rani też hejterów (z wyjątkiem Szkeletala). Ziemniaki w Szambie gniją.",
@@ -272,7 +295,6 @@ export const LANG_PL = {
   ui_gameover_level_label: "POZIOM",
   ui_gameover_kills_label: "ZABICI",
   
-  // ZMIANA: Cytaty Game Over
   quote_gameover_1: "Weź się za siebie, bo grasz jak ludolodzy.",
   quote_gameover_2: "W Soulsy to ty pewnie też tak lamisz jak ten Kiszczak...",
   quote_gameover_3: "Spokojnie. Kiszczak też ssie w inne gierki...",

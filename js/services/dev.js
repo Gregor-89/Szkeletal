@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v1.04 - Anti-Cheat Dirty Flag)
+// DEV.JS (v1.06 - Full Restore)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -55,7 +55,6 @@ let gameState = {};
 let loadConfigCallback = () => {};
 let startRunCallback = () => {};
 
-// ZMIANA: Dodano flagowanie oszusta przy użyciu dev tools
 function markAsCheated() {
     if (gameState && gameState.game) {
         gameState.game.isCheated = true;
@@ -110,7 +109,6 @@ function callStartRun() {
         devSettings.presetLoaded = true;
         devSettings.justStartedFromMenu = true; 
         
-        // Każdy scenariusz = oszustwo w kontekście rankingu
         markAsCheated();
         
         const menuOverlay = document.getElementById('menuOverlay');
@@ -123,7 +121,6 @@ function callStartRun() {
     }
 }
 
-// Helpery do bezpiecznego pobierania wartości z DOM
 function getVal(id, defaultValue) {
     const el = document.getElementById(id);
     if (!el) return defaultValue;
@@ -159,8 +156,8 @@ function devPresetEnemy(enemyType, autoStart = true) {
                 break;
             }
         }
-        if (!found && enemyType === 'lumberjack') {
-            devSettings.allowedEnemies = ['lumberjack'];
+        if (!found && (enemyType === 'lumberjack' || enemyType === 'snakeEater')) {
+            devSettings.allowedEnemies = [enemyType];
         }
     }
 
@@ -168,7 +165,8 @@ function devPresetEnemy(enemyType, autoStart = true) {
         'standard': 0, 'horde': 30, 'aggressive': 60, 'kamikaze': 90,
         'splitter': 120, 'tank': 180, 'ranged': 210, 'elite': 0, 
         'wall': SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME,
-        'lumberjack': 0 
+        'lumberjack': 0,
+        'snakeEater': 240 
     };
     
     const requiredTime = ENEMY_UNLOCK_TIMES[enemyType] || 0;
@@ -210,7 +208,7 @@ function devPresetEnemy(enemyType, autoStart = true) {
                 gameState.settings.lastSiegeEvent = jumpTime + 10000;
             }
 
-            if (enemyType === 'elite' || enemyType === 'lumberjack') {
+            if (enemyType === 'elite' || enemyType === 'lumberjack' || enemyType === 'snakeEater') {
                 gameState.settings.lastElite = -999999; 
             } else {
                 gameState.settings.lastElite = jumpTime + 10000;
@@ -344,7 +342,6 @@ function devStartPeaceful() {
     setVal('devSpawnRate', 0);
     setVal('devMaxEnemies', 0);
     
-    // Użycie trybu spacerowego = oszustwo
     markAsCheated();
     
     if (gameState.settings) {
@@ -378,7 +375,6 @@ function devStartScenario(type, autoStart = true) {
 export function applyDevSettings(silent = false) {
     if (!gameState.game) return;
     
-    // Każde zastosowanie ustawień dev = oszustwo
     markAsCheated();
     
     const { game, settings, player, perkLevels } = gameState;
@@ -477,7 +473,6 @@ function devSpawnPickup(type) {
     const { game, pickups, player } = gameState;
     if (!game.running || game.paused) { alert('❌ Rozpocznij grę!'); return; }
     
-    // Spawn itemu = oszustwo
     markAsCheated();
     
     const pos = findFreeSpotForPickup(pickups, player.x, player.y);
@@ -513,5 +508,5 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.retryLastScenario = retryLastScenario; 
     window.devStartPeaceful = devStartPeaceful; 
     
-    console.log('[DEBUG-v1.04] js/services/dev.js: Dev Tools loaded & exported.');
+    console.log('[DEBUG-v1.06] js/services/dev.js: Dev Tools loaded & exported.');
 }
