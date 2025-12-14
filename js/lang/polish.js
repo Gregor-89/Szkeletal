@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v1.0 - Filters & Caps)
+// POLISH.JS (v1.01 - Game Over Quotes)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -162,8 +162,8 @@ export const LANG_PL = {
   ui_gameover_level: "⭐ Poziom:",
   ui_gameover_time: "⏱️ Czas:",
   ui_gameover_kills: "⚔️ Zabici:",
-  ui_gameover_retry: "Restart",
-  ui_gameover_menu: "Menu",
+  ui_gameover_retry: "JESZCZE RAZ",
+  ui_gameover_menu: "MENU",
   ui_gameover_submit: "WYŚLIJ WYNIK",
   ui_gameover_sent: "WYSŁANO!",
   ui_gameover_error: "BŁĄD SIECI",
@@ -178,15 +178,15 @@ export const LANG_PL = {
   ui_scores_col_time: "CZAS",
   ui_scores_col_date: "DATA",
   
-  ui_confirm_title: "Potwierdź",
-  ui_confirm_clear_scores: "Usunąć wyniki?",
-  ui_confirm_yes: "Tak",
-  ui_confirm_no: "Nie",
+  ui_confirm_title: "POTWIERDŹ",
+  ui_confirm_clear_scores: "Czy na pewno wyczyścić wyniki?",
+  ui_confirm_yes: "TAK",
+  ui_confirm_no: "NIE",
   
-  ui_intro_prev: "Wstecz",
-  ui_intro_skip: "Pomiń",
-  ui_intro_next: "Dalej",
-  ui_intro_finish: "Menu ▶️",
+  ui_intro_prev: "WSTECZ",
+  ui_intro_skip: "POMIŃ",
+  ui_intro_next: "DALEJ",
+  ui_intro_finish: "MENU ▶️",
   
   pickup_heal_name: "Talerz Hrabianki",
   pickup_heal_desc: "Relikt utraconej miłości. Natychmiast przywraca +30 punktów Sytości.",
@@ -260,7 +260,6 @@ export const LANG_PL = {
   ui_stat_enemies: "Kill",
   ui_stat_time: "Czas",
   
-  // NOWE KLUCZE (v0.99)
   ui_scores_local: "LOKALNE",
   ui_scores_online: "ONLINE",
   ui_filter_today: "DZIŚ",
@@ -271,5 +270,21 @@ export const LANG_PL = {
   ui_gameover_score_label: "TWÓJ WYNIK",
   ui_gameover_time_label: "CZAS",
   ui_gameover_level_label: "POZIOM",
-  ui_gameover_kills_label: "ZABICI"
+  ui_gameover_kills_label: "ZABICI",
+  
+  // ZMIANA: Cytaty Game Over
+  quote_gameover_1: "Weź się za siebie, bo grasz jak ludolodzy.",
+  quote_gameover_2: "W Soulsy to ty pewnie też tak lamisz jak ten Kiszczak...",
+  quote_gameover_3: "Spokojnie. Kiszczak też ssie w inne gierki...",
+  quote_gameover_4: "Dałeś z siebie 20%, to wciąż więcej niż Arkadikutas przy tworzeniu recki...",
+  quote_gameover_5: "Taką grą to na pyszne ziemniaczki sobie nie zasłużysz...",
+  quote_gameover_6: "Drwal Zjebadło rżnie lepiej stare babcie niż ty siekasz w tą grę...",
+  quote_gameover_7: "A ty co, Wężojad, że nie dajesz rady?",
+  quote_gameover_8: "Ty bijesz menela, czy menel ciebie?",
+  quote_gameover_9: "Tylko ze wstydu nie ucieknij do Rumunii...",
+  quote_gameover_10: "Prędzej wyjdzie Skelatel nim wejdziesz na wyższy poziom werykalności!",
+  quote_gameover_11: "Ssiesz w tą grę jak Wężojad Kiszczaka...",
+  quote_gameover_12: "Nawet Dadgamerom dłużej stoi niż Ty syty jesteś...",
+  quote_gameover_13: "Z ciebie taki gamer jak z Kiszczaka ludolog.",
+  quote_gameover_14: "Chyba dziś nic z tych ziemniaczków nie będzie..."
 };

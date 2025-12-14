@@ -6,6 +6,28 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ---
 
+## [v0.100] - 2025-12-12
+**"The Roast & The Balance Update"**
+
+### ⚖️ Balans i Rozgrywka (Balance)
+- **Pacing Spawnu**: Wydłużono czas pojawiania się nowych typów wrogów o ok. 20% (np. Tank pojawia się w 216s zamiast 180s), co daje graczowi więcej czasu na przygotowanie.
+- **Event Oblężenia**: Przesunięto start oblężenia na 180. sekundę (z 150s), aby zgrać się z nowym tempem gry.
+- **Fizyka Wrogów**: Zmniejszono odporność na odrzut (Knockback Resistance) dla:
+  - **Prowokatora (Aggressive)**: Teraz łatwiej go zatrzymać atakiem, nawet podczas szarży (wprowadzono mechanikę "zachwiania").
+  - **Trolla (Kamikaze)**: Jest teraz bardzo lekki i podatny na odrzut, co ułatwia trzymanie go na dystans.
+- **Mapa**: Zwiększono liczbę Kapliczek na mapie z 8 do 10.
+
+### 💀 UI i Klimat (UI & Atmosphere)
+- **Cytaty Game Over**: Dodano system losowych, złośliwych cytatów wyświetlanych po śmierci gracza. 14 unikalnych tekstów wyśmiewających umiejętności (lub ich brak).
+- **Lokalizacja**: Pełne tłumaczenie nowych cytatów oraz brakujących elementów interfejsu (filtry, nagłówki) na język angielski i rumuński.
+- **Stylizacja**: Zwiększono czytelność cytatów końcowych.
+
+### 🐛 Poprawki (Fixes)
+- **Reset Mapy**: Naprawiono błąd, przez który przeszkody (drzewa, ruiny) nie resetowały się po ponownym uruchomieniu gry (Start Run), co powodowało nakładanie się obiektów.
+- **Muzyka**: Dodano obsługę dedykowanej muzyki dla Intro oraz sekcji "Hot Coffee".
+
+---
+
 ## [v0.99] - 2025-12-11
 **"The Architect & The Judge Update"**
 
@@ -287,8 +309,7 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
     * Całkowicie przebudowano generator Przewodnika w grze. Teraz wyświetla on **listę obiektów wraz z ich grafikami** i opisami pobieranymi dynamicznie z systemu tłumaczeń (i18n).
 * **Fix (i18n):** Naprawiono problem znikających ikon w nagłówkach tabel i menu przy zmianie języka (ikony są teraz wstrzykiwane dynamicznie obok przetłumaczonego tekstu).
 * **Fix (Techniczny):** Usunięto cykliczną zależność w `chest.js`, która powodowała błędy inicjalizacji przy ładowaniu gry.
-* 
----
+* ---
 
 ## [v0.90] - Globalna Refaktoryzacja Lokalizacji (i18n) i Re-skin
 * **Refaktoryzacja (i18n):** Zaimplementowano globalny system lokalizacji.
@@ -469,3 +490,19 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ## [v0.43 i wcześniejsze] - Wersja Monolityczna
 * **Info:** Cała logika gry znajdowała się w jednym, dużym pliku `main.js`.
+}
+
+{
+type: uploaded file
+fileName: gregor-89/szkeletal/Szkeletal-855b15aed0653a53b68914660ee77b940a848854/js/config/version.js
+fullContent:
+// ==============
+// VERSION.JS
+// Lokalizacja: /js/config/version.js
+// ==============
+
+export const VERSION = '0.100';
+
+// Log diagnostyczny startu
+console.log(`[Szkeletal] Inicjalizacja wersji v${VERSION}`);
+}

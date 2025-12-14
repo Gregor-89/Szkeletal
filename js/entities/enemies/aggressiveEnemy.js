@@ -1,5 +1,5 @@
 // ==============
-// AGGRESSIVEENEMY.JS (v0.93 - FIX: Wolniejsza Animacja i Szarża)
+// AGGRESSIVEENEMY.JS (v1.01 - Knockback Fix v0.100)
 // Lokalizacja: /js/entities/enemies/aggressiveEnemy.js
 // ==============
 
@@ -16,20 +16,39 @@ export class AggressiveEnemy extends Enemy {
   constructor(x, y, stats, hpScale) {
     super(x, y, stats, hpScale);
     
-    // Skala wizualna (3.0 = ~90px)
     this.visualScale = 3.0;
 
-    // Zmienne logiczne
     this.isSignaling = false; 
     this.chargeTimer = 0.0;
     this.chargeDuration = 0.4; 
     
-    // KOREKTA PRĘDKOŚCI: Zmniejszono z 2.2 na 2.0 (jeszcze odrobinę wolniej)
     this.chargeSpeedBonus = 2.0; 
     
     this.cooldownTimer = 0; 
+
+    // ZMIANA: Zmniejszono bazową odporność na knockback (łatwiejszy do odepchnięcia)
+    this.knockbackResistance = 0.4; 
   }
   
+  // ZMIANA: Nadpisujemy applyKnockback, aby "zepsuć" szarżę przy trafieniu
+  applyKnockback(kx, ky) {
+      if (this.frozenTimer > 0) return;
+      
+      // Aplikujemy standardowy knockback (z uwzględnieniem resistance)
+      const resist = this.knockbackResistance || 0;
+      this.knockback.x = kx * (1 - resist);
+      this.knockback.y = ky * (1 - resist);
+      
+      // Jeśli szarżuje (cooldownTimer > 0 to faza ataku po sygnalizacji)
+      if (this.cooldownTimer > 0) {
+          // "Zachwianie": Zmniejszamy czas trwania szarży (szybciej się skończy)
+          this.cooldownTimer -= 0.15; 
+          // Oraz fizycznie go cofamy od razu o mały kawałek (tzw. hard push)
+          this.x += this.knockback.x * 0.1; // 10% siły jako natychmiastowe przesunięcie
+          this.y += this.knockback.y * 0.1;
+      }
+  }
+
   getSpeed(game, dist) {
     let speed = super.getSpeed(game, dist);
     
@@ -41,6 +60,10 @@ export class AggressiveEnemy extends Enemy {
     // 2. FAZA SZARŻY: SZYBKO
     if (this.cooldownTimer > 0) {
         speed *= this.chargeSpeedBonus;
+        // Jeśli dostał knockback, szarża zwalnia drastycznie na chwilę
+        if (Math.abs(this.knockback.x) > 50 || Math.abs(this.knockback.y) > 50) {
+            speed *= 0.1; // Prawie stop przy silnym uderzeniu
+        }
     } 
     // 3. FAZA NORMALNA: WOLNO (SKRADANIE)
     else {
@@ -105,13 +128,25 @@ export class AggressiveEnemy extends Enemy {
                 if (this.chargeTimer <= 0) {
                     this.isSignaling = false;
                     this.cooldownTimer = 1.5; 
+                    
+                    // Podczas szarży (start cooldownTimer) zwiększamy odporność
+                    this.knockbackResistance = 0.5; 
                 }
             } else {
                 this.cooldownTimer -= dt;
+                // Reset odporności po zakończeniu szarży
+                if (this.cooldownTimer <= 0) {
+                    this.knockbackResistance = 0.4;
+                }
             }
         } else {
             this.isSignaling = false;
-            if (this.cooldownTimer > 0) this.cooldownTimer -= dt;
+            if (this.cooldownTimer > 0) {
+                 this.cooldownTimer -= dt;
+                 if (this.cooldownTimer <= 0) {
+                    this.knockbackResistance = 0.4;
+                }
+            }
         }
         
         // --- FIZYKA RUCHU ---
@@ -132,30 +167,25 @@ export class AggressiveEnemy extends Enemy {
         this.y += (vy + this.separationY * 1.0) * dt;
     }
     
-    // Knockback
+    // Knockback (silniejszy efekt hamowania)
     if (Math.abs(this.knockback.x) > 0.1 || Math.abs(this.knockback.y) > 0.1) {
         this.x += this.knockback.x * dt;
         this.y += this.knockback.y * dt;
-        this.knockback.x *= 0.9;
-        this.knockback.y *= 0.9;
+        this.knockback.x *= 0.85; // Szybsze wygaszanie, ale większy initial impact w applyKnockback
+        this.knockback.y *= 0.85;
     }
     
-    // --- RĘCZNA ANIMACJA (KOREKTA PRĘDKOŚCI) ---
+    // --- RĘCZNA ANIMACJA ---
     if (this.totalFrames > 1) {
         let animSpeedMult = 1.0;
         
         if (this.isSignaling) {
-            // Podczas ostrzegania (stoi) - zatrzymaj animację
             animSpeedMult = 0;
         } 
         else if (this.cooldownTimer > 0) {
-            // Podczas SZARŻY (biegnie szybko) - lekko przyspiesz
-            // (Było 2.5, teraz 1.3 - o połowę wolniej niż wcześniej)
             animSpeedMult = 1.3; 
         } 
         else {
-            // Podczas SKRADANIA (biegnie wolno) - zwolnij
-            // (Było 1.0, teraz 0.6 - pasuje do speed * 0.5)
             animSpeedMult = 0.6;
         }
         

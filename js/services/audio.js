@@ -1,5 +1,5 @@
 // ==============
-// AUDIO.JS (v0.97a - Added Death Sound)
+// AUDIO.JS (v1.01 - Intro Music Support)
 // Lokalizacja: /js/services/audio.js
 // ==============
 
@@ -35,7 +35,7 @@ const AUDIO_ASSET_LIST = [
     { id: 'ChainLightning', src: 'sounds/lightning.mp3' },
     { id: 'Hit', src: 'sounds/hit.mp3' },
     { id: 'Explosion', src: 'sounds/explosion.mp3' },
-    { id: 'Death', src: 'sounds/death.mp3' } // FIX: Nowy dźwięk
+    { id: 'Death', src: 'sounds/death.mp3' }
 ];
 
 // --- MUSIC MANAGER SYSTEM ---
@@ -47,12 +47,14 @@ const MusicManager = {
     
     bags: {
         menu: [],
-        gameplay: []
+        gameplay: [],
+        intro: [] // ZMIANA: Nowy worek dla intro
     },
 
     init() {
         this.bags.menu = [];
         this.bags.gameplay = [];
+        this.bags.intro = [];
     },
 
     shuffleArray(array) {
@@ -65,11 +67,16 @@ const MusicManager = {
 
     getNextTrack(context) {
         let bag = this.bags[context];
-        const masterList = (context === 'menu') ? MUSIC_CONFIG.MENU_PLAYLIST : MUSIC_CONFIG.GAMEPLAY_PLAYLIST;
+        
+        // ZMIANA: Wybór odpowiedniej playlisty
+        let masterList;
+        if (context === 'menu') masterList = MUSIC_CONFIG.MENU_PLAYLIST;
+        else if (context === 'intro') masterList = MUSIC_CONFIG.INTRO_PLAYLIST;
+        else masterList = MUSIC_CONFIG.GAMEPLAY_PLAYLIST;
 
         if (!masterList || masterList.length === 0) return null;
 
-        if (bag.length === 0) {
+        if (!bag || bag.length === 0) {
             console.log(`[Audio] Tasowanie playlisty dla: ${context}`);
             bag = [...masterList]; 
             if (masterList.length > 1) {
@@ -97,7 +104,11 @@ const MusicManager = {
             return;
         }
 
-        const folder = (context === 'menu') ? 'sounds/menu/' : 'sounds/gameplay/';
+        // ZMIANA: Obsługa folderu intro
+        let folder = 'sounds/gameplay/';
+        if (context === 'menu') folder = 'sounds/menu/';
+        if (context === 'intro') folder = 'sounds/intro/';
+        
         const src = folder + trackName;
 
         console.log(`[Audio] Odtwarzanie: ${src} (ReqID: ${myRequestId})`);
@@ -282,6 +293,8 @@ export function playSound(eventName) {
 
     if (eventName === 'MusicMenu') { MusicManager.play('menu'); return; }
     if (eventName === 'MusicGameplay') { MusicManager.play('gameplay'); return; }
+    // ZMIANA: Obsługa MusicIntro
+    if (eventName === 'MusicIntro') { MusicManager.play('intro'); return; }
     if (eventName === 'MusicStop') { MusicManager.stop(); return; }
 
     let targetAsset = eventName;
@@ -320,7 +333,7 @@ export function playSound(eventName) {
         case 'EliteSpawn': tone(200, 'sawtooth', 0.5, 0.2, 50); break; 
         case 'Hit': tone(100 + Math.random()*50, 'sawtooth', 0.04, 0.08, 50); break;
         case 'Explosion': tone(150, 'sawtooth', 0.4, 0.3, 10); break;
-        case 'Death': tone(50, 'sawtooth', 1.0, 0.5, 10); break; // Fallback dla śmierci
+        case 'Death': tone(50, 'sawtooth', 1.0, 0.5, 10); break; 
         default: break;
     }
 }

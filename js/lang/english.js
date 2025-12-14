@@ -1,5 +1,5 @@
 // ==============
-// ENGLISH.JS (v1.0 - Filters & Caps)
+// ENGLISH.JS (v1.01 - Game Over Quotes)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
@@ -138,11 +138,11 @@ export const LANG_EN = {
   ui_scores_clear: "🗑️ CLEAR",
   ui_scores_col_rank: "#",
   ui_scores_col_nick: "NICK",
-  ui_scores_col_score: "SCORE", // CAPS
-  ui_scores_col_kills: "KILLS", // CAPS
-  ui_scores_col_level: "LVL", // CAPS
-  ui_scores_col_time: "TIME", // CAPS
-  ui_scores_col_date: "DATE", // CAPS
+  ui_scores_col_score: "SCORE",
+  ui_scores_col_kills: "KILLS",
+  ui_scores_col_level: "LVL",
+  ui_scores_col_time: "TIME",
+  ui_scores_col_date: "DATE",
   
   ui_confirm_title: "Confirmation",
   ui_confirm_clear_scores: "Are you sure you want to clear the high scores? This operation cannot be undone.",
@@ -228,7 +228,6 @@ export const LANG_EN = {
   ui_stat_enemies: "Kills",
   ui_stat_time: "Time",
   
-  // NOWE KLUCZE (v0.99)
   ui_scores_local: "LOCAL",
   ui_scores_online: "ONLINE",
   ui_filter_today: "TODAY",
@@ -239,5 +238,21 @@ export const LANG_EN = {
   ui_gameover_score_label: "YOUR SCORE",
   ui_gameover_time_label: "TIME",
   ui_gameover_level_label: "LEVEL",
-  ui_gameover_kills_label: "KILLS"
+  ui_gameover_kills_label: "KILLS",
+  
+  // NEW QUOTES (v1.00)
+  quote_gameover_1: "Get a grip, you play like a ludologist.",
+  quote_gameover_2: "You probably suck at Souls games just like Kiszczak...",
+  quote_gameover_3: "Relax. Kiszczak sucks at other games too...",
+  quote_gameover_4: "You gave 20%, still more than Arkadikutas writing a review...",
+  quote_gameover_5: "With gameplay like this, you don't deserve delicious potatoes...",
+  quote_gameover_6: "Lumberjack Zjebadlo slashes old ladies better than you slash in this game...",
+  quote_gameover_7: "What are you, Snake Eater, can't handle it?",
+  quote_gameover_8: "Are you beating the bum, or is the bum beating you?",
+  quote_gameover_9: "Just don't flee to Romania out of shame...",
+  quote_gameover_10: "Skelatel will release before you reach a higher level of verticality!",
+  quote_gameover_11: "You suck at this game like Snake Eater sucks Kiszczak...",
+  quote_gameover_12: "Even Dadgamers last longer than your satiety...",
+  quote_gameover_13: "You're as much a gamer as Kiszczak is a ludologist.",
+  quote_gameover_14: "Looks like no potatoes for you today..."
 };

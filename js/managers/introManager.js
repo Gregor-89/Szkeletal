@@ -1,16 +1,13 @@
 // ==============
-// INTROMANAGER.JS (v0.90a - Pause Enforcement)
+// INTROMANAGER.JS (v1.01 - Intro Music)
 // Lokalizacja: /js/managers/introManager.js
 // ==============
 
 import { get as getAsset } from '../services/assets.js';
 import { playSound } from '../services/audio.js';
-// POPRAWKA v0.87b: Dodano btnIntroPrev, usunięto introText
 import { introOverlay, introImage, btnIntroNext, btnIntroSkip, btnIntroPrev } from '../ui/domElements.js';
-// NOWY IMPORT v0.90: Silnik i18n
 import { getLang } from '../services/i18n.js';
 
-// Definicja slajdów (tylko klucze obrazów)
 const INTRO_SLIDES = [
     'intro_1',
     'intro_2',
@@ -19,25 +16,16 @@ const INTRO_SLIDES = [
 
 let currentSlideIndex = 0;
 let gameStateRef = null;
-// Usunięto startRunCallback
 
-/**
- * Ustawia stan gry jako 'Intro widziane'.
- */
 function markIntroAsSeen() {
     if (gameStateRef && gameStateRef.game) {
         gameStateRef.game.introSeen = true;
-        // Opcjonalnie: zapisz stan w Local Storage, aby przetrwał odświeżenia przeglądarki
         localStorage.setItem('szkeletalIntroSeen', 'true');
     }
 }
 
-/**
- * Wczytuje i wyświetla pojedynczy slajd.
- */
 function loadSlide(index) {
     if (index < 0 || index >= INTRO_SLIDES.length) {
-        // Jeśli wyjdziemy poza zakres (np. z ostatniego slajdu), zakończ
         finishIntro();
         return;
     }
@@ -45,74 +33,56 @@ function loadSlide(index) {
     currentSlideIndex = index;
     const imageKey = INTRO_SLIDES[index];
     
-    // Ustawienie obrazu (używa klucza z assets.js)
     const asset = getAsset(imageKey);
     if (asset) {
-        // POPRAWKA v0.87b: Ustawienie 'src' tagu <img> (dla pinch-to-zoom)
         introImage.src = asset.src;
     } else {
-        introImage.src = ''; // Wyczyść obraz, jeśli go nie ma
+        introImage.src = '';
     }
     
-    // Aktualizacja widoczności przycisków nawigacji
     if (btnIntroPrev) {
         btnIntroPrev.style.display = (index === 0) ? 'none' : 'inline-block';
     }
     
-    // Zmiana tekstu przycisku "Dalej"
     if (btnIntroNext) {
         if (index === INTRO_SLIDES.length - 1) {
-            // ZMIANA v0.90: Użyj i18n
-            btnIntroNext.textContent = getLang('ui_intro_finish'); // "Do Menu Głównego ▶️"
+            btnIntroNext.textContent = getLang('ui_intro_finish');
         } else {
-            // ZMIANA v0.90: Użyj i18n
-            btnIntroNext.textContent = getLang('ui_intro_next'); // "Dalej"
+            btnIntroNext.textContent = getLang('ui_intro_next');
         }
     }
     
-    // Odtwórz dźwięk przejścia (jeśli nie jest to pierwszy slajd)
     if (index > 0) playSound('Click');
 }
 
-/**
- * Przechodzi do następnego slajdu lub kończy.
- */
 function nextSlide() {
     currentSlideIndex++;
     loadSlide(currentSlideIndex);
 }
 
-/**
- * Przechodzi do poprzedniego slajdu.
- */
 function prevSlide() {
     currentSlideIndex--;
     loadSlide(currentSlideIndex);
 }
 
-/**
- * Kończy sekwencję intro i przechodzi do Menu Głównego.
- */
 function finishIntro() {
     markIntroAsSeen();
     introOverlay.style.display = 'none';
     
-    // POPRAWKA v0.87b: Zawsze przechodź do menu głównego
+    // ZMIANA: Powrót do muzyki menu po zakończeniu intro (niezależnie czy skip czy koniec)
+    // Uwaga: showMenu też odpala MusicMenu, ale tu jest bezpieczniej.
+    // Jeśli jednak 'showMenu' zostanie wywołane, to ono przejmie kontrolę.
+    
     if (window.wrappedShowMenu) {
-        window.wrappedShowMenu(false); // Pokaż menu główne (bez opcji "Kontynuuj")
+        window.wrappedShowMenu(false);
     }
 }
 
-/**
- * Inicjalizuje modal intro i sprawdza, czy ma być wyświetlone.
- */
 export function initializeIntro(stateRef) {
     gameStateRef = stateRef;
     
-    // Sprawdź stan (czy intro zostało już kiedykolwiek obejrzane)
     gameStateRef.game.introSeen = localStorage.getItem('szkeletalIntroSeen') === 'true';
     
-    // Podepnij eventy do przycisków
     if (btnIntroNext) {
         btnIntroNext.onclick = nextSlide;
     }
@@ -120,10 +90,9 @@ export function initializeIntro(stateRef) {
         btnIntroPrev.onclick = prevSlide;
     }
     if (btnIntroSkip) {
-        btnIntroSkip.onclick = finishIntro; // Przycisk "Pomiń" teraz zamyka i idzie do menu
+        btnIntroSkip.onclick = finishIntro;
     }
     
-    // Umożliwienie nawigacji klawiszami
     document.addEventListener('keydown', (e) => {
         if (gameStateRef.game.paused && introOverlay.style.display === 'flex') {
             if (e.key === 'Escape') {
@@ -139,27 +108,23 @@ export function initializeIntro(stateRef) {
     console.log(`[IntroManager] Stan introSeen: ${gameStateRef.game.introSeen}`);
     
     if (!gameStateRef.game.introSeen) {
-        // Jeśli intro nie było widziane, wyświetl je.
         displayIntro();
     } else {
-        // Jeśli było widziane, po prostu pokaż menu główne.
         window.wrappedShowMenu(false);
     }
 }
 
-/**
- * Wyświetla modal intro (może być wywołane z menu).
- */
 export function displayIntro() {
     if (!gameStateRef) return;
     
-    // Pauzuj grę i pokaż modal
     gameStateRef.game.paused = true;
     introOverlay.style.display = 'flex';
+    
+    // ZMIANA: Uruchom muzykę intro
+    playSound('MusicIntro');
     
     currentSlideIndex = 0;
     loadSlide(currentSlideIndex);
 }
 
-// Udostępnienie na zewnątrz dla menu
 window.wrappedDisplayIntro = displayIntro;

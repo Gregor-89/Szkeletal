@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v0.98c - Boss Spawn Fix)
+// ENEMYMANAGER.JS (v1.0 - Spawn Times Update)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -59,14 +59,15 @@ export function getAvailableEnemyTypes(game) {
     const t = game.time;
     const seen = game.seenEnemyTypes; 
 
+    // ZMIANA: Zaktualizowano czasy spawnu (+20%)
     const availableAtTime = [
         t > 0 ? 'standard' : null,
-        t > 30 ? 'horde' : null,
-        t > 60 ? 'aggressive' : null,
-        t > 90 ? 'kamikaze' : null,
-        t > 120 ? 'splitter' : null,
-        t > 180 ? 'tank' : null,
-        t > 210 ? 'ranged' : null
+        t > 36 ? 'horde' : null,      // Było 30
+        t > 72 ? 'aggressive' : null, // Było 60
+        t > 108 ? 'kamikaze' : null,  // Było 90
+        t > 144 ? 'splitter' : null,  // Było 120
+        t > 216 ? 'tank' : null,      // Było 180
+        t > 252 ? 'ranged' : null     // Było 210
     ].filter(type => type !== null);
 
     let typesToSpawn = [];

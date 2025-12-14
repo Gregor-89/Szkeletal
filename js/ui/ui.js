@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.0d - Game Ref Passed)
+// UI.JS (v1.0f - Map Reset Fix)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -16,6 +16,8 @@ import {
 import { formatTime, saveScore, attachClearScoresListeners, displayScores } from '../services/scoreManager.js';
 import { updateStatsUI } from '../managers/levelManager.js';
 import { VERSION } from '../config/version.js'; 
+// ZMIANA: Dodano import generatora mapy
+import { generateMap } from '../managers/mapManager.js';
 
 import * as Hud from './hud.js';
 import * as Menus from './menus.js';
@@ -34,7 +36,6 @@ export function updateUI(game, player, settings, weapons, enemies = []) {
 export function showMenu(game, resetAllFn, uiData, allowContinue = false) {
     devSettings.presetLoaded = false; 
     
-    // ZMIANA: Ustawiamy referencję gry w LeaderboardUI
     LeaderboardUI.setGameRef(game);
 
     if (!allowContinue) { 
@@ -91,7 +92,6 @@ export function showMenu(game, resetAllFn, uiData, allowContinue = false) {
 }
 
 export function startRun(game, resetAllFn, uiData) {
-    // ZMIANA: Upewniamy się, że referencja jest świeża
     LeaderboardUI.setGameRef(game);
 
     if (devSettings.presetLoaded && !devSettings.justStartedFromMenu) { 
@@ -223,6 +223,13 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     uiData.hazards.length = 0; 
     if (uiData.siegeSpawnQueue) uiData.siegeSpawnQueue.length = 0;
     
+    // ZMIANA: Resetowanie mapy (przeszkód) i generowanie nowej
+    if (uiData.obstacles) {
+        uiData.obstacles.length = 0;
+        // Regenerujemy mapę dla nowego runu
+        generateMap(uiData.obstacles, uiData.player);
+    }
+    
     if (uiData.bulletsPool) uiData.bulletsPool.releaseAll();
     if (uiData.eBulletsPool) uiData.eBulletsPool.releaseAll();
     if (uiData.gemsPool) uiData.gemsPool.releaseAll();
@@ -304,6 +311,13 @@ export function gameOver(game, uiData) {
     
     const gameOverKillsLabel = document.getElementById('totalKillsSpanGO');
     if (gameOverKillsLabel) gameOverKillsLabel.textContent = game.totalKills || 0;
+    
+    const quoteEl = document.getElementById('gameOverQuote');
+    if (quoteEl) {
+        const rnd = Math.floor(Math.random() * 14) + 1;
+        const key = `quote_gameover_${rnd}`;
+        quoteEl.innerText = getLang(key) || "";
+    }
 
     const playerNick = localStorage.getItem('szkeletal_player_nick') || "GRACZ";
     saveScore(currentRun, playerNick); 

@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.03 - Dynamic Translation Fix)
+// MENUS.JS (v1.04 - Hot Coffee Music)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -243,6 +243,14 @@ export function switchView(viewId) {
     document.querySelectorAll('.menu-view').forEach(el => { el.classList.remove('active'); });
     const target = document.getElementById(viewId);
     if (target) { target.classList.add('active'); playSound('Click'); }
+    
+    // ZMIANA: Obsługa przełączania muzyki
+    if (viewId === 'view-coffee') {
+        playSound('MusicIntro'); // Włącz muzykę intro w Hot Coffee
+    } else if (viewId === 'view-main') {
+        playSound('MusicMenu'); // Wróć do muzyki menu
+    }
+
     if (viewId === 'view-scores') {
         if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard();
     }

@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v1.14 - Hybrid XP Curve)
+// GAMEDATA.JS (v1.02 - Intro Music Config)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -62,7 +62,7 @@ export const MAP_CONFIG = {
   ROCKS_COUNT: 250,
   HUTS_COUNT: 45,
   WATER_COUNT: 60,
-  SHRINE_COUNT: 8, 
+  SHRINE_COUNT: 10, 
   SAFE_ZONE_RADIUS: 500,
   
   OBSTACLE_STATS: {
@@ -91,7 +91,6 @@ export const MAP_CONFIG = {
       minScale: 3.5, maxScale: 3.5, 
       hitboxScale: 0.7, spriteOffset: -0.25,
       hasShadow: true, shadowScale: 1.4, shadowOffsetY: 12, 
-      // HP 1200, Drop 0.4 (zgodnie z poprzednim ustaleniem)
       hp: 1200, isSolid: true, dropChance: 0.4, canRotate: false 
     },
     water: { 
@@ -120,7 +119,7 @@ export const MAP_CONFIG = {
 
 export const SIEGE_EVENT_CONFIG = {
   SIEGE_EVENT_INTERVAL: 45.0,
-  SIEGE_EVENT_START_TIME: 150,
+  SIEGE_EVENT_START_TIME: 180,
   SIEGE_WARNING_TIME: 5.0,
   SIEGE_EVENT_RADIUS: 900,
   SIEGE_EVENT_COUNT: 40,
@@ -314,6 +313,11 @@ export const MUSIC_CONFIG = {
     'music_4.mp3',
     'music_5.mp3',
     'music_6.mp3'
+  ],
+  // ZMIANA: Nowa playlista dla Intro/HotCoffee
+  INTRO_PLAYLIST: [
+    'intro_1.mp3',
+    'intro_2.mp3'
   ],
   VOLUME: 0.4,
   FADE_TIME: 1.0
