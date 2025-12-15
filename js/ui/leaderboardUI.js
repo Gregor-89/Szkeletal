@@ -1,5 +1,5 @@
 // ==============
-// LEADERBOARDUI.JS (v1.03 - Anti-Cheat Integration)
+// LEADERBOARDUI.JS (v1.06 - Z-Index & Log Fix)
 // Lokalizacja: /js/ui/leaderboardUI.js
 // ==============
 
@@ -10,25 +10,23 @@ import { LeaderboardService } from '../services/leaderboard.js';
 import { finalScore, finalLevel, finalTime } from './domElements.js';
 
 let lastRunData = null;
-let gameRef = null; // Referencja do obiektu gry dla sprawdzania flagi Anti-Cheat
+let gameRef = null; 
 
 export function setLastRun(runData) {
     lastRunData = runData;
 }
 
-// ZMIANA: Setter dla referencji gry (używany przez ui.js)
 export function setGameRef(gameInstance) {
     gameRef = gameInstance;
 }
 
-// --- STAN LEADERBOARD MENU ---
+// --- STAN LEADERBOARD ---
 let currentLeaderboardMode = 'local';
 let currentFilterPeriod = 'today';
 let cachedOnlineScores = [];
 let currentSortColumn = 'score';
 let currentSortDir = 'desc';
 
-// --- STAN LEADERBOARD GAME OVER ---
 let goMode = 'local';
 let goFilter = 'today';
 let cachedGOOnlineScores = [];
@@ -40,21 +38,17 @@ function sortData(data, column, dir) {
     return data.sort((a, b) => {
         let valA = a[column];
         let valB = b[column];
-        
         if (column === 'date') {
             valA = new Date(valA).getTime();
             valB = new Date(valB).getTime();
-        }
-        else if (typeof valA === 'string') {
+        } else if (typeof valA === 'string') {
             valA = valA.toLowerCase();
             valB = valB.toLowerCase();
         }
-        
         if (column === 'tempRank') {
             valA = a.tempRank || 0;
             valB = b.tempRank || 0;
         }
-
         if (valA < valB) return dir === 'asc' ? -1 : 1;
         if (valA > valB) return dir === 'asc' ? 1 : -1;
         return 0;
@@ -64,9 +58,7 @@ function sortData(data, column, dir) {
 function assignRanks(data) {
     if (!data) return [];
     const ranked = [...data].sort((a, b) => b.score - a.score);
-    ranked.forEach((item, index) => {
-        item.tempRank = index + 1;
-    });
+    ranked.forEach((item, index) => { item.tempRank = index + 1; });
     return data;
 }
 
@@ -94,13 +86,8 @@ export function initLeaderboardUI() {
     const filterBtns = document.querySelectorAll('.filter-btn');
 
     setupTableSorting('retroScoreTable', (col) => {
-        if (col === currentSortColumn) {
-            currentSortDir = currentSortDir === 'desc' ? 'asc' : 'desc';
-        } else {
-            currentSortColumn = col;
-            currentSortDir = 'desc'; 
-            if (col === 'tempRank' || col === 'originalRank') currentSortDir = 'asc'; 
-        }
+        if (col === currentSortColumn) currentSortDir = currentSortDir === 'desc' ? 'asc' : 'desc';
+        else { currentSortColumn = col; currentSortDir = 'desc'; if (col === 'tempRank') currentSortDir = 'asc'; }
         updateView();
     });
 
@@ -108,22 +95,18 @@ export function initLeaderboardUI() {
         const tableBody = document.getElementById('scoresBodyMenu');
         const emptyMsg = document.getElementById('scoresEmptyMsg');
         const loadingMsg = document.getElementById('scoreLoading');
-        
         if(tableBody) tableBody.innerHTML = '';
         if(emptyMsg) emptyMsg.style.display = 'none';
 
         let rawData = [];
-
         if (currentLeaderboardMode === 'local') {
             if(filtersDiv) filtersDiv.style.display = 'none';
             if(clearBtn) clearBtn.style.display = 'inline-block';
             if(loadingMsg) loadingMsg.style.display = 'none';
-            
             rawData = JSON.parse(localStorage.getItem('szkeletal_scores')) || [];
         } else {
             if(filtersDiv) filtersDiv.style.display = 'flex';
             if(clearBtn) clearBtn.style.display = 'none';
-            
             if (cachedOnlineScores.length === 0) {
                 if(loadingMsg) loadingMsg.style.display = 'block';
                 cachedOnlineScores = await LeaderboardService.getScores(currentFilterPeriod);
@@ -131,38 +114,27 @@ export function initLeaderboardUI() {
             }
             rawData = cachedOnlineScores;
         }
-        
         assignRanks(rawData);
         const sortedScores = sortData([...rawData], currentSortColumn, currentSortDir);
         displayScores('scoresBodyMenu', null, sortedScores); 
-        
         if (tableBody && tableBody.children.length === 0 && emptyMsg) emptyMsg.style.display = 'block';
     };
 
     window.wrappedResetLeaderboard = () => {
-        if(tabLocal) {
-            tabLocal.click();
-        } else {
-            currentLeaderboardMode = 'local';
-            updateView();
-        }
+        if(tabLocal) tabLocal.click();
+        else { currentLeaderboardMode = 'local'; updateView(); }
     };
 
     if (tabLocal && tabOnline) {
         tabLocal.onclick = () => {
             currentLeaderboardMode = 'local';
-            tabLocal.classList.add('active');
-            tabOnline.classList.remove('active');
-            playSound('Click');
-            updateView();
+            tabLocal.classList.add('active'); tabOnline.classList.remove('active');
+            playSound('Click'); updateView();
         };
         tabOnline.onclick = () => {
             currentLeaderboardMode = 'online';
-            tabOnline.classList.add('active');
-            tabLocal.classList.remove('active');
-            cachedOnlineScores = []; 
-            playSound('Click');
-            updateView();
+            tabOnline.classList.add('active'); tabLocal.classList.remove('active');
+            cachedOnlineScores = []; playSound('Click'); updateView();
         };
     }
 
@@ -172,9 +144,7 @@ export function initLeaderboardUI() {
                 filterBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentFilterPeriod = btn.dataset.period;
-                cachedOnlineScores = [];
-                playSound('Click');
-                updateView();
+                cachedOnlineScores = []; playSound('Click'); updateView();
             };
         });
     }
@@ -190,10 +160,12 @@ export function initLeaderboardUI() {
             localStorage.setItem('szkeletal_player_nick', val);
         });
     }
-
+    
+    // Inicjalizacja przycisku Submit w menu (rzadko używane, ale niech będzie)
     initSubmitButtonLogic();
 }
 
+// --- LOGIKA PRZYCISKU WYŚLIJ WYNIK ---
 function initSubmitButtonLogic() {
     const btnSubmit = document.getElementById('btnSubmitScore');
     const overlay = document.getElementById('nickInputOverlay');
@@ -212,8 +184,6 @@ function initSubmitButtonLogic() {
         const parts = timeStr.split(':');
         const seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
         const kills = parseInt(document.getElementById('totalKillsSpanGO').textContent) || 0;
-
-        // ZMIANA: Pobranie flagi oszusta z referencji gry
         const isCheated = (gameRef && gameRef.isCheated === true);
 
         const result = await LeaderboardService.submitScore(nickToUse, score, level, seconds, kills, isCheated);
@@ -237,22 +207,33 @@ function initSubmitButtonLogic() {
     };
 
     if (btnSubmit) {
-        btnSubmit.onclick = () => {
+        // Czyścimy poprzedni listener
+        btnSubmit.onclick = null;
+        
+        btnSubmit.onclick = (e) => {
+            console.log("[LeaderboardUI] Kliknięto WYŚLIJ WYNIK"); // DEBUG LOG
+            
             let currentNick = localStorage.getItem('szkeletal_player_nick') || "";
-            if (!currentNick || currentNick === "GRACZ" || currentNick === "") {
-                currentNick = "ANON";
-            }
+            if (!currentNick || currentNick === "GRACZ" || currentNick === "") currentNick = "ANON";
             
             if(overlay) {
+                console.log("[LeaderboardUI] Otwieram modal...");
+                // FIX: Max Int Z-Index, żeby na pewno było na wierzchu
+                overlay.style.zIndex = "2147483647"; 
                 overlay.style.display = 'flex';
+                
                 setTimeout(() => {
                     if(inpQuick) {
                         inpQuick.value = currentNick;
                         inpQuick.focus();
                     }
                 }, 100);
+            } else {
+                console.error("[LeaderboardUI] Błąd: Brak elementu overlay (nickInputOverlay)!");
             }
         };
+    } else {
+        console.warn("[LeaderboardUI] Błąd: Brak przycisku btnSubmitScore!");
     }
 
     if (btnConfirm && inpQuick && overlay) {
@@ -288,32 +269,24 @@ export function initGameOverTabs() {
     const filterBtns = document.querySelectorAll('#goOnlineFilters .filter-btn');
 
     setupTableSorting('goScoreTable', (col) => {
-        if (col === currentGOSortColumn) {
-            currentGOSortDir = currentGOSortDir === 'desc' ? 'asc' : 'desc';
-        } else {
-            currentGOSortColumn = col;
-            currentGOSortDir = 'desc'; 
-            if (col === 'tempRank' || col === 'originalRank') currentGOSortDir = 'asc';
-        }
+        if (col === currentGOSortColumn) currentGOSortDir = currentGOSortDir === 'desc' ? 'asc' : 'desc';
+        else { currentGOSortColumn = col; currentGOSortDir = 'desc'; if (col === 'tempRank') currentGOSortDir = 'asc'; }
         updateGOView();
     });
 
     const updateGOView = async () => {
         const tableBody = document.getElementById('scoresBodyGameOver');
         if(tableBody) tableBody.innerHTML = '';
-        
         let rawData = [];
 
         if (goMode === 'local') {
             if(filtersDiv) filtersDiv.style.display = 'none';
             if(clearBtn) clearBtn.style.display = 'inline-block';
             if(loadingMsg) loadingMsg.style.display = 'none';
-            
             rawData = JSON.parse(localStorage.getItem('szkeletal_scores')) || [];
         } else {
             if(filtersDiv) filtersDiv.style.display = 'flex';
             if(clearBtn) clearBtn.style.display = 'none';
-            
             if (cachedGOOnlineScores.length === 0) {
                 if(loadingMsg) loadingMsg.style.display = 'block';
                 cachedGOOnlineScores = await LeaderboardService.getScores(goFilter);
@@ -321,7 +294,6 @@ export function initGameOverTabs() {
             }
             rawData = cachedGOOnlineScores;
         }
-        
         assignRanks(rawData);
         const sortedData = sortData([...rawData], currentGOSortColumn, currentGOSortDir);
         displayScores('scoresBodyGameOver', lastRunData, sortedData); 
@@ -330,18 +302,13 @@ export function initGameOverTabs() {
     if (tabLocal && tabOnline) {
         tabLocal.onclick = () => {
             goMode = 'local';
-            tabLocal.classList.add('active');
-            tabOnline.classList.remove('active');
-            playSound('Click');
-            updateGOView();
+            tabLocal.classList.add('active'); tabOnline.classList.remove('active');
+            playSound('Click'); updateGOView();
         };
         tabOnline.onclick = () => {
             goMode = 'online';
-            tabOnline.classList.add('active');
-            tabLocal.classList.remove('active');
-            cachedGOOnlineScores = [];
-            playSound('Click');
-            updateGOView();
+            tabOnline.classList.add('active'); tabLocal.classList.remove('active');
+            cachedGOOnlineScores = []; playSound('Click'); updateGOView();
         };
     }
 
@@ -351,24 +318,20 @@ export function initGameOverTabs() {
                 filterBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 goFilter = btn.dataset.period;
-                cachedGOOnlineScores = []; 
-                playSound('Click');
-                updateGOView();
+                cachedGOOnlineScores = []; playSound('Click'); updateGOView();
             };
         });
     }
     
-    currentGOSortColumn = 'score';
-    currentGOSortDir = 'desc';
+    currentGOSortColumn = 'score'; currentGOSortDir = 'desc';
     
     if(tabLocal) {
-        if (goMode === 'local') {
-            tabLocal.classList.add('active');
-            if(tabOnline) tabOnline.classList.remove('active');
-        } else {
-            if(tabOnline) tabOnline.classList.add('active');
-            tabLocal.classList.remove('active');
-        }
+        if (goMode === 'local') { tabLocal.classList.add('active'); if(tabOnline) tabOnline.classList.remove('active'); } 
+        else { if(tabOnline) tabOnline.classList.add('active'); tabLocal.classList.remove('active'); }
     }
+    
+    // FIX: Ponowna inicjalizacja przycisku przy otwieraniu Game Over
+    initSubmitButtonLogic();
+    
     updateGOView();
 }

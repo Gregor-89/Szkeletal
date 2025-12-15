@@ -1,28 +1,109 @@
 // ==============
-// LEADERBOARD.JS (v1.02 - Multi-Entry Shadow Ban)
+// LEADERBOARD.JS (v1.10 - Dynamic Nick ID)
 // Lokalizacja: /js/services/leaderboard.js
 // ==============
 
-// Rozbity klucz, aby utrudnić proste wyszukiwanie (Ctrl+F) w kodzie źródłowym
-const _k_parts = ["Rk_e_q710U", "CvW1GYzvME", "3QcKYKhi6V", "50mA5sW-9t", "raiQ"];
-const getKey = () => _k_parts.join('');
+const _t_parts = [
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.",
+    "eyJzdWIiOjEwMjcsImFwaSI6dHJ1ZSwiaWF0IjoxNzY1NzkwMzM5fQ.",
+    "woH9UddSHHOusNui335r_I4MRNPK143nbpt_VarDEaA"
+];
+const getApiKey = () => _t_parts.join('');
 
-const PUBLIC_CODE = "693982968f40bb18648a3aab";
-const BASE_URL = "http://dreamlo.com/lb/";
-const SHADOW_BAN_KEY = "szkeletal_shadow_entry"; // Klucz lokalny dla oszusta
+const API_URL = "https://api.trytalo.com/v1";
+const LEADERBOARD_NAME = "Szkeletal"; 
+const SHADOW_BAN_KEY = "szkeletal_shadow_entry"; 
+const PLAYER_ID_KEY = "szkeletal_player_id"; 
 
-// Limity Sanity Check (Teoretyczne maksima)
 const MAX_SCORE_PER_SECOND = 3000;
 const MAX_KILLS_PER_SECOND = 25;
 
 let cache = {
   data: null,
   lastFetch: 0,
-  CACHE_DURATION: 60000 // 60s
+  CACHE_DURATION: 60000 
 };
 
 let lastSubmissionTime = 0;
-const SUBMISSION_COOLDOWN = 30000; // 30 sekund odstępu między wysyłkami
+const SUBMISSION_COOLDOWN = 30000; 
+let cachedAliasId = null;
+
+function getPlayerIdentifier() {
+    let id = localStorage.getItem(PLAYER_ID_KEY);
+    if (!id) {
+        // Domyślny format: user_LOSOWE
+        id = 'user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        localStorage.setItem(PLAYER_ID_KEY, id);
+    }
+    return id;
+}
+
+// ZMIANA: Funkcja aktualizująca ID gracza o jego nick (np. user_123 -> Koczkodan_123)
+function updatePlayerIdentifierWithNick(nick) {
+    const currentId = getPlayerIdentifier();
+    
+    // Rozbijamy ID na części (zakładamy separator '_')
+    const parts = currentId.split('_');
+    
+    // Bierzemy wszystko po pierwszym podkreślniku jako "unikalny sufiks"
+    // Jeśli nie ma podkreślnika (stare ID?), traktujemy całe ID jako sufiks
+    const suffix = parts.length > 1 ? parts.slice(1).join('_') : parts[0];
+    
+    // Nowe ID: Nick + '_' + stary sufiks
+    // Zamieniamy spacje w nicku na myślniki dla bezpieczeństwa URL
+    const safeNick = nick.replace(/\s+/g, '-');
+    const newId = `${safeNick}_${suffix}`;
+    
+    if (currentId !== newId) {
+        console.log(`[Leaderboard] Aktualizacja ID: ${currentId} -> ${newId}`);
+        localStorage.setItem(PLAYER_ID_KEY, newId);
+        
+        // Resetujemy cachedAliasId, aby wymusić ponowną autoryzację z nowym ID
+        cachedAliasId = null;
+    }
+}
+
+async function authenticateTalo() {
+    if (cachedAliasId) return cachedAliasId;
+
+    const identifier = getPlayerIdentifier();
+    const service = 'username';
+    const url = `${API_URL}/players/identify?identifier=${encodeURIComponent(identifier)}&service=${encodeURIComponent(service)}`; 
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${getApiKey()}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            console.error(`Talo Auth Failed (${response.status})`);
+            return null;
+        }
+        
+        const data = await response.json();
+        
+        if (data.alias && data.alias.id) {
+             cachedAliasId = data.alias.id;
+        } else if (data.aliases && Array.isArray(data.aliases)) {
+            const alias = data.aliases.find(a => a.service === service);
+            if (alias) cachedAliasId = alias.id;
+            if (!cachedAliasId && data.aliases.length > 0) cachedAliasId = data.aliases[0].id;
+        } else if (data.player && data.player.aliases) {
+            const alias = data.player.aliases.find(a => a.service === service);
+            if (alias) cachedAliasId = alias.id;
+        }
+
+        return cachedAliasId;
+
+    } catch (e) {
+        console.error("Talo Auth Network Error:", e);
+        return null;
+    }
+}
 
 export const LeaderboardService = {
   
@@ -34,98 +115,85 @@ export const LeaderboardService = {
   submitScore: async (nick, score, level, timeVal, kills, isCheated = false) => {
     const now = Date.now();
     
-    // 1. Walidacja podstawowa
     if (!nick || nick.trim() === "") return { success: false, msg: "Brak nicku" };
     const cleanNick = nick.replace(/[^a-zA-Z0-9_\- ąęćżźńłóśĄĘĆŻŹŃŁÓŚ]/g, '').substring(0, 20).trim();
-    if (cleanNick.length === 0) return { success: false, msg: "Niepoprawny nick" };
     
-    // 2. Flood Protection (symulujemy też dla czitera, żeby było realistycznie)
     if (now - lastSubmissionTime < SUBMISSION_COOLDOWN) {
-      return { success: false, msg: "Za często wysyłasz (odczekaj 30s)" };
+      return { success: false, msg: "Za często (czekaj 30s)" };
     }
     lastSubmissionTime = now;
     
-    // 3. Wykrywanie oszustwa (Flag & Sanity)
-    let cheatDetected = isCheated;
+    // ZMIANA: Aktualizujemy ID gracza PRZED autoryzacją
+    updatePlayerIdentifierWithNick(cleanNick);
     
-    // Sanity Check (jeśli flaga jeszcze nie została podniesiona)
+    let cheatDetected = isCheated;
     if (!cheatDetected && timeVal > 5 && score > 0) {
       const scoreRatio = score / timeVal;
       const killRatio = kills / timeVal;
-      
-      if (scoreRatio > MAX_SCORE_PER_SECOND || killRatio > MAX_KILLS_PER_SECOND) {
-        console.warn(`[Leaderboard] Sanity Check Fail. ScoreRatio: ${scoreRatio.toFixed(1)}, KillRatio: ${killRatio.toFixed(1)}`);
-        cheatDetected = true;
-      }
+      if (scoreRatio > MAX_SCORE_PER_SECOND || killRatio > MAX_KILLS_PER_SECOND) cheatDetected = true;
     }
     
-    // 4. SHADOW BAN / FAKE SUBMIT
     if (cheatDetected) {
-      console.warn("[Leaderboard] Cheater detected. Performing Shadow Ban submit.");
-      
       const shadowEntry = {
-        name: cleanNick,
-        score: score,
-        time: timeVal,
-        level: level,
-        kills: kills,
+        name: cleanNick, score, time: timeVal, level, kills,
         date: new Date().toISOString()
       };
-      
-      // --- ZMIANA: Obsługa historii wyników czitera ---
       let shadowHistory = [];
       try {
         const stored = localStorage.getItem(SHADOW_BAN_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          // Kompatybilność: Jeśli stary zapis był pojedynczym obiektem, zamień na tablicę
-          if (Array.isArray(parsed)) {
-            shadowHistory = parsed;
-          } else if (typeof parsed === 'object') {
-            shadowHistory = [parsed];
-          }
+          shadowHistory = Array.isArray(parsed) ? parsed : [parsed];
         }
-      } catch (e) {
-        console.error("Shadow History Parse Error", e);
-        shadowHistory = [];
-      }
+      } catch (e) {}
       
-      // Dodajemy nowy wynik do historii
       shadowHistory.push(shadowEntry);
-      
-      // Opcjonalnie: Limit np. 50 ostatnich oszustw, żeby nie zapchać localStorage
-      if (shadowHistory.length > 50) {
-        shadowHistory.shift(); // Usuń najstarszy
-      }
-      
-      // Zapisz z powrotem
+      if (shadowHistory.length > 50) shadowHistory.shift();
       localStorage.setItem(SHADOW_BAN_KEY, JSON.stringify(shadowHistory));
-      // ------------------------------------------------
-      
-      // Czyścimy cache, żeby cziter od razu zobaczył swój "sukces" na liście
       LeaderboardService.clearCache();
-      
-      return { success: true, msg: "Wysłano pomyślnie!" };
+      return { success: true, msg: "Wysłano pomyślnie!" }; 
     }
     
-    // 5. Właściwe wysłanie (Uczciwy gracz)
-    const safeNick = encodeURIComponent(cleanNick);
-    const extraData = `${level}|${kills}`;
-    const privateKey = getKey();
-    
-    const url = `${BASE_URL}${privateKey}/add/${safeNick}/${score}/${timeVal}/${extraData}`;
-    
     try {
-      const response = await fetch(url);
-      if (response.ok) {
-        LeaderboardService.clearCache();
-        return { success: true };
-      } else {
-        return { success: false, msg: "Błąd sieci" };
-      }
+        let aliasId = await authenticateTalo();
+        
+        if (!aliasId) {
+            aliasId = await authenticateTalo();
+            if (!aliasId) return { success: false, msg: "Błąd autoryzacji" };
+        }
+
+        const entryUrl = `${API_URL}/leaderboards/${LEADERBOARD_NAME}/entries`;
+        
+        const propsArray = [
+            { key: "nickname", value: cleanNick },
+            { key: "level", value: level.toString() },
+            { key: "kills", value: kills.toString() },
+            { key: "time", value: timeVal.toString() }
+        ];
+
+        const response = await fetch(entryUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${getApiKey()}`,
+                'Content-Type': 'application/json',
+                'x-talo-alias': aliasId
+            },
+            body: JSON.stringify({
+                score: score,
+                props: propsArray
+            })
+        });
+
+        if (response.ok) {
+            LeaderboardService.clearCache();
+            return { success: true };
+        } else {
+            return { success: false, msg: "Błąd serwera" };
+        }
+
     } catch (e) {
-      console.error("Leaderboard Submit Error:", e);
-      return { success: false, msg: "Błąd sieci" };
+        console.error("Network Error:", e);
+        return { success: false, msg: "Błąd sieci" };
     }
   },
   
@@ -136,107 +204,77 @@ export const LeaderboardService = {
     if (cache.data && (now - cache.lastFetch < cache.CACHE_DURATION)) {
       entries = cache.data;
     } else {
-      const url = `${BASE_URL}${PUBLIC_CODE}/json`;
+      let url = `${API_URL}/leaderboards/${LEADERBOARD_NAME}/entries?page=0&limit=50&withDeleted=false`;
+      
+      if (period !== 'all') {
+          const dateNow = new Date();
+          let startDate;
+          if (period === 'today') startDate = new Date(dateNow.setHours(0,0,0,0)).toISOString();
+          else if (period === 'weekly') startDate = new Date(dateNow.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+          else if (period === 'monthly') startDate = new Date(dateNow.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+          if(startDate) url += `&startDate=${startDate}`;
+      }
+
       try {
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        let rawEntries = [];
-        if (data && data.dreamlo && data.dreamlo.leaderboard) {
-          const lb = data.dreamlo.leaderboard.entry;
-          if (Array.isArray(lb)) {
-            rawEntries = lb;
-          } else if (lb) {
-            rawEntries = [lb];
-          }
-        }
-        
-        entries = rawEntries.map(entry => {
-          let level = 1;
-          let kills = 0;
-          
-          if (entry.text && entry.text.includes('|')) {
-            const parts = entry.text.split('|');
-            level = parseInt(parts[0]) || 1;
-            kills = parseInt(parts[1]) || 0;
-          }
-          
-          const dateStr = entry.date;
-          let entryDate = new Date(dateStr);
-          if (isNaN(entryDate.getTime())) entryDate = new Date();
-          
-          let decodedName = entry.name;
-          try { decodedName = decodeURIComponent(entry.name); } catch (e) {}
-          
-          return {
-            name: decodedName,
-            score: parseInt(entry.score) || 0,
-            time: parseInt(entry.seconds) || 0,
-            level: level,
-            kills: kills,
-            date: entryDate
-          };
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${getApiKey()}`,
+                'Content-Type': 'application/json'
+            }
         });
         
+        const data = await response.json();
+        
+        if (data.entries && Array.isArray(data.entries)) {
+            entries = data.entries.map(e => {
+                let propsMap = {};
+                if (Array.isArray(e.props)) e.props.forEach(p => { propsMap[p.key] = p.value; });
+                else if (typeof e.props === 'object') propsMap = e.props; 
+
+                let nick = propsMap.nickname || "Anonim";
+                let lvl = parseInt(propsMap.level) || 1;
+                let kls = parseInt(propsMap.kills) || 0;
+                let tm = parseInt(propsMap.time) || 0;
+
+                let dateStr = e.createdAt || e.created_at || e.updatedAt || new Date().toISOString();
+                let entryDate = new Date(dateStr);
+                if (isNaN(entryDate.getTime())) entryDate = new Date(); 
+
+                return {
+                    name: nick,
+                    score: parseFloat(e.score),
+                    time: tm,
+                    level: lvl,
+                    kills: kls,
+                    date: entryDate
+                };
+            });
+        }
         cache.data = entries;
         cache.lastFetch = now;
-        
       } catch (e) {
         console.error("Leaderboard Fetch Error:", e);
         entries = [];
       }
     }
     
-    // --- SHADOW BAN INJECTION (MULTI) ---
     let displayEntries = [...entries];
-    
     const shadowString = localStorage.getItem(SHADOW_BAN_KEY);
     if (shadowString) {
       try {
         const parsed = JSON.parse(shadowString);
-        
-        // Obsługa zarówno starego formatu (obiekt) jak i nowego (tablica)
-        let shadowList = [];
-        if (Array.isArray(parsed)) {
-          shadowList = parsed;
-        } else if (typeof parsed === 'object') {
-          shadowList = [parsed];
-        }
-        
-        // Wstrzykujemy wszystkie wyniki z historii cienia
+        let shadowList = Array.isArray(parsed) ? parsed : [parsed];
         shadowList.forEach(item => {
-          // Musimy odtworzyć obiekt Date, bo z JSON-a wrócił jako string
-          const injectedEntry = {
-            ...item,
-            date: new Date(item.date)
-          };
-          displayEntries.push(injectedEntry);
+          const itemDate = new Date(item.date);
+          const dateNow = new Date();
+          let show = true;
+          if (period === 'today' && itemDate < new Date(dateNow.setHours(0,0,0,0))) show = false;
+          if (show) displayEntries.push({ ...item, date: itemDate });
         });
-        
-        // Ponowne sortowanie całej zmieszanej listy
-        displayEntries.sort((a, b) => b.score - a.score);
-        
-      } catch (e) {
-        console.error("Shadow Entry Parse Error", e);
-      }
-    }
-    // -----------------------------
-    
-    let filteredScores = [...displayEntries];
-    const dateNow = new Date();
-    const startOfDay = new Date(dateNow.getFullYear(), dateNow.getMonth(), dateNow.getDate());
-    
-    if (period === 'today') {
-      filteredScores = filteredScores.filter(s => s.date >= startOfDay);
-    } else if (period === 'weekly') {
-      const weekAgo = new Date(dateNow.getTime() - 7 * 24 * 60 * 60 * 1000);
-      filteredScores = filteredScores.filter(s => s.date >= weekAgo);
-    } else if (period === 'monthly') {
-      const monthAgo = new Date(dateNow.getTime() - 30 * 24 * 60 * 60 * 1000);
-      filteredScores = filteredScores.filter(s => s.date >= monthAgo);
+      } catch (e) { }
     }
     
-    // Przycinamy listę do np. 100 wyników, żeby nie była za długa (oszust może mieć dużo wpisów)
-    return filteredScores.slice(0, 100);
+    displayEntries.sort((a, b) => b.score - a.score);
+    return displayEntries.slice(0, 100);
   }
 };
