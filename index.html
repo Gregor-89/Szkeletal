@@ -97,6 +97,7 @@
             <img src="img/logo.png" alt="Szkeletal" class="pixel-logo">
             <div class="version-tag" id="menuVersionTag"></div> 
         </div>
+        
         <div class="menu-list">
             <button id="btnStart" class="retro-btn primary pulse">NOWA GRA</button>
             <button id="btnContinue" class="retro-btn warning" style="display:none;">KONTYNUUJ</button>
@@ -109,6 +110,12 @@
             <div class="spacer"></div>
             <button id="navDev" class="retro-btn small text-red">DEV TOOLS</button>
         </div>
+        
+        <div id="mainMenuStats" style="margin-top: 15px; font-size: 1rem; color: #aaa; text-align: center; font-family: 'VT323', monospace; text-transform: uppercase;">
+            <span id="lblMainPlayers">GRACZY:</span> <span id="valMainPlayers" style="color: #FFD700; margin-right: 10px;">...</span>
+            <span id="lblMainGames">GIER:</span> <span id="valMainGames" style="color: #4CAF50;">...</span>
+        </div>
+
       </div>
 
       <div id="view-scores" class="menu-view">
@@ -117,6 +124,7 @@
         <div class="score-tabs-container">
             <button id="tabLocalScores" class="score-tab active">LOKALNE</button>
             <button id="tabOnlineScores" class="score-tab">ONLINE</button>
+            <button id="tabStats" class="score-tab">STATYSTYKI</button>
         </div>
         
         <div id="onlineFilters" class="score-filters" style="display:none;">

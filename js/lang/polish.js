@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v1.04 - Snake Heal Quote)
+// POLISH.JS (v1.06 - Grammar Fixes & Playtime)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -63,8 +63,6 @@ export const LANG_PL = {
   
   warning_hunger: "GŁÓD!",
   shrine_text: "Rzyć umyta, sytość zdobyta",
-  
-  // NOWOŚĆ: Teksty leczenia
   snake_heal_text: "Rzyć wylizana, sytość odzyskana",
   snake_heal_quote_enemy: "Mmm, ja zrobić Panu dobrze, HAU HAU!",
   
@@ -310,5 +308,33 @@ export const LANG_PL = {
   quote_gameover_11: "Ssiesz w tą grę jak Wężojad Kiszczaka...",
   quote_gameover_12: "Nawet Dadgamerom dłużej stoi niż Ty syty jesteś...",
   quote_gameover_13: "Z ciebie taki gamer jak z Kiszczaka ludolog.",
-  quote_gameover_14: "Chyba dziś nic z tych ziemniaczków nie będzie..."
+  quote_gameover_14: "Chyba dziś nic z tych ziemniaczków nie będzie...",
+  
+  // STATYSTYKI (Game Stats) - POPRAWKI NAZZEWNICTWA
+  ui_tab_stats: "STATYSTYKI",
+  ui_stat_header_name: "NAZWA DANEJ",
+  ui_stat_header_local: "TY (Lokalnie)",
+  ui_stat_header_global: "ŚWIAT (Globalnie)",
+  
+  stat_games_played: "Rozegranych Gier",
+  stat_unique_players: "Unikalnych Graczy",
+  stat_deaths: "Zgonów Drakula",
+  stat_enemies_killed: "Łącznie Zabito",
+  stat_potatoes_collected: "Zebrano Ziemniaczków",
+  
+  // Nowa statystyka czasu gry
+  stat_total_playtime: "Łącznie Przegranego Czasu",
+  
+  // Poprawna odmiana (dopełniacz)
+  stat_killed_standard: "Zabitych Dadgamerów",
+  stat_killed_horde: "Zabitych Maćków z Czatu",
+  stat_killed_aggressive: "Zabitych Prowokatorów",
+  stat_killed_kamikaze: "Zabitych Trolli",
+  stat_killed_splitter: "Zabitych Wykopków",
+  stat_killed_tank: "Zabitych Szkeletalów",
+  stat_killed_ranged: "Zabitych Meneli",
+  stat_killed_elite: "Zabitych Elden Hejterów",
+  stat_killed_wall: "Zniszczonych Syndromów Oblężenia",
+  stat_killed_lumberjack: "Zabitych Drwali Zjebadlo",
+  stat_killed_snakeEater: "Zabitych Wężojadów"
 };

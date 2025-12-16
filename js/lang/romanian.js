@@ -1,5 +1,5 @@
 // ==============
-// ROMANIAN.JS (v1.03 - Snake Heal Quote)
+// ROMANIAN.JS (v1.05 - Playtime)
 // Lokalizacja: /js/lang/romanian.js
 // ==============
 
@@ -191,15 +191,11 @@ export const LANG_RO = {
   enemy_wall_desc: "Apare într-un inel perfect. Foarte lent și durabil. După un timp (aprox. 34-40s), detonează, distrugând totul în jur.",
   enemy_lumberjack_name: "Tăietor Zjebadlo",
   enemy_lumberjack_desc: "Un boss puternic din pădure. Aruncă topoare curcubeu care se rotesc. Atenție la \"Urma Curcubeu\"!",
-  // ZMIANA: Tłumaczenia Wężojada (v1.02)
   enemy_snakeEater_name: "Mâncător de Șerpi",
   enemy_snakeEater_desc: "Altar Mobil. Nu atacă. Îl urmează pe Conte. Te vindecă o dată pe minut dacă îl atingi.",
   snake_heal_text: "Fund lins, sațietate recuperată",
-  
-  // NOWOŚĆ: Cytat Wężojada (RO)
   snake_heal_quote_enemy: "Mmm, eu fac bine Domnului, HAM HAM!",
   
-  // ZMIANA: Cytaty Wężojada (RO)
   quote_snake_1: "HAM HAM!",
   quote_snake_2: "Știi cum latră câinii în română? HAM HAM!",
   quote_snake_3: "Nu ai nevoie de skill să joci jocuri stealth.",
@@ -219,65 +215,28 @@ export const LANG_RO = {
   quote_snake_17: "Poate vorbim despre fapte?",
   quote_snake_18: "Pot primi un cartof, Domnul meu?",
   
-  enemy_hazard_name: "Canalizarea",
-  enemy_hazard_desc: "Încetinește Contele și provoacă daune. Rănește și haterii (cu excepția Szkeletal). Cartofii lăsați aici se strică.",
-  enemy_megahazard_name: "Câmp de Dramă",
-  enemy_megahazard_desc: "Versiunea \"Mega\". O arie mult mai mare a Canalizării, provocând daune crescute.",
-  perk_whip_name: "Bătătorul Contesei",
-  perk_whip_desc: "Arma de start. Bate orizontal. Străpunge toți adversarii. Nivelurile cresc numărul de lovituri (față/spate).",
-  perk_autogun_name: "Scuipător de Venin",
-  perk_autogun_desc: "Armă automată care scuipă venin toxic în cel mai apropiat hater. Nu are niveluri proprii – se upgradează prin perk-uri separate.",
-  perk_orbital_name: "Cartofi Orbitali",
-  perk_orbital_desc: "Artefacte-cartof care se rotesc. Nivelurile cresc numărul de cartofi, raza și viteza.",
-  perk_nova_name: "Explozie Mentală",
-  perk_nova_desc: "Emanție ciclică de \"pato-lore\". Împrăștie proiectile de venin în jur.",
-  perk_chainLightning_name: "Fulgerul Ludologului",
-  perk_chainLightning_desc: "Atac automat care lovește cel mai apropiat hater și sare la următorii.",
-  perk_firerate_name: "Venin Rapid",
-  perk_firerate_desc: "Pentru că ura trebuie livrată repede! Crește viteza de tragere a Scuipătorului cu +20%.",
-  perk_damage_name: "Venin Dureros",
-  perk_damage_desc: "Creștere obiectivă a toxicității. Adaugă +1 daună de bază proiectilelor.",
-  perk_multishot_name: "Venin Multiplu",
-  perk_multishot_desc: "Diversificare verticală. Trage +1 proiectil suplimentar.",
-  perk_pierce_name: "Venin Pătrunzător",
-  perk_pierce_desc: "Veninul tău este atât de coroziv încât străpunge narațiunea. Proiectilele trec prin +1 inamic.",
-  perk_speed_name: "Viteza de Evadare",
-  perk_speed_desc: "Chiar și un Conte trebuie să se repoziționeze. Crește viteza de mișcare cu +10%.",
-  perk_pickup_name: "Raza de Hrănire",
-  perk_pickup_desc: "Cu cât foamea e mai mare, cu atât mâinile sunt mai lungi. Crește raza de atracție cu +40%.",
-  perk_health_name: "Nivel Sațietate",
-  perk_health_desc: "Un stomac mai mare pentru ură. Crește Sațietatea maximă cu +20 și vindecă 20 HP.",
-  ui_stat_level: "Nivel",
-  ui_stat_health: "HP",
-  ui_stat_speed: "Viteză",
-  ui_stat_enemies: "Kills",
-  ui_stat_time: "Timp",
+  // STATS (Game Stats)
+  ui_tab_stats: "STATISTICI",
+  ui_stat_header_name: "METRICĂ",
+  ui_stat_header_local: "TU (Local)",
+  ui_stat_header_global: "LUME (Global)",
   
-  ui_scores_local: "LOCAL",
-  ui_scores_online: "ONLINE",
-  ui_filter_today: "AZI",
-  ui_filter_weekly: "SĂPT",
-  ui_filter_monthly: "LUNĂ",
-  ui_filter_all: "TOT",
+  stat_games_played: "Jocuri Jucate",
+  stat_unique_players: "Jucători Unici",
+  stat_deaths: "Decese",
+  stat_enemies_killed: "Inamici Uciși",
+  stat_potatoes_collected: "Cartofi Colectați",
+  stat_total_playtime: "Timp Total de Joc",
   
-  ui_gameover_score_label: "SCORUL TĂU",
-  ui_gameover_time_label: "TIMP",
-  ui_gameover_level_label: "NIVEL",
-  ui_gameover_kills_label: "UCIDERI",
-  
-  // NEW QUOTES (v1.00)
-  quote_gameover_1: "Adună-te, joci ca un ludolog.",
-  quote_gameover_2: "Probabil ești praf la Souls ca și Kiszczak...",
-  quote_gameover_3: "Relaxează-te. Kiszczak e praf și la alte jocuri...",
-  quote_gameover_4: "Ai dat 20%, tot e mai mult decât Arkadikutas la o recenzie...",
-  quote_gameover_5: "Cu așa joc nu meriți cartofi delicioși...",
-  quote_gameover_6: "Tăietorul Zjebadlo taie mai bine decât joci tu...",
-  quote_gameover_7: "Ce faci, Mâncător de Șerpi, nu faci față?",
-  quote_gameover_8: "Bați vagabondul sau te bate el pe tine?",
-  quote_gameover_9: "Doar să nu fugi în România de rușine...",
-  quote_gameover_10: "Apare Skelatel înainte să atingi verticalitatea!",
-  quote_gameover_11: "Ești praf la jocul ăsta...",
-  quote_gameover_12: "Chiar și Dadgamerii rezistă mai mult decât sațietatea ta...",
-  quote_gameover_13: "Ești gamer cum e Kiszczak ludolog.",
-  quote_gameover_14: "Se pare că azi nu primești cartofi..."
+  stat_killed_standard: "Dadgameri Uciși",
+  stat_killed_horde: "Trolli de Chat Uciși",
+  stat_killed_aggressive: "Provocatori Uciși",
+  stat_killed_kamikaze: "Trolli Uciși",
+  stat_killed_splitter: "Săpători Uciși",
+  stat_killed_tank: "Szkeletali Uciși",
+  stat_killed_ranged: "Vagabonzi Uciși",
+  stat_killed_elite: "Elden Hateri Uciși",
+  stat_killed_wall: "Asedii Distruse",
+  stat_killed_lumberjack: "Tăietori Uciși",
+  stat_killed_snakeEater: "Mâncători de Șerpi Uciși"
 };

@@ -1,5 +1,5 @@
 // ==============
-// LEADERBOARDUI.JS (v1.06 - Z-Index & Log Fix)
+// LEADERBOARDUI.JS (v1.09 - Added Playtime Row)
 // Lokalizacja: /js/ui/leaderboardUI.js
 // ==============
 
@@ -8,17 +8,13 @@ import { playSound } from '../services/audio.js';
 import { displayScores } from '../services/scoreManager.js';
 import { LeaderboardService } from '../services/leaderboard.js';
 import { finalScore, finalLevel, finalTime } from './domElements.js';
+import { ENEMY_STATS } from '../config/gameData.js'; 
 
 let lastRunData = null;
 let gameRef = null; 
 
-export function setLastRun(runData) {
-    lastRunData = runData;
-}
-
-export function setGameRef(gameInstance) {
-    gameRef = gameInstance;
-}
+export function setLastRun(runData) { lastRunData = runData; }
+export function setGameRef(gameInstance) { gameRef = gameInstance; }
 
 // --- STAN LEADERBOARD ---
 let currentLeaderboardMode = 'local';
@@ -62,6 +58,22 @@ function assignRanks(data) {
     return data;
 }
 
+function formatPlaytime(seconds) {
+    if (!seconds) return "0s";
+    const d = Math.floor(seconds / (3600*24));
+    const h = Math.floor((seconds % (3600*24)) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    
+    let parts = [];
+    if (d > 0) parts.push(d + "d");
+    if (h > 0) parts.push(h + "h");
+    if (m > 0) parts.push(m + "m");
+    if (s > 0 || parts.length === 0) parts.push(s + "s");
+    
+    return parts.join(" ");
+}
+
 function setupTableSorting(tableId, callback) {
     const table = document.getElementById(tableId);
     if (!table) return;
@@ -81,11 +93,24 @@ function setupTableSorting(tableId, callback) {
 export function initLeaderboardUI() {
     const tabLocal = document.getElementById('tabLocalScores');
     const tabOnline = document.getElementById('tabOnlineScores');
+    
+    const tabsContainer = document.querySelector('.score-tabs-container');
+    let tabStats = document.getElementById('tabStats');
+    if (tabsContainer && !tabStats) {
+        tabStats = document.createElement('button');
+        tabStats.id = 'tabStats';
+        tabStats.className = 'score-tab';
+        tabStats.textContent = getLang('ui_tab_stats') || 'STATYSTYKI';
+        tabsContainer.appendChild(tabStats);
+    }
+
     const filtersDiv = document.getElementById('onlineFilters');
     const clearBtn = document.getElementById('btnClearScoresMenu');
     const filterBtns = document.querySelectorAll('.filter-btn');
+    const tableHeader = document.querySelector('#retroScoreTable thead tr');
 
     setupTableSorting('retroScoreTable', (col) => {
+        if (currentLeaderboardMode === 'stats') return; 
         if (col === currentSortColumn) currentSortDir = currentSortDir === 'desc' ? 'asc' : 'desc';
         else { currentSortColumn = col; currentSortDir = 'desc'; if (col === 'tempRank') currentSortDir = 'asc'; }
         updateView();
@@ -95,8 +120,78 @@ export function initLeaderboardUI() {
         const tableBody = document.getElementById('scoresBodyMenu');
         const emptyMsg = document.getElementById('scoresEmptyMsg');
         const loadingMsg = document.getElementById('scoreLoading');
+        
         if(tableBody) tableBody.innerHTML = '';
         if(emptyMsg) emptyMsg.style.display = 'none';
+
+        if (currentLeaderboardMode === 'stats') {
+            if(filtersDiv) filtersDiv.style.display = 'none';
+            if(clearBtn) clearBtn.style.display = 'none';
+            
+            if(tableHeader) tableHeader.innerHTML = `
+                <th>${getLang('ui_stat_header_name') || 'METRYKA'}</th>
+                <th style="color:#4CAF50">${getLang('ui_stat_header_local') || 'TY'}</th>
+                <th style="color:#FFD700">${getLang('ui_stat_header_global') || 'ŚWIAT'}</th>
+            `;
+            
+            if(loadingMsg) loadingMsg.style.display = 'block';
+            
+            const globalStats = await LeaderboardService.getGlobalStats();
+            const localStats = LeaderboardService.getLocalStats();
+            
+            if(loadingMsg) loadingMsg.style.display = 'none';
+            
+            // ZMIANA: Dodano total_playtime_seconds do listy
+            let statRows = [
+                { key: 'games_played', label: getLang('stat_games_played') },
+                { key: 'unique_players', label: getLang('stat_unique_players') },
+                { key: 'total_playtime_seconds', label: getLang('stat_total_playtime') },
+                { key: 'deaths', label: getLang('stat_deaths') },
+                { key: 'enemies_killed', label: getLang('stat_enemies_killed') },
+                { key: 'potatoes_collected', label: getLang('stat_potatoes_collected') }
+            ];
+
+            Object.keys(ENEMY_STATS).forEach(type => {
+                statRows.push({
+                    key: `killed_${type}`,
+                    label: getLang(`stat_killed_${type}`) || `${type} (Kills)`
+                });
+            });
+            
+            statRows.forEach(def => {
+                const tr = document.createElement('tr');
+                let localVal = localStats[def.key] || 0;
+                let globalVal = globalStats[def.key] || 0;
+                
+                if (def.key === 'total_playtime_seconds') {
+                    localVal = formatPlaytime(localVal);
+                    globalVal = formatPlaytime(globalVal);
+                } else {
+                    localVal = localVal.toLocaleString();
+                    globalVal = globalVal.toLocaleString();
+                }
+                
+                tr.innerHTML = `
+                    <td style="text-align:left; padding-left:20px;">${def.label || def.key}</td>
+                    <td style="color:#81C784">${localVal}</td>
+                    <td style="color:#FFD700">${globalVal}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+            return;
+        }
+        
+        if(tableHeader) {
+             tableHeader.innerHTML = `
+                <th>#</th>
+                <th data-sort="name">NICK</th>
+                <th data-sort="score">PKT</th>
+                <th data-sort="kills">ZAB</th>
+                <th data-sort="level">LVL</th>
+                <th data-sort="time">CZAS</th>
+                <th data-sort="date">DATA</th>
+             `;
+        }
 
         let rawData = [];
         if (currentLeaderboardMode === 'local') {
@@ -129,13 +224,22 @@ export function initLeaderboardUI() {
         tabLocal.onclick = () => {
             currentLeaderboardMode = 'local';
             tabLocal.classList.add('active'); tabOnline.classList.remove('active');
+            if(tabStats) tabStats.classList.remove('active');
             playSound('Click'); updateView();
         };
         tabOnline.onclick = () => {
             currentLeaderboardMode = 'online';
             tabOnline.classList.add('active'); tabLocal.classList.remove('active');
+            if(tabStats) tabStats.classList.remove('active');
             cachedOnlineScores = []; playSound('Click'); updateView();
         };
+        if(tabStats) {
+            tabStats.onclick = () => {
+                currentLeaderboardMode = 'stats';
+                tabStats.classList.add('active'); tabLocal.classList.remove('active'); tabOnline.classList.remove('active');
+                playSound('Click'); updateView();
+            };
+        }
     }
 
     if(filterBtns) {
@@ -161,11 +265,9 @@ export function initLeaderboardUI() {
         });
     }
     
-    // Inicjalizacja przycisku Submit w menu (rzadko używane, ale niech będzie)
     initSubmitButtonLogic();
 }
 
-// --- LOGIKA PRZYCISKU WYŚLIJ WYNIK ---
 function initSubmitButtonLogic() {
     const btnSubmit = document.getElementById('btnSubmitScore');
     const overlay = document.getElementById('nickInputOverlay');
@@ -207,33 +309,16 @@ function initSubmitButtonLogic() {
     };
 
     if (btnSubmit) {
-        // Czyścimy poprzedni listener
         btnSubmit.onclick = null;
-        
-        btnSubmit.onclick = (e) => {
-            console.log("[LeaderboardUI] Kliknięto WYŚLIJ WYNIK"); // DEBUG LOG
-            
+        btnSubmit.onclick = () => {
             let currentNick = localStorage.getItem('szkeletal_player_nick') || "";
             if (!currentNick || currentNick === "GRACZ" || currentNick === "") currentNick = "ANON";
-            
             if(overlay) {
-                console.log("[LeaderboardUI] Otwieram modal...");
-                // FIX: Max Int Z-Index, żeby na pewno było na wierzchu
                 overlay.style.zIndex = "2147483647"; 
                 overlay.style.display = 'flex';
-                
-                setTimeout(() => {
-                    if(inpQuick) {
-                        inpQuick.value = currentNick;
-                        inpQuick.focus();
-                    }
-                }, 100);
-            } else {
-                console.error("[LeaderboardUI] Błąd: Brak elementu overlay (nickInputOverlay)!");
+                setTimeout(() => { if(inpQuick) { inpQuick.value = currentNick; inpQuick.focus(); } }, 100);
             }
         };
-    } else {
-        console.warn("[LeaderboardUI] Błąd: Brak przycisku btnSubmitScore!");
     }
 
     if (btnConfirm && inpQuick && overlay) {
@@ -241,25 +326,20 @@ function initSubmitButtonLogic() {
             let val = inpQuick.value.replace(/[^a-zA-Z0-9_\- ąęćżźńłóśĄĘĆŻŹŃŁÓŚ]/g, '').toUpperCase();
             if(val.length === 0) val = "ANON";
             if(val.length > 20) val = val.substring(0, 20); 
-            
             localStorage.setItem('szkeletal_player_nick', val);
             const inpMain = document.getElementById('inpPlayerNick');
             if(inpMain) inpMain.value = val;
-            
             overlay.style.display = 'none';
             performSubmit(val);
         };
     }
 
     if (btnCancel && overlay) {
-        btnCancel.onclick = () => {
-            overlay.style.display = 'none';
-        };
+        btnCancel.onclick = () => { overlay.style.display = 'none'; };
     }
 }
 
 // --- GAME OVER SCREEN ---
-
 export function initGameOverTabs() {
     const tabLocal = document.getElementById('tabGOLocal');
     const tabOnline = document.getElementById('tabGOOnline');
@@ -330,8 +410,6 @@ export function initGameOverTabs() {
         else { if(tabOnline) tabOnline.classList.add('active'); tabLocal.classList.remove('active'); }
     }
     
-    // FIX: Ponowna inicjalizacja przycisku przy otwieraniu Game Over
     initSubmitButtonLogic();
-    
     updateGOView();
 }

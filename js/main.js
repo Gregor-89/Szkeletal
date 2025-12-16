@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v1.01 - Loading Count & Anti-Cheat)
+// MAIN.JS (v1.05 - Clean & Stats)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -29,6 +29,7 @@ import { VERSION } from './config/version.js';
 import { displayScores } from './services/scoreManager.js';
 import { getLang } from './services/i18n.js';
 import { generateMap } from './managers/mapManager.js'; 
+import { LeaderboardService } from './services/leaderboard.js'; 
 
 class Camera {
     constructor(worldWidth, worldHeight, viewWidth, viewHeight) {
@@ -46,7 +47,7 @@ let ctx = null;
 const splashOverlay = document.getElementById('splashOverlay');
 const loadingOverlay = document.getElementById('loadingOverlay'); 
 const loadingBarFill = document.getElementById('loadingBarFill'); 
-const loadingText = document.getElementById('loadingText'); // Referencja do tekstu
+const loadingText = document.getElementById('loadingText');
 const tutorialOverlay = document.getElementById('tutorialOverlay');
 const introOverlay = document.getElementById('introOverlay');
 
@@ -57,20 +58,17 @@ let frameCount = 0;
 let lastEnemyCounterUpdate = 0;
 const ENEMY_COUNTER_UPDATE_INTERVAL = 200;
 
-// --- ANTI-CHEAT SETUP ---
-const SALT = 7492; // Losowa liczba "sól"
-const encrypt = (val) => Math.floor((val * 17 + SALT) ^ 0xDEADBEEF); // Prosta funkcja haszująca
+const SALT = 7492; 
+const encrypt = (val) => Math.floor((val * 17 + SALT) ^ 0xDEADBEEF); 
 
-// Obiekt wewnętrzny przechowujący prawdziwe wartości
 const _gState = {
     score: 0,
     health: PLAYER_CONFIG.INITIAL_HEALTH,
-    _sShadow: encrypt(0), // Cień wyniku
-    _hShadow: encrypt(PLAYER_CONFIG.INITIAL_HEALTH), // Cień zdrowia
-    _cheater: false // Flaga "Brudnej Gry"
+    _sShadow: encrypt(0), 
+    _hShadow: encrypt(PLAYER_CONFIG.INITIAL_HEALTH), 
+    _cheater: false 
 };
 
-// Obiekt game jako publiczny interfejs z "pułapkami" (Gettery/Settery)
 const game = {
   level:1, maxHealth: PLAYER_CONFIG.INITIAL_HEALTH, 
   time:0, running:false, paused:true, inMenu:true,
@@ -94,22 +92,19 @@ const game = {
   quoteTimer: 0
 };
 
-// Zabezpieczenie SCORE
 Object.defineProperty(game, 'score', {
     get: () => _gState.score,
     set: (val) => {
-        // Jeśli aktualna wartość nie zgadza się z cieniem, ktoś grzebał w pamięci/konsoli
         if (encrypt(_gState.score) !== _gState._sShadow) {
             _gState._cheater = true;
             console.warn("Integrity Check Fail: Score corrupted!");
         }
         _gState.score = val;
-        _gState._sShadow = encrypt(val); // Aktualizacja cienia
+        _gState._sShadow = encrypt(val);
     },
     enumerable: true
 });
 
-// Zabezpieczenie HEALTH
 Object.defineProperty(game, 'health', {
     get: () => _gState.health,
     set: (val) => {
@@ -123,7 +118,6 @@ Object.defineProperty(game, 'health', {
     enumerable: true
 });
 
-// Zabezpieczenie FLAGI (tylko do odczytu publicznie, zapis przez metodę)
 Object.defineProperty(game, 'isCheated', {
     get: () => _gState._cheater,
     set: (val) => { 
@@ -132,14 +126,11 @@ Object.defineProperty(game, 'isCheated', {
     enumerable: true
 });
 
-// Helper dla systemu zapisu, aby wyciągnąć cienie
 game._getShadows = () => ({ s: _gState._sShadow, h: _gState._hShadow, c: _gState._cheater });
-// Helper dla systemu odczytu, aby przywrócić cienie
 game._setShadows = (s, h, c) => {
     _gState._sShadow = s;
     _gState._hShadow = h;
     _gState._cheater = c;
-    // Weryfikacja po wczytaniu
     if (encrypt(game.score) !== s || encrypt(game.health) !== h) {
         _gState._cheater = true;
         console.warn("Save File Integrity Check Failed!");
@@ -301,7 +292,6 @@ function update(dt){
       canvas.style.backgroundPosition = `${-roundedX}px ${-roundedY}px`;
   }
   
-  // Weryfikacja integralności w pętli (co jakiś czas, np. losowo)
   if (Math.random() < 0.01) {
       if (encrypt(game.score) !== _gState._sShadow) game.isCheated = true;
       if (encrypt(game.health) !== _gState._hShadow) game.isCheated = true;
@@ -372,6 +362,8 @@ function loop(currentTime){
                 game.isDying = true;
                 player.startDeath();
                 playSound('Death'); 
+                
+                LeaderboardService.trackStat('deaths', 1);
                 
                 const particleCount = 150; 
                 for (let k = 0; k < particleCount; k++) {
@@ -460,6 +452,7 @@ function launchApp() {
     console.log('[Main] Startowanie aplikacji...');
     
     initAudio();
+    LeaderboardService.trackUniquePlayer();
 
     const totalAssets = (loadAssets.totalAssets || 50) + (loadAudio.totalSounds || 20);
     let loadedCount = 0;
@@ -470,7 +463,6 @@ function launchApp() {
         
         if(loadingBarFill) loadingBarFill.style.width = `${pct}%`;
         
-        // ZMIANA: Aktualizacja tekstu ładowania o licznik
         if(loadingText) {
             loadingText.textContent = `WCZYTYWANIE ZASOBÓW... (${loadedCount}/${totalAssets})`;
         }

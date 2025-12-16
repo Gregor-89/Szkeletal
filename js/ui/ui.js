@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.0f - Map Reset Fix)
+// UI.JS (v1.11 - Stats Logic)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -16,12 +16,12 @@ import {
 import { formatTime, saveScore, attachClearScoresListeners, displayScores } from '../services/scoreManager.js';
 import { updateStatsUI } from '../managers/levelManager.js';
 import { VERSION } from '../config/version.js'; 
-// ZMIANA: Dodano import generatora mapy
 import { generateMap } from '../managers/mapManager.js';
 
 import * as Hud from './hud.js';
 import * as Menus from './menus.js';
 import * as LeaderboardUI from './leaderboardUI.js';
+import { LeaderboardService } from '../services/leaderboard.js'; 
 
 let hpBarOuterRef = null;
 
@@ -54,6 +54,7 @@ export function showMenu(game, resetAllFn, uiData, allowContinue = false) {
     }
     
     Menus.switchView('view-main');
+    
     if(menuOverlay) menuOverlay.style.display = 'flex';
     
     Menus.updateStaticTranslations(); 
@@ -131,7 +132,11 @@ export function startRun(game, resetAllFn, uiData) {
         uiData.settings.currentSiegeInterval = startOffset + 10.0; 
     }
     
-    console.log("[UI] startRun: Gra uruchomiona.", { time: game.time, enemies: devSettings.allowedEnemies });
+    console.log("[UI] startRun: Gra uruchomiona.");
+
+    if (LeaderboardService && LeaderboardService.trackStat) {
+        LeaderboardService.trackStat('games_played', 1);
+    }
 
     const tutorialSeen = localStorage.getItem('szkeletal_tutorial_seen');
     if (!tutorialSeen) {
@@ -223,10 +228,8 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     uiData.hazards.length = 0; 
     if (uiData.siegeSpawnQueue) uiData.siegeSpawnQueue.length = 0;
     
-    // ZMIANA: Resetowanie mapy (przeszkód) i generowanie nowej
     if (uiData.obstacles) {
         uiData.obstacles.length = 0;
-        // Regenerujemy mapę dla nowego runu
         generateMap(uiData.obstacles, uiData.player);
     }
     
@@ -305,7 +308,7 @@ export function gameOver(game, uiData) {
         date: new Date().toISOString()
     };
     
-    if(finalScore) finalScore.textContent = currentRun.score; 
+    if(finalScore) finalScore.textContent = Math.floor(game.score);
     if(finalLevel) finalLevel.textContent = currentRun.level; 
     if(finalTime) finalTime.textContent = formatTime(currentRun.time); 
     
@@ -343,6 +346,14 @@ export function gameOver(game, uiData) {
 
     Hud.resetHealthBarVisuals();
     Menus.updateStaticTranslations(); 
+    
+    if (LeaderboardService && LeaderboardService.trackStat) {
+        LeaderboardService.trackStat('total_playtime_seconds', finalTimeValue);
+    }
+    
+    if (LeaderboardService && LeaderboardService.syncSessionStats) {
+        LeaderboardService.syncSessionStats();
+    }
 }
 
 export const switchView = Menus.switchView;

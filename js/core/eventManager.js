@@ -1,9 +1,8 @@
 // ==============
-// EVENTMANAGER.JS (v1.0 - Imports Update)
+// EVENTMANAGER.JS (v1.01 - Fix Imports & Start)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
-// ZMIANA: Bezpośredni import switchView i updateStaticTranslations z menus.js
 import { switchView, updateStaticTranslations } from '../ui/menus.js';
 import { showMenu, resetAll, pauseGame, resumeGame, gameOver, startRun } from '../ui/ui.js';
 
@@ -39,7 +38,10 @@ function wrappedResetAll() {
     uiDataRef.hitTextPool = gameStateRef.hitTextPool;
     uiDataRef.camera = gameStateRef.camera;
     if (window.SIEGE_EVENT_CONFIG) uiDataRef.settings.currentSiegeInterval = window.SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
+    
+    // Używamy exportu z ui.js
     resetAll(uiDataRef.canvas, uiDataRef.settings, uiDataRef.perkLevels, uiDataRef, uiDataRef.camera);
+    
     gameStateRef.enemyIdCounter = 0;
     uiDataRef.animationFrameId = null;
     uiDataRef.lastTime = 0;
@@ -72,6 +74,7 @@ function wrappedGameOver() {
     updateAllStaticText();
 }
 
+// FIX: Wywołanie startRun z poprawną liczbą argumentów (3)
 function wrappedStartRun() {
     startRun(gameStateRef.game, wrappedResetAll, uiDataRef);
 }

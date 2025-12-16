@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v1.16 - Bigger Bomb)
+// GAMEDATA.JS (v1.17 - XP Balancing)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -28,8 +28,9 @@ export const GAME_CONFIG = {
   INITIAL_XP_NEEDED: 5,   
   XP_GROWTH_ADD: 6,
   XP_GROWTH_EARLY: 1.5, 
-  XP_GROWTH_LATE: 1.35, 
-  XP_THRESHOLD_LEVEL: 10 
+  XP_GROWTH_LATE: 1.35,
+  // ZMIANA: Mnożnik 1.35 wchodzi wcześniej (dla przejścia 7->8)
+  XP_THRESHOLD_LEVEL: 6 
 };
 
 export const HUNGER_CONFIG = {
@@ -142,7 +143,6 @@ export const PICKUP_CONFIG = {
     SHIELD_DURATION: 8.0, 
     SPEED_DURATION: 8.0, 
     FREEZE_DURATION: 5.0, 
-    // ZMIANA: Zwiększono zasięg bomby dwukrotnie (200 -> 400)
     BOMB_RADIUS: 400 
 };
 
@@ -193,7 +193,6 @@ export const ENEMY_STATS = {
     attackCooldown: 2.2,
     shadowOffset: 0.15 
   },
-  
   snakeEater: { 
     type: 'snakeEater', 
     hp: 200, 
@@ -206,18 +205,10 @@ export const ENEMY_STATS = {
     drops: {}, 
     healAmount: 100, 
     healCooldown: 60.0, 
-    
-    // Kluczowe: Wyłączamy systemowy cień, żeby rysować tylko manualny
     hasShadow: false,
-
-    // OFFSETY (regulacja):
-    // Cień: Wartość dodatnia = w dół. 100 to dużo, ale tak chciałeś.
     shadowOffsetY: 50,      
-    // Pasek HP: Wartość dodatnia = w dół. 40 obniży go pod postać.
     healthBarOffsetY: -125,   
-    // Cytaty: Wartość UJEMNA = W GÓRĘ. -150 podniesie je nad głowę.
     quoteOffsetY: -100,
-    // HitText: 0 = środek (domyślny -20 jest za wysoko)
     hitTextOffsetY: 0
   }
 };

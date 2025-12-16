@@ -4,6 +4,37 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ---
 
+## [0.102] - 2025-11-16
+### Added
+- **System Statystyk (Game Stats):** Pełna integracja z Talo API. Gra śledzi teraz globalne liczniki (m.in. zabici wrogowie, zebrane ziemniaczki, śmierci).
+- **Nowa zakładka "STATYSTYKI":** W menu "Kroniki Poległych" dostępna jest tabela porównująca wyniki gracza (Lokalne) z wynikami całego świata (Globalne).
+- **Tracking Unikalnych Graczy:** Licznik `unique_players` inkrementowany przy pierwszym uruchomieniu gry.
+- **Tracking Wrogów:** Szczegółowe statystyki zabójstw dla każdego typu wroga (np. "Zabici Dadgamerzy", "Zabite Trolle").
+- **Tłumaczenia:** Pełne wsparcie językowe (PL/EN/RO) dla nowych statystyk i cytatów Wężojada.
+
+### Changed
+- **Migracja Leaderboard:** Przejście z serwisu Dreamlo na nowoczesne API Talo.
+- **Optymalizacja Wydajności:**
+    - Zastąpienie kosztownego `shadowBlur` (Wężojad) wydajnymi gradientami.
+    - Zoptymalizowana matematyka kolizji (użycie kwadratów odległości zamiast pierwiastkowania).
+- **Balans Wężojada (SnakeEater):**
+    - Wyłączenie kolizji fizycznej (gracz może przez niego przenikać).
+    - Wydłużenie animacji leczenia (3 cykle).
+    - Nowe teksty dialogowe ("HAU HAU!").
+    - Synchronizacja pozycji cytatów i paska HP.
+- **BanWave:** Zwiększono zasięg bomby z 200 do 400.
+- **UI Loading:** Dodano licznik wczytanych zasobów (X/Y) na ekranie ładowania.
+- **UI Fix:** Naprawiono problem z `z-index`, który ukrywał okno wpisywania nicku pod ekranem Game Over.
+
+### Fixed
+- Naprawiono błąd `resetFn is not a function` przy restarcie gry.
+- Naprawiono błędy autoryzacji API Talo (obsługa braku aliasu i sesji).
+- Naprawiono wyświetlanie daty w tabeli wyników (`NaN` fix).
+- Naprawiono błąd `props must be an array` przy wysyłaniu wyników.
+
+
+---
+
 ## [v0.101] - 2025-12-14
 **"The Snake Eater & The Shadow Update"**
 

@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.05 - Snake Eater Guide)
+// MENUS.JS (v1.09 - Fix Labels & Zero Stats)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -10,13 +10,14 @@ import { setJoystickSide } from './input.js';
 import { initLeaderboardUI } from './leaderboardUI.js'; 
 import { VERSION } from '../config/version.js';
 import { MUSIC_CONFIG } from '../config/gameData.js';
+import { LeaderboardService } from '../services/leaderboard.js';
 
 let currentJoyMode = 'right';
 
 const STATIC_TRANSLATION_MAP = {
     'btnStart': 'ui_menu_start', 
     'btnContinue': 'ui_menu_continue', 
-    'navScores': 'ui_scores_title', 
+    'navScores': 'ui_scores_title', // ZMIANA: Powrót do właściwej nazwy (Rejestr/Kroniki)
     'navConfig': 'ui_menu_tab_config', 
     'navGuide': 'ui_menu_tab_guide', 
     'btnReplayIntroMain': 'ui_menu_replay_intro',
@@ -102,11 +103,11 @@ const STATIC_TRANSLATION_MAP = {
     'lblGOLevel': 'ui_gameover_level_label',
     'lblGOKills': 'ui_gameover_kills_label',
     
-    // Zakładki (zmapowane bezpośrednio po ID)
     'tabLocalScores': 'ui_scores_local',
     'tabOnlineScores': 'ui_scores_online',
     'tabGOLocal': 'ui_scores_local',
-    'tabGOOnline': 'ui_scores_online'
+    'tabGOOnline': 'ui_scores_online',
+    'tabStats': 'ui_tab_stats'
 };
 
 export function updateStaticTranslations() {
@@ -118,14 +119,19 @@ export function updateStaticTranslations() {
         }
     }
     
+    // Nadpisanie tekstu przycisku (opcjonalne, jeśli chcesz konkretnie "KRONIKI POLEGŁYCH")
+    const btnScores = document.getElementById('navScores');
+    if (btnScores && getCurrentLangCode() === 'pl') {
+        btnScores.innerText = "KRONIKI POLEGŁYCH";
+    }
+    
     const btnSubmit = document.getElementById('btnSubmitScore');
     if(btnSubmit && btnSubmit.style.display !== 'none' && btnSubmit.textContent !== getLang('ui_gameover_sent')) {
         btnSubmit.textContent = getLang('ui_gameover_submit') || "WYŚLIJ WYNIK";
     }
     
-    // Tłumaczenie przycisków filtrów (dynamicznie po klasie)
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        const period = btn.dataset.period; // today, weekly, monthly, all
+        const period = btn.dataset.period; 
         if (period) {
             const key = `ui_filter_${period}`;
             const txt = getLang(key);
@@ -161,6 +167,8 @@ export function updateStaticTranslations() {
     
     updateJoystickToggleLabel();
     updateToggleLabels();
+    
+    updateMainMenuStats();
 }
 
 function updateTutorialTexts() {
@@ -244,18 +252,46 @@ export function switchView(viewId) {
     const target = document.getElementById(viewId);
     if (target) { target.classList.add('active'); playSound('Click'); }
     
-    // ZMIANA: Obsługa przełączania muzyki
-    if (viewId === 'view-coffee') {
-        playSound('MusicIntro'); // Włącz muzykę intro w Hot Coffee
-    } else if (viewId === 'view-main') {
-        playSound('MusicMenu'); // Wróć do muzyki menu
-    }
+    if (viewId === 'view-coffee') playSound('MusicIntro'); 
+    else if (viewId === 'view-main') playSound('MusicMenu');
 
     if (viewId === 'view-scores') {
         if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard();
     }
     if (viewId === 'view-guide') { 
         generateGuide(); 
+    }
+    
+    if (viewId === 'view-main') {
+        updateMainMenuStats();
+    }
+}
+
+// ZMIANA: Fix wyświetlania zerowych wartości
+async function updateMainMenuStats() {
+    const lblPlayers = document.getElementById('lblMainPlayers');
+    const valPlayers = document.getElementById('valMainPlayers');
+    const lblGames = document.getElementById('lblMainGames');
+    const valGames = document.getElementById('valMainGames');
+    
+    if (!lblPlayers || !valPlayers || !lblGames || !valGames) return;
+    
+    lblPlayers.textContent = (getLang('stat_unique_players') || 'GRACZY') + ':';
+    lblGames.textContent = (getLang('stat_games_played') || 'GIER') + ':';
+    
+    const stats = await LeaderboardService.getGlobalStats();
+    
+    // FIX: Używamy !== undefined, aby 0 było wyświetlane poprawnie
+    if (stats.unique_players !== undefined) {
+        valPlayers.textContent = stats.unique_players.toLocaleString();
+    } else {
+        valPlayers.textContent = "...";
+    }
+    
+    if (stats.games_played !== undefined) {
+        valGames.textContent = stats.games_played.toLocaleString();
+    } else {
+        valGames.textContent = "...";
     }
 }
 
@@ -381,7 +417,6 @@ export function generateGuide() {
         { asset: 'enemy_wall', nameKey: 'enemy_wall_name', descKey: 'enemy_wall_desc' },
         { asset: 'enemy_elite', nameKey: 'enemy_elite_name', descKey: 'enemy_elite_desc' },
         { asset: 'enemy_lumberjack', nameKey: 'enemy_lumberjack_name', descKey: 'enemy_lumberjack_desc' },
-        // ZMIANA: Dodano Wężojada do przewodnika
         { asset: 'enemy_snakeEater', nameKey: 'enemy_snakeEater_name', descKey: 'enemy_snakeEater_desc' },
         
         { header: getLang('ui_guide_weapons_title') || "Bronie" },

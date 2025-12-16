@@ -1,5 +1,5 @@
 // ==============
-// ENGLISH.JS (v1.03 - Snake Heal Quote)
+// ENGLISH.JS (v1.05 - Playtime)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
@@ -197,8 +197,6 @@ export const LANG_EN = {
   enemy_snakeEater_name: "Snake Eater",
   enemy_snakeEater_desc: "Mobile Shrine. Does not attack. Follows the Count. Heals you once per minute if you touch him.",
   snake_heal_text: "Ass licked, satiety recovered",
-  
-  // NOWOŚĆ: Angielski cytat wężojada
   snake_heal_quote_enemy: "Mmm, I make Master feel good, WOOF WOOF!",
   
   quote_snake_1: "WOOF WOOF!",
@@ -280,5 +278,30 @@ export const LANG_EN = {
   quote_gameover_11: "You suck at this game like Snake Eater sucks Kiszczak...",
   quote_gameover_12: "Even Dadgamers last longer than your satiety...",
   quote_gameover_13: "You're as much a gamer as Kiszczak is a ludologist.",
-  quote_gameover_14: "Looks like no potatoes for you today..."
+  quote_gameover_14: "Looks like no potatoes for you today...",
+  
+  // STATS (Game Stats)
+  ui_tab_stats: "STATS",
+  ui_stat_header_name: "METRIC",
+  ui_stat_header_local: "YOU (Local)",
+  ui_stat_header_global: "WORLD (Global)",
+  
+  stat_games_played: "Sessions Played",
+  stat_unique_players: "Unique Players",
+  stat_deaths: "Count's Deaths",
+  stat_enemies_killed: "Total Killcount",
+  stat_potatoes_collected: "Potatoes Consumed",
+  stat_total_playtime: "Total Playtime",
+  
+  stat_killed_standard: "Dadgamers Killed",
+  stat_killed_horde: "Chat Matts Killed",
+  stat_killed_aggressive: "Provocators Killed",
+  stat_killed_kamikaze: "Trolls Killed",
+  stat_killed_splitter: "Diggers Killed",
+  stat_killed_tank: "Szkeletals Killed",
+  stat_killed_ranged: "Bums Killed",
+  stat_killed_elite: "Elden Haters Killed",
+  stat_killed_wall: "Sieges Destroyed",
+  stat_killed_lumberjack: "Lumberjacks Killed",
+  stat_killed_snakeEater: "SnakeEaters Killed"
 };

@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v1.06 - Force Warning)
+// ENEMYMANAGER.JS (v1.07 - Stats Tracking & Full Code)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -7,6 +7,7 @@ import { devSettings } from '../services/dev.js';
 import { findFreeSpotForPickup, addBombIndicator } from '../core/utils.js'; 
 import { playSound } from '../services/audio.js';
 import { getLang } from '../services/i18n.js';
+import { hpScale } from '../core/utils.js'; // Dodano import hpScale z utils, jeśli tam jest, lub zdefiniuj lokalnie
 
 import { Enemy } from '../entities/enemy.js';
 import { StandardEnemy } from '../entities/enemies/standardEnemy.js';
@@ -21,7 +22,7 @@ import { WallEnemy } from '../entities/enemies/wallEnemy.js';
 import { LumberjackEnemy } from '../entities/enemies/lumberjackEnemy.js'; 
 import { SnakeEaterEnemy } from '../entities/enemies/snakeEaterEnemy.js';
 
-import { ENEMY_STATS, SIEGE_EVENT_CONFIG, WALL_DETONATION_CONFIG } from '../config/gameData.js';
+import { ENEMY_STATS, SIEGE_EVENT_CONFIG, WALL_DETONATION_CONFIG, GAME_CONFIG } from '../config/gameData.js';
 
 import { HealPickup } from '../entities/pickups/healPickup.js';
 import { MagnetPickup } from '../entities/pickups/magnetPickup.js';
@@ -31,6 +32,7 @@ import { BombPickup } from '../entities/pickups/bombPickup.js';
 import { FreezePickup } from '../entities/pickups/freezePickup.js';
 
 import { Chest } from '../entities/chest.js';
+import { LeaderboardService } from '../services/leaderboard.js'; // IMPORT NOWY
 
 export const ENEMY_CLASS_MAP = {
     standard: StandardEnemy,
@@ -233,7 +235,6 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
         playSound('EliteSpawn');
         console.log(`[BOSS] Zespawnowano: ${bossType.toUpperCase()}`);
         
-        // NOWOŚĆ: Wymuszenie ostrzeżenia "NADCHODZI WĘŻOJAD"
         if (bossType === 'snakeEater') {
             game.newEnemyWarningT = 3.0; 
             game.newEnemyWarningType = getLang('enemy_snakeEater_name').toUpperCase();
@@ -344,6 +345,13 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         game.score += e.stats.score;
         game.totalKills = (game.totalKills || 0) + 1;
         
+        // NOWOŚĆ: Śledzenie statystyk zabójstw w Talo
+        // Wywołujemy trackStat dla ogólnej liczby i dla typu wroga
+        LeaderboardService.trackStat('enemies_killed', 1);
+        if (e.type) {
+            LeaderboardService.trackStat(`killed_${e.type}`, 1);
+        }
+
         if (e.stats.xp > 0) {
             const gem = gemsPool.get();
             if (gem) {
@@ -374,6 +382,9 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         if (e.type === 'elite' || e.type === 'lumberjack' || e.type === 'snakeEater') {
             chests.push(new Chest(e.x, e.y));
         }
+        
+        // Dynamiczny wzrost limitu wrogów
+        settings.maxEnemies = Math.min(1500, settings.maxEnemies + 0.1); 
     }
 
     const particleCount = 40; 
