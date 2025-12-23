@@ -1,5 +1,5 @@
 // ==============
-// SKINMANAGER.JS (v1.06 - JSON Fix & Robustness)
+// SKINMANAGER.JS (0.104 - JSON Fix & Robustness)
 // Lokalizacja: /js/services/skinManager.js
 // ==============
 
