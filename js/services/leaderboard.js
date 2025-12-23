@@ -1,5 +1,5 @@
 // ==============
-// LEADERBOARD.JS (v1.16 - Date Filter Fix)
+// LEADERBOARD.JS (v1.17 - Fix JSON & Date Filtering)
 // Lokalizacja: /js/services/leaderboard.js
 // ==============
 
@@ -38,6 +38,22 @@ const SUBMISSION_COOLDOWN = 30000;
 let cachedAliasId = null;
 let cachedPlayerId = null;
 let cachedSessionToken = null;
+
+// --- FUNKCJA NAPRAWCZA JSON (Klucz do naprawy błędów konsoli) ---
+function safeJsonParse(str, fallback) {
+    if (!str) return fallback;
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        console.warn("[Leaderboard] Wykryto uszkodzony JSON, naprawiam...", e);
+        try {
+            const sanitized = str.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+            return JSON.parse(sanitized);
+        } catch (e2) {
+            return fallback;
+        }
+    }
+}
 
 function getPlayerIdentifier() {
     let id = localStorage.getItem(PLAYER_ID_KEY);
@@ -79,10 +95,7 @@ async function authenticateTalo() {
             }
         });
 
-        if (!response.ok) {
-            console.error(`Talo Auth Failed: ${response.status} ${response.statusText}`);
-            return null;
-        }
+        if (!response.ok) return null;
         
         const data = await response.json();
         
@@ -104,16 +117,12 @@ async function authenticateTalo() {
         return cachedAliasId;
 
     } catch (e) {
-        console.error("Talo Auth Network Error:", e);
         return null;
     }
 }
 
 function updateLocalStats(statName, value) {
-    let stats = {};
-    try {
-        stats = JSON.parse(localStorage.getItem(LOCAL_STATS_KEY) || "{}");
-    } catch (e) { stats = {}; }
+    let stats = safeJsonParse(localStorage.getItem(LOCAL_STATS_KEY), {});
 
     if (!stats[statName]) stats[statName] = 0;
     stats[statName] += value;
@@ -151,39 +160,27 @@ export const LeaderboardService = {
       const keys = Object.keys(statsToSend);
       if (keys.length === 0) return;
       
-      console.log("[Stats] Wysyłanie do Talo...", keys);
       sessionStats = {}; 
 
       try {
           await authenticateTalo();
           
-          if (!cachedAliasId) {
-             console.warn("[Stats] Brak autoryzacji (aliasId). Pomijam wysyłkę.");
-             return;
-          }
+          if (!cachedAliasId) return;
 
           const promises = keys.map(async (key) => {
               const amount = statsToSend[key];
               const url = `${API_URL}/game-stats/${key}`;
               
               try {
-                  const res = await fetch(url, {
+                  await fetch(url, {
                       method: 'PUT',
                       headers: getTaloHeaders(), 
                       body: JSON.stringify({ change: amount })
                   });
-                  if (!res.ok) {
-                      const txt = await res.text();
-                      console.warn(`[Stats] Błąd wysyłania ${key}: ${res.status}`, txt);
-                  }
-                  return res;
-              } catch (err) {
-                  console.warn(`[Stats] Błąd sieci dla ${key}`, err);
-              }
+              } catch (err) {}
           });
 
           await Promise.all(promises);
-          console.log("[Stats] Synchronizacja zakończona.");
           statsCache.data = null; 
 
       } catch (e) {
@@ -222,15 +219,12 @@ export const LeaderboardService = {
         statsCache.lastFetch = now;
         return statsMap;
     } catch (e) {
-        console.error("Stats Fetch Error:", e);
         return {};
     }
   },
 
   getLocalStats: () => {
-      try {
-          return JSON.parse(localStorage.getItem(LOCAL_STATS_KEY) || "{}");
-      } catch (e) { return {}; }
+      return safeJsonParse(localStorage.getItem(LOCAL_STATS_KEY), {});
   },
 
   trackUniquePlayer: () => {
@@ -260,13 +254,11 @@ export const LeaderboardService = {
     if (cheatDetected) {
       const shadowEntry = { name: cleanNick, score, time: timeVal, level, kills, date: new Date().toISOString() };
       let shadowHistory = [];
-      try {
-        const stored = localStorage.getItem(SHADOW_BAN_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
+      const stored = localStorage.getItem(SHADOW_BAN_KEY);
+      if (stored) {
+          const parsed = safeJsonParse(stored, []);
           shadowHistory = Array.isArray(parsed) ? parsed : [parsed];
-        }
-      } catch (e) {}
+      }
       shadowHistory.push(shadowEntry);
       if (shadowHistory.length > 50) shadowHistory.shift();
       localStorage.setItem(SHADOW_BAN_KEY, JSON.stringify(shadowHistory));
@@ -298,8 +290,6 @@ export const LeaderboardService = {
             LeaderboardService.clearCache();
             return { success: true };
         } else {
-            const txt = await response.text();
-            console.error("Talo Submit Error:", txt);
             return { success: false, msg: "Błąd serwera" };
         }
     } catch (e) {
@@ -310,25 +300,14 @@ export const LeaderboardService = {
   getScores: async (period = 'all') => {
     const now = Date.now();
     let entries = [];
-    if (cache.data && (now - cache.lastFetch < cache.CACHE_DURATION)) entries = cache.data;
-    else {
-      // Pobieramy więcej wyników (200), żeby móc je filtrować client-side
+    
+    // Uproszczone: ZAWSZE pobieramy 200 ostatnich wyników bez filtrowania daty w API.
+    // Dzięki temu filtrowanie po stronie klienta (poniżej) zadziała poprawnie na pełnym zestawie.
+    if (cache.data && (now - cache.lastFetch < cache.CACHE_DURATION)) {
+        entries = cache.data;
+    } else {
       let url = `${API_URL}/leaderboards/${LEADERBOARD_NAME}/entries?page=0&limit=200&withDeleted=false`;
       
-      // Dodajemy filtr startDate dla API, ale z marginesem bezpieczeństwa (np. -1 dzień) lub wcale
-      // Lepiej wysłać request bez filtru daty (lub szeroki) i filtrować precyzyjnie w JS
-      if (period !== 'all') {
-          // Dla pewności wysyłamy do API prośbę o szerszy zakres, a w JS docinamy
-          // Jeśli Talo obsługuje startDate, użyjmy go, ale nie ufajmy mu w 100% przy granicach dni
-          const dateNow = new Date();
-          let startDate;
-          if (period === 'today') startDate = new Date(dateNow.setHours(0,0,0,0)).toISOString();
-          else if (period === 'weekly') startDate = new Date(dateNow.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-          else if (period === 'monthly') startDate = new Date(dateNow.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-          
-          if(startDate) url += `&startDate=${startDate}`;
-      }
-
       try {
         const response = await fetch(url, { headers: { 'Authorization': `Bearer ${getApiKey()}`, 'Content-Type': 'application/json' } });
         const data = await response.json();
@@ -338,7 +317,6 @@ export const LeaderboardService = {
                 if (Array.isArray(e.props)) e.props.forEach(p => { propsMap[p.key] = p.value; });
                 else if (typeof e.props === 'object') propsMap = e.props; 
                 
-                // FIX DATY: Szukamy created_at lub createdAt, bez fallbacku do new Date()
                 let dateStr = e.created_at || e.createdAt || e.updatedAt;
                 let entryDate = dateStr ? new Date(dateStr) : null;
 
@@ -348,23 +326,27 @@ export const LeaderboardService = {
                     time: parseInt(propsMap.time) || 0,
                     level: parseInt(propsMap.level) || 1,
                     kills: parseInt(propsMap.kills) || 0,
-                    date: entryDate // Może być null
+                    date: entryDate
                 };
-            }).filter(e => e.date !== null); // Odsiewamy błędne daty
+            }).filter(e => e.date !== null);
         }
         cache.data = entries;
         cache.lastFetch = now;
       } catch (e) { entries = []; }
     }
     
-    // FILTROWANIE CLIENT-SIDE (Precyzyjne)
+    // FILTROWANIE CLIENT-SIDE (Teraz działa na wszystkich pobranych danych)
+    let filteredEntries = [...entries];
     if (period !== 'all') {
         const dateNow = new Date();
         const startOfDay = new Date(dateNow.setHours(0,0,0,0));
+        // Tydzień to 7 dni wstecz
         const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        // Miesiąc to 30 dni wstecz
         const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         
-        entries = entries.filter(e => {
+        filteredEntries = entries.filter(e => {
+            if (!e.date) return false;
             if (period === 'today') return e.date >= startOfDay;
             if (period === 'weekly') return e.date >= oneWeekAgo;
             if (period === 'monthly') return e.date >= oneMonthAgo;
@@ -372,11 +354,10 @@ export const LeaderboardService = {
         });
     }
 
-    let displayEntries = [...entries];
+    let displayEntries = [...filteredEntries];
     const shadowString = localStorage.getItem(SHADOW_BAN_KEY);
     if (shadowString) {
-      try {
-        const parsed = JSON.parse(shadowString);
+        const parsed = safeJsonParse(shadowString, []);
         let shadowList = Array.isArray(parsed) ? parsed : [parsed];
         shadowList.forEach(item => {
           const itemDate = new Date(item.date);
@@ -385,8 +366,8 @@ export const LeaderboardService = {
           if (period === 'today' && itemDate < new Date(dateNow.setHours(0,0,0,0))) show = false;
           if (show) displayEntries.push({ ...item, date: itemDate });
         });
-      } catch (e) { }
     }
+    
     displayEntries.sort((a, b) => b.score - a.score);
     return displayEntries.slice(0, 100);
   }

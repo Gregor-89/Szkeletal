@@ -1,5 +1,5 @@
 // ==============
-// SAVEMANAGER.JS (v1.05 - Anti-Cheat Shadows Persistence)
+// SAVEMANAGER.JS (v1.07 - Robust JSON & Auto-Storage)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
@@ -23,6 +23,8 @@ import { ENEMY_CLASS_MAP } from '../managers/enemyManager.js';
 import { initAudio, playSound } from './audio.js';
 import { titleDiv } from '../ui/domElements.js';
 
+const SAVE_KEY = 'szkeletal_savegame';
+
 const PICKUP_CLASS_MAP = {
     heal: HealPickup,
     magnet: MagnetPickup,
@@ -39,6 +41,36 @@ const WEAPON_CLASS_MAP = {
     WhipWeapon: WhipWeapon,
     ChainLightningWeapon: ChainLightningWeapon 
 };
+
+// --- FUNKCJA NAPRAWCZA JSON (Ten sam fix co w scoreManager) ---
+function safeJsonParse(str, fallback) {
+    if (!str) return fallback;
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        console.warn("[SaveManager] Wykryto uszkodzony JSON zapisu, próbuję naprawić...", e);
+        try {
+            // Usuwamy znaki sterujące ASCII 0-31 oraz 127-159 (częste źródło błędów w localStorage)
+            const sanitized = str.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+            return JSON.parse(sanitized);
+        } catch (e2) {
+            console.error("[SaveManager] Nie udało się naprawić zapisu gry. Zwracam fallback.", e2);
+            return fallback;
+        }
+    }
+}
+
+// Funkcja pomocnicza do pobierania zapisu z dysku
+export function getSavedGameFromStorage() {
+    const raw = localStorage.getItem(SAVE_KEY);
+    return safeJsonParse(raw, null);
+}
+
+// Funkcja pomocnicza do usuwania zapisu (np. po śmierci)
+export function clearSavedGame() {
+    localStorage.removeItem(SAVE_KEY);
+    console.log('[SaveManager] Zapis gry usunięty.');
+}
 
 export function saveGame(state) {
     const { 
@@ -78,17 +110,32 @@ export function saveGame(state) {
         enemyIdCounter: enemyIdCounter 
     };
     
-    console.log('[DEBUG-v0.70] saveManager.js: Gra zapisana.', savedState);
+    // ZMIANA: Automatyczny zapis do localStorage z obsługą błędów
+    try {
+        const jsonStr = JSON.stringify(savedState);
+        localStorage.setItem(SAVE_KEY, jsonStr);
+        console.log('[SaveManager] Gra zapisana pomyślnie do localStorage.');
+    } catch (e) {
+        console.error('[SaveManager] Błąd zapisu do localStorage:', e);
+    }
+    
     return savedState;
 }
 
-export function loadGame(savedState, state, uiData) {
+export function loadGame(savedStateInput, state, uiData) {
+    // ZMIANA: Jeśli nie przekazano stanu, spróbuj wczytać z localStorage
+    let savedState = savedStateInput;
     if (!savedState) {
-        console.error("[saveManager.js] Błąd: Próbowano wczytać pusty stan.");
+        console.log('[SaveManager] Brak argumentu savedState, próba odczytu z localStorage...');
+        savedState = getSavedGameFromStorage();
+    }
+
+    if (!savedState) {
+        console.error("[SaveManager] Błąd: Próbowano wczytać pusty stan lub odczyt się nie powiódł.");
         return;
     }
 
-    console.log("[DEBUG-v0.70] saveManager.js: Wczytywanie stanu gry...", savedState);
+    console.log("[SaveManager] Wczytywanie stanu gry...", savedState);
 
     const { 
         game, player, settings, perkLevels, enemies, 
@@ -97,6 +144,7 @@ export function loadGame(savedState, state, uiData) {
         pickups, chests, hazards, bombIndicators
     } = state;
 
+    // Resetowanie stanu przed wczytaniem
     enemies.length = 0;
     pickups.length = 0;
     chests.length = 0;
@@ -108,12 +156,13 @@ export function loadGame(savedState, state, uiData) {
     particlePool.releaseAll();
     hitTextPool.releaseAll();
 
+    // Przywracanie danych
     Object.assign(game, savedState.game);
     Object.assign(settings, savedState.settings);
     Object.keys(perkLevels).forEach(key => delete perkLevels[key]);
     Object.assign(perkLevels, savedState.perkLevels);
     
-    // ZMIANA: Przywracanie cieni i weryfikacja
+    // Przywracanie cieni i weryfikacja
     if (savedState.integrity && game._setShadows) {
         game._setShadows(
             savedState.integrity.s, 
@@ -199,7 +248,10 @@ export function loadGame(savedState, state, uiData) {
     
     state.enemyIdCounter = savedState.enemyIdCounter || 0;
     
-    document.getElementById('menuOverlay').style.display='none';
+    // UI i Audio
+    const menuOverlay = document.getElementById('menuOverlay');
+    if (menuOverlay) menuOverlay.style.display = 'none';
+    
     game.inMenu = false; 
     game.paused = false; 
     game.running = true; 
@@ -225,7 +277,7 @@ export function loadGame(savedState, state, uiData) {
       uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
     }
     
-    console.log("[DEBUG-v0.70] saveManager.js: Wczytywanie zakończone.");
+    console.log("[SaveManager] Wczytywanie zakończone.");
 }
 
-console.log('[DEBUG-v0.82a] js/services/saveManager.js: Zarejestrowano ChainLightningWeapon.');
+console.log('[DEBUG] js/services/saveManager.js: Załadowano wersję z safeJsonParse.');

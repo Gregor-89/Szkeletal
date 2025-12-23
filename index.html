@@ -172,6 +172,11 @@
             <input type="checkbox" id="chkFPS" checked style="display:none;">
             <input type="checkbox" id="chkPickupLabels" checked style="display:none;">
             
+            <div class="config-row" style="flex-direction:column; align-items:flex-start;">
+                <div id="lblSkin" style="width:100%; margin-bottom: 8px; color: #eee;">WYGLĄD POSTACI:</div>
+                <div class="skin-selector" id="skinSelector"></div>
+            </div>
+
             <div class="config-row"><span id="lblJoy">JOYSTICK</span><button class="retro-toggle" id="toggleJoy">PRAWA</button></div>
             <div class="config-row"><span id="lblHyper">HYPER MODE</span><button class="retro-toggle off" id="toggleHyper">WYŁ</button></div>
             <div class="config-row"><span id="lblShake">WSTRZĄSY</span><button class="retro-toggle on" id="toggleShake">WŁ</button></div>
@@ -187,8 +192,9 @@
                 <input type="range" id="volSFX" class="retro-range" min="0" max="100" value="30">
             </div>
             <div class="config-row"><span id="lblLang">JĘZYK</span><div id="lang-selector-container" class="retro-lang-row"></div></div>
+            
             <div class="config-row">
-                <span>SAMOUCZEK</span>
+                <span id="lblTutorial">SAMOUCZEK</span>
                 <button id="btnShowTutorialConfig" class="retro-btn small">ODTWÓRZ</button>
             </div>
         </div>
@@ -197,7 +203,8 @@
 
       <div id="view-coffee" class="menu-view">
         <h2 id="coffeeTitle" class="retro-title" style="color:#E91E63; border-color:#E91E63;">HOT COFFEE</h2>
-        <div class="retro-scroll-box text-center" style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        
+        <div class="retro-scroll-box text-center" style="display:flex; flex-direction:column; justify-content:flex-start; align-items:center; padding-top: 20px; overflow-y: auto;">
             <div style="font-size:48px; margin-bottom:15px; width:100%; text-align:center;">☕ + 🥔</div>
             <p id="coffeeDesc" style="font-size:1.3rem; line-height:1.5; margin-bottom:20px; color:#eee; max-width:90%;">
                 Jeżeli doceniasz napracowanie...

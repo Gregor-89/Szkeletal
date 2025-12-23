@@ -1,5 +1,5 @@
 // ==============
-// ASSETS.JS (v0.101 - Snake Eater Assets)
+// ASSETS.JS (v1.02 - Skin Fixes)
 // Lokalizacja: /js/services/assets.js
 // ==============
 
@@ -38,6 +38,15 @@ export function loadAssets(onProgress) {
 
 const assetDefinitions = {
   'player': 'player/drakul_spritesheet.png',
+  
+  // POPRAWKA v0.103: Rozdzielenie static i spritesheet dla domyślnego skina
+  'player_static': 'drakul.png', // Stary plik w root img/
+  'player_spritesheet': 'player/drakul_spritesheet.png',
+  
+  // Skiny Gracza
+  'player_hot_idle': 'player/drakul_hot_idle.png',
+  'player_hot_spritesheet': 'player/drakul_hot_running.png',
+  
   'enemy_standard': 'enemies/dadgamer/dadgamer_idle.png',
   'enemy_horde': 'enemies/horde/horde_idle.png',
   'enemy_aggressive': 'enemies/aggressive/aggressive_idle.png',
@@ -48,7 +57,6 @@ const assetDefinitions = {
   'enemy_elite': 'enemies/elite/elite_idle.png',
   'enemy_wall': 'enemies/wall/wall_idle.png',
   'enemy_lumberjack': 'enemies/lumberjack/lumberjack_idle.png',
-  // NOWOŚĆ v0.101: Wężojad
   'enemy_snakeEater': 'enemies/snakeEater/snake_idle.png',
   
   'enemy_standard_spritesheet': 'enemies/dadgamer/dadgamer_spritesheet.png',
@@ -63,7 +71,6 @@ const assetDefinitions = {
   'enemy_ranged_attack': 'enemies/ranged/ranged_attack.png',
   'enemy_lumberjack_walk': 'enemies/lumberjack/lumberjack_walk.png',
   'enemy_lumberjack_attack': 'enemies/lumberjack/lumberjack_attack.png',
-  // NOWOŚĆ v0.101: Animacje Wężojada
   'enemy_snakeEater_walk': 'enemies/snakeEater/snake_walk.png',
   'enemy_snakeEater_heal': 'enemies/snakeEater/snake_heal.png',
   

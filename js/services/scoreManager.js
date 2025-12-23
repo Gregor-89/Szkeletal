@@ -1,5 +1,5 @@
 // ==============
-// SCOREMANAGER.JS (v1.03 - Perfect Highlight & Rank)
+// SCOREMANAGER.JS (v1.06 - JSON Fix & Original UI Preserved)
 // Lokalizacja: /js/services/scoreManager.js
 // ==============
 
@@ -7,12 +7,32 @@ import { confirmOverlay, btnConfirmYes, btnConfirmNo } from '../ui/domElements.j
 
 const SCORES_KEY = 'szkeletal_scores';
 
+// NOWOŚĆ: Funkcja naprawcza do JSON-a (usuwa znaki sterujące)
+function safeJsonParse(str, fallback) {
+    if (!str) return fallback;
+    try {
+        return JSON.parse(str);
+    } catch (e) {
+        console.warn("[ScoreManager] Wykryto uszkodzony JSON, próbuję naprawić...", e);
+        try {
+            // Usuwamy znaki sterujące (ASCII 0-31), które psują JSON.parse
+            const sanitized = str.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+            return JSON.parse(sanitized);
+        } catch (e2) {
+            console.error("[ScoreManager] Nie udało się naprawić danych. Zwracam fallback.", e2);
+            return fallback;
+        }
+    }
+}
+
 export function getScores() {
     const str = localStorage.getItem(SCORES_KEY);
-    return str ? JSON.parse(str) : [];
+    // ZMIANA: Użycie bezpiecznego parsera
+    return safeJsonParse(str, []);
 }
 
 export function saveScore(runData, nick = "GRACZ") {
+    // Pobieramy bezpiecznie wyniki
     const scores = getScores();
     
     const now = new Date();
@@ -33,13 +53,19 @@ export function saveScore(runData, nick = "GRACZ") {
     scores.push(entry);
     scores.sort((a, b) => b.score - a.score);
     
-    if (scores.length > 20) scores.length = 20;
+    // Limit do 50 wyników (zwiększyłem z 20 na 50, standardowo bezpieczniej)
+    if (scores.length > 50) scores.length = 50;
     
-    localStorage.setItem(SCORES_KEY, JSON.stringify(scores));
+    try {
+        localStorage.setItem(SCORES_KEY, JSON.stringify(scores));
+    } catch (e) {
+        console.error("[ScoreManager] Błąd zapisu wyniku:", e);
+    }
 }
 
 export function clearScores() {
     localStorage.removeItem(SCORES_KEY);
+    console.log("[ScoreManager] Wyniki wyczyszczone.");
 }
 
 export function formatTime(seconds) {
@@ -56,9 +82,8 @@ export function displayScores(tableBodyId, currentRun = null, onlineData = null)
     let scores = onlineData || getScores(); // Fallback dla lokalnych jeśli nie przekazano
     
     // Jeśli to lokalne i nie przekazano onlineData, to 'scores' to surowe dane z localStorage
-    // Musimy upewnić się, że mają tempRank, jeśli wywołano to spoza leaderboardUI (np. bezpośrednio)
+    // Musimy upewnić się, że mają tempRank, jeśli wywołano to spoza leaderboardUI
     if (!onlineData && (!scores[0] || typeof scores[0].tempRank === 'undefined')) {
-        // Szybki fallback dla rankingu lokalnego (Score Desc)
         scores.sort((a, b) => b.score - a.score);
         scores.forEach((e, i) => e.tempRank = i + 1);
     }
@@ -80,16 +105,14 @@ export function displayScores(tableBodyId, currentRun = null, onlineData = null)
         
         if (currentRun) {
             // Sprawdzamy czy to "ten" wynik
-            // 1. Wynik punktowy musi się zgadzać
             if (entry.score === currentRun.score) {
-                // 2. Jeśli mamy imię, musi się zgadzać (dla Online)
+                // Dla Online: sprawdzamy imię
                 if (entry.name && entry.name.toUpperCase() === currentNick) {
-                    // 3. Dla pewności sprawdźmy też czas gry (sekundy)
                     if (entry.time === currentRun.time) {
                         isHighlight = true;
                     }
                 }
-                // Fallback dla lokalnych (pełna zgodność obiektu daty)
+                // Fallback dla lokalnych (zgodność daty)
                 if (entry.date === currentRun.date) {
                     isHighlight = true;
                 }
@@ -97,7 +120,6 @@ export function displayScores(tableBodyId, currentRun = null, onlineData = null)
         }
         
         const rowBg = isHighlight ? 'rgba(255, 215, 0, 0.15)' : 'transparent';
-        // Kolory: Złoty jeśli highlight, w przeciwnym razie standardowe palety
         const cCommon = isHighlight ? '#FFD700' : null;
         
         tr.style.backgroundColor = rowBg;
@@ -143,7 +165,6 @@ export function displayScores(tableBodyId, currentRun = null, onlineData = null)
             }
         }
         
-        // ZMIANA: Używamy tempRank (dynamicznie obliczony) zamiast indexu
         const rankDisplay = entry.tempRank || (index + 1);
         
         tr.innerHTML = `

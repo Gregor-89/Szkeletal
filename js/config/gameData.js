@@ -1,12 +1,12 @@
 // ==============
-// GAMEDATA.JS (v1.17 - XP Balancing)
+// GAMEDATA.JS (v1.21 - XP Growth Late Nerf)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
 export const PLAYER_CONFIG = {
   BASE_SPEED: 240, 
   SIZE: 15,
-  INITIAL_HEALTH: 100,
+  INITIAL_HEALTH: 120,
   INITIAL_PICKUP_RANGE: 30,
   HEAL_AMOUNT: 30
 };
@@ -16,20 +16,30 @@ export const COLLISION_CONFIG = {
   WALL_SLOWDOWN_DURATION: 0.35
 };
 
+export const SPAWN_TIMINGS = {
+    STANDARD: 0,
+    HORDE: 40,
+    AGGRESSIVE: 90,
+    KAMIKAZE: 140,
+    SPLITTER: 190,
+    TANK: 260,
+    SNAKEEATER: 290,
+    RANGED: 310
+};
+
 export const GAME_CONFIG = {
   SPAWN_GRACE_PERIOD: 4.0,
-  INITIAL_SPAWN_RATE: 0.008,
+  INITIAL_SPAWN_RATE: 0.006, 
   MAX_ENEMIES: 400,
-  ELITE_SPAWN_INTERVAL: 144,
+  ELITE_SPAWN_INTERVAL: 144, 
   INITIAL_MAX_ENEMIES: 3,
-  ENEMY_LIMIT_GROWTH_PER_MINUTE: 20,
+  ENEMY_LIMIT_GROWTH_PER_MINUTE: 15, 
   
   // BALANS XP
-  INITIAL_XP_NEEDED: 5,   
+  INITIAL_XP_NEEDED: 4,   
   XP_GROWTH_ADD: 6,
-  XP_GROWTH_EARLY: 1.5, 
-  XP_GROWTH_LATE: 1.35,
-  // ZMIANA: Mnożnik 1.35 wchodzi wcześniej (dla przejścia 7->8)
+  XP_GROWTH_EARLY: 1.4, 
+  XP_GROWTH_LATE: 1.25, // ZMIANA: Zmniejszono z 1.35 (szybsze wbijanie leveli w mid-game)
   XP_THRESHOLD_LEVEL: 6 
 };
 
@@ -60,7 +70,7 @@ export const MAP_CONFIG = {
   HUTS_COUNT: 45,
   WATER_COUNT: 60,
   SHRINE_COUNT: 10, 
-  SAFE_ZONE_RADIUS: 500,
+  SAFE_ZONE_RADIUS: 600, 
   
   OBSTACLE_STATS: {
     tree: { 
@@ -172,7 +182,18 @@ export const EFFECTS_CONFIG = { BOMB_INDICATOR_LIFE: 0.375, CONFETTI_COUNT: 80, 
 export const ENEMY_STATS = {
   standard: { type: 'standard', hp: 10, speed: 105, size: 60, damage: 10, color: '#D32F2F', score: 10, xp: 1, drops: BASE_DROP_RATES },
   horde: { type: 'horde', hp: 8, speed: 95, size: 43, damage: 8, color: '#2E7D32', score: 10, xp: 1, drops: BASE_DROP_RATES },
-  aggressive: { type: 'aggressive', hp: 15, speed: 130, size: 52, damage: 12, color: '#E91E63', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  aggressive: { 
+      type: 'aggressive', 
+      hp: 12, 
+      speed: 110, 
+      size: 52, 
+      damage: 10, 
+      color: '#E91E63', 
+      score: 10, 
+      xp: 1, 
+      drops: BASE_DROP_RATES,
+      chargeBonus: 1.6 
+  },
   kamikaze: { type: 'kamikaze', hp: 5, speed: 150, size: 36, damage: 25, color: '#76FF03', score: 10, xp: 1, drops: BASE_DROP_RATES },
   splitter: { type: 'splitter', hp: 12, speed: 140, size: 52, damage: 10, color: '#B71C1C', score: 10, xp: 1, drops: BASE_DROP_RATES },
   tank: { type: 'tank', hp: 100, speed: 70, size: 108, damage: 15, color: '#F5F5F5', score: 20, xp: 1, drops: BASE_DROP_RATES },
@@ -234,3 +255,8 @@ export const MUSIC_CONFIG = {
   VOLUME: 0.4,
   FADE_TIME: 1.0
 };
+
+export const SKINS_CONFIG = [
+  { id: 'default', name: 'Drakul (Standard)', assetIdle: 'player_static', assetSprite: 'player_spritesheet', locked: false },
+  { id: 'hot', name: 'Drakul (Hot)', assetIdle: 'player_hot_idle', assetSprite: 'player_hot_spritesheet', locked: true }
+];

@@ -1,9 +1,10 @@
 // ==============
-// POLISH.JS (v1.06 - Grammar Fixes & Playtime)
+// POLISH.JS (v1.08 - Colored Text)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
 export const LANG_PL = {
+  // ... (poprzednie klucze bez zmian) ...
   ui_on: "WŁ",
   ui_off: "WYŁ",
   ui_warning_new_enemy: "NADCHODZI",
@@ -21,11 +22,13 @@ export const LANG_PL = {
   ui_dev_god: "God Mode:",
   ui_dev_hitbox: "Hitboxy:",
   
+  // KOLOROWY TEKST
   ui_coffee_title: "HOT COFFEE",
-  ui_coffee_desc: "Jeżeli doceniasz napracowanie, tysiące łez i potu wylanych nad promptowaniem (bo ta gierka powstała w 99% za pomocą AI), to możesz mi podziękować kupując wirtualną kawkę lub dokładając się do zakupu worka ziemniaków!",
+  ui_coffee_desc: "Gratulacje. Właśnie dokonałeś bezpowrotnej deprecjacji kilku minut swojego czasu, choć ja sam, w akcie czystego masochizmu, poświęciłem ich dziesiątki na wertykalne promptowanie algorytmów AI przez ostatnie dwa miesiące.<br><br>Musimy postawić sprawę obiektywnie: tak samo jak nasi rodzimi „ludolodzy” (nie mylić z faktycznymi groznawcami) de facto wykazują immanentny brak kompetencji w temacie mechanik, specjalizując się głównie w akwizycji cudzego contentu, tak i ja nie posiadam żadnej wiedzy o kodowaniu, estetyce pixel-artu czy narratologii. Ten projekt to „pato-konstrukt” zbudowany z klocków generatywnych – ziemniak po ziemniaku.<br><br>Czy ta teleologiczna pogoń była warta zachodu? Absolutnie nie. Kto o zdrowych zmysłach chciałby partycypować w tym paszyżu dłużej niż kilka minut? Nawet jeśli to tylko luźna parodia, a wszelkie podobieństwa do znanych nam „śmiechodojów” ze środowiska ludologicznego są oczywiście zupełnie stochastyczne i przypadkowe.<br><br>Niemniej, jeśli mimo wszystko dostrzegasz w tym chochole jakikolwiek walor napracowania, możesz dokonać dobrowolnej subwencji na moją wirtualną kawkę lub dorzucić się do worka kartofli. Dzięki temu sam zainicjuję proces kulinarny i przygotuję sobie pyszne ziemniaczki.<br><br>Aha, aktywacja poniższego interfejsu przyciskowego odblokuje – ot tak, w ramach radosnej transgresji – <span style=\"color:#E91E63;font-weight:bold;\">alternatywną, „gorącą” skórkę Drakula</span>.<br><br>Wejdź w mental. Have fun.",
   ui_coffee_btn: "POSTAW KAWKĘ",
-  ui_coffee_footer: "Code by Gregor & Gemini AI",
+  ui_coffee_footer: "Pozdrawiam wykopową gawędź z <a href=\"https://wykop.pl/tag/bekazludologuff\" target=\"_blank\" style=\"color:#FFD700;text-decoration:none;\">#bekazludologuff</a> i powiązanych tagów.",
   
+  // ... (reszta pliku taka sama jak wcześniej) ...
   ui_dev_title: "DEV TOOLS",
   ui_dev_label_presets: "PRESETY WROGÓW (AUTO-START)",
   ui_dev_label_scenarios: "SCENARIUSZE (BROŃ)",
@@ -130,6 +133,12 @@ export const LANG_PL = {
   ui_menu_new_game_prompt: "Start Symulacji",
   
   ui_config_title_game: "Ustawienia Rozgrywki",
+  // BRAKUJĄCE KLUCZE KONFIGURACJI
+  ui_config_nick: "TWOJA KSYWKA",
+  ui_config_skin: "WYGLĄD POSTACI",
+  ui_config_tutorial: "SAMOUCZEK",
+  ui_config_tutorial_btn: "ODTWÓRZ",
+  
   ui_config_joystick: "Pozycja joysticka:",
   ui_config_joy_left: "Lewa",
   ui_config_joy_right: "Prawa",
@@ -191,6 +200,7 @@ export const LANG_PL = {
   
   ui_scores_title: "REJESTR PRZEGRYWÓW",
   ui_scores_clear: "🗑️ WYCZYŚĆ",
+  ui_scores_clear_local: "WYCZYŚĆ LOKALNE", 
   ui_scores_col_rank: "#",
   ui_scores_col_nick: "KSYWKA",
   ui_scores_col_score: "PKT",
@@ -310,7 +320,6 @@ export const LANG_PL = {
   quote_gameover_13: "Z ciebie taki gamer jak z Kiszczaka ludolog.",
   quote_gameover_14: "Chyba dziś nic z tych ziemniaczków nie będzie...",
   
-  // STATYSTYKI (Game Stats) - POPRAWKI NAZZEWNICTWA
   ui_tab_stats: "STATYSTYKI",
   ui_stat_header_name: "NAZWA DANEJ",
   ui_stat_header_local: "TY (Lokalnie)",
@@ -322,10 +331,8 @@ export const LANG_PL = {
   stat_enemies_killed: "Łącznie Zabito",
   stat_potatoes_collected: "Zebrano Ziemniaczków",
   
-  // Nowa statystyka czasu gry
   stat_total_playtime: "Łącznie Przegranego Czasu",
   
-  // Poprawna odmiana (dopełniacz)
   stat_killed_standard: "Zabitych Dadgamerów",
   stat_killed_horde: "Zabitych Maćków z Czatu",
   stat_killed_aggressive: "Zabitych Prowokatorów",

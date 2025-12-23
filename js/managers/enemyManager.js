@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v1.07 - Stats Tracking & Full Code)
+// ENEMYMANAGER.JS (v1.09 - Centralized Spawn Config)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -7,7 +7,7 @@ import { devSettings } from '../services/dev.js';
 import { findFreeSpotForPickup, addBombIndicator } from '../core/utils.js'; 
 import { playSound } from '../services/audio.js';
 import { getLang } from '../services/i18n.js';
-import { hpScale } from '../core/utils.js'; // Dodano import hpScale z utils, jeśli tam jest, lub zdefiniuj lokalnie
+import { hpScale } from '../core/utils.js'; 
 
 import { Enemy } from '../entities/enemy.js';
 import { StandardEnemy } from '../entities/enemies/standardEnemy.js';
@@ -22,7 +22,8 @@ import { WallEnemy } from '../entities/enemies/wallEnemy.js';
 import { LumberjackEnemy } from '../entities/enemies/lumberjackEnemy.js'; 
 import { SnakeEaterEnemy } from '../entities/enemies/snakeEaterEnemy.js';
 
-import { ENEMY_STATS, SIEGE_EVENT_CONFIG, WALL_DETONATION_CONFIG, GAME_CONFIG } from '../config/gameData.js';
+// ZMIANA: Import SPAWN_TIMINGS
+import { ENEMY_STATS, SIEGE_EVENT_CONFIG, WALL_DETONATION_CONFIG, GAME_CONFIG, SPAWN_TIMINGS } from '../config/gameData.js';
 
 import { HealPickup } from '../entities/pickups/healPickup.js';
 import { MagnetPickup } from '../entities/pickups/magnetPickup.js';
@@ -32,7 +33,7 @@ import { BombPickup } from '../entities/pickups/bombPickup.js';
 import { FreezePickup } from '../entities/pickups/freezePickup.js';
 
 import { Chest } from '../entities/chest.js';
-import { LeaderboardService } from '../services/leaderboard.js'; // IMPORT NOWY
+import { LeaderboardService } from '../services/leaderboard.js'; 
 
 export const ENEMY_CLASS_MAP = {
     standard: StandardEnemy,
@@ -63,15 +64,16 @@ export function getAvailableEnemyTypes(game) {
     const t = game.time;
     const seen = game.seenEnemyTypes; 
 
+    // ZMIANA: Użycie SPAWN_TIMINGS z gameData.js
     const availableAtTime = [
-        t > 0 ? 'standard' : null,
-        t > 36 ? 'horde' : null,
-        t > 72 ? 'aggressive' : null,
-        t > 108 ? 'kamikaze' : null,
-        t > 144 ? 'splitter' : null,
-        t > 216 ? 'tank' : null,
-        t > 240 ? 'snakeEater' : null,
-        t > 252 ? 'ranged' : null
+        t > SPAWN_TIMINGS.STANDARD ? 'standard' : null,
+        t > SPAWN_TIMINGS.HORDE ? 'horde' : null,
+        t > SPAWN_TIMINGS.AGGRESSIVE ? 'aggressive' : null,
+        t > SPAWN_TIMINGS.KAMIKAZE ? 'kamikaze' : null,
+        t > SPAWN_TIMINGS.SPLITTER ? 'splitter' : null,
+        t > SPAWN_TIMINGS.TANK ? 'tank' : null,
+        t > SPAWN_TIMINGS.SNAKEEATER ? 'snakeEater' : null,
+        t > SPAWN_TIMINGS.RANGED ? 'ranged' : null
     ].filter(type => type !== null);
 
     let typesToSpawn = [];

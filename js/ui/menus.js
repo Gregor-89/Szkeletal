@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.09 - Fix Labels & Zero Stats)
+// MENUS.JS (v1.15 - Forced Translation Fix)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -9,22 +9,28 @@ import { get as getAsset } from '../services/assets.js';
 import { setJoystickSide } from './input.js';
 import { initLeaderboardUI } from './leaderboardUI.js'; 
 import { VERSION } from '../config/version.js';
-import { MUSIC_CONFIG } from '../config/gameData.js';
+import { MUSIC_CONFIG, SKINS_CONFIG } from '../config/gameData.js';
 import { LeaderboardService } from '../services/leaderboard.js';
+import { getUnlockedSkins, unlockSkin, setCurrentSkin, getCurrentSkin } from '../services/skinManager.js'; 
 
 let currentJoyMode = 'right';
 
 const STATIC_TRANSLATION_MAP = {
     'btnStart': 'ui_menu_start', 
     'btnContinue': 'ui_menu_continue', 
-    'navScores': 'ui_scores_title', // ZMIANA: Powrót do właściwej nazwy (Rejestr/Kroniki)
+    'navScores': 'ui_scores_title', 
     'navConfig': 'ui_menu_tab_config', 
     'navGuide': 'ui_menu_tab_guide', 
     'btnReplayIntroMain': 'ui_menu_replay_intro',
     'navDev': 'ui_menu_tab_dev', 
     'navCoffee': 'ui_coffee_title',
 
-    'configTitleMain': 'ui_config_title_game', 
+    'configTitleMain': 'ui_config_title_game',
+    'lblNick': 'ui_config_nick',
+    'lblSkin': 'ui_config_skin',
+    'lblTutorial': 'ui_config_tutorial',
+    'btnShowTutorialConfig': 'ui_config_tutorial_btn',
+    
     'lblJoy': 'ui_config_joystick', 
     'lblHyper': 'ui_config_hyper',
     'lblShake': 'ui_config_shake', 
@@ -41,7 +47,8 @@ const STATIC_TRANSLATION_MAP = {
     
     'resumeOverlayTitle': 'ui_ready_title', 
     'scoresTitle': 'ui_scores_title', 
-    'btnClearScoresMenu': 'ui_scores_clear',
+    'btnClearScoresMenu': 'ui_scores_clear_local',
+    'btnClearScoresGO': 'ui_scores_clear_local',
     'scoresEmptyMsg': 'ui_chest_empty_title', 
     'guideTitle': 'ui_guide_title',
 
@@ -115,11 +122,16 @@ export function updateStaticTranslations() {
         const el = document.getElementById(id);
         if (el) {
             const text = getLang(key);
-            if (text && !text.startsWith('[')) el.innerText = text; 
+            if (text && !text.startsWith('[')) {
+                if (text.includes('<') && text.includes('>')) {
+                    el.innerHTML = text;
+                } else {
+                    el.innerText = text;
+                }
+            }
         }
     }
     
-    // Nadpisanie tekstu przycisku (opcjonalne, jeśli chcesz konkretnie "KRONIKI POLEGŁYCH")
     const btnScores = document.getElementById('navScores');
     if (btnScores && getCurrentLangCode() === 'pl') {
         btnScores.innerText = "KRONIKI POLEGŁYCH";
@@ -144,8 +156,9 @@ export function updateStaticTranslations() {
     const backText = getLang('ui_nav_back') || 'POWRÓT';
     document.querySelectorAll('.nav-back').forEach(el => el.innerText = backText);
 
+    // Tłumaczenie nagłówków tabeli
     const headers = document.querySelectorAll('#retroScoreTable th, #goScoreTable th');
-    if (headers.length >= 6) {
+    if (headers.length > 0) {
         headers.forEach((th, index) => {
             const mod = index % 7; 
             if (mod === 0) th.innerText = getLang('ui_scores_col_rank');
@@ -235,6 +248,7 @@ function initLanguageSelector() {
         radio.onchange = () => {
             setLanguage(lang.code);
             updateStaticTranslations();
+            initLanguageSelector(); 
             playSound('Click');
         };
         
@@ -257,17 +271,23 @@ export function switchView(viewId) {
 
     if (viewId === 'view-scores') {
         if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard();
+        
+        // POPRAWKA: Wymuszenie tłumaczeń z opóźnieniem, aby nadpisać leaderboardUI
+        setTimeout(() => {
+            updateStaticTranslations();
+        }, 100);
     }
     if (viewId === 'view-guide') { 
         generateGuide(); 
     }
-    
+    if (viewId === 'view-config') {
+        generateSkinSelector();
+    }
     if (viewId === 'view-main') {
         updateMainMenuStats();
     }
 }
 
-// ZMIANA: Fix wyświetlania zerowych wartości
 async function updateMainMenuStats() {
     const lblPlayers = document.getElementById('lblMainPlayers');
     const valPlayers = document.getElementById('valMainPlayers');
@@ -281,7 +301,6 @@ async function updateMainMenuStats() {
     
     const stats = await LeaderboardService.getGlobalStats();
     
-    // FIX: Używamy !== undefined, aby 0 było wyświetlane poprawnie
     if (stats.unique_players !== undefined) {
         valPlayers.textContent = stats.unique_players.toLocaleString();
     } else {
@@ -299,6 +318,48 @@ function updateToggleVisual(btn, isOn) {
     const onTxt = getLang('ui_on') || "WŁ";
     const offTxt = getLang('ui_off') || "WYŁ";
     if (isOn) { btn.textContent = onTxt; btn.className = "retro-toggle on"; } else { btn.textContent = offTxt; btn.className = "retro-toggle off"; }
+}
+
+function generateSkinSelector() {
+    const container = document.getElementById('skinSelector');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const unlocked = getUnlockedSkins();
+    const current = getCurrentSkin();
+
+    SKINS_CONFIG.forEach(skin => {
+        const option = document.createElement('div');
+        option.className = 'skin-option';
+        
+        const isLocked = skin.locked && !unlocked.includes(skin.id);
+        const isSelected = (skin.id === current);
+
+        if (isLocked) option.classList.add('locked');
+        if (isSelected) option.classList.add('selected');
+
+        const asset = getAsset(skin.assetIdle);
+        const img = document.createElement('img');
+        if (asset) img.src = asset.src;
+        else img.alt = skin.name;
+
+        option.appendChild(img);
+
+        option.onclick = () => {
+            if (isLocked) {
+                playSound('Click');
+                switchView('view-coffee');
+            } else {
+                setCurrentSkin(skin.id);
+                playSound('Click');
+                generateSkinSelector(); 
+            }
+        };
+
+        option.title = isLocked ? "ZABLOKOWANE (Kliknij aby zobaczyć jak odblokować)" : skin.name;
+
+        container.appendChild(option);
+    });
 }
 
 export function initRetroToggles(game, uiData) {
@@ -362,6 +423,29 @@ export function initRetroToggles(game, uiData) {
             playSound('Click');
             game.paused = true;
         };
+    }
+
+    const coffeeBtn = document.getElementById('coffeeBtn');
+    if (coffeeBtn) {
+        const unlocked = getUnlockedSkins();
+        if (unlocked.includes('hot')) {
+             coffeeBtn.innerText = "NIKT TEGO NIE SPRAWDZA - SKIN ODBLOKOWANY :)";
+             coffeeBtn.style.borderColor = "#00E676";
+             coffeeBtn.style.background = "#1B5E20";
+             coffeeBtn.classList.remove('pulse');
+        }
+
+        coffeeBtn.addEventListener('click', () => {
+            playSound('Click');
+            setTimeout(() => {
+                unlockSkin('hot');
+                coffeeBtn.innerText = "NIKT TEGO NIE SPRAWDZA - SKIN ODBLOKOWANY :)";
+                coffeeBtn.style.borderColor = "#00E676";
+                coffeeBtn.style.background = "#1B5E20";
+                coffeeBtn.classList.remove('pulse');
+                playSound('ChestReward'); 
+            }, 2000);
+        });
     }
 
     const volMusic = document.getElementById('volMusic');

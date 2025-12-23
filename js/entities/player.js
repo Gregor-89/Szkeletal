@@ -1,11 +1,12 @@
 // ==============
-// PLAYER.JS (v1.02 - Analog Animation Speed)
+// PLAYER.JS (v1.06 - Skin Scaling Logic)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
 import { WhipWeapon } from '../config/weapons/whipWeapon.js'; 
 import { get as getAsset } from '../services/assets.js';
-import { PLAYER_CONFIG, HAZARD_CONFIG } from '../config/gameData.js';
+import { PLAYER_CONFIG, HAZARD_CONFIG, SKINS_CONFIG } from '../config/gameData.js';
+import { getCurrentSkin } from '../services/skinManager.js';
 
 export class Player {
     constructor(startX, startY) {
@@ -13,7 +14,9 @@ export class Player {
         
         this.x = startX;
         this.y = startY;
-        this.size = 80; 
+        // Domyślny rozmiar (bazowy)
+        this.baseSize = 80; 
+        this.size = this.baseSize;
 
         this.baseSpeed = PLAYER_CONFIG.BASE_SPEED;
         this.speedMultiplier = 1.0;
@@ -26,9 +29,9 @@ export class Player {
         
         this.knockback = { x: 0, y: 0 };
         
-        this.spriteSheet = getAsset('player_spritesheet'); 
-        if (!this.spriteSheet) this.spriteSheet = getAsset('drakul'); 
-        if (!this.spriteSheet) this.spriteSheet = getAsset('player');
+        // Inicjalizacja skina
+        this.currentSkinId = getCurrentSkin(); 
+        this.refreshSkinAssets(this.currentSkinId);
         
         this.totalFrames = 16; 
         this.cols = 4;
@@ -44,6 +47,36 @@ export class Player {
         this.isDead = false;
         this.deathTimer = 0;
         this.deathDuration = 1.5; 
+    }
+
+    // Metoda pomocnicza do ładowania zasobów i SKALOWANIA
+    refreshSkinAssets(skinId) {
+        const skinConfig = SKINS_CONFIG.find(s => s.id === skinId) || SKINS_CONFIG[0];
+        this.currentSkinAsset = skinConfig.assetSprite;
+        
+        this.spriteSheet = getAsset(this.currentSkinAsset); 
+        // Fallbacki
+        if (!this.spriteSheet) this.spriteSheet = getAsset('player_spritesheet'); 
+        if (!this.spriteSheet) this.spriteSheet = getAsset('drakul'); 
+        if (!this.spriteSheet) this.spriteSheet = getAsset('player');
+
+        // LOGIKA SKALOWANIA SKINA
+        if (skinId === 'hot') {
+            this.size = this.baseSize * 1.10; // +10% dla Hot Drakula
+        } else {
+            this.size = this.baseSize; // Domyślny rozmiar dla reszty
+        }
+    }
+    
+    // Metoda do wywołania zmiany w locie
+    refreshSkin(newSkinId) {
+        // console.log(`[Player] Zmiana skina w locie: ${this.currentSkinId} -> ${newSkinId}`);
+        this.currentSkinId = newSkinId;
+        this.refreshSkinAssets(newSkinId);
+        
+        // Reset klatki, żeby uniknąć błędów renderowania przy zmianie spritesheeta
+        this.currentFrame = 0;
+        this.animTimer = 0;
     }
 
     reset(canvasWidth, canvasHeight) {
@@ -63,6 +96,10 @@ export class Player {
         
         this.isDead = false;
         this.deathTimer = 0;
+        
+        // Refresh skina przy resecie
+        this.currentSkinId = getCurrentSkin();
+        this.refreshSkinAssets(this.currentSkinId);
     }
     
     startDeath() {
@@ -95,6 +132,12 @@ export class Player {
     }
 
     update(dt, game, keys, jVec, camera) { 
+        // Sprawdzenie zmiany skina w locie
+        const globalSkin = getCurrentSkin();
+        if (this.currentSkinId !== globalSkin) {
+            this.refreshSkin(globalSkin);
+        }
+
         if (this.isDead) return; 
 
         if (Math.abs(this.knockback.x) > 0.1 || Math.abs(this.knockback.y) > 0.1) {
@@ -115,16 +158,14 @@ export class Player {
             dy = jVec.y;
         }
 
-        // ZMIANA: Obliczanie siły wejścia (0.0 - 1.0)
         let inputMagnitude = 0;
 
         if (dx !== 0 || dy !== 0) {
             inputMagnitude = Math.hypot(dx, dy);
-            // Normalizacja wektora ruchu, ale zachowanie siły wejścia
             if (inputMagnitude > 1) { 
                 dx /= inputMagnitude; 
                 dy /= inputMagnitude; 
-                inputMagnitude = 1; // Cap na 1.0
+                inputMagnitude = 1; 
             }
             this.isMoving = true;
             if (dx !== 0) this.facingDir = Math.sign(dx);
@@ -151,24 +192,20 @@ export class Player {
             maxCurrentSpeed *= 1.4;
         }
 
-        // Faktyczna prędkość w tej klatce (uwzględnia analogowe wychylenie)
         const actualSpeed = maxCurrentSpeed * inputMagnitude;
 
         this.x += dx * actualSpeed * dt;
         this.y += dy * actualSpeed * dt;
 
-        // Przekazujemy FAKTYCZNĄ prędkość do animacji
         this.updateAnimation(dt, actualSpeed);
     }
 
     updateAnimation(dt, actualSpeed) {
         if (!this.spriteSheet) {
-            this.spriteSheet = getAsset('player_spritesheet') || getAsset('drakul') || getAsset('player');
+            this.refreshSkinAssets(this.currentSkinId);
         }
         
         if (this.isMoving) {
-            // ZMIANA: Ratio bazuje na actualSpeed (0..max) vs baseSpeed
-            // Dzięki temu lekki ruch joystickiem = wolne przebieranie nogami
             const speedRatio = actualSpeed / this.baseSpeed;
             
             this.animTimer += dt * speedRatio;
@@ -187,7 +224,7 @@ export class Player {
         if (this.isDead) return;
 
         if (!this.spriteSheet) {
-             this.spriteSheet = getAsset('player_spritesheet') || getAsset('drakul') || getAsset('player');
+             this.refreshSkinAssets(this.currentSkinId);
         }
 
         ctx.save();
@@ -231,6 +268,7 @@ export class Player {
                 const sx = col * frameW;
                 const sy = row * frameH;
                 
+                // ZMIANA: Używamy this.size zamiast na sztywno 80
                 const drawH = this.size; 
                 const ratio = frameW / frameH;
                 const drawW = drawH * ratio;
@@ -257,6 +295,7 @@ export class Player {
         const hpBarW = 64;
         const hpBarH = 6;
         const hpBarX = -hpBarW / 2;
+        // ZMIANA: Pasek życia pozycjonowany względem aktualnego this.size
         const hpBarY = -this.size / 2 - 20; 
         
         const healthPct = Math.max(0, Math.min(1, game.health / game.maxHealth));
@@ -277,6 +316,7 @@ export class Player {
 
         if (game.shield) {
             const t = performance.now() / 1000;
+            // ZMIANA: Tarcza skalowana względem this.size
             const r = this.size * 0.8; 
 
             const shieldGrad = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, r);
