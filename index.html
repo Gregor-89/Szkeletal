@@ -128,20 +128,17 @@
 
       <div id="view-scores" class="menu-view">
         <h2 id="scoresTitle" class="retro-title">MAUZOLEUM</h2>
-        
         <div class="score-tabs-container">
             <button id="tabLocalScores" class="score-tab active">LOKALNE</button>
             <button id="tabOnlineScores" class="score-tab">ONLINE</button>
             <button id="tabStats" class="score-tab">STATYSTYKI</button>
         </div>
-        
         <div id="onlineFilters" class="score-filters" style="display:none;">
             <button class="filter-btn active" data-period="today">DZIŚ</button>
             <button class="filter-btn" data-period="weekly">TYDZIEŃ</button>
             <button class="filter-btn" data-period="monthly">MIESIĄC</button>
             <button class="filter-btn" data-period="all">ALL</button>
         </div>
-        
         <div class="retro-scroll-box" id="scoreScrollBox">
             <div id="scoreLoading" style="display:none; text-align:center; padding:20px; color:#FFD700;">WCZYTYWANIE...</div>
             <table id="retroScoreTable" class="sortable-table">
@@ -174,23 +171,19 @@
                 <input type="text" id="inpPlayerNick" class="retro-input" maxlength="20" placeholder="Wpisz nick..." value="GRACZ">
                 <span id="lblNickLimitConfig" style="font-size:0.8rem; color:#666;">(Max 20 znaków, A-Z, 0-9)</span>
             </div>
-            
             <input type="checkbox" id="chkHyper" style="display:none;">
             <input type="checkbox" id="chkShake" checked style="display:none;">
             <input type="checkbox" id="chkFPS" checked style="display:none;">
             <input type="checkbox" id="chkPickupLabels" checked style="display:none;">
-            
             <div class="config-row" style="flex-direction:column; align-items:flex-start;">
                 <div id="lblSkin" style="width:100%; margin-bottom: 8px; color: #eee;">WYGLĄD POSTACI:</div>
                 <div class="skin-selector" id="skinSelector"></div>
             </div>
-
             <div class="config-row"><span id="lblJoy">JOYSTICK</span><button class="retro-toggle" id="toggleJoy">PRAWA</button></div>
             <div class="config-row"><span id="lblHyper">HYPER MODE</span><button class="retro-toggle off" id="toggleHyper">WYŁ</button></div>
             <div class="config-row"><span id="lblShake">WSTRZĄSY</span><button class="retro-toggle on" id="toggleShake">WŁ</button></div>
             <div class="config-row"><span id="lblFPS">LICZNIK FPS</span><button class="retro-toggle on" id="toggleFPS">WŁ</button></div>
             <div class="config-row"><span id="lblLabels">PODPISY</span><button class="retro-toggle on" id="toggleLabels">WŁ</button></div>
-            
             <div class="config-row">
                 <span id="lblMusic">MUZYKA</span>
                 <input type="range" id="volMusic" class="retro-range" min="0" max="100" value="40">
@@ -199,7 +192,6 @@
                 <span id="lblSFX">EFEKTY</span>
                 <input type="range" id="volSFX" class="retro-range" min="0" max="100" value="30">
             </div>
-            
             <div class="config-row">
                 <span id="lblFOV">POLE WIDZENIA (ZOOM)</span>
                 <div style="display:flex; align-items:center; gap:10px; width:100%;">
@@ -207,9 +199,7 @@
                     <span id="zoomValue" style="min-width:50px; text-align:right; color:#FFD700; font-family:'VT323', monospace; font-size:1.5rem;">100%</span>
                 </div>
             </div>
-
             <div class="config-row"><span id="lblLang">JĘZYK</span><div id="lang-selector-container" class="retro-lang-row"></div></div>
-            
             <div class="config-row">
                 <span id="lblTutorial">SAMOUCZEK</span>
                 <button id="btnShowTutorialConfig" class="retro-btn small">ODTWÓRZ</button>
@@ -220,12 +210,9 @@
 
       <div id="view-coffee" class="menu-view">
         <h2 id="coffeeTitle" class="retro-title" style="color:#E91E63; border-color:#E91E63;">HOT COFFEE</h2>
-        
         <div class="retro-scroll-box text-center" style="display:flex; flex-direction:column; justify-content:flex-start; align-items:center; padding-top: 20px; overflow-y: auto;">
             <div style="font-size:48px; margin-bottom:15px; width:100%; text-align:center;">☕ + 🥔</div>
-            <p id="coffeeDesc" style="font-size:1.3rem; line-height:1.5; margin-bottom:20px; color:#eee; max-width:90%;">
-                Jeżeli doceniasz napracowanie...
-            </p>
+            <p id="coffeeDesc" style="font-size:1.3rem; line-height:1.5; margin-bottom:20px; color:#eee; max-width:90%;"></p>
             <div style="display:flex; flex-direction:row; justify-content:center; align-items:center; gap:30px; margin-bottom:20px;">
                 <div class="qr-wrapper" style="margin-bottom:0;">
                     <img src="img/qrcode.png" alt="QR Code" style="width:150px; height:150px; display:block; image-rendering:pixelated;">
@@ -235,14 +222,10 @@
             <a id="coffeeBtn" href="https://suppi.pl/gregor" target="_blank" class="retro-btn primary pulse" style="text-decoration:none; color:#fff; border-color:#E91E63; background:#C2185B;">
                 POSTAW KAWKĘ
             </a>
-            
             <div id="supportersContainer" style="margin-top: 30px; width: 90%; border-top: 2px dashed #444; padding-top: 15px; text-align: center;">
                 <h3 id="lblSupporters" style="color: #FFD700; margin-bottom: 10px;">🏆 OSTATNIA PIĄTKA ZIEMNIACZANYCH MECENASÓW 🏆</h3>
-                <div id="supportersList" style="font-size: 1rem; color: #aaa; min-height: 50px;">
-                    Ładowanie listy wspierających...
-                </div>
+                <div id="supportersList" style="font-size: 1rem; color: #aaa; min-height: 50px;">Ładowanie listy wspierających...</div>
             </div>
-
             <div id="coffeeFooter" style="margin-top:20px; opacity:0.6; font-size:0.9rem;">Code by Gregor & Gemini AI</div>
         </div>
         <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
@@ -298,7 +281,7 @@
                 </div>
             </div>
             <div class="dev-section">
-                <p class="dev-label">SPAWN WROGÓW (DOZWOLEMNI)</p>
+                <p class="dev-label">SPAWN WROGÓW</p>
                 <div class="dev-control">
                   <label>Dozwoleni:</label>
                   <select id="devEnemyType" multiple style="background:#333; color:#fff; padding:5px; height:100px;">
@@ -384,30 +367,15 @@
   <div id="gameOverOverlay" class="retro-overlay" style="display:none;"> 
     <div class="retro-frame"> 
       <h2 id="gameOverTitle" class="retro-title text-red">KONIEC GRY</h2> 
-      
       <div id="gameOverQuote" class="retro-quote pulse" style="color:#FFA07A; font-style:italic; margin-bottom:20px; text-align:center; min-height:1.2em; font-size: 1.8rem; line-height: 1.4;"></div>
-      
       <div class="gameover-stats-fancy">
-          <div class="fancy-stat-box main">
-              <span id="lblGOScore" class="fancy-label">TWÓJ WYNIK</span>
-              <span id="finalScore" class="fancy-value gold">0</span>
-          </div>
+          <div class="fancy-stat-box main"><span id="lblGOScore" class="fancy-label">TWÓJ WYNIK</span><span id="finalScore" class="fancy-value gold">0</span></div>
           <div class="fancy-stat-row">
-              <div class="fancy-stat-box">
-                  <span id="lblGOTime" class="fancy-label">CZAS</span>
-                  <span id="finalTime" class="fancy-value">0:00</span>
-              </div>
-              <div class="fancy-stat-box">
-                  <span id="lblGOLevel" class="fancy-label">POZIOM</span>
-                  <span id="finalLevel" class="fancy-value">1</span>
-              </div>
-              <div class="fancy-stat-box">
-                  <span id="lblGOKills" class="fancy-label">ZABICI</span>
-                  <span id="totalKillsSpanGO" class="fancy-value kill-count">0</span>
-              </div>
+              <div class="fancy-stat-box"><span id="lblGOTime" class="fancy-label">CZAS</span><span id="finalTime" class="fancy-value">0:00</span></div>
+              <div class="fancy-stat-box"><span id="lblGOLevel" class="fancy-label">POZIOM</span><span id="finalLevel" class="fancy-value">1</span></div>
+              <div class="fancy-stat-box"><span id="lblGOKills" class="fancy-label">ZABICI</span><span id="totalKillsSpanGO" class="fancy-value kill-count">0</span></div>
           </div>
       </div>
-
       <div class="score-tabs-container go-tabs">
           <button id="tabGOLocal" class="score-tab active small">LOKALNE</button>
           <button id="tabGOOnline" class="score-tab small">ONLINE</button>
@@ -418,28 +386,19 @@
           <button class="filter-btn" data-period="monthly">MIESIĄC</button>
           <button class="filter-btn" data-period="all">ALL</button>
       </div>
-
       <div class="retro-scroll-box" style="height:150px;"> 
         <div id="goScoreLoading" style="display:none; text-align:center; padding:10px; color:#FFD700;">WCZYTYWANIE...</div>
         <table id="goScoreTable" class="sortable-table"> 
           <thead>
               <tr>
-                  <th>#</th>
-                  <th data-sort="name">NICK</th>
-                  <th data-sort="score">PKT</th>
-                  <th data-sort="kills">ZAB</th>
-                  <th data-sort="level">LVL</th>
-                  <th data-sort="time">CZAS</th>
-                  <th data-sort="date">DATA</th>
+                  <th>#</th><th data-sort="name">NICK</th><th data-sort="score">PKT</th><th data-sort="kills">ZAB</th><th data-sort="level">LVL</th><th data-sort="time">CZAS</th><th data-sort="date">DATA</th>
               </tr>
           </thead> 
           <tbody id="scoresBodyGameOver"></tbody> 
         </table> 
       </div> 
-      
       <button id="btnSubmitScore" class="retro-btn small success" style="margin-bottom:10px; border-color:#00E676; background:#1B5E20; display:none;">WYŚLIJ WYNIK</button>
       <div id="submitMsg" style="text-align:center; font-size:1rem; margin-bottom:5px; height:20px;"></div>
-
       <button id="btnClearScoresGO" class="retro-btn small danger" style="margin-bottom:10px;">WYCZYŚĆ LOKALNE</button>
       <div class="menu-actions"> 
         <button id="btnRetry" class="retro-btn primary">JESZCZE RAZ</button> 
@@ -467,7 +426,6 @@
         if(viewId === 'view-scores' && window.wrappedDisplayScores) window.wrappedDisplayScores();
         if(viewId === 'view-guide' && window.wrappedGenerateGuide) window.wrappedGenerateGuide();
     }
-    
     document.getElementById('navScores').onclick = () => menuNav('view-scores');
     document.getElementById('navConfig').onclick = () => menuNav('view-config');
     document.getElementById('navGuide').onclick = () => menuNav('view-guide');

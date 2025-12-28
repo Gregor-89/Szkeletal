@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v1.14 - Zoom Aware Offscreen & Full Restoration)
+// COLLISIONS.JS (v1.14b - Full Restoration & Zoom Aware Offscreen)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -230,7 +230,12 @@ export function checkCollisions(state) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const b = bullets[i];
         if (!b) continue;
-        if (typeof b.isOffScreen === 'function' && b.isOffScreen(state.camera, game)) { b.release(); continue; }
+        
+        // FIX: Poprawne przekazanie game do isOffScreen dla Zooma
+        if (typeof b.isOffScreen === 'function' && b.isOffScreen(state.camera, game)) { 
+            b.release(); 
+            continue; 
+        }
         
         if (obstacles) {
             let hitObs = false;
@@ -241,36 +246,63 @@ export function checkCollisions(state) {
                     const destroyed = obs.takeDamage(b.damage, 'player');
                     addHitText(hitTextPool, hitTexts, obs.x, obs.y - 20, b.damage, '#fff');
                     playSound('Hit');
-                    if (b.type === 'axe') spawnRainbowSplash(particlePool, b.x, b.y, 30);
-                    else { const p = particlePool.get(); if(p) p.init(b.x, b.y, Math.random()*100-50, Math.random()*100-50, 0.3, '#5D4037', 0, 0.9, 3); }
-                    if (destroyed) { spawnConfetti(particlePool, obs.x, obs.y); playSound('Explosion'); }
+                    if (b.type === 'axe') {
+                         spawnRainbowSplash(particlePool, b.x, b.y, WEAPON_CONFIG.LUMBERJACK_AXE.IMPACT_PARTICLE_COUNT || 30);
+                    } else {
+                         const p = particlePool.get();
+                         if (p) p.init(b.x, b.y, Math.random()*100-50, Math.random()*100-50, 0.3, '#5D4037', 0, 0.9, 3);
+                    }
+                    if (destroyed) {
+                        spawnConfetti(particlePool, obs.x, obs.y);
+                        playSound('Explosion');
+                        const gemCount = 5 + Math.floor(Math.random() * 4);
+                        for(let k=0; k<gemCount; k++) {
+                             const gem = gemsPool.get();
+                             if (gem) gem.init(obs.x + (Math.random()-0.5)*40, obs.y + (Math.random()-0.5)*40, 5, 5, '#81C784');
+                        }
+                        if (Math.random() < obs.dropChance) {
+                             const dropType = Math.random() < 0.3 ? 'chest' : 'heal';
+                             const PickupClass = PICKUP_CLASS_MAP[dropType];
+                             if (PickupClass) pickups.push(new PickupClass(obs.x, obs.y));
+                        }
+                    }
                     break;
                 }
             }
-            if (hitObs) { if (b.pierce > 0) b.pierce--; else b.release(); continue; }
+            if (hitObs) {
+                if (b.pierce > 0) b.pierce--;
+                else b.release();
+                continue;
+            }
         }
 
         let hitEnemy = false;
         for (let j = enemies.length - 1; j >= 0; j--) {
             const e = enemies[j];
             if (!e || e.isDead || b.lastEnemyHitId === e.id) continue; 
+            
             if (checkCircleCollision(b.x, b.y, b.size, e.x, e.y, e.size * 0.6)) {
                 hitEnemy = true;
                 const isDead = e.takeDamage(b.damage, 'player');
                 let hitY = e.y;
                 if (e.stats && e.stats.hitTextOffsetY !== undefined) hitY = e.y + e.stats.hitTextOffsetY; 
                 else if (['wall', 'tank', 'elite', 'lumberjack', 'snakeEater'].includes(e.type)) hitY = e.y - e.size * 0.8; 
-                addHitText(hitTextPool, hitTexts, e.x, hitY, b.damage); playSound('Hit');
+                
+                addHitText(hitTextPool, hitTexts, e.x, hitY, b.damage);
+                playSound('Hit');
                 
                 if (e.type !== 'wall' && e.type !== 'tank' && e.type !== 'snakeEater') {
                     const angle = Math.atan2(e.y - b.y, e.x - b.x);
                     const kbForce = (b.damage + 20) * 8 * (b.type === 'orbital' ? 3.0 : 1.0); 
                     e.applyKnockback(Math.cos(angle) * kbForce, Math.sin(angle) * kbForce);
                 }
+                const p = particlePool.get();
+                if (p) p.init(b.x, b.y, Math.random()*100-50, Math.random()*100-50, 0.2, b.color, 0, 0.9, 3);
+                
                 if (isDead) state.enemyIdCounter = killEnemy(j, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, b.type === 'orbital');
                 
                 if (b.pierce > 0) { b.pierce--; b.lastEnemyHitId = e.id; hitEnemy = false; } 
-                else if (b.bouncesLeft > 0) { b.bouncesLeft--; b.lastEnemyHitId = e.id; b.vx = -b.vx; b.vy = -b.vy; hitEnemy = false; }
+                else if (b.bouncesLeft > 0) { b.bouncesLeft--; b.lastEnemyHitId = e.id; b.vx = -b.vx + (Math.random()-0.5)*100; b.vy = -b.vy + (Math.random()-0.5)*100; hitEnemy = false; }
                 if (hitEnemy) break; 
             }
         }
@@ -282,33 +314,42 @@ export function checkCollisions(state) {
         for (let i = eBullets.length - 1; i >= 0; i--) {
             const eb = eBullets[i];
             if (!eb) continue;
-            if (typeof eb.isOffScreen === 'function' && eb.isOffScreen(state.camera, game)) { eb.release(); continue; }
+            // FIX: Przekazanie game do isOffScreen dla Zooma
+            if (typeof eb.isOffScreen === 'function' && eb.isOffScreen(state.camera, game)) { 
+                eb.release(); 
+                continue; 
+            }
             if (checkCircleCollision(eb.x, eb.y, eb.size, player.x, player.y, player.size / 2)) {
-                game.health -= eb.damage; game.playerHitFlashT = 0.1;
+                game.health -= eb.damage;
+                game.playerHitFlashT = 0.1;
                 addHitText(hitTextPool, hitTexts, player.x, player.y, eb.damage, '#FF0000');
-                playSound('PlayerHurt'); eb.release(); 
+                playSound('PlayerHurt');
+                if (eb.type === 'axe') spawnRainbowSplash(particlePool, eb.x, eb.y, WEAPON_CONFIG.LUMBERJACK_AXE.IMPACT_PARTICLE_COUNT || 30);
+                eb.release(); 
             }
         }
     }
 
-    // --- GEMY I PICKUPY ---
+    const collectionRadius = 35;
     for (let i = gems.length - 1; i >= 0; i--) {
         const g = gems[i];
         if (!g || g.delay > 0 || g.isCollected) continue; 
+        if (g.isDecayedByHazard && g.isDecayedByHazard()) { g.release(); continue; }
         const dx = player.x - g.x; const dy = player.y - g.y;
         if (game.magnet || (dx*dx + dy*dy) < (game.pickupRange * game.pickupRange)) g.magnetized = true;
-        if ((dx*dx + dy*dy) < (35 + g.r) ** 2) {
+        if ((dx*dx + dy*dy) < (collectionRadius + g.r) ** 2) {
             game.xp += Math.floor(g.val * (game.level >= 20 ? 1.2 : 1)); 
-            game.hunger = game.maxHunger; playSound('XPPickup'); g.collect();
+            game.hunger = 100; playSound('XPPickup'); g.collect();
             LeaderboardService.trackStat('potatoes_collected', 1);
         }
     }
     for (let i = pickups.length - 1; i >= 0; i--) {
         const p = pickups[i];
         if (!p) continue;
+        if (p.isDecayed && p.isDecayed()) { pickups.splice(i, 1); continue; }
         const dx = player.x - p.x; const dy = player.y - p.y;
         if ((dx*dx + dy*dy) < (game.pickupRange * game.pickupRange)) p.isMagnetized = true; 
-        if ((dx*dx + dy*dy) < 45 ** 2) {
+        if ((dx*dx + dy*dy) < (collectionRadius + 10) ** 2) {
             p.applyEffect(state); playSound('Pickup');
             addHitText(hitTextPool, hitTexts, player.x, player.y - 20, 0, '#FFF', (p.getLabel ? p.getLabel() : "Bonus"));
             pickups.splice(i, 1);
@@ -317,11 +358,11 @@ export function checkCollisions(state) {
     for (let i = chests.length - 1; i >= 0; i--) {
         const c = chests[i];
         if (!c) continue;
+        if (c.isDecayed && c.isDecayed()) { chests.splice(i, 1); continue; }
         const dx = player.x - c.x; const dy = player.y - c.y;
-        if ((dx*dx + dy*dy) < 55 ** 2) { chests.splice(i, 1); game.triggerChestOpen = true; }
+        if ((dx*dx + dy*dy) < (collectionRadius + 20) ** 2) { chests.splice(i, 1); game.triggerChestOpen = true; }
     }
 
-    // --- ZAGROŻENIA ---
     if (!game.hazardTicker) game.hazardTicker = 0;
     game.hazardTicker -= state.dt;
     for (const h of hazards) {
@@ -335,12 +376,18 @@ export function checkCollisions(state) {
                 playSound('PlayerHurt'); game.hazardTicker = 0.5; 
             }
         }
+        const hazardRadiusSq = h.r * h.r;
+        for (const g of gems) { if (g.active && ((g.x - h.x)**2 + (g.y - h.y)**2) < hazardRadiusSq) g.hazardDecayT = Math.min(1.0, (g.hazardDecayT || 0) + HAZARD_CONFIG.HAZARD_PICKUP_DECAY_RATE * state.dt); }
+        for (const p of pickups) { if (((p.x - h.x)**2 + (p.y - h.y)**2) < hazardRadiusSq) p.inHazardDecayT = Math.min(1.0, (p.inHazardDecayT || 0) + HAZARD_CONFIG.HAZARD_PICKUP_DECAY_RATE * state.dt); }
         for (let i = enemies.length - 1; i >= 0; i--) {
             const e = enemies[i];
             if (e && !e.isDead && !['elite', 'wall', 'snakeEater'].includes(e.type) && h.checkCollision(e.x, e.y, e.size * 0.4)) {
                 e.hazardSlowdownT = 0.2; if (isMega) e.inMegaHazard = true; 
-                if (game.hazardTicker <= 0) {
+                if (!e.hazardTicker) e.hazardTicker = Math.random() * 0.5; e.hazardTicker -= state.dt;
+                if (e.hazardTicker <= 0) {
                     if (e.takeDamage(h.enemyDamage * 0.5, 'hazard')) state.enemyIdCounter = killEnemy(i, e, game, settings, enemies, particlePool, gemsPool, pickups, state.enemyIdCounter, chests, false, false);
+                    else addHitText(hitTextPool, hitTexts, e.x, e.y - 10, h.enemyDamage * 0.5, '#90EE90'); 
+                    e.hazardTicker = 0.5;
                 }
             }
         }
