@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v1.09 - Centralized Spawn Config)
+// ENEMYMANAGER.JS (v1.10 - Boss Pacing & Scaled Difficulty)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -22,7 +22,6 @@ import { WallEnemy } from '../entities/enemies/wallEnemy.js';
 import { LumberjackEnemy } from '../entities/enemies/lumberjackEnemy.js'; 
 import { SnakeEaterEnemy } from '../entities/enemies/snakeEaterEnemy.js';
 
-// ZMIANA: Import SPAWN_TIMINGS
 import { ENEMY_STATS, SIEGE_EVENT_CONFIG, WALL_DETONATION_CONFIG, GAME_CONFIG, SPAWN_TIMINGS } from '../config/gameData.js';
 
 import { HealPickup } from '../entities/pickups/healPickup.js';
@@ -64,7 +63,6 @@ export function getAvailableEnemyTypes(game) {
     const t = game.time;
     const seen = game.seenEnemyTypes; 
 
-    // ZMIANA: Użycie SPAWN_TIMINGS z gameData.js
     const availableAtTime = [
         t > SPAWN_TIMINGS.STANDARD ? 'standard' : null,
         t > SPAWN_TIMINGS.HORDE ? 'horde' : null,
@@ -136,6 +134,14 @@ function spawnHorde(enemies, x, y, hpScale, enemyIdCounter) {
 }
 
 export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
+    // ZMIANA: Sprawdzamy czy na mapie jest aktywny BOSS
+    const bossActive = enemies.some(e => BOSS_TYPES.includes(e.type));
+    
+    // Jeśli Boss jest aktywny, spawnujemy 75% rzadziej, żeby dać graczowi oddech
+    if (bossActive && Math.random() < 0.75) {
+        return enemyIdCounter; 
+    }
+
     const availableTypes = getAvailableEnemyTypes(game);
     
     if (availableTypes.length === 0) {
@@ -169,7 +175,9 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
     x = Math.max(0, Math.min(worldWidth, x));
     y = Math.max(0, Math.min(worldHeight, y));
 
-    const hpScale = 1 + 0.10 * (game.level - 1) + game.time / 90; 
+    // ZMIANA: Łagodniejsze skalowanie HP dla zwykłych wrogów
+    // 7% za level (było 10%) i co 120s (było 90s)
+    const hpScale = 1 + 0.07 * (game.level - 1) + game.time / 120; 
 
     if (type === 'horde') {
         enemyIdCounter = spawnHorde(enemies, x, y, hpScale, enemyIdCounter);
@@ -229,7 +237,8 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
     x = Math.max(0, Math.min(worldWidth, x));
     y = Math.max(0, Math.min(worldHeight, y));
     
-    const hpScale = (1 + 0.10 * (game.level - 1) + game.time / 90) * 1.5; 
+    // ZMIANA: Skalowanie HP Bossów (również łagodniejsze)
+    const hpScale = (1 + 0.07 * (game.level - 1) + game.time / 120) * 1.5; 
     
     const newEnemy = createEnemyInstance(bossType, x, y, hpScale, enemyIdCounter++);
     if (newEnemy) {
@@ -279,7 +288,8 @@ export function spawnWallEnemies(state) {
 
     for (let i = 0; i < spawnQueue.length; i++) {
         const { x, y } = spawnQueue[i];
-        const hpScale = 1 + 0.10 * (game.level - 1) + game.time / 90; 
+        // Skalowanie HP dla Wall Enemy też łagodniejsze
+        const hpScale = 1 + 0.07 * (game.level - 1) + game.time / 120; 
         const newEnemy = createEnemyInstance('wall', x, y, hpScale, state.enemyIdCounter++);
         if (newEnemy) {
             enemies.push(newEnemy);
@@ -347,8 +357,6 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         game.score += e.stats.score;
         game.totalKills = (game.totalKills || 0) + 1;
         
-        // NOWOŚĆ: Śledzenie statystyk zabójstw w Talo
-        // Wywołujemy trackStat dla ogólnej liczby i dla typu wroga
         LeaderboardService.trackStat('enemies_killed', 1);
         if (e.type) {
             LeaderboardService.trackStat(`killed_${e.type}`, 1);
@@ -385,7 +393,6 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
             chests.push(new Chest(e.x, e.y));
         }
         
-        // Dynamiczny wzrost limitu wrogów
         settings.maxEnemies = Math.min(1500, settings.maxEnemies + 0.1); 
     }
 
@@ -400,7 +407,7 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
     }
 
     if (e.type === 'splitter') {
-        const hpScale = (1 + 0.10 * (game.level - 1) + game.time / 90) * 0.8; 
+        const hpScale = (1 + 0.07 * (game.level - 1) + game.time / 120) * 0.8; 
         const child1 = createEnemyInstance('horde', e.x - 5, e.y, hpScale, enemyIdCounter++);
         const child2 = createEnemyInstance('horde', e.x + 5, e.y, hpScale, enemyIdCounter++);
         

@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v1.12 - Potato Stats)
+// COLLISIONS.JS (v1.13 - Pierce Logic Fix)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -10,7 +10,7 @@ import { devSettings } from '../services/dev.js';
 import { COLLISION_CONFIG, HAZARD_CONFIG, MAP_CONFIG, WEAPON_CONFIG } from '../config/gameData.js'; 
 import { getLang } from '../services/i18n.js';
 import { PICKUP_CLASS_MAP } from './effects.js';
-import { LeaderboardService } from '../services/leaderboard.js'; // IMPORT
+import { LeaderboardService } from '../services/leaderboard.js'; 
 
 function spawnRainbowSplash(particlePool, x, y, count = 20) {
     for(let k=0; k<count; k++) {
@@ -357,7 +357,10 @@ export function checkCollisions(state) {
         for (let j = enemies.length - 1; j >= 0; j--) {
             const e = enemies[j];
             if (!e || e.isDead) continue; 
-            if (b.lastEnemyHitId === e.id && b.pierce > 0) continue; 
+            
+            // FIX: Zmieniono warunek z '&& b.pierce > 0' na sam ID. 
+            // Wcześniej, gdy pierce spadał do 0, pocisk uderzał w tego samego wroga po raz drugi i znikał (marnując przebicie).
+            if (b.lastEnemyHitId === e.id) continue; 
             
             if (checkCircleCollision(b.x, b.y, b.size, e.x, e.y, e.size * 0.6)) {
                 hitEnemy = true;
@@ -447,7 +450,6 @@ export function checkCollisions(state) {
             playSound('XPPickup');
             g.collect();
             
-            // NOWOŚĆ: Śledzenie zebranych ziemniaków
             LeaderboardService.trackStat('potatoes_collected', 1);
         }
     }

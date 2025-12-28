@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.15 - Forced Translation Fix)
+// MENUS.JS (v1.17 - Retry Logic & Robust Parsing)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -44,6 +44,7 @@ const STATIC_TRANSLATION_MAP = {
     'coffeeDesc': 'ui_coffee_desc', 
     'coffeeBtn': 'ui_coffee_btn', 
     'coffeeFooter': 'ui_coffee_footer',
+    'lblSupporters': 'ui_coffee_supporters_header',
     
     'resumeOverlayTitle': 'ui_ready_title', 
     'scoresTitle': 'ui_scores_title', 
@@ -156,7 +157,6 @@ export function updateStaticTranslations() {
     const backText = getLang('ui_nav_back') || 'POWRÓT';
     document.querySelectorAll('.nav-back').forEach(el => el.innerText = backText);
 
-    // Tłumaczenie nagłówków tabeli
     const headers = document.querySelectorAll('#retroScoreTable th, #goScoreTable th');
     if (headers.length > 0) {
         headers.forEach((th, index) => {
@@ -261,18 +261,95 @@ function initLanguageSelector() {
     });
 }
 
+// === ULEPSZONA FUNKCJA: Pobieranie wspierających (Retry + Greedy Parsing) ===
+async function fetchSupporters(retries = 3) {
+    const listContainer = document.getElementById('supportersList');
+    if (!listContainer) return;
+    
+    const lastFetch = sessionStorage.getItem('suppi_last_fetch');
+    const cachedData = sessionStorage.getItem('suppi_data');
+    if (lastFetch && cachedData && (Date.now() - lastFetch < 300000)) {
+        listContainer.innerHTML = cachedData;
+        return;
+    }
+
+    listContainer.innerHTML = '<span class="pulse">Łączenie z Suppi...</span>';
+
+    const suppiUrl = 'https://suppi.pl/gregor'; 
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(suppiUrl)}`;
+
+    try {
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error("Proxy error");
+        
+        const data = await response.json();
+        if (!data.contents) throw new Error("Brak danych");
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
+
+        const rows = doc.querySelectorAll('.contributor-row');
+        
+        let html = '';
+        
+        if (rows.length === 0) {
+             html = '<div style="color:#888; font-style:italic; margin-top:10px;">Brak widocznych wpłat na profilu.<br>Zostań pierwszym Mecenasem!</div>';
+        } else {
+            html = '<ul style="list-style:none; padding:0; margin:0; width:100%;">';
+            
+            rows.forEach((row) => {
+                const nameEl = row.querySelector('.fund-contributor-name .wrap-ellipsis');
+                const name = nameEl ? nameEl.innerText.trim() : "Anonim";
+                
+                const dataEls = row.querySelectorAll('.fund-contributor-data');
+                
+                let amount = "Darowizna";
+                let timeAgo = "";
+                
+                if (dataEls.length > 0) amount = dataEls[0].innerText.trim();
+                if (dataEls.length > 1) timeAgo = dataEls[1].innerText.trim();
+
+                html += `
+                    <li style="margin-bottom:8px; background:rgba(255,255,255,0.05); padding:8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="text-align:left;">
+                            <span style="color:#4CAF50; font-weight:bold; display:block;">${name}</span>
+                            <span style="font-size:0.8em; color:#666;">${timeAgo}</span>
+                        </div>
+                        <span style="color:#FFD700; font-weight:bold; font-size:1.1em;">${amount}</span>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+        }
+
+        listContainer.innerHTML = html;
+        sessionStorage.setItem('suppi_data', html);
+        sessionStorage.setItem('suppi_last_fetch', Date.now());
+
+    } catch (e) {
+        console.warn("Suppi fetch failed, retrying...", retries);
+        if (retries > 0) {
+            setTimeout(() => fetchSupporters(retries - 1), 1000); // Ponów po 1s
+        } else {
+            listContainer.innerHTML = '<div style="color:#D32F2F; font-size:0.9em;">Błąd pobierania listy.<br>Spróbuj ponownie później.</div>';
+        }
+    }
+}
+
 export function switchView(viewId) {
     document.querySelectorAll('.menu-view').forEach(el => { el.classList.remove('active'); });
     const target = document.getElementById(viewId);
     if (target) { target.classList.add('active'); playSound('Click'); }
     
-    if (viewId === 'view-coffee') playSound('MusicIntro'); 
+    if (viewId === 'view-coffee') {
+        playSound('MusicIntro'); 
+        fetchSupporters(); 
+    }
     else if (viewId === 'view-main') playSound('MusicMenu');
 
     if (viewId === 'view-scores') {
         if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard();
         
-        // POPRAWKA: Wymuszenie tłumaczeń z opóźnieniem, aby nadpisać leaderboardUI
         setTimeout(() => {
             updateStaticTranslations();
         }, 100);

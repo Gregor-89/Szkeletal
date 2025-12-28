@@ -1,10 +1,9 @@
 // ==============
-// POLISH.JS (v1.08 - Colored Text)
+// POLISH.JS (v1.10 - Supporters Header & Full Translation)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
 export const LANG_PL = {
-  // ... (poprzednie klucze bez zmian) ...
   ui_on: "WŁ",
   ui_off: "WYŁ",
   ui_warning_new_enemy: "NADCHODZI",
@@ -22,13 +21,13 @@ export const LANG_PL = {
   ui_dev_god: "God Mode:",
   ui_dev_hitbox: "Hitboxy:",
   
-  // KOLOROWY TEKST
+  // ZAKTUALIZOWANA SEKCJA HOT COFFEE
   ui_coffee_title: "HOT COFFEE",
   ui_coffee_desc: "Gratulacje. Właśnie dokonałeś bezpowrotnej deprecjacji kilku minut swojego czasu, choć ja sam, w akcie czystego masochizmu, poświęciłem ich dziesiątki na wertykalne promptowanie algorytmów AI przez ostatnie dwa miesiące.<br><br>Musimy postawić sprawę obiektywnie: tak samo jak nasi rodzimi „ludolodzy” (nie mylić z faktycznymi groznawcami) de facto wykazują immanentny brak kompetencji w temacie mechanik, specjalizując się głównie w akwizycji cudzego contentu, tak i ja nie posiadam żadnej wiedzy o kodowaniu, estetyce pixel-artu czy narratologii. Ten projekt to „pato-konstrukt” zbudowany z klocków generatywnych – ziemniak po ziemniaku.<br><br>Czy ta teleologiczna pogoń była warta zachodu? Absolutnie nie. Kto o zdrowych zmysłach chciałby partycypować w tym paszyżu dłużej niż kilka minut? Nawet jeśli to tylko luźna parodia, a wszelkie podobieństwa do znanych nam „śmiechodojów” ze środowiska ludologicznego są oczywiście zupełnie stochastyczne i przypadkowe.<br><br>Niemniej, jeśli mimo wszystko dostrzegasz w tym chochole jakikolwiek walor napracowania, możesz dokonać dobrowolnej subwencji na moją wirtualną kawkę lub dorzucić się do worka kartofli. Dzięki temu sam zainicjuję proces kulinarny i przygotuję sobie pyszne ziemniaczki.<br><br>Aha, aktywacja poniższego interfejsu przyciskowego odblokuje – ot tak, w ramach radosnej transgresji – <span style=\"color:#E91E63;font-weight:bold;\">alternatywną, „gorącą” skórkę Drakula</span>.<br><br>Wejdź w mental. Have fun.",
   ui_coffee_btn: "POSTAW KAWKĘ",
   ui_coffee_footer: "Pozdrawiam wykopową gawędź z <a href=\"https://wykop.pl/tag/bekazludologuff\" target=\"_blank\" style=\"color:#FFD700;text-decoration:none;\">#bekazludologuff</a> i powiązanych tagów.",
+  ui_coffee_supporters_header: "🏆 OSTATNIA PIĄTKA ZIEMNIACZANYCH MECENASÓW 🏆",
   
-  // ... (reszta pliku taka sama jak wcześniej) ...
   ui_dev_title: "DEV TOOLS",
   ui_dev_label_presets: "PRESETY WROGÓW (AUTO-START)",
   ui_dev_label_scenarios: "SCENARIUSZE (BROŃ)",

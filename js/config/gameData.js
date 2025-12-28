@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v1.21 - XP Growth Late Nerf)
+// GAMEDATA.JS (v1.27 - FULL FIX: All Configs & Skins)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -35,11 +35,10 @@ export const GAME_CONFIG = {
   INITIAL_MAX_ENEMIES: 3,
   ENEMY_LIMIT_GROWTH_PER_MINUTE: 15, 
   
-  // BALANS XP
   INITIAL_XP_NEEDED: 4,   
   XP_GROWTH_ADD: 6,
   XP_GROWTH_EARLY: 1.4, 
-  XP_GROWTH_LATE: 1.25, // ZMIANA: Zmniejszono z 1.35 (szybsze wbijanie leveli w mid-game)
+  XP_GROWTH_LATE: 1.25,
   XP_THRESHOLD_LEVEL: 6 
 };
 
@@ -160,7 +159,7 @@ export const GEM_CONFIG = { BASE_LIFE: 35.0, FADE_TIME: 5.0 };
 
 export const PERK_CONFIG = {
   firerate: { value: 0.80, max: 6 },
-  damage: { value: 2, max: 6 },
+  damage: { value: 3, max: 6 },
   multishot: { value: 1, max: 4 },
   pierce: { value: 1, max: 4 },
   autogun: { max: 1 },
@@ -173,11 +172,25 @@ export const PERK_CONFIG = {
   chainLightning: { max: 6, VISUAL_DURATION: 0.25, calculateCooldown: (level) => [0, 2.5, 2.3, 2.1, 1.9, 1.7, 1.6][level] || 1.6, calculateDamage: (level) => (10 + level * 3), calculateTargets: (level) => [0, 1, 2, 3, 4, 5, 6][level] || 6, }
 };
 
+// PRZYWRÓCONE CONFIGI
 export const UI_CONFIG = { RESUME_TIMER: 0.75, LEVEL_UP_PAUSE: 700, LOW_HEALTH_THRESHOLD: 0.25 };
 
 export const WORLD_CONFIG = { SIZE: 24 };
 
-export const EFFECTS_CONFIG = { BOMB_INDICATOR_LIFE: 0.375, CONFETTI_COUNT: 80, CONFETTI_LIFE: 1.67, CONFETTI_SPEED_MIN: 180, CONFETTI_SPEED_MAX: 420, CONFETTI_INITIAL_UP_VELOCITY: -210, CONFETTI_GRAVITY: 6, CONFETTI_FRICTION: 1.0, CONFETTI_ROTATION_SPEED: 12, NUKE_PARTICLE_COUNT: 40, NUKE_PARTICLE_SPEED: 300, NUKE_PARTICLE_LIFE: 0.6 };
+export const EFFECTS_CONFIG = { 
+    BOMB_INDICATOR_LIFE: 0.375, 
+    CONFETTI_COUNT: 80, 
+    CONFETTI_LIFE: 1.67, 
+    CONFETTI_SPEED_MIN: 180, 
+    CONFETTI_SPEED_MAX: 420, 
+    CONFETTI_INITIAL_UP_VELOCITY: -210, 
+    CONFETTI_GRAVITY: 6, 
+    CONFETTI_FRICTION: 1.0, 
+    CONFETTI_ROTATION_SPEED: 12, 
+    NUKE_PARTICLE_COUNT: 40, 
+    NUKE_PARTICLE_SPEED: 300, 
+    NUKE_PARTICLE_LIFE: 0.6 
+};
 
 export const ENEMY_STATS = {
   standard: { type: 'standard', hp: 10, speed: 105, size: 60, damage: 10, color: '#D32F2F', score: 10, xp: 1, drops: BASE_DROP_RATES },
@@ -198,11 +211,12 @@ export const ENEMY_STATS = {
   splitter: { type: 'splitter', hp: 12, speed: 140, size: 52, damage: 10, color: '#B71C1C', score: 10, xp: 1, drops: BASE_DROP_RATES },
   tank: { type: 'tank', hp: 100, speed: 70, size: 108, damage: 15, color: '#F5F5F5', score: 20, xp: 1, drops: BASE_DROP_RATES },
   ranged: { type: 'ranged', hp: 12, speed: 110, size: 54, damage: 10, color: '#795548', score: 15, xp: 1, drops: BASE_DROP_RATES, attackRange: 300, attackCooldown: 1.8, projectileSpeed: WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED, projectileDamage: WEAPON_CONFIG.RANGED_ENEMY_BULLET.DAMAGE },
-  elite: { type: 'elite', hp: 350, speed: 115, size: 120, damage: 15, color: '#9C27B0', score: 80, xp: 1, drops: {} },
+  
+  elite: { type: 'elite', hp: 250, speed: 115, size: 120, damage: 15, color: '#9C27B0', score: 80, xp: 1, drops: {} }, 
   wall: { type: 'wall', hp: 200, speed: 8, size: 88, damage: 20, color: '#9E9E9E', score: 25, xp: 0, drops: {} },
   lumberjack: { 
     type: 'lumberjack', 
-    hp: 400, 
+    hp: 300, 
     speed: 120, 
     size: 90, 
     damage: 20, 
@@ -256,6 +270,7 @@ export const MUSIC_CONFIG = {
   FADE_TIME: 1.0
 };
 
+// PRZYWRÓCONY SKINS_CONFIG
 export const SKINS_CONFIG = [
   { id: 'default', name: 'Drakul (Standard)', assetIdle: 'player_static', assetSprite: 'player_spritesheet', locked: false },
   { id: 'hot', name: 'Drakul (Hot)', assetIdle: 'player_hot_idle', assetSprite: 'player_hot_spritesheet', locked: true }

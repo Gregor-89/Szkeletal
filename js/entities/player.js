@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v1.06 - Skin Scaling Logic)
+// PLAYER.JS (v1.08 - Shield Blink & Full Fix)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -14,7 +14,6 @@ export class Player {
         
         this.x = startX;
         this.y = startY;
-        // Domyślny rozmiar (bazowy)
         this.baseSize = 80; 
         this.size = this.baseSize;
 
@@ -29,7 +28,6 @@ export class Player {
         
         this.knockback = { x: 0, y: 0 };
         
-        // Inicjalizacja skina
         this.currentSkinId = getCurrentSkin(); 
         this.refreshSkinAssets(this.currentSkinId);
         
@@ -49,7 +47,6 @@ export class Player {
         this.deathDuration = 1.5; 
     }
 
-    // Metoda pomocnicza do ładowania zasobów i SKALOWANIA
     refreshSkinAssets(skinId) {
         const skinConfig = SKINS_CONFIG.find(s => s.id === skinId) || SKINS_CONFIG[0];
         this.currentSkinAsset = skinConfig.assetSprite;
@@ -60,21 +57,16 @@ export class Player {
         if (!this.spriteSheet) this.spriteSheet = getAsset('drakul'); 
         if (!this.spriteSheet) this.spriteSheet = getAsset('player');
 
-        // LOGIKA SKALOWANIA SKINA
         if (skinId === 'hot') {
-            this.size = this.baseSize * 1.10; // +10% dla Hot Drakula
+            this.size = this.baseSize * 1.10; 
         } else {
-            this.size = this.baseSize; // Domyślny rozmiar dla reszty
+            this.size = this.baseSize; 
         }
     }
     
-    // Metoda do wywołania zmiany w locie
     refreshSkin(newSkinId) {
-        // console.log(`[Player] Zmiana skina w locie: ${this.currentSkinId} -> ${newSkinId}`);
         this.currentSkinId = newSkinId;
         this.refreshSkinAssets(newSkinId);
-        
-        // Reset klatki, żeby uniknąć błędów renderowania przy zmianie spritesheeta
         this.currentFrame = 0;
         this.animTimer = 0;
     }
@@ -97,7 +89,6 @@ export class Player {
         this.isDead = false;
         this.deathTimer = 0;
         
-        // Refresh skina przy resecie
         this.currentSkinId = getCurrentSkin();
         this.refreshSkinAssets(this.currentSkinId);
     }
@@ -132,7 +123,6 @@ export class Player {
     }
 
     update(dt, game, keys, jVec, camera) { 
-        // Sprawdzenie zmiany skina w locie
         const globalSkin = getCurrentSkin();
         if (this.currentSkinId !== globalSkin) {
             this.refreshSkin(globalSkin);
@@ -245,11 +235,51 @@ export class Player {
             ctx.filter = 'sepia(1) hue-rotate(60deg) saturate(2)';
         }
         
+        // ZMIANA: Miganie tarczy (Alpha Modulation)
         if (game.shield) {
+            let alpha = 0.5;
+            
+            // Jeśli czas tarczy < 3 sekundy, migaj
+            if (game.shieldT < 3.0) {
+                const blinkSpeed = 10 + (3.0 - game.shieldT) * 10;
+                if (Math.sin(performance.now() / 100 * blinkSpeed) > 0) {
+                    alpha = 0.5;
+                } else {
+                    alpha = 0.1;
+                }
+            }
+
             ctx.shadowColor = '#40C4FF';
             ctx.shadowBlur = 20 + 5 * Math.sin(performance.now() / 100);
-        }
+            
+            const t = performance.now() / 1000;
+            const r = this.size * 0.8; 
 
+            const shieldGrad = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, r);
+            shieldGrad.addColorStop(0, 'rgba(64, 196, 255, 0.0)');
+            shieldGrad.addColorStop(0.85, `rgba(64, 196, 255, ${alpha * 0.3})`);
+            shieldGrad.addColorStop(1, `rgba(64, 196, 255, ${alpha})`);
+
+            ctx.fillStyle = shieldGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.shadowBlur = 0; 
+            ctx.strokeStyle = `rgba(200, 240, 255, ${alpha + 0.3})`;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([15, 12]); 
+            
+            ctx.save();
+            ctx.rotate(t * 1.5); 
+            ctx.beginPath();
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+            
+            ctx.setLineDash([]); 
+        }
+        
         if (this.spriteSheet) {
             if (this.facingDir === -1) {
                 ctx.scale(-1, 1);
@@ -268,7 +298,6 @@ export class Player {
                 const sx = col * frameW;
                 const sy = row * frameH;
                 
-                // ZMIANA: Używamy this.size zamiast na sztywno 80
                 const drawH = this.size; 
                 const ratio = frameW / frameH;
                 const drawW = drawH * ratio;
@@ -295,7 +324,6 @@ export class Player {
         const hpBarW = 64;
         const hpBarH = 6;
         const hpBarX = -hpBarW / 2;
-        // ZMIANA: Pasek życia pozycjonowany względem aktualnego this.size
         const hpBarY = -this.size / 2 - 20; 
         
         const healthPct = Math.max(0, Math.min(1, game.health / game.maxHealth));
@@ -313,36 +341,6 @@ export class Player {
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 1.5;
         ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
-
-        if (game.shield) {
-            const t = performance.now() / 1000;
-            // ZMIANA: Tarcza skalowana względem this.size
-            const r = this.size * 0.8; 
-
-            const shieldGrad = ctx.createRadialGradient(0, 0, r * 0.6, 0, 0, r);
-            shieldGrad.addColorStop(0, 'rgba(64, 196, 255, 0.0)');
-            shieldGrad.addColorStop(0.85, 'rgba(64, 196, 255, 0.15)');
-            shieldGrad.addColorStop(1, 'rgba(64, 196, 255, 0.5)');
-
-            ctx.fillStyle = shieldGrad;
-            ctx.beginPath();
-            ctx.arc(0, 0, r, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.shadowBlur = 0; 
-            ctx.strokeStyle = 'rgba(200, 240, 255, 0.8)';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([15, 12]); 
-            
-            ctx.save();
-            ctx.rotate(t * 1.5); 
-            ctx.beginPath();
-            ctx.arc(0, 0, r, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-            
-            ctx.setLineDash([]); 
-        }
         
         ctx.restore(); 
         
