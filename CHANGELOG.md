@@ -4,6 +4,71 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 ---
 
+# Changelog
+
+## [0.106] - 2025-12-28
+### Dodano
+- **Pełne wsparcie dla Gamepada:** Obsługa kontrolerów w menu i podczas rozgrywki.
+- **Sterowanie:** Możliwość poruszania postacią za pomocą lewej gałki, prawej gałki lub krzyżaka (D-Pad).
+- **Nawigacja UI:** System "Focus" dla menu - obsługa przycisków i nawigacji gałką/krzyżakiem.
+- **Przewijanie:** Obsługa przewijania list (np. w menu Hot Coffee) za pomocą prawej gałki analogowej.
+- **Pauza:** Przycisk START/OPTIONS na padzie teraz pauzuje i wznawia grę.
+
+### Zmieniono
+- **UX:** Przycisk 'A' na padzie pozwala pominąć ekrany powitalne (Splash).
+- **UX:** Zablokowano nawigację po menu podczas aktywnej rozgrywki (zapobiega przypadkowym resetom gry).
+- **UI:** Dodano wizualne podświetlenie (ramkę) dla elementu wybranego padem.
+
+## [0.105]
+### Balans (Nerf & Buff)
+- **Bossowie:** Znacznie zmniejszono startowe HP bossów (Drwal: 400 -> 300, Elden Hejter: 350 -> 250).
+- **Arena Bossa:** Gdy na mapie żyje Boss, częstotliwość pojawiania się zwykłych wrogów spada o 75%.
+- **Spawny:** Opóźniono pojawianie się trudniejszych wrogów (Prowokatorzy od 90s, Kamikaze od 140s).
+- **Skalowanie:** Złagodzono krzywą przyrostu HP wrogów (wzrost co 120s zamiast 90s, 7% za level zamiast 10%).
+- **Gracz:** Zwiększono startowe HP do 120.
+- **Perki:** Perk "Obrażenia" daje teraz +3 obrażeń co poziom (wcześniej +2).
+
+### Ulepszenia
+- **VFX:** Tarcza (Shield) teraz intensywnie pulsuje, gdy zostało mniej niż 3 sekundy działania.
+- **Fix:** Naprawiono logikę przebicia (Pierce) - pociski nie znikają już błędnie na pierwszym trafionym celu.
+
+## [0.104]
+### Dodano
+- **Wsparcie:** Nowa sekcja "Ziemniaczani Mecenasi" w menu Hot Coffee - dynamicznie pobiera listę ostatnich wpłacających z profilu Suppi.
+- **Proxy:** Implementacja bezpiecznego parsowania danych HTML przez proxy (allorigins).
+
+### Zmieniono
+- **Lokalizacja:** Uzupełniono brakujące tłumaczenia (nagłówki tabel wyników, opcje konfiguracji, splashscreen).
+- **UI:** Poprawki skalowania i przewijania tekstów na urządzeniach mobilnych i tabletach.
+- **UI:** Wyśrodkowanie i odświeżenie nagłówków w menu wsparcia.
+
+## [0.103]
+### Poprawki
+- **Stabilność:** Naprawiono krytyczne błędy "Bad control character in string literal" w plikach zapisu (Save/Load/Scores) poprzez dodanie sanityzacji JSON.
+- **Skiny:** Skórka "Hot Drakul" jest teraz fizycznie o 10% większa (większy hitbox i sprite).
+- **UI:** Poprawki w selektorze skinów (wizualizacja blokady).
+- **System:** Zabezpieczenie przed błędami zapisu localStorage (try-catch).
+- DODANO: Nowy Boss - 'Wężojad' (SnakeEater). Nie atakuje, leczy gracza przy dotyku.
+- DODANO: Nowa broń - 'Piorun Ludologa' (Chain Lightning).
+- UI: Nowy wygląd paska życia bossów (z nazwą i cieniem).
+- SYSTEM: Integracja Talo (Statystyki globalne: zabici wrogowie, zebrane ziemniaki).
+
+## [0.101] - 2025-12-15
+- DODANO: Menu 'Hot Coffee' z kodem QR i linkiem do wsparcia.
+- DODANO: System Skinów (Domyślny / Hot).
+- UI: Poprawki w menu (zakładki, powrót, skalowanie na mobilkach).
+- FIX: Poprawiono błąd z nieśmiertelnością przy pauzie.
+
+## [0.100] - 2025-12-12
+- RELEASE: Wersja Beta v0.100.
+- SYSTEM: Zapisywanie postępów (Save/Load).
+- SYSTEM: Rankingi online (Talo).
+- GAMEPLAY: 6 typów broni, 10 typów wrogów, system głodu.
+
+
+---
+
+
 ## [0.102] - 2025-11-16
 ### Added
 - **System Statystyk (Game Stats):** Pełna integracja z Talo API. Gra śledzi teraz globalne liczniki (m.in. zabici wrogowie, zebrane ziemniaczki, śmierci).

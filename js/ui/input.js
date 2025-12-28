@@ -1,191 +1,100 @@
 // ==============
-// INPUT.JS (v1.05 - Gamepad Support)
+// INPUT.JS (v1.12 - Multi-Stick & D-Pad Movement)
 // Lokalizacja: /js/ui/input.js
 // ==============
 
+import { initAudio, playSound } from '../services/audio.js';
+
+const joyZone = document.getElementById('joystickZone');
+const joy = document.getElementById('joystick');
+
 export const keys = {};
-export let joystickVector = { x: 0, y: 0 };
-let joystickSide = 'right';
 
-// --- GAMEPAD STATE ---
-let activeGamepadIndex = null;
-const AXIS_THRESHOLD = 0.2; // Martwa strefa gałki
+let onEscapePress = () => {};
+let onJoyStart = () => {};
+let onJoyEnd = () => {};
+let jActive = false, jStartX = 0, jStartY = 0, jMoveX = 0, jMoveY = 0;
 
-window.addEventListener('keydown', (e) => {
-    keys[e.key] = true;
-});
+// --- ZMIENNE GAMEPADA ---
+let gamepadIndex = null;
+const GAMEPAD_DEADZONE = 0.2;
 
-window.addEventListener('keyup', (e) => {
-    keys[e.key] = false;
-});
+export function initInput(escapeFn, joyStartFn, joyEndFn) {
+    onEscapePress = escapeFn;
+    onJoyStart = joyStartFn;
+    onJoyEnd = joyEndFn;
+}
 
-// Wykrywanie podłączenia pada
+// Obsługa podłączenia pada
 window.addEventListener("gamepadconnected", (e) => {
-    console.log("Gamepad connected:", e.gamepad.id);
-    activeGamepadIndex = e.gamepad.index;
+    console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+        e.gamepad.index, e.gamepad.id,
+        e.gamepad.buttons.length, e.gamepad.axes.length);
+    gamepadIndex = e.gamepad.index;
+    playSound('Click'); 
 });
 
 window.addEventListener("gamepaddisconnected", (e) => {
-    console.log("Gamepad disconnected");
-    if (activeGamepadIndex === e.gamepad.index) {
-        activeGamepadIndex = null;
+    console.log("Gamepad disconnected from index %d: %s",
+        e.gamepad.index, e.gamepad.id);
+    if (gamepadIndex === e.gamepad.index) {
+        gamepadIndex = null;
     }
 });
 
-// Funkcja pomocnicza dla Menus.js do pobierania stanu przycisków
-// Mapowanie standardowe (Xbox/PlayStation): 0=A/X, 1=B/O, 12=Up, 13=Down, 14=Left, 15=Right
-export function getGamepadState() {
-    if (activeGamepadIndex === null) return null;
-    const gp = navigator.getGamepads()[activeGamepadIndex];
+// Funkcja pomocnicza do pobierania obiektu gamepada
+export function pollGamepad() {
+    if (gamepadIndex === null) return null;
+    const gp = navigator.getGamepads()[gamepadIndex];
     if (!gp) return null;
-
-    return {
-        a: gp.buttons[0].pressed,      // A / Cross
-        b: gp.buttons[1].pressed,      // B / Circle
-        up: gp.buttons[12].pressed || gp.axes[1] < -0.5,
-        down: gp.buttons[13].pressed || gp.axes[1] > 0.5,
-        left: gp.buttons[14].pressed || gp.axes[0] < -0.5,
-        right: gp.buttons[15].pressed || gp.axes[0] > 0.5,
-        start: gp.buttons[9].pressed,  // Start / Options
-        select: gp.buttons[8].pressed  // Select / Share
-    };
+    return gp;
 }
 
-export function setJoystickSide(side) {
-    joystickSide = side;
-    const zone = document.getElementById('joystickZone');
-    const base = document.getElementById('joystickBase');
-    const stick = document.getElementById('joystick');
-    
-    if (side === 'off') {
-        if(zone) zone.classList.add('off');
-        return;
-    }
-    
-    if(zone) {
-        zone.classList.remove('off');
-        if (side === 'left') {
-            zone.style.left = '20px';
-            zone.style.right = 'auto';
-        } else {
-            zone.style.left = 'auto';
-            zone.style.right = '20px';
-        }
-    }
-    
-    // Reset pozycji
-    joystickVector = { x:0, y:0 };
-    if(stick) {
-        stick.style.top = '45px';
-        stick.style.left = '45px';
-    }
-}
-
-// Inicjalizacja dotykowego joysticka
-const zone = document.getElementById('joystickZone');
-if (zone) {
-    const base = document.getElementById('joystickBase');
-    const stick = document.getElementById('joystick');
-    
-    let touchId = null;
-    let startX = 0, startY = 0;
-    
-    zone.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        const touch = e.changedTouches[0];
-        touchId = touch.identifier;
-        startX = touch.clientX;
-        startY = touch.clientY;
-        
-        // Wyśrodkowanie pod palcem dla lepszego UX
-        const rect = zone.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        
-        // Opcjonalnie: przesunięcie joysticka pod palec (tu: uproszczone, bazujemy na środku)
-    }, {passive: false});
-    
-    zone.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        for (let i=0; i<e.changedTouches.length; i++) {
-            if (e.changedTouches[i].identifier === touchId) {
-                const touch = e.changedTouches[i];
-                let dx = touch.clientX - startX;
-                let dy = touch.clientY - startY;
-                
-                const maxDist = 45; 
-                const dist = Math.hypot(dx, dy);
-                
-                if (dist > maxDist) {
-                    const ratio = maxDist / dist;
-                    dx *= ratio;
-                    dy *= ratio;
-                }
-                
-                joystickVector.x = dx / maxDist; 
-                joystickVector.y = dy / maxDist;
-                
-                stick.style.left = (45 + dx) + 'px';
-                stick.style.top = (45 + dy) + 'px';
-            }
-        }
-    }, {passive: false});
-    
-    const endTouch = (e) => {
-        e.preventDefault();
-        for (let i=0; i<e.changedTouches.length; i++) {
-            if (e.changedTouches[i].identifier === touchId) {
-                touchId = null;
-                joystickVector = { x: 0, y: 0 };
-                stick.style.left = '45px';
-                stick.style.top = '45px';
-            }
-        }
-    };
-    
-    zone.addEventListener('touchend', endTouch);
-    zone.addEventListener('touchcancel', endTouch);
-}
-
-// ZMIANA: jVec teraz łączy klawiaturę, dotyk ORAZ gamepad
+// Zwraca wektor ruchu (suma dotyku + WSZYSTKIE GAŁKI I KRZYŻAK PADA)
 export function jVec() {
-    let dx = 0;
-    let dy = 0;
+    let dx = 0, dy = 0;
 
-    // 1. Klawiatura
-    if (keys['ArrowUp'] || keys['w']) dy -= 1;
-    if (keys['ArrowDown'] || keys['s']) dy += 1;
-    if (keys['ArrowLeft'] || keys['a']) dx -= 1;
-    if (keys['ArrowRight'] || keys['d']) dx += 1;
-
-    // 2. Dotykowy Joystick
-    if (joystickVector.x !== 0 || joystickVector.y !== 0) {
-        dx = joystickVector.x;
-        dy = joystickVector.y;
+    // 1. Joystick ekranowy (Dotyk/Mysz)
+    if (jActive && joyZone && !joyZone.classList.contains('off')) {
+        let jx = jMoveX - jStartX;
+        let jy = jMoveY - jStartY;
+        const max = 50;
+        let d = Math.hypot(jx, jy);
+        if (d > max) { jx = jx / d * max; jy = jy / d * max; }
+        dx += jx / max;
+        dy += jy / max;
     }
 
-    // 3. Gamepad (Analog)
-    if (activeGamepadIndex !== null) {
-        const gp = navigator.getGamepads()[activeGamepadIndex];
-        if (gp) {
-            // Lewa gałka (axes 0 i 1)
-            const axisX = gp.axes[0];
-            const axisY = gp.axes[1];
-            
-            if (Math.abs(axisX) > AXIS_THRESHOLD) dx = axisX;
-            if (Math.abs(axisY) > AXIS_THRESHOLD) dy = axisY;
-            
-            // D-Pad (jako przyciski)
-            if (gp.buttons[12].pressed) dy = -1;
-            if (gp.buttons[13].pressed) dy = 1;
-            if (gp.buttons[14].pressed) dx = -1;
-            if (gp.buttons[15].pressed) dx = 1;
+    // 2. Gamepad
+    const gp = pollGamepad();
+    if (gp) {
+        // --- Lewa Gałka (Axes 0, 1) ---
+        let lx = gp.axes[0];
+        let ly = gp.axes[1];
+        if (Math.abs(lx) < GAMEPAD_DEADZONE) lx = 0;
+        if (Math.abs(ly) < GAMEPAD_DEADZONE) ly = 0;
+        dx += lx;
+        dy += ly;
+
+        // --- Prawa Gałka (Axes 2, 3) - Opcjonalnie ---
+        if (gp.axes.length >= 4) {
+            let rx = gp.axes[2];
+            let ry = gp.axes[3];
+            if (Math.abs(rx) < GAMEPAD_DEADZONE) rx = 0;
+            if (Math.abs(ry) < GAMEPAD_DEADZONE) ry = 0;
+            dx += rx;
+            dy += ry;
         }
+
+        // --- D-Pad (Krzyżak - Buttons 12, 13, 14, 15) ---
+        // 12=Up, 13=Down, 14=Left, 15=Right
+        if (gp.buttons[12] && gp.buttons[12].pressed) dy -= 1.0;
+        if (gp.buttons[13] && gp.buttons[13].pressed) dy += 1.0;
+        if (gp.buttons[14] && gp.buttons[14].pressed) dx -= 1.0;
+        if (gp.buttons[15] && gp.buttons[15].pressed) dx += 1.0;
     }
 
-    // Normalizacja wektora (żeby po skosie nie było szybciej, chyba że to analog)
-    // Jeśli sterowanie jest cyfrowe (klawiatura/dpad), normalizujemy do długości 1
-    // Jeśli analogowe (gałka), zachowujemy wychylenie (np. wolny chód)
+    // Normalizacja sumy (żeby gracz nie był szybszy używając wszystkiego naraz)
     const len = Math.hypot(dx, dy);
     if (len > 1.0) {
         dx /= len;
@@ -194,3 +103,102 @@ export function jVec() {
 
     return { x: dx, y: dy };
 }
+
+// Eksportujemy funkcję do sprawdzania przycisków (dla nawigacji w menu)
+export function getGamepadButtonState() {
+    const gp = pollGamepad();
+    if (!gp) return {};
+
+    // Mapowanie standardowego kontrolera (Xbox/PlayStation)
+    const state = {
+        A: gp.buttons[0].pressed, // Cross / A
+        B: gp.buttons[1].pressed, // Circle / B
+        X: gp.buttons[2].pressed, // Square / X
+        Y: gp.buttons[3].pressed, // Triangle / Y
+        LB: gp.buttons[4].pressed,
+        RB: gp.buttons[5].pressed,
+        LT: gp.buttons[6].pressed,
+        RT: gp.buttons[7].pressed,
+        Select: gp.buttons[8].pressed,
+        Start: gp.buttons[9].pressed, // Options / Menu
+        Up: gp.buttons[12].pressed,
+        Down: gp.buttons[13].pressed,
+        Left: gp.buttons[14].pressed,
+        Right: gp.buttons[15].pressed
+    };
+    return state;
+}
+
+export function setJoystickSide(side) {
+    if (!joyZone) return;
+    joyZone.classList.remove('off');
+    if (side === 'off') { joyZone.classList.add('off'); }
+    if (side === 'left') { joyZone.style.right = ''; joyZone.style.left = '20px'; }
+    if (side === 'right') { joyZone.style.left = ''; joyZone.style.right = '20px'; }
+}
+
+function jSet(dx, dy) {
+    if (!joy) return;
+    const max = 50;
+    const d = Math.hypot(dx, dy);
+    if (d > max) { dx = dx / d * max; dy = dy / d * max; }
+    joy.style.left = (45 + dx) + 'px';
+    joy.style.top = (45 + dy) + 'px';
+}
+
+function jStart(e) {
+    if (!joyZone || joyZone.classList.contains('off')) return;
+    jActive = true;
+    
+    initAudio();
+    onJoyStart();
+    
+    const p = e.touches ? e.touches[0] : e;
+    const r = joyZone.getBoundingClientRect();
+    
+    jStartX = p.clientX - r.left - 75; 
+    jStartY = p.clientY - r.top - 75;
+    jMoveX = jStartX; jMoveY = jStartY; jSet(0, 0);
+    e.preventDefault();
+    
+    playSound('Click');
+}
+
+function jMove(e) {
+    if (!jActive || !joyZone || joyZone.classList.contains('off')) return;
+    const p = e.touches ? e.touches[0] : e;
+    const r = joyZone.getBoundingClientRect();
+    
+    jMoveX = p.clientX - r.left - 75; 
+    jMoveY = p.clientY - r.top - 75;
+    jSet(jMoveX - jStartX, jMoveY - jStartY);
+    e.preventDefault();
+}
+
+function jEnd(e) {
+    if (!jActive) return;
+    jActive = false; jSet(0, 0); e.preventDefault();
+    onJoyEnd();
+}
+
+document.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    keys[k] = true;
+    initAudio();
+    if (k === 'escape') {
+        onEscapePress();
+    }
+});
+
+document.addEventListener('keyup', e => {
+    keys[e.key.toLowerCase()] = false;
+});
+
+if (joyZone) {
+    joyZone.addEventListener('touchstart', jStart, { passive: false });
+    joyZone.addEventListener('touchmove', jMove, { passive: false });
+    joyZone.addEventListener('touchend', jEnd, { passive: false });
+    joyZone.addEventListener('mousedown', jStart);
+}
+window.addEventListener('mousemove', jMove);
+window.addEventListener('mouseup', jEnd);

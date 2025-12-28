@@ -1,12 +1,12 @@
 // ==============
-// MENUS.JS (v1.17 - Retry Logic & Robust Parsing)
+// MENUS.JS (v1.26 - Right Stick Scroll Only & Null Safety)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
 import { getLang, setLanguage, getAvailableLanguages, getCurrentLangCode } from '../services/i18n.js';
 import { playSound, setMusicVolume, setSfxVolume } from '../services/audio.js';
 import { get as getAsset } from '../services/assets.js';
-import { setJoystickSide } from './input.js';
+import { setJoystickSide, getGamepadButtonState, pollGamepad } from './input.js';
 import { initLeaderboardUI } from './leaderboardUI.js'; 
 import { VERSION } from '../config/version.js';
 import { MUSIC_CONFIG, SKINS_CONFIG } from '../config/gameData.js';
@@ -14,6 +14,11 @@ import { LeaderboardService } from '../services/leaderboard.js';
 import { getUnlockedSkins, unlockSkin, setCurrentSkin, getCurrentSkin } from '../services/skinManager.js'; 
 
 let currentJoyMode = 'right';
+
+// === GAMEPAD NAVIGATION STATE ===
+let lastGpState = {};
+let navCooldown = 0;
+let focusedElement = null;
 
 const STATIC_TRANSLATION_MAP = {
     'btnStart': 'ui_menu_start', 
@@ -153,6 +158,7 @@ export function updateStaticTranslations() {
     });
     
     updateTutorialTexts();
+    updateFlagHighlights();
     
     const backText = getLang('ui_nav_back') || 'POWRÓT';
     document.querySelectorAll('.nav-back').forEach(el => el.innerText = backText);
@@ -182,6 +188,28 @@ export function updateStaticTranslations() {
     updateToggleLabels();
     
     updateMainMenuStats();
+}
+
+function updateFlagHighlights() {
+    const currentLang = getCurrentLangCode();
+    
+    ['btnLangPL', 'btnLangEN', 'btnLangRO'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.style.border = 'none';
+            btn.style.transform = 'scale(1.0)';
+            btn.style.filter = 'drop-shadow(2px 2px 0 #000) grayscale(0.5)';
+        }
+    });
+
+    const activeId = `btnLang${currentLang.toUpperCase()}`;
+    const activeBtn = document.getElementById(activeId);
+    if (activeBtn) {
+        activeBtn.style.border = '2px solid #FFD700';
+        activeBtn.style.borderRadius = '50%';
+        activeBtn.style.transform = 'scale(1.2)';
+        activeBtn.style.filter = 'drop-shadow(2px 2px 0 #000) grayscale(0)';
+    }
 }
 
 function updateTutorialTexts() {
@@ -238,18 +266,41 @@ function initLanguageSelector() {
         const label = document.createElement('label');
         label.style.marginRight = '15px';
         label.style.cursor = 'pointer';
+        label.tabIndex = 0; 
+        label.className = 'lang-label-wrapper';
         
+        if (lang.code === current) {
+            label.style.color = '#FFD700'; 
+            label.style.fontWeight = 'bold';
+        }
+
         const radio = document.createElement('input');
         radio.type = 'radio';
         radio.name = 'lang-select';
         radio.value = lang.code;
         radio.checked = (lang.code === current);
+        radio.tabIndex = -1;
         
-        radio.onchange = () => {
+        label.onclick = () => {
+            radio.checked = true;
             setLanguage(lang.code);
             updateStaticTranslations();
             initLanguageSelector(); 
             playSound('Click');
+            
+            setTimeout(() => {
+                const newContainer = document.getElementById('lang-selector-container');
+                if (newContainer) {
+                    const newRadio = newContainer.querySelector(`input[value="${lang.code}"]`);
+                    if (newRadio && newRadio.parentElement) {
+                        const newLabel = newRadio.parentElement;
+                        document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
+                        focusedElement = newLabel;
+                        newLabel.classList.add('focused');
+                        newLabel.focus();
+                    }
+                }
+            }, 0);
         };
         
         const span = document.createElement('span');
@@ -261,7 +312,6 @@ function initLanguageSelector() {
     });
 }
 
-// === ULEPSZONA FUNKCJA: Pobieranie wspierających (Retry + Greedy Parsing) ===
 async function fetchSupporters(retries = 3) {
     const listContainer = document.getElementById('supportersList');
     if (!listContainer) return;
@@ -329,7 +379,7 @@ async function fetchSupporters(retries = 3) {
     } catch (e) {
         console.warn("Suppi fetch failed, retrying...", retries);
         if (retries > 0) {
-            setTimeout(() => fetchSupporters(retries - 1), 1000); // Ponów po 1s
+            setTimeout(() => fetchSupporters(retries - 1), 1000); 
         } else {
             listContainer.innerHTML = '<div style="color:#D32F2F; font-size:0.9em;">Błąd pobierania listy.<br>Spróbuj ponownie później.</div>';
         }
@@ -341,24 +391,39 @@ export function switchView(viewId) {
     const target = document.getElementById(viewId);
     if (target) { target.classList.add('active'); playSound('Click'); }
     
+    // Reset focusu pada
+    focusedElement = null;
+    document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
+    
     if (viewId === 'view-coffee') {
         playSound('MusicIntro'); 
         fetchSupporters(); 
     }
-    else if (viewId === 'view-main') playSound('MusicMenu');
+    else if (viewId === 'view-main') {
+        playSound('MusicMenu');
+        updateFlagHighlights(); 
+        
+        // WYMUSZENIE FOCUSU NA START PRZY KAŻDYM WEJŚCIU DO MENU
+        setTimeout(() => {
+            const btnStart = document.getElementById('btnStart');
+            if (btnStart) {
+                document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
+                focusedElement = btnStart;
+                btnStart.classList.add('focused');
+            }
+        }, 50);
+    }
 
     if (viewId === 'view-scores') {
         if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard();
-        
-        setTimeout(() => {
-            updateStaticTranslations();
-        }, 100);
+        setTimeout(() => { updateStaticTranslations(); }, 100);
     }
     if (viewId === 'view-guide') { 
         generateGuide(); 
     }
     if (viewId === 'view-config') {
         generateSkinSelector();
+        initLanguageSelector(); 
     }
     if (viewId === 'view-main') {
         updateMainMenuStats();
@@ -408,6 +473,7 @@ function generateSkinSelector() {
     SKINS_CONFIG.forEach(skin => {
         const option = document.createElement('div');
         option.className = 'skin-option';
+        option.tabIndex = 0; 
         
         const isLocked = skin.locked && !unlocked.includes(skin.id);
         const isSelected = (skin.id === current);
@@ -438,6 +504,197 @@ function generateSkinSelector() {
         container.appendChild(option);
     });
 }
+
+function getFocusableElements() {
+    const overlays = ['gameOverOverlay', 'levelUpOverlay', 'pauseOverlay', 'introOverlay', 'confirmOverlay', 'nickInputOverlay'];
+    
+    for (const ovId of overlays) {
+        const ov = document.getElementById(ovId);
+        if (ov && ov.style.display !== 'none' && ov.style.display !== '') {
+             return Array.from(ov.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'));
+        }
+    }
+    
+    const menuOverlay = document.getElementById('menuOverlay');
+    if (menuOverlay && menuOverlay.style.display !== 'none') {
+        const activeView = document.querySelector('.menu-view.active');
+        if (activeView) {
+            return Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .skin-option, .lang-label-wrapper'));
+        }
+    }
+    
+    return [];
+}
+
+function isGameplayActive() {
+    const menuOverlay = document.getElementById('menuOverlay');
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    const levelUpOverlay = document.getElementById('levelUpOverlay');
+    const gameOverOverlay = document.getElementById('gameOverOverlay');
+    const introOverlay = document.getElementById('introOverlay');
+    const chestOverlay = document.getElementById('chestOverlay');
+    
+    if (menuOverlay && menuOverlay.style.display !== 'none') return false;
+    if (pauseOverlay && pauseOverlay.style.display !== 'none') return false;
+    if (levelUpOverlay && levelUpOverlay.style.display !== 'none') return false;
+    if (gameOverOverlay && gameOverOverlay.style.display !== 'none') return false;
+    if (introOverlay && introOverlay.style.display !== 'none') return false;
+    if (chestOverlay && chestOverlay.style.display !== 'none') return false;
+    
+    return true;
+}
+
+function updateGamepadMenu() {
+    navCooldown--;
+    if (navCooldown > 0) return;
+
+    const gpState = getGamepadButtonState();
+    if (Object.keys(gpState).length === 0) return;
+
+    if (gpState.A && !lastGpState.A) {
+        const splash = document.getElementById('splashOverlay');
+        if (splash && splash.style.display !== 'none' && !splash.classList.contains('fade-out')) {
+             splash.classList.add('fade-out'); 
+             setTimeout(() => { splash.style.display = 'none'; }, 1000); 
+             
+             const evt = new Event('touchstart');
+             document.dispatchEvent(evt);
+             
+             navCooldown = 30; 
+             return;
+        }
+    }
+
+    if (gpState.Start && !lastGpState.Start) {
+        if (isGameplayActive()) {
+            const event = new KeyboardEvent('keydown', {'key': 'Escape'});
+            document.dispatchEvent(event);
+            navCooldown = 15;
+            return;
+        }
+    }
+
+    if (isGameplayActive()) return;
+
+    const focusables = getFocusableElements();
+    if (focusables.length === 0) return;
+
+    // FIX FLAGA: Wymuszenie startu na btnStart w menu głównym
+    const menuOverlay = document.getElementById('menuOverlay');
+    const viewMain = document.getElementById('view-main');
+    if (menuOverlay.style.display !== 'none' && viewMain.classList.contains('active')) {
+        if (!focusedElement || !focusables.includes(focusedElement)) {
+             const btnStart = document.getElementById('btnStart');
+             // Upewnij się, że nie zaznacza flag (lang-label-wrapper) na starcie
+             if(btnStart && !focusedElement?.classList?.contains('lang-label-wrapper')) {
+                 focusedElement = btnStart;
+                 btnStart.classList.add('focused');
+             }
+        }
+    } else {
+        if (!focusedElement || !focusables.includes(focusedElement)) {
+            const current = document.querySelector('.focused');
+            if (current && focusables.includes(current)) {
+                focusedElement = current;
+            } else {
+                focusedElement = focusables[0];
+                if(focusedElement) focusedElement.classList.add('focused');
+            }
+        }
+    }
+
+    const rawGp = pollGamepad();
+    let moveDir = { up: false, down: false, left: false, right: false };
+
+    // D-Pad
+    if (gpState.Up) moveDir.up = true;
+    if (gpState.Down) moveDir.down = true;
+    if (gpState.Left) moveDir.left = true;
+    if (gpState.Right) moveDir.right = true;
+
+    // FIX: Tylko Lewa Gałka nawiguje po menu (Prawa usunięta)
+    if (rawGp && rawGp.axes) {
+        if (rawGp.axes[1] < -0.5) moveDir.up = true;
+        if (rawGp.axes[1] > 0.5) moveDir.down = true;
+        if (rawGp.axes[0] < -0.5) moveDir.left = true;
+        if (rawGp.axes[0] > 0.5) moveDir.right = true;
+        
+        // Prawa gałka (axes 3) tylko do scrollowania
+        if (rawGp.axes.length >= 4) {
+            const scrollY = rawGp.axes[3];
+            if (Math.abs(scrollY) > 0.2) {
+                const activeView = document.querySelector('.menu-view.active');
+                if (activeView) {
+                    const scrollBox = activeView.querySelector('.retro-scroll-box, .config-list, .menu-list');
+                    if (scrollBox) scrollBox.scrollTop += scrollY * 15;
+                }
+                const guideContent = document.getElementById('guideContent');
+                if (guideContent && guideContent.offsetParent !== null) {
+                     guideContent.scrollTop += scrollY * 15;
+                }
+            }
+        }
+    }
+
+    let index = focusables.indexOf(focusedElement);
+    let moved = false;
+
+    if (moveDir.down) {
+        index++;
+        if (index >= focusables.length) index = 0;
+        moved = true;
+    } else if (moveDir.up) {
+        index--;
+        if (index < 0) index = focusables.length - 1;
+        moved = true;
+    } 
+    else if (moveDir.right) {
+        index++;
+        if (index >= focusables.length) index = 0;
+        moved = true;
+    } else if (moveDir.left) {
+        index--;
+        if (index < 0) index = focusables.length - 1;
+        moved = true;
+    }
+
+    if (moved) {
+        if (focusedElement) focusedElement.classList.remove('focused');
+        focusedElement = focusables[index];
+        if (focusedElement) {
+            focusedElement.classList.add('focused');
+            focusedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            playSound('Click'); 
+        }
+        navCooldown = 12; 
+    }
+
+    if (gpState.A && !lastGpState.A) {
+        // FIX: Bezpieczny dostęp do tagName
+        if (focusedElement) {
+            focusedElement.click();
+            if (focusedElement.tagName === 'INPUT') focusedElement.focus();
+        }
+        navCooldown = 15;
+    }
+    
+    if (gpState.B && !lastGpState.B) {
+        const activeView = document.querySelector('.menu-view.active');
+        if (activeView && activeView.id !== 'view-main') {
+            const backBtn = activeView.querySelector('.nav-back');
+            if (backBtn) backBtn.click();
+        }
+        else if (document.getElementById('pauseOverlay').style.display === 'flex') {
+            document.getElementById('btnResume').click();
+        }
+        navCooldown = 15;
+    }
+
+    lastGpState = { ...gpState };
+}
+
+setInterval(updateGamepadMenu, 16); 
+
 
 export function initRetroToggles(game, uiData) {
     const setupToggle = (btnId, chkId, callback) => {
@@ -550,6 +807,15 @@ export function initRetroToggles(game, uiData) {
 
     initLeaderboardUI();
     initLanguageSelector(); 
+    
+    // Initial Focus
+    setTimeout(() => {
+        const btnStart = document.getElementById('btnStart');
+        if (btnStart) {
+            focusedElement = btnStart;
+            btnStart.classList.add('focused');
+        }
+    }, 500);
 }
 
 export function generateGuide() {

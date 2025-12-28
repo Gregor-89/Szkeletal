@@ -1,5 +1,5 @@
 // ==============
-// SAVEMANAGER.JS (v1.07 - Robust JSON & Auto-Storage)
+// SAVEMANAGER.JS (v1.08 - Fix TypeError & Secure Save)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
@@ -42,7 +42,6 @@ const WEAPON_CLASS_MAP = {
     ChainLightningWeapon: ChainLightningWeapon 
 };
 
-// --- FUNKCJA NAPRAWCZA JSON (Ten sam fix co w scoreManager) ---
 function safeJsonParse(str, fallback) {
     if (!str) return fallback;
     try {
@@ -50,7 +49,6 @@ function safeJsonParse(str, fallback) {
     } catch (e) {
         console.warn("[SaveManager] Wykryto uszkodzony JSON zapisu, próbuję naprawić...", e);
         try {
-            // Usuwamy znaki sterujące ASCII 0-31 oraz 127-159 (częste źródło błędów w localStorage)
             const sanitized = str.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
             return JSON.parse(sanitized);
         } catch (e2) {
@@ -60,70 +58,65 @@ function safeJsonParse(str, fallback) {
     }
 }
 
-// Funkcja pomocnicza do pobierania zapisu z dysku
 export function getSavedGameFromStorage() {
     const raw = localStorage.getItem(SAVE_KEY);
     return safeJsonParse(raw, null);
 }
 
-// Funkcja pomocnicza do usuwania zapisu (np. po śmierci)
 export function clearSavedGame() {
     localStorage.removeItem(SAVE_KEY);
     console.log('[SaveManager] Zapis gry usunięty.');
 }
 
 export function saveGame(state) {
-    const { 
-        game, player, settings, perkLevels, enemies, 
-        bulletsPool, eBulletsPool, gemsPool, 
-        pickups, chests, hazards, enemyIdCounter 
-    } = state;
-    
-    // ZMIANA: Pobranie wartości Shadow do zapisu
-    let shadowData = {};
-    if (game._getShadows) shadowData = game._getShadows();
-
-    const activeBullets = bulletsPool.activeItems.map(b => ({ ...b }));
-    const activeEBullets = eBulletsPool.activeItems.map(eb => ({ ...eb }));
-    const activeGems = gemsPool.activeItems.map(g => ({ ...g }));
-
-    const savedState = { 
-        game: {...game},
-        // Zapisujemy cienie (integrity check)
-        integrity: shadowData,
-        
-        player: { 
-            x: player.x, 
-            y: player.y, 
-            speed: player.speed, 
-            weapons: player.weapons.map(w => w.toJSON ? w.toJSON() : { type: w.constructor.name }) 
-        }, 
-        settings: {...settings},
-        perkLevels: {...perkLevels},
-        enemies: enemies.map(e => ({ ...e })), 
-        bullets: activeBullets,
-        eBullets: activeEBullets,
-        gems: activeGems,
-        pickups: pickups.map(p => ({ ...p })),
-        chests: chests.map(c => ({ ...c })),
-        hazards: hazards.map(h => ({ ...h, isMega: h.isMega, scale: h.scale })),
-        enemyIdCounter: enemyIdCounter 
-    };
-    
-    // ZMIANA: Automatyczny zapis do localStorage z obsługą błędów
     try {
+        const { 
+            game, player, settings, perkLevels, enemies, 
+            bulletsPool, eBulletsPool, gemsPool, 
+            pickups, chests, hazards, enemyIdCounter 
+        } = state;
+        
+        let shadowData = {};
+        if (game._getShadows) shadowData = game._getShadows();
+
+        const activeBullets = bulletsPool.activeItems.map(b => ({ ...b }));
+        const activeEBullets = eBulletsPool.activeItems.map(eb => ({ ...eb }));
+        const activeGems = gemsPool.activeItems.map(g => ({ ...g }));
+
+        const savedState = { 
+            game: {...game},
+            integrity: shadowData,
+            
+            player: { 
+                x: player.x, 
+                y: player.y, 
+                speed: player.speed, 
+                weapons: player.weapons.map(w => w.toJSON ? w.toJSON() : { type: w.constructor.name }) 
+            }, 
+            settings: {...settings},
+            perkLevels: {...perkLevels},
+            enemies: enemies.map(e => ({ ...e })), 
+            bullets: activeBullets,
+            eBullets: activeEBullets,
+            gems: activeGems,
+            pickups: pickups.map(p => ({ ...p })),
+            chests: chests.map(c => ({ ...c })),
+            hazards: hazards.map(h => ({ ...h, isMega: h.isMega, scale: h.scale })),
+            enemyIdCounter: enemyIdCounter 
+        };
+        
         const jsonStr = JSON.stringify(savedState);
         localStorage.setItem(SAVE_KEY, jsonStr);
         console.log('[SaveManager] Gra zapisana pomyślnie do localStorage.');
+        
+        return savedState;
     } catch (e) {
         console.error('[SaveManager] Błąd zapisu do localStorage:', e);
+        return null;
     }
-    
-    return savedState;
 }
 
 export function loadGame(savedStateInput, state, uiData) {
-    // ZMIANA: Jeśli nie przekazano stanu, spróbuj wczytać z localStorage
     let savedState = savedStateInput;
     if (!savedState) {
         console.log('[SaveManager] Brak argumentu savedState, próba odczytu z localStorage...');
@@ -144,7 +137,6 @@ export function loadGame(savedStateInput, state, uiData) {
         pickups, chests, hazards, bombIndicators
     } = state;
 
-    // Resetowanie stanu przed wczytaniem
     enemies.length = 0;
     pickups.length = 0;
     chests.length = 0;
@@ -156,13 +148,11 @@ export function loadGame(savedStateInput, state, uiData) {
     particlePool.releaseAll();
     hitTextPool.releaseAll();
 
-    // Przywracanie danych
     Object.assign(game, savedState.game);
     Object.assign(settings, savedState.settings);
     Object.keys(perkLevels).forEach(key => delete perkLevels[key]);
     Object.assign(perkLevels, savedState.perkLevels);
     
-    // Przywracanie cieni i weryfikacja
     if (savedState.integrity && game._setShadows) {
         game._setShadows(
             savedState.integrity.s, 
@@ -248,7 +238,6 @@ export function loadGame(savedStateInput, state, uiData) {
     
     state.enemyIdCounter = savedState.enemyIdCounter || 0;
     
-    // UI i Audio
     const menuOverlay = document.getElementById('menuOverlay');
     if (menuOverlay) menuOverlay.style.display = 'none';
     
@@ -280,4 +269,4 @@ export function loadGame(savedStateInput, state, uiData) {
     console.log("[SaveManager] Wczytywanie zakończone.");
 }
 
-console.log('[DEBUG] js/services/saveManager.js: Załadowano wersję z safeJsonParse.');
+console.log('[DEBUG] js/services/saveManager.js: Załadowano wersję z safeJsonParse i try-catch.');

@@ -1,4 +1,4 @@
-/* style.css (v1.12 - Full Skin Selector Support) */
+/* style.css (v1.15 - Full + Gamepad & Skins) */
 
 :root {
     --bg-color: #050505;
@@ -450,4 +450,12 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
     max-height: 90%;
     object-fit: contain;
     image-rendering: pixelated;
+}
+
+/* DODANO STYL DLA NAWIGACJI PADEM */
+.focused {
+    outline: 2px solid var(--accent-gold);
+    box-shadow: 0 0 15px var(--accent-gold);
+    background-color: rgba(255, 215, 0, 0.1);
+    transform: scale(1.02);
 }
