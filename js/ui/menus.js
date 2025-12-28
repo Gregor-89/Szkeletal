@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.26 - Right Stick Scroll Only & Null Safety)
+// MENUS.JS (v1.26h - Layout Restore & Full Code)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -196,20 +196,24 @@ function updateFlagHighlights() {
     ['btnLangPL', 'btnLangEN', 'btnLangRO'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
-            btn.style.border = 'none';
             btn.style.transform = 'scale(1.0)';
             btn.style.filter = 'drop-shadow(2px 2px 0 #000) grayscale(0.5)';
+            btn.style.outline = 'none';
+            btn.style.boxShadow = 'none';
+
+            const isActive = id.endsWith(currentLang.toUpperCase());
+            const isFocused = btn.classList.contains('focused');
+
+            if (isActive || isFocused) {
+                btn.style.border = '2px solid #FFD700';
+                btn.style.borderRadius = '50%';
+                btn.style.transform = 'scale(1.2)';
+                btn.style.filter = 'drop-shadow(2px 2px 0 #000) grayscale(0)';
+            } else {
+                btn.style.border = 'none';
+            }
         }
     });
-
-    const activeId = `btnLang${currentLang.toUpperCase()}`;
-    const activeBtn = document.getElementById(activeId);
-    if (activeBtn) {
-        activeBtn.style.border = '2px solid #FFD700';
-        activeBtn.style.borderRadius = '50%';
-        activeBtn.style.transform = 'scale(1.2)';
-        activeBtn.style.filter = 'drop-shadow(2px 2px 0 #000) grayscale(0)';
-    }
 }
 
 function updateTutorialTexts() {
@@ -391,7 +395,6 @@ export function switchView(viewId) {
     const target = document.getElementById(viewId);
     if (target) { target.classList.add('active'); playSound('Click'); }
     
-    // Reset focusu pada
     focusedElement = null;
     document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
     
@@ -403,13 +406,13 @@ export function switchView(viewId) {
         playSound('MusicMenu');
         updateFlagHighlights(); 
         
-        // WYMUSZENIE FOCUSU NA START PRZY KAŻDYM WEJŚCIU DO MENU
         setTimeout(() => {
             const btnStart = document.getElementById('btnStart');
             if (btnStart) {
                 document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
                 focusedElement = btnStart;
                 btnStart.classList.add('focused');
+                btnStart.focus(); 
             }
         }, 50);
     }
@@ -519,7 +522,10 @@ function getFocusableElements() {
     if (menuOverlay && menuOverlay.style.display !== 'none') {
         const activeView = document.querySelector('.menu-view.active');
         if (activeView) {
-            return Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .skin-option, .lang-label-wrapper'));
+            const all = Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'));
+            const flags = all.filter(el => el.id && el.id.startsWith('btnLang'));
+            const others = all.filter(el => !el.id || !el.id.startsWith('btnLang'));
+            return [...others, ...flags];
         }
     }
     
@@ -556,10 +562,8 @@ function updateGamepadMenu() {
         if (splash && splash.style.display !== 'none' && !splash.classList.contains('fade-out')) {
              splash.classList.add('fade-out'); 
              setTimeout(() => { splash.style.display = 'none'; }, 1000); 
-             
              const evt = new Event('touchstart');
              document.dispatchEvent(evt);
-             
              navCooldown = 30; 
              return;
         }
@@ -579,14 +583,12 @@ function updateGamepadMenu() {
     const focusables = getFocusableElements();
     if (focusables.length === 0) return;
 
-    // FIX FLAGA: Wymuszenie startu na btnStart w menu głównym
     const menuOverlay = document.getElementById('menuOverlay');
     const viewMain = document.getElementById('view-main');
     if (menuOverlay.style.display !== 'none' && viewMain.classList.contains('active')) {
         if (!focusedElement || !focusables.includes(focusedElement)) {
              const btnStart = document.getElementById('btnStart');
-             // Upewnij się, że nie zaznacza flag (lang-label-wrapper) na starcie
-             if(btnStart && !focusedElement?.classList?.contains('lang-label-wrapper')) {
+             if(btnStart) {
                  focusedElement = btnStart;
                  btnStart.classList.add('focused');
              }
@@ -606,20 +608,16 @@ function updateGamepadMenu() {
     const rawGp = pollGamepad();
     let moveDir = { up: false, down: false, left: false, right: false };
 
-    // D-Pad
     if (gpState.Up) moveDir.up = true;
     if (gpState.Down) moveDir.down = true;
     if (gpState.Left) moveDir.left = true;
     if (gpState.Right) moveDir.right = true;
 
-    // FIX: Tylko Lewa Gałka nawiguje po menu (Prawa usunięta)
     if (rawGp && rawGp.axes) {
         if (rawGp.axes[1] < -0.5) moveDir.up = true;
         if (rawGp.axes[1] > 0.5) moveDir.down = true;
         if (rawGp.axes[0] < -0.5) moveDir.left = true;
         if (rawGp.axes[0] > 0.5) moveDir.right = true;
-        
-        // Prawa gałka (axes 3) tylko do scrollowania
         if (rawGp.axes.length >= 4) {
             const scrollY = rawGp.axes[3];
             if (Math.abs(scrollY) > 0.2) {
@@ -628,10 +626,6 @@ function updateGamepadMenu() {
                     const scrollBox = activeView.querySelector('.retro-scroll-box, .config-list, .menu-list');
                     if (scrollBox) scrollBox.scrollTop += scrollY * 15;
                 }
-                const guideContent = document.getElementById('guideContent');
-                if (guideContent && guideContent.offsetParent !== null) {
-                     guideContent.scrollTop += scrollY * 15;
-                }
             }
         }
     }
@@ -639,41 +633,42 @@ function updateGamepadMenu() {
     let index = focusables.indexOf(focusedElement);
     let moved = false;
 
-    if (moveDir.down) {
+    if (moveDir.down || moveDir.right) {
         index++;
         if (index >= focusables.length) index = 0;
         moved = true;
-    } else if (moveDir.up) {
+    } else if (moveDir.up || moveDir.left) {
         index--;
         if (index < 0) index = focusables.length - 1;
         moved = true;
     } 
-    else if (moveDir.right) {
-        index++;
-        if (index >= focusables.length) index = 0;
-        moved = true;
-    } else if (moveDir.left) {
-        index--;
-        if (index < 0) index = focusables.length - 1;
-        moved = true;
-    }
 
     if (moved) {
-        if (focusedElement) focusedElement.classList.remove('focused');
+        if (focusedElement) {
+            focusedElement.classList.remove('focused');
+            focusedElement.blur(); 
+        }
         focusedElement = focusables[index];
         if (focusedElement) {
             focusedElement.classList.add('focused');
+            focusedElement.focus();
             focusedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             playSound('Click'); 
+            updateFlagHighlights();
         }
         navCooldown = 12; 
     }
 
     if (gpState.A && !lastGpState.A) {
-        // FIX: Bezpieczny dostęp do tagName
         if (focusedElement) {
-            focusedElement.click();
-            if (focusedElement.tagName === 'INPUT') focusedElement.focus();
+            const el = focusedElement;
+            if (el.id === 'btnLangPL') { setLanguage('pl'); updateStaticTranslations(); playSound('Click'); }
+            else if (el.id === 'btnLangEN') { setLanguage('en'); updateStaticTranslations(); playSound('Click'); }
+            else if (el.id === 'btnLangRO') { setLanguage('ro'); updateStaticTranslations(); playSound('Click'); }
+            else {
+                el.focus(); 
+                el.click();
+            }
         }
         navCooldown = 15;
     }
@@ -684,9 +679,6 @@ function updateGamepadMenu() {
             const backBtn = activeView.querySelector('.nav-back');
             if (backBtn) backBtn.click();
         }
-        else if (document.getElementById('pauseOverlay').style.display === 'flex') {
-            document.getElementById('btnResume').click();
-        }
         navCooldown = 15;
     }
 
@@ -694,7 +686,6 @@ function updateGamepadMenu() {
 }
 
 setInterval(updateGamepadMenu, 16); 
-
 
 export function initRetroToggles(game, uiData) {
     const setupToggle = (btnId, chkId, callback) => {
@@ -725,7 +716,6 @@ export function initRetroToggles(game, uiData) {
         const joyOpts = ['right', 'left', 'off'];
         let joyIdx = 0;
         updateStaticTranslations(); 
-
         joyBtn.addEventListener('click', () => {
             joyIdx = (joyIdx + 1) % joyOpts.length;
             currentJoyMode = joyOpts[joyIdx]; 
@@ -735,48 +725,12 @@ export function initRetroToggles(game, uiData) {
         });
     }
 
-    const overlay = document.getElementById('tutorialOverlay');
-    const btnClose = document.getElementById('btnCloseTutorial');
-    const btnShowTutorial = document.getElementById('btnShowTutorialConfig');
-
-    if (btnClose && overlay) {
-        btnClose.onclick = () => {
-            overlay.style.display = 'none';
-            if (!game.inMenu) {
-                game.paused = false;
-            }
-            playSound('Click');
-            localStorage.setItem('szkeletal_tutorial_seen', 'true');
-        };
-    }
-
-    if (btnShowTutorial && overlay) {
-        btnShowTutorial.onclick = () => {
-            overlay.style.display = 'flex';
-            updateTutorialTexts();
-            playSound('Click');
-            game.paused = true;
-        };
-    }
-
     const coffeeBtn = document.getElementById('coffeeBtn');
     if (coffeeBtn) {
-        const unlocked = getUnlockedSkins();
-        if (unlocked.includes('hot')) {
-             coffeeBtn.innerText = "NIKT TEGO NIE SPRAWDZA - SKIN ODBLOKOWANY :)";
-             coffeeBtn.style.borderColor = "#00E676";
-             coffeeBtn.style.background = "#1B5E20";
-             coffeeBtn.classList.remove('pulse');
-        }
-
         coffeeBtn.addEventListener('click', () => {
             playSound('Click');
             setTimeout(() => {
                 unlockSkin('hot');
-                coffeeBtn.innerText = "NIKT TEGO NIE SPRAWDZA - SKIN ODBLOKOWANY :)";
-                coffeeBtn.style.borderColor = "#00E676";
-                coffeeBtn.style.background = "#1B5E20";
-                coffeeBtn.classList.remove('pulse');
                 playSound('ChestReward'); 
             }, 2000);
         });
@@ -784,7 +738,6 @@ export function initRetroToggles(game, uiData) {
 
     const volMusic = document.getElementById('volMusic');
     if (volMusic) { 
-        if (MUSIC_CONFIG && typeof MUSIC_CONFIG.VOLUME !== 'undefined') { volMusic.value = Math.floor(MUSIC_CONFIG.VOLUME * 100); } 
         volMusic.oninput = (e) => { const val = parseInt(e.target.value) / 100; setMusicVolume(val); }; 
     }
     const volSFX = document.getElementById('volSFX');
@@ -807,13 +760,15 @@ export function initRetroToggles(game, uiData) {
 
     initLeaderboardUI();
     initLanguageSelector(); 
-    
-    // Initial Focus
+    updateFlagHighlights();
+
     setTimeout(() => {
         const btnStart = document.getElementById('btnStart');
         if (btnStart) {
+            document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
             focusedElement = btnStart;
             btnStart.classList.add('focused');
+            btnStart.focus();
         }
     }, 500);
 }
@@ -821,7 +776,7 @@ export function initRetroToggles(game, uiData) {
 export function generateGuide() {
     const guideContainer = document.getElementById('guideContent');
     if (!guideContainer) return;
-
+    
     const guideData = [
         { customImg: 'img/drakul.png', nameKey: 'ui_player_name', descKey: 'ui_guide_intro' },
         { asset: 'gem', nameKey: 'ui_gem_name', descKey: 'ui_gem_desc' },
@@ -845,7 +800,6 @@ export function generateGuide() {
         { asset: 'enemy_elite', nameKey: 'enemy_elite_name', descKey: 'enemy_elite_desc' },
         { asset: 'enemy_lumberjack', nameKey: 'enemy_lumberjack_name', descKey: 'enemy_lumberjack_desc' },
         { asset: 'enemy_snakeEater', nameKey: 'enemy_snakeEater_name', descKey: 'enemy_snakeEater_desc' },
-        
         { header: getLang('ui_guide_weapons_title') || "Bronie" },
         { asset: 'icon_whip', nameKey: 'perk_whip_name', descKey: 'perk_whip_desc' },
         { asset: 'icon_autogun', nameKey: 'perk_autogun_name', descKey: 'perk_autogun_desc' },
@@ -860,9 +814,8 @@ export function generateGuide() {
             html += `<div class="guide-section-title" style="margin-top:20px; border-bottom:1px solid #444; color:#FFD700; font-size:1.2em;">${item.header}</div>`;
         } else {
             let displayIcon = '<span style="font-size:24px;">❓</span>';
-            if (item.customImg) {
-                displayIcon = `<img src="${item.customImg}" class="guide-icon">`;
-            } else if (item.asset) {
+            if (item.customImg) displayIcon = `<img src="${item.customImg}" class="guide-icon">`;
+            else if (item.asset) {
                 const asset = getAsset(item.asset);
                 if(asset) displayIcon = `<img src="${asset.src}" class="guide-icon">`;
             }
@@ -875,6 +828,4 @@ export function generateGuide() {
 }
 
 window.wrappedGenerateGuide = generateGuide;
-window.wrappedDisplayScores = () => {
-    if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard();
-};
+window.wrappedDisplayScores = () => { if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard(); };

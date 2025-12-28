@@ -8,6 +8,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+  /* Całkowite wyłączenie systemowego prostokąta focusu dla flag */
+  .lang-quick-switch button:focus,
+  .lang-quick-switch button:active {
+      outline: none !important;
+      box-shadow: none !important;
+  }
+</style>
 </head>
 <body>
 
@@ -87,10 +95,11 @@
 
     <div class="retro-frame">
       <div id="view-main" class="menu-view active">
+        
         <div class="lang-quick-switch" style="position:absolute; top:15px; right:15px; z-index:20; display:flex; gap:10px;">
-            <button id="btnLangPL" style="font-size:2rem; background:none; border:none; cursor:pointer; filter:drop-shadow(2px 2px 0 #000);">🇵🇱</button>
-            <button id="btnLangEN" style="font-size:2rem; background:none; border:none; cursor:pointer; filter:drop-shadow(2px 2px 0 #000);">🇬🇧</button>
-            <button id="btnLangRO" style="font-size:2rem; background:none; border:none; cursor:pointer; filter:drop-shadow(2px 2px 0 #000);">🇷🇴</button>
+            <button id="btnLangPL" tabindex="0" style="font-size:2rem; background:none; border:none; cursor:pointer; filter:drop-shadow(2px 2px 0 #000);">🇵🇱</button>
+            <button id="btnLangEN" tabindex="0" style="font-size:2rem; background:none; border:none; cursor:pointer; filter:drop-shadow(2px 2px 0 #000);">🇬🇧</button>
+            <button id="btnLangRO" tabindex="0" style="font-size:2rem; background:none; border:none; cursor:pointer; filter:drop-shadow(2px 2px 0 #000);">🇷🇴</button>
         </div>
 
         <div class="logo-area">
