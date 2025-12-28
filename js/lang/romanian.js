@@ -1,5 +1,5 @@
 // ==============
-// ROMANIAN.JS (v1.10 - Supporters Header & Full Translation)
+// ROMANIAN.JS (v1.11 - FOV Translation)
 // Lokalizacja: /js/lang/romanian.js
 // ==============
 
@@ -21,7 +21,6 @@ export const LANG_RO = {
   ui_dev_god: "God Mode:",
   ui_dev_hitbox: "Hitboxes:",
   
-  // TEXT NOU HOT COFFEE
   ui_coffee_title: "CAFEA FIERBINTE",
   ui_coffee_desc: "Felicitări. Tocmai ți-ai depreciat ireversibil câteva minute din timp, deși eu însumi, într-un act de masochism pur, am dedicat zeci de ore promptării verticale a algoritmilor AI în ultimele două luni.<br><br>Să fim obiectivi: la fel cum 'ludologii' noștri nativi (a nu se confunda cu cercetătorii reali de jocuri) demonstrează de facto o lipsă imanentă de competență în mecanici, specializându-se în principal pe achiziția de conținut străin, nici eu nu posed nicio cunoștință de codare, estetică pixel-art sau naratologie. Acest proiect este un 'pato-construct' construit din blocuri generative – cartof cu cartof.<br><br>A meritat această urmărire teleologică efortul? Absolut nu. Cine în toate mințile ar vrea să participe la acest pastiș mai mult de câteva minute? Chiar dacă este doar o parodie lejeră, iar orice asemănare cu 'vaci de muls râsete' cunoscute din mediul ludologic este, desigur, complet stocastică și întâmplătoare.<br><br>Totuși, dacă în ciuda tuturor lucrurilor percepi vreo valoare a efortului în această sperietoare, poți face o subvenție voluntară pentru cafeaua mea virtuală sau să contribui la un sac de cartofi. Datorită acestui fapt, voi iniția singur procesul culinar și îmi voi pregăti cartofi delicioși.<br><br>Aha, activarea interfeței cu butoane de mai jos va debloca – pur și simplu, ca o transgresiune veselă – <span style=\"color:#E91E63;font-weight:bold;\">un skin alternativ, 'fierbinte', pentru Drakul</span>.<br><br>Intră în mental. Distracție plăcută.",
   ui_coffee_btn: "CUMPĂRĂ CAFEA",
@@ -37,6 +36,7 @@ export const LANG_RO = {
   
   ui_config_music: "MUZICĂ",
   ui_config_sfx: "SFX",
+  ui_config_fov: "CÂMP VIZUAL (ZOOM)",
   
   ui_nav_back: "ÎNAPOI",
   
@@ -96,7 +96,7 @@ export const LANG_RO = {
   quote_gameplay_7: "Scrie aici 'trimite feedback', imbecilule?",
   quote_gameplay_8: "Streamerii polonezi sunt cerșetori și săraci",
   quote_gameplay_9: "Se vede a cui mamă a băut în sarcină",
-  quote_gameplay_10: "Sunteți obișnuiți ca singura interacțiune a părinților voștri să fie cearta",
+  quote_gameplay_10: "Sunteți obișunuiți ca singura interacțiune a părinților voștri să fie cearta",
   quote_gameplay_11: "Trebuie să ne radicalizăm împotriva Dadgamerilor",
   quote_gameplay_12: "Ești un ratat în ochii mei",
   quote_gameplay_13: "V-aș bate pe toți din chatul ăsta",
@@ -132,7 +132,6 @@ export const LANG_RO = {
   ui_menu_new_game_prompt: "Start Simulare",
   
   ui_config_title_game: "Setări Joc",
-  // CHEI LIPSĂ ADĂUGATE
   ui_config_nick: "PORECLA TA",
   ui_config_skin: "ASPECT CARACTER",
   ui_config_tutorial: "TUTORIAL",
@@ -199,7 +198,7 @@ export const LANG_RO = {
   
   ui_scores_title: "REGISTRUL PIERZĂTORILOR",
   ui_scores_clear: "🗑️ ȘTERGE",
-  ui_scores_clear_local: "ȘTERGE LOCAL", // Adăugat
+  ui_scores_clear_local: "ȘTERGE LOCAL", 
   ui_scores_col_rank: "#",
   ui_scores_col_nick: "NICK",
   ui_scores_col_score: "PCT",
@@ -286,7 +285,6 @@ export const LANG_RO = {
   perk_health_name: "Sănătate",
   perk_health_desc: "Stomac mai mare pentru ură. Crește Sațietatea Max cu +20 și vindecă 20 HP.",
   
-  // STATISTICI LIPSĂ ADĂUGATE
   ui_stat_level: "Nivel",
   ui_stat_health: "Sănătate",
   ui_stat_speed: "Viteză",

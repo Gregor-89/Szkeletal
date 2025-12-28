@@ -1,5 +1,5 @@
 // ==============
-// INPUT.JS (v1.12 - Multi-Stick & D-Pad Movement)
+// INPUT.JS (v1.13 - Multi-Stick & D-Pad Movement)
 // Lokalizacja: /js/ui/input.js
 // ==============
 
@@ -94,7 +94,7 @@ export function jVec() {
         if (gp.buttons[15] && gp.buttons[15].pressed) dx += 1.0;
     }
 
-    // Normalizacja sumy (żeby gracz nie był szybszy używając wszystkiego naraz)
+    // Normalizacja sumy
     const len = Math.hypot(dx, dy);
     if (len > 1.0) {
         dx /= len;
@@ -109,7 +109,6 @@ export function getGamepadButtonState() {
     const gp = pollGamepad();
     if (!gp) return {};
 
-    // Mapowanie standardowego kontrolera (Xbox/PlayStation)
     const state = {
         A: gp.buttons[0].pressed, // Cross / A
         B: gp.buttons[1].pressed, // Circle / B

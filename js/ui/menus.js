@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.26h - Layout Restore & Full Code)
+// MENUS.JS (v1.27b - FOV Percentage Support)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -43,6 +43,7 @@ const STATIC_TRANSLATION_MAP = {
     'lblLabels': 'ui_config_labels',
     'lblMusic': 'ui_config_music', 
     'lblSFX': 'ui_config_sfx', 
+    'lblFOV': 'ui_config_fov',
     'lblLang': 'ui_config_title_lang',
     
     'coffeeTitle': 'ui_coffee_title', 
@@ -186,7 +187,6 @@ export function updateStaticTranslations() {
     
     updateJoystickToggleLabel();
     updateToggleLabels();
-    
     updateMainMenuStats();
 }
 
@@ -345,21 +345,16 @@ async function fetchSupporters(retries = 3) {
         const rows = doc.querySelectorAll('.contributor-row');
         
         let html = '';
-        
         if (rows.length === 0) {
              html = '<div style="color:#888; font-style:italic; margin-top:10px;">Brak widocznych wpłat na profilu.<br>Zostań pierwszym Mecenasem!</div>';
         } else {
             html = '<ul style="list-style:none; padding:0; margin:0; width:100%;">';
-            
             rows.forEach((row) => {
                 const nameEl = row.querySelector('.fund-contributor-name .wrap-ellipsis');
                 const name = nameEl ? nameEl.innerText.trim() : "Anonim";
-                
                 const dataEls = row.querySelectorAll('.fund-contributor-data');
-                
                 let amount = "Darowizna";
                 let timeAgo = "";
-                
                 if (dataEls.length > 0) amount = dataEls[0].innerText.trim();
                 if (dataEls.length > 1) timeAgo = dataEls[1].innerText.trim();
 
@@ -427,6 +422,15 @@ export function switchView(viewId) {
     if (viewId === 'view-config') {
         generateSkinSelector();
         initLanguageSelector(); 
+        
+        // SYNCHRONIZACJA ETYKIETY FOV PRZY WEJŚCIU DO OPCJI
+        const zoomSlider = document.getElementById('zoomSlider');
+        const zoomValue = document.getElementById('zoomValue');
+        if (zoomSlider && zoomValue && window.lastGameRef) {
+            const val = Math.round((window.lastGameRef.zoomLevel || 1.0) * 100);
+            zoomSlider.value = val;
+            zoomValue.innerText = val + "%";
+        }
     }
     if (viewId === 'view-main') {
         updateMainMenuStats();
@@ -446,17 +450,8 @@ async function updateMainMenuStats() {
     
     const stats = await LeaderboardService.getGlobalStats();
     
-    if (stats.unique_players !== undefined) {
-        valPlayers.textContent = stats.unique_players.toLocaleString();
-    } else {
-        valPlayers.textContent = "...";
-    }
-    
-    if (stats.games_played !== undefined) {
-        valGames.textContent = stats.games_played.toLocaleString();
-    } else {
-        valGames.textContent = "...";
-    }
+    if (stats.unique_players !== undefined) valPlayers.textContent = stats.unique_players.toLocaleString();
+    if (stats.games_played !== undefined) valGames.textContent = stats.games_played.toLocaleString();
 }
 
 function updateToggleVisual(btn, isOn) {
@@ -468,7 +463,6 @@ function updateToggleVisual(btn, isOn) {
 function generateSkinSelector() {
     const container = document.getElementById('skinSelector');
     if (!container) return;
-
     container.innerHTML = '';
     const unlocked = getUnlockedSkins();
     const current = getCurrentSkin();
@@ -477,10 +471,8 @@ function generateSkinSelector() {
         const option = document.createElement('div');
         option.className = 'skin-option';
         option.tabIndex = 0; 
-        
         const isLocked = skin.locked && !unlocked.includes(skin.id);
         const isSelected = (skin.id === current);
-
         if (isLocked) option.classList.add('locked');
         if (isSelected) option.classList.add('selected');
 
@@ -488,7 +480,6 @@ function generateSkinSelector() {
         const img = document.createElement('img');
         if (asset) img.src = asset.src;
         else img.alt = skin.name;
-
         option.appendChild(img);
 
         option.onclick = () => {
@@ -501,23 +492,19 @@ function generateSkinSelector() {
                 generateSkinSelector(); 
             }
         };
-
-        option.title = isLocked ? "ZABLOKOWANE (Kliknij aby zobaczyć jak odblokować)" : skin.name;
-
+        option.title = isLocked ? "ZABLOKOWANE" : skin.name;
         container.appendChild(option);
     });
 }
 
 function getFocusableElements() {
     const overlays = ['gameOverOverlay', 'levelUpOverlay', 'pauseOverlay', 'introOverlay', 'confirmOverlay', 'nickInputOverlay'];
-    
     for (const ovId of overlays) {
         const ov = document.getElementById(ovId);
         if (ov && ov.style.display !== 'none' && ov.style.display !== '') {
              return Array.from(ov.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'));
         }
     }
-    
     const menuOverlay = document.getElementById('menuOverlay');
     if (menuOverlay && menuOverlay.style.display !== 'none') {
         const activeView = document.querySelector('.menu-view.active');
@@ -528,32 +515,21 @@ function getFocusableElements() {
             return [...others, ...flags];
         }
     }
-    
     return [];
 }
 
 function isGameplayActive() {
-    const menuOverlay = document.getElementById('menuOverlay');
-    const pauseOverlay = document.getElementById('pauseOverlay');
-    const levelUpOverlay = document.getElementById('levelUpOverlay');
-    const gameOverOverlay = document.getElementById('gameOverOverlay');
-    const introOverlay = document.getElementById('introOverlay');
-    const chestOverlay = document.getElementById('chestOverlay');
-    
-    if (menuOverlay && menuOverlay.style.display !== 'none') return false;
-    if (pauseOverlay && pauseOverlay.style.display !== 'none') return false;
-    if (levelUpOverlay && levelUpOverlay.style.display !== 'none') return false;
-    if (gameOverOverlay && gameOverOverlay.style.display !== 'none') return false;
-    if (introOverlay && introOverlay.style.display !== 'none') return false;
-    if (chestOverlay && chestOverlay.style.display !== 'none') return false;
-    
+    const overlays = ['menuOverlay', 'pauseOverlay', 'levelUpOverlay', 'gameOverOverlay', 'introOverlay', 'chestOverlay'];
+    for (const id of overlays) {
+        const el = document.getElementById(id);
+        if (el && el.style.display !== 'none' && el.style.display !== '') return false;
+    }
     return true;
 }
 
 function updateGamepadMenu() {
     navCooldown--;
     if (navCooldown > 0) return;
-
     const gpState = getGamepadButtonState();
     if (Object.keys(gpState).length === 0) return;
 
@@ -564,60 +540,41 @@ function updateGamepadMenu() {
              setTimeout(() => { splash.style.display = 'none'; }, 1000); 
              const evt = new Event('touchstart');
              document.dispatchEvent(evt);
-             navCooldown = 30; 
-             return;
+             navCooldown = 30; return;
         }
     }
-
     if (gpState.Start && !lastGpState.Start) {
         if (isGameplayActive()) {
-            const event = new KeyboardEvent('keydown', {'key': 'Escape'});
-            document.dispatchEvent(event);
-            navCooldown = 15;
-            return;
+            document.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Escape'}));
+            navCooldown = 15; return;
         }
     }
-
     if (isGameplayActive()) return;
 
     const focusables = getFocusableElements();
     if (focusables.length === 0) return;
 
-    const menuOverlay = document.getElementById('menuOverlay');
     const viewMain = document.getElementById('view-main');
-    if (menuOverlay.style.display !== 'none' && viewMain.classList.contains('active')) {
+    if (document.getElementById('menuOverlay').style.display !== 'none' && viewMain.classList.contains('active')) {
         if (!focusedElement || !focusables.includes(focusedElement)) {
              const btnStart = document.getElementById('btnStart');
-             if(btnStart) {
-                 focusedElement = btnStart;
-                 btnStart.classList.add('focused');
-             }
+             if(btnStart) { focusedElement = btnStart; btnStart.classList.add('focused'); }
         }
     } else {
         if (!focusedElement || !focusables.includes(focusedElement)) {
             const current = document.querySelector('.focused');
-            if (current && focusables.includes(current)) {
-                focusedElement = current;
-            } else {
-                focusedElement = focusables[0];
-                if(focusedElement) focusedElement.classList.add('focused');
-            }
+            focusedElement = (current && focusables.includes(current)) ? current : focusables[0];
+            if(focusedElement) focusedElement.classList.add('focused');
         }
     }
 
     const rawGp = pollGamepad();
     let moveDir = { up: false, down: false, left: false, right: false };
-
-    if (gpState.Up) moveDir.up = true;
-    if (gpState.Down) moveDir.down = true;
-    if (gpState.Left) moveDir.left = true;
-    if (gpState.Right) moveDir.right = true;
-
+    if (gpState.Up) moveDir.up = true; if (gpState.Down) moveDir.down = true;
+    if (gpState.Left) moveDir.left = true; if (gpState.Right) moveDir.right = true;
     if (rawGp && rawGp.axes) {
-        if (rawGp.axes[1] < -0.5) moveDir.up = true;
-        if (rawGp.axes[1] > 0.5) moveDir.down = true;
-        if (rawGp.axes[0] < -0.5) moveDir.left = true;
-        if (rawGp.axes[0] > 0.5) moveDir.right = true;
+        if (rawGp.axes[1] < -0.5) moveDir.up = true; if (rawGp.axes[1] > 0.5) moveDir.down = true;
+        if (rawGp.axes[0] < -0.5) moveDir.left = true; if (rawGp.axes[0] > 0.5) moveDir.right = true;
         if (rawGp.axes.length >= 4) {
             const scrollY = rawGp.axes[3];
             if (Math.abs(scrollY) > 0.2) {
@@ -632,29 +589,16 @@ function updateGamepadMenu() {
 
     let index = focusables.indexOf(focusedElement);
     let moved = false;
-
-    if (moveDir.down || moveDir.right) {
-        index++;
-        if (index >= focusables.length) index = 0;
-        moved = true;
-    } else if (moveDir.up || moveDir.left) {
-        index--;
-        if (index < 0) index = focusables.length - 1;
-        moved = true;
-    } 
+    if (moveDir.down || moveDir.right) { index++; if (index >= focusables.length) index = 0; moved = true; }
+    else if (moveDir.up || moveDir.left) { index--; if (index < 0) index = focusables.length - 1; moved = true; } 
 
     if (moved) {
-        if (focusedElement) {
-            focusedElement.classList.remove('focused');
-            focusedElement.blur(); 
-        }
+        if (focusedElement) { focusedElement.classList.remove('focused'); focusedElement.blur(); }
         focusedElement = focusables[index];
         if (focusedElement) {
-            focusedElement.classList.add('focused');
-            focusedElement.focus();
+            focusedElement.classList.add('focused'); focusedElement.focus();
             focusedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            playSound('Click'); 
-            updateFlagHighlights();
+            playSound('Click'); updateFlagHighlights();
         }
         navCooldown = 12; 
     }
@@ -665,14 +609,10 @@ function updateGamepadMenu() {
             if (el.id === 'btnLangPL') { setLanguage('pl'); updateStaticTranslations(); playSound('Click'); }
             else if (el.id === 'btnLangEN') { setLanguage('en'); updateStaticTranslations(); playSound('Click'); }
             else if (el.id === 'btnLangRO') { setLanguage('ro'); updateStaticTranslations(); playSound('Click'); }
-            else {
-                el.focus(); 
-                el.click();
-            }
+            else { el.focus(); el.click(); }
         }
         navCooldown = 15;
     }
-    
     if (gpState.B && !lastGpState.B) {
         const activeView = document.querySelector('.menu-view.active');
         if (activeView && activeView.id !== 'view-main') {
@@ -681,23 +621,23 @@ function updateGamepadMenu() {
         }
         navCooldown = 15;
     }
-
     lastGpState = { ...gpState };
 }
 
 setInterval(updateGamepadMenu, 16); 
 
 export function initRetroToggles(game, uiData) {
+    window.lastGameRef = game; 
     const setupToggle = (btnId, chkId, callback) => {
         const btn = document.getElementById(btnId);
         const chk = document.getElementById(chkId);
         if(btn && chk) {
-            btn.addEventListener('click', () => {
+            btn.onclick = () => {
                 chk.checked = !chk.checked;
                 updateToggleVisual(btn, chk.checked);
                 playSound('Click');
                 if(callback) callback();
-            });
+            };
         }
     };
 
@@ -716,59 +656,54 @@ export function initRetroToggles(game, uiData) {
         const joyOpts = ['right', 'left', 'off'];
         let joyIdx = 0;
         updateStaticTranslations(); 
-        joyBtn.addEventListener('click', () => {
+        joyBtn.onclick = () => {
             joyIdx = (joyIdx + 1) % joyOpts.length;
             currentJoyMode = joyOpts[joyIdx]; 
             updateStaticTranslations();
             setJoystickSide(currentJoyMode);
             playSound('Click');
-        });
+        };
+    }
+
+    const zoomSlider = document.getElementById('zoomSlider');
+    const zoomValueText = document.getElementById('zoomValue');
+    if (zoomSlider && zoomValueText) {
+        zoomSlider.value = Math.round((game.zoomLevel || 1.0) * 100);
+        zoomValueText.innerText = zoomSlider.value + "%";
+        zoomSlider.oninput = (e) => {
+            const val = parseInt(e.target.value);
+            game.zoomLevel = val / 100;
+            zoomValueText.innerText = val + "%";
+        };
     }
 
     const coffeeBtn = document.getElementById('coffeeBtn');
     if (coffeeBtn) {
-        coffeeBtn.addEventListener('click', () => {
+        coffeeBtn.onclick = () => {
             playSound('Click');
-            setTimeout(() => {
-                unlockSkin('hot');
-                playSound('ChestReward'); 
-            }, 2000);
-        });
+            setTimeout(() => { unlockSkin('hot'); playSound('ChestReward'); }, 2000);
+        };
     }
 
     const volMusic = document.getElementById('volMusic');
-    if (volMusic) { 
-        volMusic.oninput = (e) => { const val = parseInt(e.target.value) / 100; setMusicVolume(val); }; 
-    }
+    if (volMusic) volMusic.oninput = (e) => { setMusicVolume(parseInt(e.target.value) / 100); }; 
     const volSFX = document.getElementById('volSFX');
-    if (volSFX) { volSFX.oninput = (e) => { const val = parseInt(e.target.value) / 100; setSfxVolume(val); }; }
+    if (volSFX) volSFX.oninput = (e) => { setSfxVolume(parseInt(e.target.value) / 100); }; 
     
     const btnPL = document.getElementById('btnLangPL');
     const btnEN = document.getElementById('btnLangEN');
     const btnRO = document.getElementById('btnLangRO');
-
-    const doSwitch = (lang) => {
-        setLanguage(lang);
-        updateStaticTranslations();
-        initLanguageSelector(); 
-        playSound('Click');
-    };
-
+    const doSwitch = (lang) => { setLanguage(lang); updateStaticTranslations(); initLanguageSelector(); playSound('Click'); };
     if(btnPL) btnPL.onclick = () => doSwitch('pl');
     if(btnEN) btnEN.onclick = () => doSwitch('en');
     if(btnRO) btnRO.onclick = () => doSwitch('ro');
 
-    initLeaderboardUI();
-    initLanguageSelector(); 
-    updateFlagHighlights();
-
+    initLeaderboardUI(); initLanguageSelector(); updateFlagHighlights();
     setTimeout(() => {
         const btnStart = document.getElementById('btnStart');
         if (btnStart) {
             document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
-            focusedElement = btnStart;
-            btnStart.classList.add('focused');
-            btnStart.focus();
+            focusedElement = btnStart; btnStart.classList.add('focused'); btnStart.focus();
         }
     }, 500);
 }
@@ -776,7 +711,6 @@ export function initRetroToggles(game, uiData) {
 export function generateGuide() {
     const guideContainer = document.getElementById('guideContent');
     if (!guideContainer) return;
-    
     const guideData = [
         { customImg: 'img/drakul.png', nameKey: 'ui_player_name', descKey: 'ui_guide_intro' },
         { asset: 'gem', nameKey: 'ui_gem_name', descKey: 'ui_gem_desc' },
@@ -807,7 +741,6 @@ export function generateGuide() {
         { asset: 'icon_nova', nameKey: 'perk_nova_name', descKey: 'perk_nova_desc' },
         { asset: 'icon_lightning', nameKey: 'perk_chainLightning_name', descKey: 'perk_chainLightning_desc' }
     ];
-
     let html = `<h4 style="color:#4caf50; margin-bottom:15px; text-align:center;">📖 ${getLang('ui_guide_title')}</h4>`;
     guideData.forEach(item => {
         if (item.header) {

@@ -95,7 +95,6 @@
 
     <div class="retro-frame">
       <div id="view-main" class="menu-view active">
-        
         <div class="lang-quick-switch" style="position:absolute; top:15px; right:15px; z-index:20; display:flex; gap:10px;">
             <button id="btnLangPL" tabindex="0" style="font-size:2rem; background:none; border:none; cursor:pointer; filter:drop-shadow(2px 2px 0 #000);">🇵🇱</button>
             <button id="btnLangEN" tabindex="0" style="font-size:2rem; background:none; border:none; cursor:pointer; filter:drop-shadow(2px 2px 0 #000);">🇬🇧</button>
@@ -200,6 +199,15 @@
                 <span id="lblSFX">EFEKTY</span>
                 <input type="range" id="volSFX" class="retro-range" min="0" max="100" value="30">
             </div>
+            
+            <div class="config-row">
+                <span id="lblFOV">POLE WIDZENIA (ZOOM)</span>
+                <div style="display:flex; align-items:center; gap:10px; width:100%;">
+                    <input type="range" id="zoomSlider" class="retro-range" min="60" max="130" value="100" style="flex-grow:1;">
+                    <span id="zoomValue" style="min-width:50px; text-align:right; color:#FFD700; font-family:'VT323', monospace; font-size:1.5rem;">100%</span>
+                </div>
+            </div>
+
             <div class="config-row"><span id="lblLang">JĘZYK</span><div id="lang-selector-container" class="retro-lang-row"></div></div>
             
             <div class="config-row">

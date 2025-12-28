@@ -1,5 +1,5 @@
 // ==============
-// SAVEMANAGER.JS (v1.08 - Fix TypeError & Secure Save)
+// SAVEMANAGER.JS (v1.09 - Safe Serialization & FOV Support)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
@@ -42,6 +42,14 @@ const WEAPON_CLASS_MAP = {
     ChainLightningWeapon: ChainLightningWeapon 
 };
 
+/**
+ * Usuwa znaki kontrolne (0-31), które psują JSON.parse w niektórych przeglądarkach.
+ */
+function sanitizeString(str) {
+    if (typeof str !== 'string') return str;
+    return str.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+}
+
 function safeJsonParse(str, fallback) {
     if (!str) return fallback;
     try {
@@ -68,6 +76,10 @@ export function clearSavedGame() {
     console.log('[SaveManager] Zapis gry usunięty.');
 }
 
+/**
+ * Główna funkcja zapisu. 
+ * Jawnie mapujemy pola, aby uniknąć TypeError przy serializacji klas z referencjami do DOM/Assetów.
+ */
 export function saveGame(state) {
     try {
         const { 
@@ -79,39 +91,68 @@ export function saveGame(state) {
         let shadowData = {};
         if (game._getShadows) shadowData = game._getShadows();
 
-        const activeBullets = bulletsPool.activeItems.map(b => ({ ...b }));
-        const activeEBullets = eBulletsPool.activeItems.map(eb => ({ ...eb }));
-        const activeGems = gemsPool.activeItems.map(g => ({ ...g }));
+        // Bezpieczna serializacja aktywnych obiektów z pul
+        const activeBullets = bulletsPool.activeItems.map(b => ({
+            x: b.x, y: b.y, vx: b.vx, vy: b.vy, size: b.size, 
+            damage: b.damage, color: b.color, pierce: b.pierce
+        }));
+
+        const activeEBullets = eBulletsPool.activeItems.map(eb => ({
+            x: eb.x, y: eb.y, vx: eb.vx, vy: eb.vy, size: eb.size, 
+            damage: eb.damage, color: eb.color
+        }));
+
+        const activeGems = gemsPool.activeItems.map(g => ({
+            x: g.x, y: g.y, r: g.r, val: g.val, color: g.color
+        }));
 
         const savedState = { 
-            game: {...game},
+            game: {
+                score: game.score,
+                level: game.level,
+                xp: game.xp,
+                xpNeeded: game.xpNeeded,
+                health: game.health,
+                maxHealth: game.maxHealth,
+                time: game.time,
+                hyper: game.hyper,
+                zoomLevel: game.zoomLevel || 1.0, 
+                hunger: game.hunger,
+                totalKills: game.totalKills,
+                seenEnemyTypes: [...(game.seenEnemyTypes || [])]
+            },
             integrity: shadowData,
             
             player: { 
                 x: player.x, 
                 y: player.y, 
                 speed: player.speed, 
-                weapons: player.weapons.map(w => w.toJSON ? w.toJSON() : { type: w.constructor.name }) 
+                weapons: player.weapons.map(w => {
+                    return w.toJSON ? w.toJSON() : { type: w.constructor.name };
+                }) 
             }, 
-            settings: {...settings},
-            perkLevels: {...perkLevels},
-            enemies: enemies.map(e => ({ ...e })), 
+            settings: { ...settings },
+            perkLevels: { ...perkLevels },
+            enemies: enemies.map(e => ({
+                type: e.type, x: e.x, y: e.y, hp: e.hp, maxHp: e.maxHp, 
+                id: e.id, stats: e.stats, visualScale: e.visualScale
+            })), 
+            pickups: pickups.map(p => ({ type: p.type, x: p.x, y: p.y })),
+            chests: chests.map(c => ({ x: c.x, y: c.y })),
+            hazards: hazards.map(h => ({ x: h.x, y: h.y, isMega: h.isMega, scale: h.scale, life: h.life })),
             bullets: activeBullets,
             eBullets: activeEBullets,
             gems: activeGems,
-            pickups: pickups.map(p => ({ ...p })),
-            chests: chests.map(c => ({ ...c })),
-            hazards: hazards.map(h => ({ ...h, isMega: h.isMega, scale: h.scale })),
             enemyIdCounter: enemyIdCounter 
         };
         
         const jsonStr = JSON.stringify(savedState);
         localStorage.setItem(SAVE_KEY, jsonStr);
-        console.log('[SaveManager] Gra zapisana pomyślnie do localStorage.');
+        console.log('[SaveManager] Gra zapisana pomyślnie.');
         
         return savedState;
     } catch (e) {
-        console.error('[SaveManager] Błąd zapisu do localStorage:', e);
+        console.error('[SaveManager] Błąd krytyczny zapisu:', e);
         return null;
     }
 }
@@ -119,16 +160,13 @@ export function saveGame(state) {
 export function loadGame(savedStateInput, state, uiData) {
     let savedState = savedStateInput;
     if (!savedState) {
-        console.log('[SaveManager] Brak argumentu savedState, próba odczytu z localStorage...');
         savedState = getSavedGameFromStorage();
     }
 
     if (!savedState) {
-        console.error("[SaveManager] Błąd: Próbowano wczytać pusty stan lub odczyt się nie powiódł.");
+        console.error("[SaveManager] Nie odnaleziono poprawnego zapisu.");
         return;
     }
-
-    console.log("[SaveManager] Wczytywanie stanu gry...", savedState);
 
     const { 
         game, player, settings, perkLevels, enemies, 
@@ -137,6 +175,7 @@ export function loadGame(savedStateInput, state, uiData) {
         pickups, chests, hazards, bombIndicators
     } = state;
 
+    // Resetowanie aktualnej sceny
     enemies.length = 0;
     pickups.length = 0;
     chests.length = 0;
@@ -148,8 +187,11 @@ export function loadGame(savedStateInput, state, uiData) {
     particlePool.releaseAll();
     hitTextPool.releaseAll();
 
+    // Przywracanie danych logicznych
     Object.assign(game, savedState.game);
     Object.assign(settings, savedState.settings);
+    
+    // Czyścimy stare perki przed przypisaniem nowych
     Object.keys(perkLevels).forEach(key => delete perkLevels[key]);
     Object.assign(perkLevels, savedState.perkLevels);
     
@@ -161,6 +203,7 @@ export function loadGame(savedStateInput, state, uiData) {
         );
     }
 
+    // Rekonstrukcja Gracza i Broni
     player.x = savedState.player.x;
     player.y = savedState.player.y;
     player.speed = savedState.player.speed;
@@ -175,6 +218,7 @@ export function loadGame(savedStateInput, state, uiData) {
         }
     }
 
+    // Rekonstrukcja Przeciwników
     const loadedEnemies = savedState.enemies || [];
     for (const savedEnemy of loadedEnemies) {
         const EnemyClass = ENEMY_CLASS_MAP[savedEnemy.type];
@@ -185,12 +229,12 @@ export function loadGame(savedStateInput, state, uiData) {
         }
     }
     
+    // Rekonstrukcja Pocisków
     const loadedBullets = savedState.bullets || [];
     for (const b of loadedBullets) {
         const newBullet = bulletsPool.get(); 
         if (newBullet) {
             newBullet.init(b.x, b.y, b.vx, b.vy, b.size, b.damage, b.color, b.pierce);
-            Object.assign(newBullet, b); 
         }
     }
     
@@ -199,19 +243,19 @@ export function loadGame(savedStateInput, state, uiData) {
         const newEBullet = eBulletsPool.get(); 
         if (newEBullet) {
             newEBullet.init(eb.x, eb.y, eb.vx, eb.vy, eb.size, eb.damage, eb.color);
-            Object.assign(newEBullet, eb);
         }
     }
 
+    // Rekonstrukcja Ziemniaczków (XP)
     const loadedGems = savedState.gems || [];
     for (const g of loadedGems) {
         const newGem = gemsPool.get();
         if(newGem) {
             newGem.init(g.x, g.y, g.r, g.val, g.color);
-            Object.assign(newGem, g);
         }
     }
     
+    // Rekonstrukcja Zagrożeń i Skrzyń
     const loadedHazards = savedState.hazards || [];
     for (const h of loadedHazards) {
         const newHazard = new Hazard(h.x, h.y, h.isMega, h.scale);
@@ -246,12 +290,10 @@ export function loadGame(savedStateInput, state, uiData) {
     game.running = true; 
     
     const newTitle = `Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula v${uiData.VERSION}`;
-    
     document.title = newTitle;
     if(titleDiv) titleDiv.textContent = newTitle;
     
     initAudio();
-    
     playSound('MusicStop');
     
     setTimeout(() => {
@@ -266,7 +308,5 @@ export function loadGame(savedStateInput, state, uiData) {
       uiData.animationFrameId = requestAnimationFrame(uiData.loopCallback);
     }
     
-    console.log("[SaveManager] Wczytywanie zakończone.");
+    console.log("[SaveManager] Gra załadowana pomyślnie.");
 }
-
-console.log('[DEBUG] js/services/saveManager.js: Załadowano wersję z safeJsonParse i try-catch.');

@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v1.10 - Boss Pacing & Scaled Difficulty)
+// ENEMYMANAGER.JS (v1.12 - Spawning Margin Fix & Full Restoration)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -134,10 +134,8 @@ function spawnHorde(enemies, x, y, hpScale, enemyIdCounter) {
 }
 
 export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
-    // ZMIANA: Sprawdzamy czy na mapie jest aktywny BOSS
     const bossActive = enemies.some(e => BOSS_TYPES.includes(e.type));
     
-    // Jeśli Boss jest aktywny, spawnujemy 75% rzadziej, żeby dać graczowi oddech
     if (bossActive && Math.random() < 0.75) {
         return enemyIdCounter; 
     }
@@ -157,26 +155,30 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
         }
     }
 
+    // LOGIKA ZOOM-AWARE SPAWN - POPRAWKA DLA v0.107c
+    const zoom = game.zoomLevel || 1.0;
+    const vWidth = canvas.width / zoom;
+    const vHeight = canvas.height / zoom;
+    // Zwiększony margines bazowy do 150 i skalowanie przez zoom
+    const margin = 150 / zoom; 
+
     let x, y;
-    const margin = 100; 
     const viewLeft = camera.offsetX;
-    const viewRight = camera.offsetX + camera.viewWidth;
+    const viewRight = camera.offsetX + vWidth;
     const viewTop = camera.offsetY;
-    const viewBottom = camera.offsetY + camera.viewHeight;
+    const viewBottom = camera.offsetY + vHeight;
     const worldWidth = camera.worldWidth;
     const worldHeight = camera.worldHeight;
 
     const edge = Math.random();
-    if (edge < 0.25) { x = viewLeft + Math.random() * camera.viewWidth; y = viewTop - margin; }
-    else if (edge < 0.5) { x = viewLeft + Math.random() * camera.viewWidth; y = viewBottom + margin; }
-    else if (edge < 0.75) { x = viewLeft - margin; y = viewTop + Math.random() * camera.viewHeight; }
-    else { x = viewRight + margin; y = viewTop + Math.random() * camera.viewHeight; }
+    if (edge < 0.25) { x = viewLeft + Math.random() * vWidth; y = viewTop - margin; }
+    else if (edge < 0.5) { x = viewLeft + Math.random() * vWidth; y = viewBottom + margin; }
+    else if (edge < 0.75) { x = viewLeft - margin; y = viewTop + Math.random() * vHeight; }
+    else { x = viewRight + margin; y = viewTop + Math.random() * vHeight; }
 
     x = Math.max(0, Math.min(worldWidth, x));
     y = Math.max(0, Math.min(worldHeight, y));
 
-    // ZMIANA: Łagodniejsze skalowanie HP dla zwykłych wrogów
-    // 7% za level (było 10%) i co 120s (było 90s)
     const hpScale = 1 + 0.07 * (game.level - 1) + game.time / 120; 
 
     if (type === 'horde') {
@@ -219,25 +221,29 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
         bossType = availableBosses[Math.floor(Math.random() * availableBosses.length)];
     }
 
+    // LOGIKA ZOOM-AWARE DLA BOSSÓW - POPRAWKA v0.107c
+    const zoom = game.zoomLevel || 1.0;
+    const vWidth = canvas.width / zoom;
+    const vHeight = canvas.height / zoom;
+    const margin = 200 / zoom; 
+
     let x, y;
-    const margin = 150; 
     const viewLeft = camera.offsetX;
-    const viewRight = camera.offsetX + camera.viewWidth;
+    const viewRight = camera.offsetX + vWidth;
     const viewTop = camera.offsetY;
-    const viewBottom = camera.offsetY + camera.viewHeight;
+    const viewBottom = camera.offsetY + vHeight;
     const worldWidth = camera.worldWidth;
     const worldHeight = camera.worldHeight;
 
     const edge = Math.random();
-    if (edge < 0.25) { x = viewLeft + Math.random() * camera.viewWidth; y = viewTop - margin; }
-    else if (edge < 0.5) { x = viewLeft + Math.random() * camera.viewWidth; y = viewBottom + margin; }
-    else if (edge < 0.75) { x = viewLeft - margin; y = viewTop + Math.random() * camera.viewHeight; }
-    else { x = viewRight + margin; y = viewTop + Math.random() * camera.viewHeight; }
+    if (edge < 0.25) { x = viewLeft + Math.random() * vWidth; y = viewTop - margin; }
+    else if (edge < 0.5) { x = viewLeft + Math.random() * vWidth; y = viewBottom + margin; }
+    else if (edge < 0.75) { x = viewLeft - margin; y = viewTop + Math.random() * vHeight; }
+    else { x = viewRight + margin; y = viewTop + Math.random() * vHeight; }
 
     x = Math.max(0, Math.min(worldWidth, x));
     y = Math.max(0, Math.min(worldHeight, y));
     
-    // ZMIANA: Skalowanie HP Bossów (również łagodniejsze)
     const hpScale = (1 + 0.07 * (game.level - 1) + game.time / 120) * 1.5; 
     
     const newEnemy = createEnemyInstance(bossType, x, y, hpScale, enemyIdCounter++);
@@ -288,7 +294,6 @@ export function spawnWallEnemies(state) {
 
     for (let i = 0; i < spawnQueue.length; i++) {
         const { x, y } = spawnQueue[i];
-        // Skalowanie HP dla Wall Enemy też łagodniejsze
         const hpScale = 1 + 0.07 * (game.level - 1) + game.time / 120; 
         const newEnemy = createEnemyInstance('wall', x, y, hpScale, state.enemyIdCounter++);
         if (newEnemy) {

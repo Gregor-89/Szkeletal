@@ -1,5 +1,5 @@
 // ==============
-// ENGLISH.JS (v1.10 - Supporters Header & Full Translation)
+// ENGLISH.JS (v1.11 - FOV Translation)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
@@ -21,7 +21,6 @@ export const LANG_EN = {
   ui_dev_god: "God Mode:",
   ui_dev_hitbox: "Hitboxes:",
   
-  // NEW HOT COFFEE TEXT
   ui_coffee_title: "HOT COFFEE",
   ui_coffee_desc: "Congratulations. You have just irreversibly depreciated several minutes of your time, although I myself, in an act of pure masochism, have dedicated tens of them to vertical prompting of AI algorithms over the last two months.<br><br>Let's be objective: just as our native 'ludologists' (not to be confused with actual game scholars) de facto exhibit an immanent lack of competence in mechanics, specializing mainly in the acquisition of other people's content, I possess zero knowledge of coding, pixel-art aesthetics, or narratology. This project is a 'patho-construct' built from generative blocks – potato by potato.<br><br>Was this teleological pursuit worth the effort? Absolutely not. Who in their right mind would want to participate in this pastiche for more than a few minutes? Even if it's just a loose parody, and any resemblance to known 'lolcows' from the ludological environment is, of course, completely stochastic and accidental.<br><br>Nevertheless, if you perceive any value of effort in this straw man, you can make a voluntary subvention to my virtual coffee or chip in for a sack of potatoes. Thanks to this, I will initiate the culinary process myself and prepare delicious potatoes.<br><br>Oh, activating the button interface below will unlock – just like that, as a joyful transgression – <span style=\"color:#E91E63;font-weight:bold;\">an alternative, 'hot' Drakul skin</span>.<br><br>Enter the mental. Have fun.",
   ui_coffee_btn: "BUY COFFEE",
@@ -37,6 +36,7 @@ export const LANG_EN = {
   
   ui_config_music: "MUSIC",
   ui_config_sfx: "SFX",
+  ui_config_fov: "FIELD OF VIEW (ZOOM)",
   
   ui_nav_back: "BACK",
   
@@ -132,7 +132,6 @@ export const LANG_EN = {
   ui_menu_new_game_prompt: "Start Simulation",
   
   ui_config_title_game: "Gameplay Settings",
-  // MISSING KEYS ADDED
   ui_config_nick: "YOUR NICKNAME",
   ui_config_skin: "CHARACTER SKIN",
   ui_config_tutorial: "TUTORIAL",
@@ -199,7 +198,7 @@ export const LANG_EN = {
   
   ui_scores_title: "REGISTRY OF LOSERS",
   ui_scores_clear: "🗑️ CLEAR",
-  ui_scores_clear_local: "CLEAR LOCAL", // Added
+  ui_scores_clear_local: "CLEAR LOCAL", 
   ui_scores_col_rank: "#",
   ui_scores_col_nick: "NICK",
   ui_scores_col_score: "PTS",
@@ -286,7 +285,6 @@ export const LANG_EN = {
   perk_health_name: "Health",
   perk_health_desc: "Bigger stomach for hate. Increases Max Satiety by +20 and heals 20 HP.",
   
-  // MISSING STATS TRANSLATIONS
   ui_stat_level: "Level",
   ui_stat_health: "Health",
   ui_stat_speed: "Spd",

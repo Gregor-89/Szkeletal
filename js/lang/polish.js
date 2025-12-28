@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v1.10 - Supporters Header & Full Translation)
+// POLISH.JS (v1.11 - FOV Translation)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -21,7 +21,6 @@ export const LANG_PL = {
   ui_dev_god: "God Mode:",
   ui_dev_hitbox: "Hitboxy:",
   
-  // ZAKTUALIZOWANA SEKCJA HOT COFFEE
   ui_coffee_title: "HOT COFFEE",
   ui_coffee_desc: "Gratulacje. Właśnie dokonałeś bezpowrotnej deprecjacji kilku minut swojego czasu, choć ja sam, w akcie czystego masochizmu, poświęciłem ich dziesiątki na wertykalne promptowanie algorytmów AI przez ostatnie dwa miesiące.<br><br>Musimy postawić sprawę obiektywnie: tak samo jak nasi rodzimi „ludolodzy” (nie mylić z faktycznymi groznawcami) de facto wykazują immanentny brak kompetencji w temacie mechanik, specjalizując się głównie w akwizycji cudzego contentu, tak i ja nie posiadam żadnej wiedzy o kodowaniu, estetyce pixel-artu czy narratologii. Ten projekt to „pato-konstrukt” zbudowany z klocków generatywnych – ziemniak po ziemniaku.<br><br>Czy ta teleologiczna pogoń była warta zachodu? Absolutnie nie. Kto o zdrowych zmysłach chciałby partycypować w tym paszyżu dłużej niż kilka minut? Nawet jeśli to tylko luźna parodia, a wszelkie podobieństwa do znanych nam „śmiechodojów” ze środowiska ludologicznego są oczywiście zupełnie stochastyczne i przypadkowe.<br><br>Niemniej, jeśli mimo wszystko dostrzegasz w tym chochole jakikolwiek walor napracowania, możesz dokonać dobrowolnej subwencji na moją wirtualną kawkę lub dorzucić się do worka kartofli. Dzięki temu sam zainicjuję proces kulinarny i przygotuję sobie pyszne ziemniaczki.<br><br>Aha, aktywacja poniższego interfejsu przyciskowego odblokuje – ot tak, w ramach radosnej transgresji – <span style=\"color:#E91E63;font-weight:bold;\">alternatywną, „gorącą” skórkę Drakula</span>.<br><br>Wejdź w mental. Have fun.",
   ui_coffee_btn: "POSTAW KAWKĘ",
@@ -37,6 +36,7 @@ export const LANG_PL = {
   
   ui_config_music: "MUZYKA",
   ui_config_sfx: "EFEKTY",
+  ui_config_fov: "POLE WIDZENIA (ZOOM)",
   
   ui_nav_back: "POWRÓT",
   
@@ -46,7 +46,7 @@ export const LANG_PL = {
   ui_player_name: "Drakul",
   
   ui_tutorial_title: "PROTOKÓŁ WSTĘPNY",
-  ui_tutorial_intro: "Witaj w symulacji ziemniaczkowego łakomstwa. Wcielasz się w Hrabiego Drakula, który po ucieczce z Res-krainy popadł w ludologiczny obłęd i cierpi na ciągły popęd do pysznych ziemniaczków [XP], w imię których jest gotów poświęcić każdego na swej drodze.",
+  ui_tutorial_intro: "Witaj w symulacji ziemniaczkowego łakomstwa. Wcielasz się w Hrabiego Drakula, który po ucieczce z Res-krainy popadł w ludologiczny obłęd i cierpi na ciągły popęd do pysznych ziemniaczków [XP], w imię których jest gotów poświęcić każdego na sweby drodze.",
   ui_tutorial_ctrl_title: "🕹️ Interfejs Kinestetyczny",
   ui_tutorial_ctrl_desc: "Smyraj ekran (urządzenia dotykowe) lub duś klawisze (WSAD). Przemoc jest zautomatyzowana – Twój awatar sam dobiera najbliższe ofiary.",
   ui_tutorial_hunger_title: "🥔 Imperatyw Sytości",
@@ -132,7 +132,6 @@ export const LANG_PL = {
   ui_menu_new_game_prompt: "Start Symulacji",
   
   ui_config_title_game: "Ustawienia Rozgrywki",
-  // BRAKUJĄCE KLUCZE KONFIGURACJI
   ui_config_nick: "TWOJA KSYWKA",
   ui_config_skin: "WYGLĄD POSTACI",
   ui_config_tutorial: "SAMOUCZEK",

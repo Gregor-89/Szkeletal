@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v1.27 - FULL FIX: All Configs & Skins)
+// GAMEDATA.JS (v1.27e - FOV Range 60-130%)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -40,6 +40,13 @@ export const GAME_CONFIG = {
   XP_GROWTH_EARLY: 1.4, 
   XP_GROWTH_LATE: 1.25,
   XP_THRESHOLD_LEVEL: 6 
+};
+
+// AKTUALIZACJA ZAKRESU FOV (0.6 = 60%)
+export const ZOOM_CONFIG = {
+  MIN: 0.6,
+  MAX: 1.3,
+  DEFAULT: 1.0
 };
 
 export const HUNGER_CONFIG = {
@@ -172,7 +179,6 @@ export const PERK_CONFIG = {
   chainLightning: { max: 6, VISUAL_DURATION: 0.25, calculateCooldown: (level) => [0, 2.5, 2.3, 2.1, 1.9, 1.7, 1.6][level] || 1.6, calculateDamage: (level) => (10 + level * 3), calculateTargets: (level) => [0, 1, 2, 3, 4, 5, 6][level] || 6, }
 };
 
-// PRZYWRÓCONE CONFIGI
 export const UI_CONFIG = { RESUME_TIMER: 0.75, LEVEL_UP_PAUSE: 700, LOW_HEALTH_THRESHOLD: 0.25 };
 
 export const WORLD_CONFIG = { SIZE: 24 };
@@ -270,7 +276,6 @@ export const MUSIC_CONFIG = {
   FADE_TIME: 1.0
 };
 
-// PRZYWRÓCONY SKINS_CONFIG
 export const SKINS_CONFIG = [
   { id: 'default', name: 'Drakul (Standard)', assetIdle: 'player_static', assetSprite: 'player_spritesheet', locked: false },
   { id: 'hot', name: 'Drakul (Hot)', assetIdle: 'player_hot_idle', assetSprite: 'player_hot_spritesheet', locked: true }
