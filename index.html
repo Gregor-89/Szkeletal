@@ -9,12 +9,17 @@
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-  /* Całkowite wyłączenie systemowego prostokąta focusu dla flag */
   .lang-quick-switch button:focus,
   .lang-quick-switch button:active {
       outline: none !important;
       box-shadow: none !important;
   }
+  .retro-btn.indigo { border-color: #7986CB; color: #C5CAE9; background: #303F9F; }
+  .retro-btn.indigo:hover { background: #3F51B5; box-shadow: 0 0 10px #7986CB; }
+  
+  /* Naprawa koloru niebieskiego dla Sklepu - standardowy rozmiar */
+  .retro-btn.blue { border-color: #42A5F5; color: #E3F2FD; background: #1565C0; }
+  .retro-btn.blue:hover { background: #1976D2; box-shadow: 0 0 10px #42A5F5; }
 </style>
 </head>
 <body>
@@ -107,8 +112,9 @@
         </div>
         
         <div class="menu-list">
-            <button id="btnStart" class="retro-btn primary pulse">NOWA GRA</button>
+            <button id="btnStart" class="retro-btn success pulse">NOWA GRA</button>
             <button id="btnContinue" class="retro-btn warning" style="display:none;">KONTYNUUJ</button>
+            <button id="navShop" class="retro-btn blue">SKLEPIK</button>
             <div class="spacer"></div>
             <button id="navScores" class="retro-btn">KRONIKI POLEGŁYCH</button>
             <button id="navConfig" class="retro-btn">OPCJE</button>
@@ -124,6 +130,28 @@
             <span id="lblMainGames">GIER:</span> <span id="valMainGames" style="color: #4CAF50;">...</span>
         </div>
 
+      </div>
+
+      <div id="view-shop" class="menu-view">
+        <h2 id="shopTitle" class="retro-title">SKLEPIK ZIEMNIACZANY</h2>
+        
+        <div class="shop-wallet-container" style="text-align:center; margin-bottom:10px; background:rgba(0,0,0,0.4); padding:15px; border:1px solid #444;">
+            <div style="font-size:1.8rem; color:#fff;">DOSTĘPNE PUNKTY: <span id="shopWalletPoints" style="color:var(--accent-green);">0</span></div>
+        </div>
+
+        <div class="retro-scroll-box">
+            <div id="shopInfoNote" style="font-size:1rem; color:#aaa; margin-bottom:15px; border-left:4px solid var(--accent-gold); padding-left:10px;">
+                <strong>JAK TO DZIAŁA?</strong><br>
+                Twoim budżetem jest Twój najwyższy wynik (High Score) ze wszystkich sesji. Punkty nie sumują się – aby mieć ich więcej, musisz pobić swój rekord! Zakupy ulepszeń dają <strong>natychmiastowy bonus na start każdej gry</strong>, co pozwoli Ci szybciej progressować i wbijać wyższe poziomy wertykalności. <br>
+                <strong>UWAGA:</strong> Każdy kolejny zakup kosztuje o ok. 50% więcej niż poprzedni, więc wydawaj punkty rozważnie!
+            </div>
+            <div id="shopContainer" class="perk-grid"></div>
+        </div>
+
+        <div class="menu-actions" style="display:flex; flex-direction:column; gap:10px;">
+            <button id="btnResetShop" class="retro-btn small danger">RESET ULEPSZEŃ (BEZ ZWROTU PKT)</button>
+            <button class="retro-btn nav-back">POWRÓT</button>
+        </div>
       </div>
 
       <div id="view-scores" class="menu-view">
@@ -269,6 +297,14 @@
                 <div class="dev-control"><label id="lblDevHit">Hitboxy:</label><input type="checkbox" id="devDebugHitboxes" style="width:24px; height:24px;"></div>
             </div>
             <div class="dev-section">
+                <p class="dev-label">TESTY SKLEPU</p>
+                <div class="dev-control">
+                    <label>Persistent Score:</label>
+                    <input type="number" id="devShopScore" min="0" value="0">
+                    <button class="retro-btn small" onclick="window.devSetShopScore()">USTAW</button>
+                </div>
+            </div>
+            <div class="dev-section">
                 <p class="dev-label">SPAWN ITEM</p>
                 <div class="dev-grid">
                     <button class="retro-btn small" onclick="window.devSpawnPickup('heal')">HP</button>
@@ -397,7 +433,7 @@
           <tbody id="scoresBodyGameOver"></tbody> 
         </table> 
       </div> 
-      <button id="btnSubmitScore" class="retro-btn small success" style="margin-bottom:10px; border-color:#00E676; background:#1B5E20; display:none;">WYŚLIJ WYNIK</button>
+      <button id="btnSubmitScore" class="retro-btn small indigo" style="margin-bottom:10px; display:none;">WYŚLIJ WYNIK</button>
       <div id="submitMsg" style="text-align:center; font-size:1rem; margin-bottom:5px; height:20px;"></div>
       <button id="btnClearScoresGO" class="retro-btn small danger" style="margin-bottom:10px;">WYCZYŚĆ LOKALNE</button>
       <div class="menu-actions"> 
@@ -425,12 +461,15 @@
         document.getElementById(viewId).classList.add('active');
         if(viewId === 'view-scores' && window.wrappedDisplayScores) window.wrappedDisplayScores();
         if(viewId === 'view-guide' && window.wrappedGenerateGuide) window.wrappedGenerateGuide();
+        if(viewId === 'view-shop' && window.wrappedGenerateShop) window.wrappedGenerateShop();
     }
     document.getElementById('navScores').onclick = () => menuNav('view-scores');
     document.getElementById('navConfig').onclick = () => menuNav('view-config');
     document.getElementById('navGuide').onclick = () => menuNav('view-guide');
     document.getElementById('navCoffee').onclick = () => menuNav('view-coffee');
     document.getElementById('navDev').onclick = () => menuNav('view-dev');
+    document.getElementById('navShop').onclick = () => menuNav('view-shop');
+    
     document.querySelectorAll('.nav-back').forEach(b => b.onclick = () => menuNav('view-main'));
   </script>
 </body>

@@ -1,14 +1,14 @@
 // ==============
-// GAMEDATA.JS (v1.27h - Health Bonus Revert & Balance Sync)
+// GAMEDATA.JS (v1.30 - Speed Balance & Shop Config)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
 export const PLAYER_CONFIG = {
-  BASE_SPEED: 240, 
+  BASE_SPEED: 175, // ZMNIEJSZONO Z 240 dla balansu (poprzednie wersje miały ok. 160-180)
   SIZE: 15,
   INITIAL_HEALTH: 120,
   INITIAL_PICKUP_RANGE: 30,
-  HEAL_AMOUNT: 20 // Przywrócono do 20
+  HEAL_AMOUNT: 20 
 };
 
 export const COLLISION_CONFIG = {
@@ -40,6 +40,25 @@ export const GAME_CONFIG = {
   XP_GROWTH_EARLY: 1.4, 
   XP_GROWTH_LATE: 1.25,
   XP_THRESHOLD_LEVEL: 6 
+};
+
+// KONFIGURACJA SKLEPU
+export const SHOP_CONFIG = {
+    BASE_COST: 4000,
+    COST_MULTIPLIER: 1.5,
+    UPGRADES: {
+        autogun: { id: 'autogun', dependsOn: null, icon: 'img/icons/autogun.png' },
+        firerate: { id: 'firerate', dependsOn: 'autogun', icon: 'img/icons/firerate.png' },
+        damage: { id: 'damage', dependsOn: 'autogun', icon: 'img/icons/damage.png' },
+        multishot: { id: 'multishot', dependsOn: 'autogun', icon: 'img/icons/multishot.png' },
+        pierce: { id: 'pierce', dependsOn: 'autogun', icon: 'img/icons/pierce.png' },
+        orbital: { id: 'orbital', dependsOn: null, icon: 'img/icons/orbital.jpg' },
+        nova: { id: 'nova', dependsOn: null, icon: 'img/icons/nova.png' },
+        chainLightning: { id: 'chainLightning', dependsOn: null, icon: 'img/icons/lightning.png' },
+        speed: { id: 'speed', dependsOn: null, icon: 'img/icons/speed.png' },
+        health: { id: 'health', dependsOn: null, icon: 'img/icons/health.png' },
+        pickup: { id: 'pickup', dependsOn: null, icon: 'img/icons/magnet.png' }
+    }
 };
 
 export const ZOOM_CONFIG = {
@@ -173,7 +192,7 @@ export const PERK_CONFIG = {
   nova: { max: 6, calculateDamage: (level) => (15 + level * 4), calculateCooldown: (level) => Math.max(0.5, 3.0 - (level * 0.4)), calculateCount: (level) => 2 + level, calculatePierce: (level) => 1 + Math.floor(level / 3) },
   speed: { value: 1.10, max: 4 },
   pickup: { value: 1.40, max: 3 }, 
-  health: { value: 20, max: 3 }, // Przywrócono do 20
+  health: { value: 20, max: 3 }, 
   whip: { max: 5, HITBOX_RADIUS: 30, calculateCooldown: (level) => (Math.max(1.0, 3.0 - 0.4 * level)), calculateDamage: (level) => (10 + (level - 1) * 2.5), calculateDrawScale: (level) => (100 + 25 * (level - 1)), calculateCount: (level) => { const counts = [0, 1, 2, 3, 4, 4]; return counts[level] || 4; } },
   chainLightning: { max: 6, VISUAL_DURATION: 0.25, calculateCooldown: (level) => [0, 2.5, 2.3, 2.1, 1.9, 1.7, 1.6][level] || 1.6, calculateDamage: (level) => (10 + level * 3), calculateTargets: (level) => [0, 1, 2, 3, 4, 5, 6][level] || 6, }
 };

@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v1.11 - FOV Translation)
+// POLISH.JS (v1.13 - Shop Fixes)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -84,7 +84,7 @@ export const LANG_PL = {
   quote_snake_14: "Mój Panie, czy mogę o minimum atencji?",
   quote_snake_15: "Patrz mój Panie jak robię HAU HAU!",
   quote_snake_16: "Jestem mądrym chłopcem, HAU",
-  quote_snake_17: "Może porozmawiamy o faktach?",
+  quote_snake_17: "Maybe let's talk facts?",
   quote_snake_18: "Mogę ziemniaczka mój Panie?",
   
   quote_gameplay_1: "Jebać wszystkich Dadgamerów i chuj wam w dupę",
@@ -126,11 +126,23 @@ export const LANG_PL = {
   ui_menu_tab_config: "Konfiguracja",
   ui_menu_tab_dev: "🛠️ Dev Menu",
   ui_menu_tab_guide: "Przewodnik",
+  ui_menu_shop: "🛒 SKLEPIK",
   ui_menu_start: "▶️ Zacznij nową grę",
   ui_menu_continue: "⏯️ Kontynuuj Grę",
   ui_menu_replay_intro: "🎥 Włącz Intro",
   ui_menu_new_game_prompt: "Start Symulacji",
   
+  ui_shop_title: "SKLEPIK ZIEMNIACZANY",
+  ui_shop_wallet: "DOSTĘPNE PUNKTY:",
+  ui_shop_info: "<strong>JAK TO DZIAŁA?</strong><br>Twoim budżetem jest Twój najwyższy wynik (High Score) ze wszystkich sesji. Punkty nie sumują się – aby mieć ich więcej, musisz pobić swój rekord! Zakupy ulepszeń dają <strong>natychmiastowy bonus na start każdej gry</strong>, co pozwoli Ci szybciej progressować i wbijać wyższe poziomy wertykalności. <br><strong>UWAGA:</strong> Każdy kolejny zakup kosztuje o ok. 50% więcej niż poprzedni, więc wydawaj punkty rozważnie!",
+  ui_shop_owned: "[WYKUPIONE]",
+  ui_shop_maxed: "OSIĄGNIĘTO LIMIT",
+  ui_shop_active_start: "AKTYWNE NA START",
+  ui_shop_cost: "KOSZT:",
+  ui_shop_requires: "WYMAGA:",
+  ui_shop_reset_btn: "RESET ULEPSZEŃ (BEZ ZWROTU PKT)",
+  ui_shop_reset_confirm: "CZY NA PEWNO CHCESZ ZRESETOWAĆ ULEPSZENIA? WYDANE PUNKTY NIE ZOSTANĄ ZWRÓCONE!",
+
   ui_config_title_game: "Ustawienia Rozgrywki",
   ui_config_nick: "TWOJA KSYWKA",
   ui_config_skin: "WYGLĄD POSTACI",
@@ -271,19 +283,19 @@ export const LANG_PL = {
   perk_chainLightning_name: "Pierun Ludologa",
   perk_chainLightning_desc: "Automatyczny atak rażący najbliższego wroga i przeskakujący na kolejnych.",
   perk_firerate_name: "Szybkostrzelność",
-  perk_firerate_desc: "Bo hejt musi być dostarczony szybko! Zwiększa szybkostrzelność Plujko Jadu o +20%.",
+  perk_firerate_desc: "Bo hejt musi być dostarczony szybko! Zwiększa szybkostrzelność Plujko Jadu o +{val}%.",
   perk_damage_name: "Obrażenia",
-  perk_damage_desc: "Obiektywny wzrost toksyczności. Dodaje +1 do obrażeń pocisków.",
+  perk_damage_desc: "Obiektywny wzrost toksyczności. Dodaje +{val} do obrażeń pocisków.",
   perk_multishot_name: "Multishot",
-  perk_multishot_desc: "Dywersyfikacja wertykalna. Wystrzeliwuje +1 dodatkowy pocisk.",
+  perk_multishot_desc: "Dywersyfikacja wertykalna. Wystrzeliwuje +{val} dodatkowy pocisk.",
   perk_pierce_name: "Przebicie",
-  perk_pierce_desc: "Twój jad jest tak żrący, że przebija narrację. Przebija +1 dodatkowego wroga.",
+  perk_pierce_desc: "Twój jad jest tak żrący, że przebija narrację. Przebija +{val} dodatkowego wroga.",
   perk_speed_name: "Szybkość",
-  perk_speed_desc: "Nawet Hrabia musi czasem zmienić pozycję. +10% do szybkości ruchu.",
+  perk_speed_desc: "Nawet Hrabia musi czasem zmienić pozycję. +{val}% do szybkości ruchu.",
   perk_pickup_name: "Zasięg",
-  perk_pickup_desc: "Im większy głód, tym dłuższe ręce. +40% do zasięgu przyciągania Ziemniaków.",
+  perk_pickup_desc: "Im większy głód, tym dłuższe ręce. +{val}% do zasięgu przyciągania Ziemniaków.",
   perk_health_name: "Zdrowie",
-  perk_health_desc: "Większy żołądek na hejt. Zwiększa Max Sytość o +20 i leczy 20 HP.",
+  perk_health_desc: "Większy żołądek na hejt. Zwiększa Max Sytość o +{val} i leczy.",
   
   ui_stat_level: "Poziom",
   ui_stat_health: "Zdrowie",

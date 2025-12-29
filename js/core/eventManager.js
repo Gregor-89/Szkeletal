@@ -1,5 +1,5 @@
 // ==============
-// EVENTMANAGER.JS (v1.02 - Sync Zoom Config)
+// EVENTMANAGER.JS (v1.04 - Tutorial Fix & Shop Integration)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
@@ -10,18 +10,23 @@ import { levelUp, pickPerk, openChest } from '../managers/levelManager.js';
 import { saveGame, loadGame } from '../services/saveManager.js';
 import { playSound } from '../services/audio.js';
 import { resetDevTime, devSettings } from '../services/dev.js';
-import { chestOverlay, gameOverOverlay, pauseOverlay, levelUpOverlay, btnContinueMaxLevel, chestButton } from '../ui/domElements.js';
+import { 
+    chestOverlay, gameOverOverlay, pauseOverlay, levelUpOverlay, 
+    btnContinueMaxLevel, chestButton, confirmOverlay, confirmText, btnConfirmYes 
+} from '../ui/domElements.js';
+import { shopManager } from '../services/shopManager.js';
 
 let gameStateRef = null;
 let uiDataRef = null;
 
-function wrappedShowMenu(allowContinue = false) {
+// ZMIANA: Wrappery stają się async dla obsługi sklepu
+async function wrappedShowMenu(allowContinue = false) {
     uiDataRef.animationFrameId = uiDataRef.animationFrameId;
     showMenu(uiDataRef.game, wrappedResetAll, uiDataRef, allowContinue);
     updateAllStaticText();
 }
 
-function wrappedResetAll() {
+async function wrappedResetAll() {
     uiDataRef.game = gameStateRef.game;
     uiDataRef.settings = gameStateRef.settings;
     uiDataRef.perkLevels = gameStateRef.perkLevels;
@@ -39,8 +44,8 @@ function wrappedResetAll() {
     uiDataRef.camera = gameStateRef.camera;
     if (window.SIEGE_EVENT_CONFIG) uiDataRef.settings.currentSiegeInterval = window.SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
     
-    // Używamy exportu z ui.js
-    resetAll(uiDataRef.canvas, uiDataRef.settings, uiDataRef.perkLevels, uiDataRef, uiDataRef.camera);
+    // Używamy await dla async resetAll
+    await resetAll(uiDataRef.canvas, uiDataRef.settings, uiDataRef.perkLevels, uiDataRef, uiDataRef.camera);
     
     gameStateRef.enemyIdCounter = 0;
     uiDataRef.animationFrameId = null;
@@ -74,9 +79,8 @@ function wrappedGameOver() {
     updateAllStaticText();
 }
 
-// FIX: Wywołanie startRun z poprawną liczbą argumentów (3)
-function wrappedStartRun() {
-    startRun(gameStateRef.game, wrappedResetAll, uiDataRef);
+async function wrappedStartRun() {
+    await startRun(gameStateRef.game, wrappedResetAll, uiDataRef);
 }
 
 function wrappedLoadConfig() {
@@ -85,7 +89,6 @@ function wrappedLoadConfig() {
     const fpsEl = document.getElementById('chkFPS');
     const labelsEl = document.getElementById('chkPickupLabels');
     
-    // POPRAWKA v1.02: Pobieranie wartości Zooma przy ładowaniu konfiguracji (np. przed Startem)
     const zoomSlider = document.getElementById('zoomSlider');
     if (zoomSlider) {
         const val = parseInt(zoomSlider.value);
@@ -133,7 +136,7 @@ function initEvents() {
     document.getElementById('btnStart').addEventListener('click', () => {
         devSettings.presetLoaded = false;
         resetDevTime();
-        wrappedLoadConfig(); // <-- Tutaj teraz syncuje Zooma
+        wrappedLoadConfig();
         wrappedStartRun();
     });
     document.getElementById('btnContinue').addEventListener('click', () => {
@@ -150,16 +153,45 @@ function initEvents() {
     bindNav('navGuide', 'view-guide');
     bindNav('navCoffee', 'view-coffee');
     bindNav('navDev', 'view-dev');
+    bindNav('navShop', 'view-shop');
     
     document.querySelectorAll('.nav-back').forEach(btn => {
         btn.addEventListener('click', () => switchView('view-main'));
     });
+
+    // NOWOŚĆ: Obsługa przycisku START w tutorialu
+    const btnCloseTutorial = document.getElementById('btnCloseTutorial');
+    if (btnCloseTutorial) {
+        btnCloseTutorial.addEventListener('click', () => {
+            const overlay = document.getElementById('tutorialOverlay');
+            if (overlay) overlay.style.display = 'none';
+            localStorage.setItem('szkeletal_tutorial_seen', 'true');
+            if (gameStateRef && gameStateRef.game) {
+                gameStateRef.game.paused = false;
+            }
+            playSound('Click');
+        });
+    }
     
+    const btnResetShop = document.getElementById('btnResetShop');
+    if (btnResetShop) {
+        btnResetShop.addEventListener('click', () => {
+            confirmText.textContent = "CZY NA PEWNO CHCESZ ZRESETOWAĆ ULEPSZENIA? WYDANE PUNKTY NIE ZOSTANĄ ZWRÓCONE!";
+            confirmOverlay.style.display = 'flex';
+            btnConfirmYes.onclick = () => {
+                shopManager.resetUpgrades();
+                confirmOverlay.style.display = 'none';
+                playSound('Click');
+                if (window.wrappedGenerateShop) window.wrappedGenerateShop();
+            };
+        });
+    }
+
     document.getElementById('btnRetry').addEventListener('click', () => {
         gameOverOverlay.style.display = 'none';
         devSettings.presetLoaded = false;
         resetDevTime();
-        wrappedLoadConfig(); // <-- Tutaj też syncuje Zooma
+        wrappedLoadConfig();
         wrappedStartRun();
     });
     document.getElementById('btnMenu').addEventListener('click', () => {

@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.11j - Global Zoom Sync Fix)
+// UI.JS (v1.16 - Full Restore & Async Deterministic Flow)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -22,6 +22,9 @@ import * as Hud from './hud.js';
 import * as Menus from './menus.js';
 import * as LeaderboardUI from './leaderboardUI.js';
 import { LeaderboardService } from '../services/leaderboard.js'; 
+// IMPORTY SKLEPU
+import { shopManager } from '../services/shopManager.js';
+import { perkPool } from '../config/perks.js';
 
 let hpBarOuterRef = null;
 
@@ -92,7 +95,8 @@ export function showMenu(game, resetAllFn, uiData, allowContinue = false) {
     attachClearScoresListeners();
 }
 
-export function startRun(game, resetAllFn, uiData) {
+// ZMIANA: startRun staje się async dla obsługi await w resetAll
+export async function startRun(game, resetAllFn, uiData) {
     LeaderboardUI.setGameRef(game);
 
     if (devSettings.presetLoaded && !devSettings.justStartedFromMenu) { 
@@ -103,9 +107,9 @@ export function startRun(game, resetAllFn, uiData) {
     const startOffset = devStartTime;
     
     if (resetAllFn) {
-        resetAllFn();
+        await resetAllFn(); 
     } else {
-        resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); 
+        await resetAll(uiData.canvas, uiData.settings, uiData.perkLevels, uiData, uiData.camera); 
     }
 
     uiData.savedGameState = null;
@@ -132,7 +136,7 @@ export function startRun(game, resetAllFn, uiData) {
         uiData.settings.currentSiegeInterval = startOffset + 10.0; 
     }
     
-    console.log("[UI] startRun: Gra uruchomiona.");
+    console.log("[UI] startRun: Gra uruchomiona deterministycznie.");
 
     if (LeaderboardService && LeaderboardService.trackStat) {
         LeaderboardService.trackStat('games_played', 1);
@@ -151,7 +155,8 @@ export function startRun(game, resetAllFn, uiData) {
     }
 }
 
-export function resetAll(canvas, settings, perkLevels, uiData, camera) {
+// ZMIANA: resetAll staje się async, aby obsłużyć wczytywanie ulepszeń Sklepu
+export async function resetAll(canvas, settings, perkLevels, uiData, camera) {
     if (uiData.animationFrameId !== null) { 
         cancelAnimationFrame(uiData.animationFrameId); 
         uiData.animationFrameId = null; 
@@ -196,6 +201,42 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
         uiData.player.reset(worldWidth, worldHeight);
         
         for (let key in perkLevels) delete perkLevels[key];
+
+        // LOGIKA SKLEPU v1.16: Deterministyczne ładowanie startowe
+        if (shopManager && shopManager.boughtUpgrades) {
+            const bought = shopManager.boughtUpgrades;
+            const shopIds = Object.keys(bought);
+            if (shopIds.length > 0) {
+                const state = { game, player: uiData.player, settings, weapons: uiData.player.weapons, perkLevels };
+                // Faza 1: Bronie (czekamy na importy klas)
+                const weaponIds = shopIds.filter(id => {
+                    const p = perkPool.find(x => x.id === id);
+                    return p && p.type === 'weapon';
+                });
+                for (const id of weaponIds) {
+                    const level = bought[id];
+                    const perk = perkPool.find(p => p.id === id);
+                    for (let i = 0; i < level; i++) {
+                        await perk.apply(state, perk); 
+                    }
+                    perkLevels[id] = level;
+                }
+                // Faza 2: Statystyki (teraz na pewno znajdą broń w player.weapons)
+                const statIds = shopIds.filter(id => {
+                    const p = perkPool.find(x => x.id === id);
+                    return p && p.type !== 'weapon';
+                });
+                for (const id of statIds) {
+                    const level = bought[id];
+                    const perk = perkPool.find(p => p.id === id);
+                    for (let i = 0; i < level; i++) {
+                        await perk.apply(state, perk);
+                    }
+                    perkLevels[id] = level;
+                }
+            }
+        }
+
     } else {
         game.score = 0; 
         settings.lastFire = 0; 
@@ -329,6 +370,11 @@ export function gameOver(game, uiData) {
     const playerNick = localStorage.getItem('szkeletal_player_nick') || "GRACZ";
     saveScore(currentRun, playerNick); 
     
+    // INTEGRACJA SKLEPU: Aktualizacja rekordu
+    if (shopManager && !game.isCheated) {
+        shopManager.updateMaxScore(Math.floor(game.score));
+    }
+
     playSound('MusicMenu');
     
     const btnSubmit = document.getElementById('btnSubmitScore');

@@ -1,5 +1,5 @@
 // ==============
-// ROMANIAN.JS (v1.11b - Dynamic Tags Sync)
+// ROMANIAN.JS (v1.13 - Shop Fixes)
 // Lokalizacja: /js/lang/romanian.js
 // ==============
 
@@ -126,10 +126,22 @@ export const LANG_RO = {
   ui_menu_tab_config: "Config",
   ui_menu_tab_dev: "🛠️ Meniu Dev",
   ui_menu_tab_guide: "Ghid",
+  ui_menu_shop: "🛒 MAGAZIN",
   ui_menu_start: "▶️ Joc Nou",
   ui_menu_continue: "⏯️ Continuă Jocul",
   ui_menu_replay_intro: "🎥 Redă Intro",
   ui_menu_new_game_prompt: "Start Simulare",
+
+  ui_shop_title: "MAGAZIN DE CARTOFI",
+  ui_shop_wallet: "PUNCTE DISPONIBILE:",
+  ui_shop_info: "<strong>CUM FUNCȚIONEAZĂ?</strong><br>Bugetul tău este cel mai mare scor (High Score) din toate sesiunile. Punctele nu se acumulează – pentru a avea mai multe, trebuie să-ți bați recordul! Achizițiile oferă un <strong>bonus de pornire imediat</strong>, permițându-ți să progresezi mai rapid. <br><strong>NOTĂ:</strong> Fiecare achiziție ulterioară costă cu ~50% mai mult, așa că cheltuiește cu înțelepciune!",
+  ui_shop_owned: "[CUMPĂRAT]",
+  ui_shop_maxed: "LIMITĂ ATINSĂ",
+  ui_shop_active_start: "ACTIV LA START",
+  ui_shop_cost: "COST:",
+  ui_shop_requires: "NECESITĂ:",
+  ui_shop_reset_btn: "RESETARE (FĂRĂ RAMBURSARE)",
+  ui_shop_reset_confirm: "EȘTI SIGUR? PUNCTELE CHELTUITE NU VOR FI RAMBURSATE!",
   
   ui_config_title_game: "Setări Joc",
   ui_config_nick: "PORECLA TA",
@@ -218,7 +230,7 @@ export const LANG_RO = {
   ui_intro_finish: "MENU ▶️",
   
   pickup_heal_name: "Farfuria Contesei",
-  pickup_heal_desc: "Relicvă a iubirii pierdute. Restaurează instantaneu 100% din Sațietate.",
+  pickup_heal_desc: "Relicvă a iubirii pierdute. Restaurează instantaneu +30 Sațietate.",
   pickup_magnet_name: "Lăcomie",
   pickup_magnet_desc: "Indulgență de 2 secunde, Contele manifestă atracție magnetică față de Cartofi.",
   pickup_shield_name: "Scutul LodoZeu",
@@ -238,7 +250,7 @@ export const LANG_RO = {
   enemy_horde_desc: "Fanatic fără creier. Atacă doar în grup. Mai lent, dar tinde să înconjoare Jucătorul.",
   enemy_aggressive_name: "Provocator",
   enemy_aggressive_desc: "Oponent viclean. Se oprește aproape (semnalizare), apoi execută o șarjă violentă.",
-  enemy_kamikaze_name: "Troll",
+  enemy_kamikaze_name: "Troli",
   enemy_kamikaze_desc: "Rapid și haotic. Se mișcă în zigzag agresiv și prezice mișcarea jucătorului. Explodează la contact.",
   enemy_splitter_name: "Utilizator Wykop",
   enemy_splitter_desc: "Semănător de dramă. Mișcare liniară foarte rapidă. Se divide în doi hateri mai mici când este învins.",

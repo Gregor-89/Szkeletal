@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.27f - Language Flag Visual Fix)
+// MENUS.JS (v1.32 - Shop UI Polishing)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -9,19 +9,18 @@ import { get as getAsset } from '../services/assets.js';
 import { setJoystickSide, getGamepadButtonState, pollGamepad } from './input.js';
 import { initLeaderboardUI } from './leaderboardUI.js'; 
 import { VERSION } from '../config/version.js';
-import { MUSIC_CONFIG, SKINS_CONFIG } from '../config/gameData.js';
+import { MUSIC_CONFIG, SKINS_CONFIG, SHOP_CONFIG } from '../config/gameData.js';
 import { LeaderboardService } from '../services/leaderboard.js';
 import { getUnlockedSkins, unlockSkin, setCurrentSkin, getCurrentSkin } from '../services/skinManager.js'; 
+import { shopManager } from '../services/shopManager.js';
+import { perkPool } from '../config/perks.js';
 
 let currentJoyMode = 'right';
-
-// === GAMEPAD NAVIGATION STATE ===
 let lastGpState = {};
 let navCooldown = 0;
 let focusedElement = null;
 
 const STATIC_TRANSLATION_MAP = {
-    // ... [Mapa tłumaczeń pozostaje bez zmian] ...
     'btnStart': 'ui_menu_start', 
     'btnContinue': 'ui_menu_continue', 
     'navScores': 'ui_scores_title', 
@@ -30,7 +29,7 @@ const STATIC_TRANSLATION_MAP = {
     'btnReplayIntroMain': 'ui_menu_replay_intro',
     'navDev': 'ui_menu_tab_dev', 
     'navCoffee': 'ui_coffee_title',
-    // ... (Pozostałe klucze zachowane)
+    'navShop': 'ui_menu_shop'
 };
 
 export function updateStaticTranslations() {
@@ -94,18 +93,120 @@ export function updateStaticTranslations() {
     updateMainMenuStats();
 }
 
-// FIX v1.27f: Poprawione wizualia flag - usunięcie owalu, dodanie ramki i poświaty
+export function generateShop() {
+    const container = document.getElementById('shopContainer');
+    const walletText = document.getElementById('shopWalletPoints');
+    if (!container || !shopManager) return;
+
+    walletText.textContent = shopManager.getWalletBalance().toLocaleString();
+    container.innerHTML = '';
+
+    const nextCost = shopManager.calculateNextCost();
+
+    Object.values(SHOP_CONFIG.UPGRADES).forEach(upg => {
+        const perkData = perkPool.find(p => p.id === upg.id);
+        if (!perkData) return;
+
+        const currentLvl = shopManager.getUpgradeLevel(upg.id);
+        const maxLvl = perkData.max || 1;
+        const isMaxed = currentLvl >= maxLvl;
+        const canBuy = shopManager.canBuy(upg.id);
+        
+        const el = document.createElement('div');
+        el.className = 'perk perk-graphic';
+        
+        // ZMIANA: Wizualne przygaszanie ulepszeń na maksie
+        if (isMaxed) {
+            el.style.borderColor = 'var(--accent-green)';
+            el.style.opacity = '0.6';
+            el.style.cursor = 'default';
+        } else if (!canBuy) {
+            el.style.opacity = '0.5';
+            el.style.cursor = 'not-allowed';
+        }
+
+        const iconWrapper = document.createElement('div');
+        iconWrapper.className = 'perk-img-wrapper';
+        const img = document.createElement('img');
+        img.src = upg.icon;
+        iconWrapper.appendChild(img);
+
+        const info = document.createElement('div');
+        info.className = 'perk-info';
+        
+        const title = document.createElement('h4');
+        const levelTag = `<span class="badge" style="color: ${isMaxed ? 'var(--accent-green)' : '#aaa'}">POZ. ${currentLvl}/${maxLvl}</span>`;
+        title.innerHTML = `${getLang(`perk_${upg.id}_name`) || upg.id.toUpperCase()} ${levelTag}`;
+        
+        let descText = getLang(`perk_${upg.id}_desc`) || "Ulepszenie startowe.";
+        if (descText.includes('{val}')) {
+            const val = perkData.formatVal ? perkData.formatVal(currentLvl) : (perkData.value || "");
+            descText = descText.replace('{val}', val);
+        }
+        
+        const desc = document.createElement('p');
+        desc.textContent = descText;
+
+        const costTag = document.createElement('div');
+        costTag.style.marginTop = '5px';
+        costTag.style.fontSize = '0.9rem';
+        
+        if (isMaxed) {
+            // TERAZ WYŚWIETLI PRZETŁUMACZONY TEKST
+            costTag.innerHTML = `<span style="color:var(--accent-green);">${getLang('ui_shop_maxed') || 'OSIĄGNIĘTO LIMIT'}</span>`;
+        } else {
+            const color = canBuy ? 'var(--accent-gold)' : 'var(--accent-red)';
+            const costLbl = getLang('ui_shop_cost') || 'KOSZT:';
+            costTag.innerHTML = `${costLbl} <span style="color:${color}; font-weight:bold;">${nextCost.toLocaleString()} PKT</span>`;
+            
+            if (currentLvl === 0 && upg.dependsOn && shopManager.getUpgradeLevel(upg.dependsOn) === 0) {
+                const depName = getLang(`perk_${upg.dependsOn}_name`) || upg.dependsOn;
+                const reqLbl = getLang('ui_shop_requires') || 'WYMAGA:';
+                costTag.innerHTML += `<br><span style="color:var(--accent-red); font-size:0.8rem;">${reqLbl} ${depName}</span>`;
+            }
+        }
+
+        info.appendChild(title);
+        info.appendChild(desc);
+        info.appendChild(costTag);
+        
+        el.appendChild(iconWrapper);
+        el.appendChild(info);
+
+        el.onclick = () => {
+            if (isMaxed) return;
+            if (!canBuy) {
+                playSound('Click');
+                return;
+            }
+            if (shopManager.buyUpgrade(upg.id)) {
+                playSound('ChestReward');
+                generateShop();
+            } else {
+                console.warn("[ANTI-CHEAT] Purchase rejected by Manager logic.");
+                if (window.lastGameRef) {
+                    window.lastGameRef.isCheated = true;
+                }
+            }
+        };
+
+        container.appendChild(el);
+    });
+}
+
+window.wrappedGenerateShop = generateShop;
+
 function updateFlagHighlights() {
     const currentLang = getCurrentLangCode();
     ['btnLangPL', 'btnLangEN', 'btnLangRO'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
             btn.style.transform = 'scale(1.0)';
-            btn.style.filter = 'grayscale(1.0) contrast(0.8)'; // Wyłączone flagi są szare
+            btn.style.filter = 'grayscale(1.0) contrast(0.8)'; 
             btn.style.outline = 'none';
             btn.style.boxShadow = 'none';
             btn.style.border = '2px solid transparent';
-            btn.style.borderRadius = '4px'; // Stałe lekkie zaokrąglenie zamiast 50%
+            btn.style.borderRadius = '4px'; 
             btn.style.transition = 'all 0.2s ease-in-out';
 
             const isActive = id.endsWith(currentLang.toUpperCase());
@@ -249,6 +350,7 @@ export function switchView(viewId) {
     }
     if (viewId === 'view-scores') { if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard(); setTimeout(() => { updateStaticTranslations(); }, 100); }
     if (viewId === 'view-guide') generateGuide(); 
+    if (viewId === 'view-shop') generateShop(); 
     if (viewId === 'view-config') {
         generateSkinSelector(); initLanguageSelector(); 
         const zoomSlider = document.getElementById('zoomSlider');
@@ -470,7 +572,6 @@ export function initRetroToggles(game, uiData) {
 }
 
 export function generateGuide() {
-    // ... [Przewodnik pozostaje bez zmian] ...
     const gc = document.getElementById('guideContent'); if (!gc) return;
     const guideData = [
         { customImg: 'img/drakul.png', nameKey: 'ui_player_name', descKey: 'ui_guide_intro' },

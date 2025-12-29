@@ -1,5 +1,5 @@
 // ==============
-// ENGLISH.JS (v1.11b - Dynamic Tags Sync)
+// ENGLISH.JS (v1.13 - Shop Fixes)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
@@ -126,10 +126,22 @@ export const LANG_EN = {
   ui_menu_tab_config: "Config",
   ui_menu_tab_dev: "🛠️ Dev Menu",
   ui_menu_tab_guide: "Guide",
+  ui_menu_shop: "🛒 SHOP",
   ui_menu_start: "▶️ Start New Game",
   ui_menu_continue: "⏯️ Continue Game",
   ui_menu_replay_intro: "🎥 Replay Intro",
   ui_menu_new_game_prompt: "Start Simulation",
+
+  ui_shop_title: "POTATO SHOP",
+  ui_shop_wallet: "AVAILABLE POINTS:",
+  ui_shop_info: "<strong>HOW IT WORKS?</strong><br>Your budget is your highest score (High Score) from all sessions. Points do not accumulate – to have more, you must beat your record! Purchased upgrades give an <strong>immediate starting bonus</strong>, allowing you to progress faster and reach higher verticality levels. <br><strong>NOTE:</strong> Each subsequent purchase costs ~50% more, so spend wisely!",
+  ui_shop_owned: "[OWNED]",
+  ui_shop_maxed: "LIMIT REACHED",
+  ui_shop_active_start: "ACTIVE AT START",
+  ui_shop_cost: "COST:",
+  ui_shop_requires: "REQUIRES:",
+  ui_shop_reset_btn: "RESET UPGRADES (NO REFUND)",
+  ui_shop_reset_confirm: "ARE YOU SURE? SPENT POINTS WILL NOT BE REFUNDED!",
   
   ui_config_title_game: "Gameplay Settings",
   ui_config_nick: "YOUR NICKNAME",
@@ -218,7 +230,7 @@ export const LANG_EN = {
   ui_intro_finish: "MENU ▶️",
   
   pickup_heal_name: "Countess Plate",
-  pickup_heal_desc: "Relic of lost love. Instantly restores 100% of Satiety.",
+  pickup_heal_desc: "Relic of lost love. Instantly restores +30 Satiety.",
   pickup_magnet_name: "Gluttony",
   pickup_magnet_desc: "2-second indulgence, Count exhibits magnetic pull towards Potatoes.",
   pickup_shield_name: "IceGod Shield",

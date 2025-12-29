@@ -6,6 +6,28 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 # Changelog
 
+## [0.108] - 2025-12-29
+### DODANO
+- **System Sklepu (Ziemniaczany Sklepik):** Wprowadzono system stałego rozwoju (Meta-Progression).
+  - **Mechanika Waluty:** Twoim budżetem jest Twój rekord życiowy (High Score). Punkty nie sumują się – aby kupić więcej, musisz pobić swój rekord!
+  - **Ulepszenia Poziomowe:** Gracz może teraz wykupywać nie tylko bronie, ale i ich kolejne poziomy (zgodnie z limitami w grze).
+  - **Bonus Startowy:** Każdy zakupiony poziom ulepszenia jest automatycznie aplikowany na start każdej nowej rozgrywki.
+  - **Skalowanie Kosztów:** Każdy kolejny zakup w sklepie (niezależnie od typu) kosztuje o 50% więcej niż poprzedni. Kwoty są zaokrąglane do pełnych tysięcy.
+  - **Reset ulepszeń:** Dodano możliwość zresetowania wszystkich zakupów (bez zwrotu punktów) w celach re-balansu własnej strategii.
+
+
+### ZMIENIONO
+- **Interfejs Menu:**
+  - Przycisk Sklepu otrzymał kolor niebieski i został dopasowany rozmiarem do reszty przycisków.
+  - Przycisk wysyłania wyniku Online ma teraz kolor fioletowy (Indigo) dla lepszego rozróżnienia od przycisku Nowej Gry.
+- **Lokalizacja:** Pełne wsparcie dla Sklepu w języku polskim, angielskim i rumuńskim.
+- **Opisy Perkóww:** Wszystkie ulepszenia korzystają teraz z dynamicznych tagów, pokazując realne wartości (np. "+2 dmg" zamiast statycznego tekstu) w zależności od poziomu.
+- **Balans:** Piorun Ludologa (Chain Lightning) nie wymaga już posiadania Eksplozji Mentalu do odblokowania.
+
+---
+
+# Changelog
+
 ## [0.107] - 2025-12-29
 
 ### Naprawiono

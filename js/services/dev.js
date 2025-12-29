@@ -1,5 +1,5 @@
 // ==============
-// DEV.JS (v1.06 - Full Restore)
+// DEV.JS (v1.07 - Shop Testing Tools)
 // Lokalizacja: /js/services/dev.js
 // ==============
 
@@ -22,6 +22,8 @@ import { FreezePickup } from '../entities/pickups/freezePickup.js';
 import { Chest } from '../entities/chest.js';
 
 import { confirmOverlay, confirmText, btnConfirmYes } from '../ui/domElements.js';
+// IMPORT SKLEPU DLA TESTÓW
+import { shopManager } from './shopManager.js';
 
 const PICKUP_CLASS_MAP = {
     'heal': HealPickup,
@@ -58,6 +60,19 @@ let startRunCallback = () => {};
 function markAsCheated() {
     if (gameState && gameState.game) {
         gameState.game.isCheated = true;
+    }
+}
+
+// NOWA FUNKCJA TESTOWA DLA SKLEPU
+function devSetShopScore() {
+    const val = getVal('devShopScore', 0);
+    if (shopManager) {
+        shopManager.maxScore = val;
+        shopManager.save();
+        markAsCheated(); // Każda manipulacja punktami sklepu flaguje cheatera
+        showDevConfirmModal(`✅ Max Score ustawiony na: ${val}. Oflagowano jako CHEATER.`);
+        // Odśwież widok sklepu jeśli jest otwarty
+        if (window.wrappedGenerateShop) window.wrappedGenerateShop();
     }
 }
 
@@ -507,6 +522,8 @@ export function initDevTools(stateRef, loadConfigFn, startRunFn) {
     window.devStartPreset = devPresetEnemy; 
     window.retryLastScenario = retryLastScenario; 
     window.devStartPeaceful = devStartPeaceful; 
+    // EKSPORT NOWEJ FUNKCJI
+    window.devSetShopScore = devSetShopScore;
     
-    console.log('[DEBUG-v1.06] js/services/dev.js: Dev Tools loaded & exported.');
+    console.log('[DEBUG-v1.07] js/services/dev.js: Dev Tools loaded & exported.');
 }

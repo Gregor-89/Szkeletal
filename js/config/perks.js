@@ -1,5 +1,5 @@
 // ==============
-// PERKS.JS (v1.02e - Dynamic Value Providers)
+// PERKS.JS (v1.03 - Async Support & Shop Logic Fix)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
@@ -14,13 +14,16 @@ export const perkPool = [
     color: '#FFF',
     max: 1, 
     apply: (state, perk) => {
-       import('../config/weapons/autoGun.js').then(module => {
+       // ZWRACAMY PROMISE: Silnik poczeka na załadowanie klasy broni
+       return import('../config/weapons/autoGun.js').then(module => {
            const AutoGun = module.AutoGun;
            let w = state.player.getWeapon(AutoGun);
            if (!w) {
                w = new AutoGun(state.player);
                state.player.weapons.push(w);
+               console.log("[PERK] Plujkojad zainicjalizowany pomyślnie.");
            }
+           return w;
        });
     }
   },
@@ -32,7 +35,7 @@ export const perkPool = [
     icon: 'icon_firerate',
     emoji: '⏩',
     color: '#FFFF00',
-    value: 0.80, // -20% cooldownu
+    value: 0.80, 
     max: 6,
     requiresWeapon: 'AutoGun',
     formatVal: () => 20, 
@@ -42,6 +45,7 @@ export const perkPool = [
            if(w.fireRate) w.fireRate *= perk.value;
            if(w.cooldown) w.cooldown *= perk.value;
        }
+       return Promise.resolve();
     }
   },
   {
@@ -54,9 +58,6 @@ export const perkPool = [
     color: '#FF0000',
     max: 6,
     requiresWeapon: 'AutoGun',
-    /**
-     * (v1.02e) Progresywne skalowanie: +2, +3, +4, +5, +6, +7.
-     */
     formatVal: (currentLvl) => currentLvl + 2,
     apply: (state, perk) => {
        const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
@@ -65,8 +66,8 @@ export const perkPool = [
            const bonus = currentLvl + 2; 
            if(w.bulletDamage !== undefined) w.bulletDamage += bonus;
            if(w.damage !== undefined) w.damage += bonus;
-           console.log(`[PERK-DMG] AutoGun: Dodano +${bonus} dmg.`);
        }
+       return Promise.resolve();
     }
   },
   {
@@ -83,7 +84,13 @@ export const perkPool = [
     formatVal: () => 1,
     apply: (state, perk) => {
        const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
-       if(w) w.multishot += perk.value;
+       if(w) {
+           w.multishot += perk.value;
+           console.log(`[PERK] Multishot zaaplikowany. Aktualnie pocisków: ${w.multishot + 1}`);
+       } else {
+           console.warn("[PERK] BŁĄD: Multishot nie znalazł Plujkojada!");
+       }
+       return Promise.resolve();
     }
   },
   {
@@ -101,6 +108,7 @@ export const perkPool = [
     apply: (state, perk) => {
        const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
        if(w) w.pierce += perk.value;
+       return Promise.resolve();
     }
   },
   {
@@ -113,7 +121,7 @@ export const perkPool = [
     color: '#CDDC39',
     max: 5,
     apply: (state, perk) => {
-       import('../config/weapons/orbitalWeapon.js').then(module => {
+       return import('../config/weapons/orbitalWeapon.js').then(module => {
            const OrbitalWeapon = module.OrbitalWeapon;
            let w = state.player.getWeapon(OrbitalWeapon);
            if(!w) {
@@ -122,6 +130,7 @@ export const perkPool = [
            } else {
                w.upgrade(perk);
            }
+           return w;
        });
     }
   },
@@ -135,7 +144,7 @@ export const perkPool = [
     color: '#FF5722',
     max: 6,
     apply: (state, perk) => {
-       import('../config/weapons/novaWeapon.js').then(module => {
+       return import('../config/weapons/novaWeapon.js').then(module => {
            const NovaWeapon = module.NovaWeapon;
            let w = state.player.getWeapon(NovaWeapon);
            if(!w) {
@@ -144,6 +153,7 @@ export const perkPool = [
            } else {
                w.upgrade(perk);
            }
+           return w;
        });
     }
   },
@@ -157,7 +167,7 @@ export const perkPool = [
     color: '#795548',
     max: 5,
     apply: (state, perk) => {
-       import('../config/weapons/whipWeapon.js').then(module => {
+       return import('../config/weapons/whipWeapon.js').then(module => {
            const WhipWeapon = module.WhipWeapon;
            let w = state.player.getWeapon(WhipWeapon);
            if(!w) {
@@ -166,6 +176,7 @@ export const perkPool = [
            } else {
                w.upgrade(perk);
            }
+           return w;
        });
     }
   },
@@ -179,7 +190,7 @@ export const perkPool = [
     color: '#448AFF',
     max: 6,
     apply: (state, perk) => {
-       import('../config/weapons/chainLightningWeapon.js').then(module => {
+       return import('../config/weapons/chainLightningWeapon.js').then(module => {
            const ChainLightningWeapon = module.ChainLightningWeapon;
            let w = state.player.getWeapon(ChainLightningWeapon);
            if(!w) {
@@ -188,6 +199,7 @@ export const perkPool = [
            } else {
                w.upgrade(perk);
            }
+           return w;
        });
     }
   },
@@ -204,6 +216,7 @@ export const perkPool = [
     formatVal: () => 10,
     apply: (state, perk) => {
        state.player.speedMultiplier *= perk.value;
+       return Promise.resolve();
     }
   },
   {
@@ -219,6 +232,7 @@ export const perkPool = [
     formatVal: () => 40,
     apply: (state, perk) => {
        state.game.pickupRange *= perk.value;
+       return Promise.resolve();
     }
   },
   {
@@ -231,10 +245,11 @@ export const perkPool = [
     color: '#E91E63',
     value: 20, 
     max: 3,
-    formatVal: () => 30,
+    formatVal: () => 20,
     apply: (state, perk) => {
        state.game.maxHealth += perk.value;
        state.game.health = Math.min(state.game.maxHealth, state.game.health + perk.value);
+       return Promise.resolve();
     }
   }
 ];

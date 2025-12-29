@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v1.14c - Dynamic Descriptions Fix)
+// LEVELMANAGER.JS (v1.15 - Full Restore & Stats Fix)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -44,10 +44,7 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
     game.xp -= game.xpNeeded;
     game.level += 1;
     
-    // HYBRYDOWY PRZYROST XP
-    let growthFactor = GAME_CONFIG.XP_GROWTH_LATE; // Domyślnie 1.35
-    
-    // Jeśli poziom jest mniejszy lub równy progowi, użyj trudniejszego mnożnika (1.5)
+    let growthFactor = GAME_CONFIG.XP_GROWTH_LATE; 
     if (game.level <= GAME_CONFIG.XP_THRESHOLD_LEVEL) {
         growthFactor = GAME_CONFIG.XP_GROWTH_EARLY;
     }
@@ -73,10 +70,8 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
     setTimeout(() => {
         if (game.running && !game.inMenu) {
             pauseGame(game, settings, weapons, player);
-            
             const pauseOverlay = document.getElementById('pauseOverlay');
             if (pauseOverlay) pauseOverlay.style.display = 'none';
-
             levelUpOverlay.style.display = 'flex';
             
             updateStatsUI(game, player, settings, weapons, statsDisplay);
@@ -99,9 +94,7 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
 
     const getIcon = (assetKey, fallbackEmoji) => {
         const asset = getAsset(assetKey);
-        return asset 
-            ? `<img src="${asset.src}" class="stat-icon-img">` 
-            : fallbackEmoji;
+        return asset ? `<img src="${asset.src}" class="stat-icon-img">` : fallbackEmoji;
     };
 
     const iconLevel = getIcon('icon_level', '⭐');
@@ -115,6 +108,8 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
     const iconAutoGun = getIcon('icon_autogun', '🔫');
     const iconDamage = getIcon('icon_damage', '💥');
     const iconFirerate = getIcon('icon_firerate', '⏩');
+    const iconMultishot = getIcon('icon_multishot', '🎯');
+    const iconPierce = getIcon('icon_pierce', '➡️');
 
     const pickupVal = (game.pickupRange || PLAYER_CONFIG.INITIAL_PICKUP_RANGE).toFixed(0);
 
@@ -130,14 +125,15 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
         { icon: iconOrbital, label: getLang('perk_orbital_name'), value: `${orbital ? orbital.level : '0'} / ${PERK_CONFIG.orbital?.max || 5}` },
         { icon: iconNova, label: getLang('perk_nova_name'), value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova?.max || 5}` },
         
-        ...(chainLightning ? [
-            { icon: iconLightning, label: `${getLang('perk_chainLightning_name')} (Lvl)`, value: `${chainLightning.level} / ${PERK_CONFIG.chainLightning?.max || 6}` },
-        ] : []),
+        ...(chainLightning ? [{ icon: iconLightning, label: `${getLang('perk_chainLightning_name')} (Lvl)`, value: `${chainLightning.level} / ${PERK_CONFIG.chainLightning?.max || 6}` }] : []),
 
         ...(autoGun ? [
-            { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: `Gotowy` },
+            { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: `ZAINSTALOWANY` },
             { icon: iconDamage, label: `${getLang('perk_damage_name')}`, value: `${autoGun.bulletDamage.toFixed(0)}` },
             { icon: iconFirerate, label: `${getLang('perk_firerate_name')}`, value: `${(1000 / autoGun.fireRate).toFixed(2)}/s` },
+            // NOWOŚĆ: Dodanie brakujących statystyk
+            { icon: iconMultishot, label: `Multishot`, value: `+${autoGun.multishot}` },
+            { icon: iconPierce, label: `Przebicie`, value: `${autoGun.pierce} cel(i)` }
         ] : [
             { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: `---` }
         ])
@@ -151,35 +147,36 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
         <div class="stat-item-content">
           <div class="stat-item-label">${s.label}</div>
           <div class="stat-item-value">${s.value}</div>
-        </div>
-      `;
+        </div>`;
         targetElement.appendChild(el);
     });
+
+    const perkList = document.createElement('div');
+    perkList.style.gridColumn = '1 / -1'; perkList.style.marginTop = '10px'; perkList.style.borderTop = '1px solid #444'; perkList.style.paddingTop = '10px';
+    perkPool.forEach(perk => {
+        const lvl = (player.perkLevels && player.perkLevels[perk.id]) || 0;
+        if (lvl > 0) {
+            const row = document.createElement('div');
+            row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.fontSize = '0.9rem'; row.style.color = perk.color || '#fff';
+            row.innerHTML = `<span>${perk.emoji || ''} ${getLang(perk.name)}</span> <span>POZ. ${lvl}</span>`;
+            perkList.appendChild(row);
+        }
+    });
+    if (perkList.children.length > 0) targetElement.appendChild(perkList);
 }
 
-/**
- * (v1.14c) Przetwarza opis perka, podmieniając {val} na rzeczywistą wartość dla danego poziomu.
- */
 function getDynamicDesc(perk, currentLvl) {
-    let desc = getLang(perk.desc);
+    let desc = getLang(perk.desc) || "";
     if (!desc.includes('{val}')) return desc;
-
     let displayVal = perk.value || "";
-    // Jeśli perk ma funkcję formatującą wartość (np. dla progresywnego DMG Plujkojada)
-    if (perk.formatVal) {
-        displayVal = perk.formatVal(currentLvl);
-    }
-
+    if (perk.formatVal) displayVal = perk.formatVal(currentLvl);
     return desc.replace('{val}', displayVal);
 }
 
 export function showPerks(perkLevels, player, game, settings, weapons) {
     const avail = perkPool.filter(p => {
         const currentLevel = perkLevels[p.id] || 0;
-        
-        // FIX: Upewnienie się, że perk nie jest blokowany, jeśli p.max nie istnieje
         if (p.max !== undefined && currentLevel >= p.max) return false;
-        
         if (p.requiresWeapon) { 
             const hasWeapon = player.weapons.some(w => w.constructor.name === p.requiresWeapon);
             if (!hasWeapon) return false;
@@ -193,45 +190,31 @@ export function showPerks(perkLevels, player, game, settings, weapons) {
         picks.push(avail.splice(i, 1)[0]); 
     }
 
-    perksDiv.innerHTML = ''; 
+    if (perksDiv) perksDiv.innerHTML = ''; 
 
     if (picks.length === 0) {
         btnContinueMaxLevel.style.display = 'block';
         perksDiv.innerHTML = `<p style="text-align:center; color:#aaa;">${getLang('ui_levelup_max')}</p>`;
-        
-        btnContinueMaxLevel.onclick = () => {
-             levelUpOverlay.style.display = 'none';
-             resumeGame(game, 0);
-        };
-
+        btnContinueMaxLevel.onclick = () => { levelUpOverlay.style.display = 'none'; resumeGame(game, 0); };
     } else {
-        btnContinueMaxLevel.style.display = 'none';
+        if (btnContinueMaxLevel) btnContinueMaxLevel.style.display = 'none';
         picks.forEach(perk => {
             const lvl = perkLevels[perk.id] || 0;
             const el = document.createElement('div');
-            
-            // Dynamiczne formatowanie opisu
             const dynamicDesc = getDynamicDesc(perk, lvl);
-            
-            let imgAsset = null;
-            if (perk.icon) {
-                imgAsset = getAsset(perk.icon);
-            }
+            let imgAsset = perk.icon ? getAsset(perk.icon) : null;
 
             if (imgAsset) {
                 el.className = 'perk perk-graphic';
                 el.innerHTML = `
-                    <div class="perk-img-wrapper">
-                        <img src="${imgAsset.src}" alt="${perk.name}">
-                    </div>
+                    <div class="perk-img-wrapper"><img src="${imgAsset.src}" alt="${perk.name}"></div>
                     <div class="perk-info">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                            <h4>${getLang(perk.name)}</h4>
                            <span class="badge">${lvl} » ${lvl + 1}</span>
                         </div>
                         <p>${dynamicDesc}</p>
-                    </div>
-                `;
+                    </div>`;
             } else {
                 el.className = 'perk';
                 const iconHTML = perk.emoji ? `<span class="picon-emoji">${perk.emoji}</span>` : `<span class="picon" style="background:${perk.color || '#999'}"></span>`;
@@ -244,36 +227,26 @@ export function showPerks(perkLevels, player, game, settings, weapons) {
                        <p>${dynamicDesc}</p>
                    </div>`;
             }
-            
             el.onclick = () => { 
                 pickPerk(perk, game, perkLevels, settings, weapons, player, (g, t) => {
                     levelUpOverlay.style.display = 'none';
                     resumeGame(g, t !== undefined ? t : 0);
                 });
             };
-            perksDiv.appendChild(el);
+            if (perksDiv) perksDiv.appendChild(el);
         });
     }
 }
 
 export function pickPerk(perk, game, perkLevels, settings, weapons, player, resumeCallback) {
-    if (!perk) {
-        resumeCallback(game, 0); 
-        return;
-    }
-    
-    if (perk.max !== undefined && (perkLevels[perk.id] || 0) >= perk.max) {
-        return;
-    }
+    if (!perk) { resumeCallback(game, 0); return; }
+    if (perk.max !== undefined && (perkLevels[perk.id] || 0) >= perk.max) return;
     
     const state = { game, settings, weapons, player, perkLevels }; 
-    if (perk.apply) {
-        perk.apply(state, perk); 
-    }
+    if (perk.apply) perk.apply(state, perk); 
     
     perkLevels[perk.id] = (perkLevels[perk.id] || 0) + 1;
     playSound('PerkPick');
-    
     resumeCallback(game); 
 }
 
@@ -281,14 +254,9 @@ export function pickChestReward(perkLevels, player) {
     const pool = perkPool.filter(p => {
         const currentLevel = perkLevels[p.id] || 0;
         if (p.max !== undefined && currentLevel >= p.max) return false;
-        
-        if (p.requiresWeapon) {
-            const hasWeapon = player.weapons.some(w => w.constructor.name === p.requiresWeapon);
-            if (!hasWeapon) return false;
-        }
+        if (p.requiresWeapon) return player.weapons.some(w => w.constructor.name === p.requiresWeapon);
         return true;
     });
-    
     if (!pool.length) return null;
     return pool[Math.floor(Math.random() * pool.length)];
 }
@@ -296,46 +264,20 @@ export function pickChestReward(perkLevels, player) {
 export function openChest(game, perkLevels, uiData, player) {
     uiData.currentChestReward = pickChestReward(perkLevels, player); 
     const reward = uiData.currentChestReward;
-
     if (reward) {
         const currentLevel = perkLevels[reward.id] || 0;
-        const maxVal = reward.max || 10;
-        const progress = ((currentLevel + 1) / maxVal) * 100;
-        
-        // Dynamiczne formatowanie opisu dla skrzynki
+        const progress = ((currentLevel + 1) / (reward.max || 10)) * 100;
         const dynamicDesc = getDynamicDesc(reward, currentLevel);
-        
-        let iconHTML = '';
-        if (reward.icon) {
-            const asset = getAsset(reward.icon);
-            if (asset) {
-                iconHTML = `<img src="${asset.src}" class="chest-reward-img" alt="${reward.name}">`;
-            }
-        }
-        if (!iconHTML) {
-            iconHTML = `<div class="chest-reward-icon">${reward.emoji || '🎁'}</div>`;
-        }
+        let iconHTML = reward.icon ? `<img src="${getAsset(reward.icon).src}" class="chest-reward-img">` : `<div class="chest-reward-icon">${reward.emoji || '🎁'}</div>`;
 
         chestRewardDisplay.innerHTML = `
-        ${iconHTML}
-        <div class="chest-reward-name">${getLang(reward.name)}</div>
+        ${iconHTML}<div class="chest-reward-name">${getLang(reward.name)}</div>
         <div class="chest-reward-desc">${dynamicDesc}</div>
-        <div class="chest-reward-level">
-          Poziom: ${currentLevel} » ${currentLevel + 1} ${reward.max ? `(z ${reward.max})` : ''}
-        </div>
-        <div class="chest-reward-level-bar">
-          <div class="chest-reward-level-fill" style="width:${progress}%;"></div>
-        </div>
-      `;
+        <div class="chest-reward-level">Poziom: ${currentLevel} » ${currentLevel + 1}</div>
+        <div class="chest-reward-level-bar"><div class="chest-reward-level-fill" style="width:${progress}%;"></div></div>`;
     } else {
-        chestRewardDisplay.innerHTML = `
-        <div class="chest-reward-icon">😔</div>
-        <div class="chest-reward-name">${getLang('ui_chest_empty_title')}</div>
-        <div class="chest-reward-desc">${getLang('ui_chest_empty_desc')}</div>
-      `;
+        chestRewardDisplay.innerHTML = `<div class="chest-reward-icon">😔</div><div class="chest-reward-name">${getLang('ui_chest_empty_title')}</div><div class="chest-reward-desc">${getLang('ui_chest_empty_desc')}</div>`;
     }
-
-    chestOverlay.style.display = 'flex';
-    game.paused = true;
-    playSound('ChestOpen');
+    if (chestOverlay) chestOverlay.style.display = 'flex';
+    game.paused = true; playSound('ChestOpen');
 }
