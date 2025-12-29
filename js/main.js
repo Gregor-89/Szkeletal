@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v1.05 - Clean & Stats)
+// MAIN.JS (v1.05b - Zoom Initialization)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -69,6 +69,7 @@ const _gState = {
     _cheater: false 
 };
 
+// POPRAWKA v1.05b: Dodano zoomLevel do głównej definicji obiektu
 const game = {
   level:1, maxHealth: PLAYER_CONFIG.INITIAL_HEALTH, 
   time:0, running:false, paused:true, inMenu:true,
@@ -89,7 +90,8 @@ const game = {
   hunger: HUNGER_CONFIG.MAX_HUNGER,
   maxHunger: HUNGER_CONFIG.MAX_HUNGER,
   starvationTimer: 0,
-  quoteTimer: 0
+  quoteTimer: 0,
+  zoomLevel: 1.0 
 };
 
 Object.defineProperty(game, 'score', {

@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.11h - Stats Logic & Full Loop Control)
+// UI.JS (v1.11j - Global Zoom Sync Fix)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -159,6 +159,10 @@ export function resetAll(canvas, settings, perkLevels, uiData, camera) {
     uiData.lastTime = 0; 
     uiData.startTime = 0;
     const game = uiData.game; 
+
+    // POPRAWKA v1.11j: Inicjalizacja poziomu Zooma przy każdym resecie (niezależnie od Dev Tools)
+    const savedZoom = localStorage.getItem('szkeletal_zoom');
+    game.zoomLevel = savedZoom ? parseInt(savedZoom) / 100 : 1.0;
     
     if (devSettings.presetLoaded === false) {
         game.score = 0; 

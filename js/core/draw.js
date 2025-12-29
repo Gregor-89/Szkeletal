@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v1.03c - Full Restoration & Freeze Overlay Fix)
+// DRAW.JS (v1.03d - Render Culling Distance Fix)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -144,24 +144,27 @@ export function draw(ctx, state, ui, fps) {
     
     const { pickupStyleEmoji, pickupShowLabels } = ui;
     
-    // FIX: Dynamiczny Zoom przywrócony
     const zoom = game.zoomLevel || 1.0; 
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
-    // Obliczanie wirtualnych wymiarów widoku
     const vWidth = canvas.width / zoom;
     const vHeight = canvas.height / zoom;
-    const margin = 300 / zoom; // Zwiększony margines wycinania dla Zooma
+
+    // POPRAWKA RENDERINGU: Zwiększenie marginesu wycinania (Culling)
+    // Zwiększono margines z 300 na 800, aby pociski nie znikaly przy zoomie 60%
+    const margin = 800 / zoom; 
+
+    const viewLeft = camera.offsetX - (vWidth - canvas.width) / 2;
+    const viewTop = camera.offsetY - (vHeight - canvas.height) / 2;
     
-    const cullLeft = camera.offsetX - margin;
-    const cullRight = camera.offsetX + vWidth + margin;
-    const cullTop = camera.offsetY - margin;
-    const cullBottom = camera.offsetY + vHeight + margin;
+    const cullLeft = viewLeft - margin;
+    const cullRight = viewLeft + vWidth + margin;
+    const cullTop = viewTop - margin;
+    const cullBottom = viewTop + vHeight + margin;
 
     ctx.save(); 
 
-    // Skalowanie widoku względem środka ekranu
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.scale(zoom, zoom);
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
@@ -179,10 +182,9 @@ export function draw(ctx, state, ui, fps) {
     drawBackground(ctx, camera);
     ctx.globalAlpha = 1;
 
-    // FIX: Filtr zamrożenia wypełnia teraz cały wirtualny ekran przy dowolnym Zoomie
     if (game.freezeT > 0) {
         ctx.fillStyle = 'rgba(100,200,255,0.12)';
-        ctx.fillRect(camera.offsetX, camera.offsetY, vWidth, vHeight);
+        ctx.fillRect(viewLeft, viewTop, vWidth, vHeight);
     }
     
     for (const h of hazards) {
@@ -278,7 +280,6 @@ export function draw(ctx, state, ui, fps) {
         eb.draw(ctx);
     }
     
-    // PARTICLE BATCH RENDERING
     const batches = {}; 
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];

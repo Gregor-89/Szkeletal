@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v1.14 - Hybrid XP Logic)
+// LEVELMANAGER.JS (v1.14c - Dynamic Descriptions Fix)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -47,7 +47,7 @@ export function levelUp(game, player, hitTextPool, particlePool, settings, weapo
     // HYBRYDOWY PRZYROST XP
     let growthFactor = GAME_CONFIG.XP_GROWTH_LATE; // Domyślnie 1.35
     
-    // Jeśli poziom jest mniejszy lub równy 10, użyj trudniejszego mnożnika (1.5)
+    // Jeśli poziom jest mniejszy lub równy progowi, użyj trudniejszego mnożnika (1.5)
     if (game.level <= GAME_CONFIG.XP_THRESHOLD_LEVEL) {
         growthFactor = GAME_CONFIG.XP_GROWTH_EARLY;
     }
@@ -125,7 +125,7 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
         { icon: iconPickup, label: getLang('perk_pickup_name'), value: pickupVal },
         
         { icon: iconWhip, label: `${getLang('perk_whip_name')} (Lvl)`, value: `${whip ? whip.level : '1'} / ${PERK_CONFIG.whip?.max || 5}` },
-        { icon: iconWhip, label: `${getLang('perk_whip_name')} (Dmg)`, value: `${whip ? whip.damage : '1'}` },
+        { icon: iconWhip, label: `${getLang('perk_whip_name')} (Dmg)`, value: `${whip ? (whip.damage || 0).toFixed(1) : '1'}` },
         
         { icon: iconOrbital, label: getLang('perk_orbital_name'), value: `${orbital ? orbital.level : '0'} / ${PERK_CONFIG.orbital?.max || 5}` },
         { icon: iconNova, label: getLang('perk_nova_name'), value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova?.max || 5}` },
@@ -135,7 +135,7 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
         ] : []),
 
         ...(autoGun ? [
-            { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: `Level ${autoGun.level}` },
+            { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: `Gotowy` },
             { icon: iconDamage, label: `${getLang('perk_damage_name')}`, value: `${autoGun.bulletDamage.toFixed(0)}` },
             { icon: iconFirerate, label: `${getLang('perk_firerate_name')}`, value: `${(1000 / autoGun.fireRate).toFixed(2)}/s` },
         ] : [
@@ -157,10 +157,28 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
     });
 }
 
+/**
+ * (v1.14c) Przetwarza opis perka, podmieniając {val} na rzeczywistą wartość dla danego poziomu.
+ */
+function getDynamicDesc(perk, currentLvl) {
+    let desc = getLang(perk.desc);
+    if (!desc.includes('{val}')) return desc;
+
+    let displayVal = perk.value || "";
+    // Jeśli perk ma funkcję formatującą wartość (np. dla progresywnego DMG Plujkojada)
+    if (perk.formatVal) {
+        displayVal = perk.formatVal(currentLvl);
+    }
+
+    return desc.replace('{val}', displayVal);
+}
+
 export function showPerks(perkLevels, player, game, settings, weapons) {
     const avail = perkPool.filter(p => {
         const currentLevel = perkLevels[p.id] || 0;
-        if (currentLevel >= p.max) return false;
+        
+        // FIX: Upewnienie się, że perk nie jest blokowany, jeśli p.max nie istnieje
+        if (p.max !== undefined && currentLevel >= p.max) return false;
         
         if (p.requiresWeapon) { 
             const hasWeapon = player.weapons.some(w => w.constructor.name === p.requiresWeapon);
@@ -192,6 +210,9 @@ export function showPerks(perkLevels, player, game, settings, weapons) {
             const lvl = perkLevels[perk.id] || 0;
             const el = document.createElement('div');
             
+            // Dynamiczne formatowanie opisu
+            const dynamicDesc = getDynamicDesc(perk, lvl);
+            
             let imgAsset = null;
             if (perk.icon) {
                 imgAsset = getAsset(perk.icon);
@@ -208,7 +229,7 @@ export function showPerks(perkLevels, player, game, settings, weapons) {
                            <h4>${getLang(perk.name)}</h4>
                            <span class="badge">${lvl} » ${lvl + 1}</span>
                         </div>
-                        <p>${getLang(perk.desc)}</p>
+                        <p>${dynamicDesc}</p>
                     </div>
                 `;
             } else {
@@ -220,7 +241,7 @@ export function showPerks(perkLevels, player, game, settings, weapons) {
                            <h4>${iconHTML}${getLang(perk.name)}</h4>
                            <span class="badge">${lvl} » ${lvl + 1}</span>
                        </div>
-                       <p>${getLang(perk.desc)}</p>
+                       <p>${dynamicDesc}</p>
                    </div>`;
             }
             
@@ -241,7 +262,7 @@ export function pickPerk(perk, game, perkLevels, settings, weapons, player, resu
         return;
     }
     
-    if ((perkLevels[perk.id] || 0) >= perk.max) {
+    if (perk.max !== undefined && (perkLevels[perk.id] || 0) >= perk.max) {
         return;
     }
     
@@ -259,7 +280,7 @@ export function pickPerk(perk, game, perkLevels, settings, weapons, player, resu
 export function pickChestReward(perkLevels, player) {
     const pool = perkPool.filter(p => {
         const currentLevel = perkLevels[p.id] || 0;
-        if (currentLevel >= p.max) return false;
+        if (p.max !== undefined && currentLevel >= p.max) return false;
         
         if (p.requiresWeapon) {
             const hasWeapon = player.weapons.some(w => w.constructor.name === p.requiresWeapon);
@@ -278,7 +299,11 @@ export function openChest(game, perkLevels, uiData, player) {
 
     if (reward) {
         const currentLevel = perkLevels[reward.id] || 0;
-        const progress = ((currentLevel + 1) / reward.max) * 100;
+        const maxVal = reward.max || 10;
+        const progress = ((currentLevel + 1) / maxVal) * 100;
+        
+        // Dynamiczne formatowanie opisu dla skrzynki
+        const dynamicDesc = getDynamicDesc(reward, currentLevel);
         
         let iconHTML = '';
         if (reward.icon) {
@@ -294,9 +319,9 @@ export function openChest(game, perkLevels, uiData, player) {
         chestRewardDisplay.innerHTML = `
         ${iconHTML}
         <div class="chest-reward-name">${getLang(reward.name)}</div>
-        <div class="chest-reward-desc">${getLang(reward.desc)}</div>
+        <div class="chest-reward-desc">${dynamicDesc}</div>
         <div class="chest-reward-level">
-          Poziom: ${currentLevel} » ${currentLevel + 1} (z ${reward.max})
+          Poziom: ${currentLevel} » ${currentLevel + 1} ${reward.max ? `(z ${reward.max})` : ''}
         </div>
         <div class="chest-reward-level-bar">
           <div class="chest-reward-level-fill" style="width:${progress}%;"></div>

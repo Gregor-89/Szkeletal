@@ -1,10 +1,9 @@
 // ==============
-// HEALPICKUP.JS (v0.72 - Refaktoryzacja Logiki Pickupów)
+// HEALPICKUP.JS (v0.72b - Full Heal Fix)
 // Lokalizacja: /js/entities/pickups/healPickup.js
 // ==============
 
 import { Pickup } from '../pickup.js';
-// NOWE IMPORTY (v0.72)
 import { PLAYER_CONFIG } from '../../config/gameData.js';
 import { addHitText } from '../../core/utils.js';
 import { playSound } from '../../services/audio.js';
@@ -18,16 +17,22 @@ export class HealPickup extends Pickup {
   }
   
   /**
-   * (v0.72) Nadpisuje metodę bazową, aby zastosować efekt leczenia.
+   * (v0.72b) Zmodyfikowano, aby zawsze odzyskiwać 100% życia.
    */
   applyEffect(state) {
     const { game, player, hitTextPool, hitTexts } = state;
     
-    // Logika przeniesiona z collisions.js
-    const healAmount = PLAYER_CONFIG.HEAL_AMOUNT;
-    game.health = Math.min(game.maxHealth, game.health + healAmount);
+    // Obliczanie brakującego zdrowia do pełnego wyleczenia
+    const missingHp = game.maxHealth - game.health;
     
-    addHitText(hitTextPool, hitTexts, player.x, player.y - 16, -healAmount, '#4caf50', '+HP');
+    if (missingHp > 0) {
+      game.health = game.maxHealth;
+      addHitText(hitTextPool, hitTexts, player.x, player.y - 16, -missingHp, '#4caf50', '+MAX HP');
+    } else {
+      // Jeśli życie jest pełne, nadal pokazujemy tekst dla potwierdzenia
+      addHitText(hitTextPool, hitTexts, player.x, player.y - 16, 0, '#4caf50', 'FULL HP');
+    }
+    
     playSound('HealPickup');
   }
 }

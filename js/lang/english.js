@@ -1,5 +1,5 @@
 // ==============
-// ENGLISH.JS (v1.11 - FOV Translation)
+// ENGLISH.JS (v1.11b - Dynamic Tags Sync)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
@@ -218,7 +218,7 @@ export const LANG_EN = {
   ui_intro_finish: "MENU ▶️",
   
   pickup_heal_name: "Countess Plate",
-  pickup_heal_desc: "Relic of lost love. Instantly restores +30 Satiety points.",
+  pickup_heal_desc: "Relic of lost love. Instantly restores 100% of Satiety.",
   pickup_magnet_name: "Gluttony",
   pickup_magnet_desc: "2-second indulgence, Count exhibits magnetic pull towards Potatoes.",
   pickup_shield_name: "IceGod Shield",
@@ -271,19 +271,19 @@ export const LANG_EN = {
   perk_chainLightning_name: "Ludologist's Bolt",
   perk_chainLightning_desc: "Automatic attack striking the nearest enemy and jumping to subsequent ones.",
   perk_firerate_name: "Firerate",
-  perk_firerate_desc: "Because hate must be delivered fast! Increases Spit Venom firerate by +20%.",
+  perk_firerate_desc: "Because hate must be delivered fast! Increases Spit Venom firerate by +{val}%.",
   perk_damage_name: "Damage",
-  perk_damage_desc: "Objective toxicity increase. Adds +1 to projectile damage.",
+  perk_damage_desc: "Objective toxicity increase. Adds +{val} to projectile damage.",
   perk_multishot_name: "Multishot",
-  perk_multishot_desc: "Vertical diversification. Fires +1 additional projectile.",
+  perk_multishot_desc: "Vertical diversification. Fires +{val} additional projectile.",
   perk_pierce_name: "Pierce",
-  perk_pierce_desc: "Your venom is so caustic it pierces the narrative. Pierces +1 additional enemy.",
+  perk_pierce_desc: "Your venom is so caustic it pierces the narrative. Pierces +{val} additional enemy.",
   perk_speed_name: "Speed",
-  perk_speed_desc: "Even the Count needs to shift position. +10% movement speed.",
+  perk_speed_desc: "Even the Count needs to shift position. +{val}% movement speed.",
   perk_pickup_name: "Range",
-  perk_pickup_desc: "The greater the hunger, the longer the hands. +40% Potato attraction range.",
+  perk_pickup_desc: "The greater the hunger, the longer the hands. +{val}% Potato attraction range.",
   perk_health_name: "Health",
-  perk_health_desc: "Bigger stomach for hate. Increases Max Satiety by +20 and heals 20 HP.",
+  perk_health_desc: "Bigger stomach for hate. Increases Max Satiety by +{val} and restores strength.",
   
   ui_stat_level: "Level",
   ui_stat_health: "Health",

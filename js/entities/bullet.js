@@ -1,5 +1,5 @@
 // ==============
-// BULLET.JS (v0.99 - Axe Config Fix)
+// BULLET.JS (v0.99c - Extended Zoom-Aware Margin)
 // Lokalizacja: /js/entities/bullet.js
 // ==============
 
@@ -33,13 +33,30 @@ export class Bullet {
         this.type = type; 
     }
 
-    isOffScreen(camera) {
-        const margin = 50;
-        const viewLeft = camera.offsetX;
-        const viewRight = camera.offsetX + camera.viewWidth;
-        const viewTop = camera.offsetY;
-        const viewBottom = camera.offsetY + camera.viewHeight;
-        return (this.x < viewLeft - margin || this.x > viewRight + margin || this.y < viewTop - margin || this.y > viewBottom + margin);
+    /**
+     * (v0.99c) FIX: Drastycznie zwiÄ™kszono margines usuwania pociskĂłw.
+     * Z 500 na 1500, aby uniknÄ…Ä‡ znikania pociskĂłw przed dotarciem do wroga przy zoomie 60%.
+     */
+    isOffScreen(camera, game) {
+        const zoom = game ? (game.zoomLevel || 1.0) : 1.0;
+        
+        // Obliczanie wirtualnych wymiarĂłw widoku
+        const vWidth = camera.viewWidth / zoom;
+        const vHeight = camera.viewHeight / zoom;
+
+        // Obliczanie faktycznego lewego-gĂłrnego rogu widocznego obszaru (centrowany Zoom)
+        const viewLeft = camera.offsetX - (vWidth - camera.viewWidth) / 2;
+        const viewTop = camera.offsetY - (vHeight - camera.viewHeight) / 2;
+
+        // Margines skalowany zoomem - musi byÄ‡ znacznie wiÄ™kszy niĹĽ margines spawnu wrogĂłw
+        const margin = 1500 / zoom; 
+
+        return (
+            this.x < viewLeft - margin || 
+            this.x > viewLeft + vWidth + margin || 
+            this.y < viewTop - margin || 
+            this.y > viewTop + vHeight + margin
+        );
     }
 
     release() {
@@ -304,7 +321,6 @@ export class EnemyBullet extends Bullet {
         if (asset) {
             if (this.type === 'axe') {
                 ctx.shadowColor = 'rgba(0, 255, 255, 0.5)';
-                // FIX: Zmniejszono blur o połowę (z 12 na 6) dla lepszej czytelności
                 ctx.shadowBlur = 6; 
             } else {
                 ctx.shadowColor = 'rgba(255, 100, 100, 0.5)'; 
@@ -320,7 +336,6 @@ export class EnemyBullet extends Bullet {
                 drawWidth = 22 * 0.625; 
                 drawHeight = 64 * 0.625;
             } else if (this.type === 'axe') {
-                // FIX: Pobieranie rozmiaru z configu (gameData.js)
                 const axeCfg = WEAPON_CONFIG.LUMBERJACK_AXE;
                 drawWidth = axeCfg.SPRITE_WIDTH || 96;
                 drawHeight = axeCfg.SPRITE_HEIGHT || 96;

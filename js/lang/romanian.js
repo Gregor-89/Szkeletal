@@ -1,5 +1,5 @@
 // ==============
-// ROMANIAN.JS (v1.11 - FOV Translation)
+// ROMANIAN.JS (v1.11b - Dynamic Tags Sync)
 // Lokalizacja: /js/lang/romanian.js
 // ==============
 
@@ -218,7 +218,7 @@ export const LANG_RO = {
   ui_intro_finish: "MENU ▶️",
   
   pickup_heal_name: "Farfuria Contesei",
-  pickup_heal_desc: "Relicvă a iubirii pierdute. Restaurează instantaneu +30 puncte Sațietate.",
+  pickup_heal_desc: "Relicvă a iubirii pierdute. Restaurează instantaneu 100% din Sațietate.",
   pickup_magnet_name: "Lăcomie",
   pickup_magnet_desc: "Indulgență de 2 secunde, Contele manifestă atracție magnetică față de Cartofi.",
   pickup_shield_name: "Scutul LodoZeu",
@@ -271,19 +271,19 @@ export const LANG_RO = {
   perk_chainLightning_name: "Trăsnet Ludolog",
   perk_chainLightning_desc: "Atac automat care lovește cel mai apropiat inamic și sare la următorii.",
   perk_firerate_name: "Cadență",
-  perk_firerate_desc: "Pentru că ura trebuie livrată rapid! Crește cadența Scuipă Venin cu +20%.",
+  perk_firerate_desc: "Pentru că ura trebuie livrată rapid! Crește cadența Scuipă Venin cu +{val}%.",
   perk_damage_name: "Daune",
-  perk_damage_desc: "Creștere obiectivă a toxicității. Adaugă +1 la daunele proiectilelor.",
+  perk_damage_desc: "Creștere obiectivă a toxicității. Adaugă +{val} la daunele proiectilelor.",
   perk_multishot_name: "Multishot",
-  perk_multishot_desc: "Diversificare verticală. Trage +1 proiectil adițional.",
+  perk_multishot_desc: "Diversificare verticală. Trage +{val} proiectil adițional.",
   perk_pierce_name: "Penetrare",
-  perk_pierce_desc: "Veninul tău este atât de caustic încât străpunge narațiunea. Străpunge +1 inamic adițional.",
+  perk_pierce_desc: "Veninul tău este atât de caustic încât străpunge narațiunea. Străpunge +{val} inamic adițional.",
   perk_speed_name: "Viteză",
-  perk_speed_desc: "Chiar și Contele trebuie să își schimbe poziția. +10% la viteza de mișcare.",
+  perk_speed_desc: "Chiar și Contele trebuie să își schimbe poziția. +{val}% la viteza de mișcare.",
   perk_pickup_name: "Rază",
-  perk_pickup_desc: "Cu cât foamea e mai mare, cu atât mâinile sunt mai lungi. +40% rază atracție Cartofi.",
+  perk_pickup_desc: "Cu cât foamea e mai mare, cu atât mâinile sunt mai lungi. +{val}% rază atracție Cartofi.",
   perk_health_name: "Sănătate",
-  perk_health_desc: "Stomac mai mare pentru ură. Crește Sațietatea Max cu +20 și vindecă 20 HP.",
+  perk_health_desc: "Stomac mai mare pentru ură. Crește Sațietatea Max cu +{val} și restabilește forțele.",
   
   ui_stat_level: "Nivel",
   ui_stat_health: "Sănătate",

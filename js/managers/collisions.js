@@ -1,5 +1,5 @@
 // ==============
-// COLLISIONS.JS (v1.14b - Full Restoration & Zoom Aware Offscreen)
+// COLLISIONS.JS (v1.14c - Zoom-Aware Projectile Cleanup)
 // Lokalizacja: /js/managers/collisions.js
 // ==============
 
@@ -231,7 +231,7 @@ export function checkCollisions(state) {
         const b = bullets[i];
         if (!b) continue;
         
-        // FIX: Poprawne przekazanie game do isOffScreen dla Zooma
+        // FIX v1.14c: Poprawne przekazanie 'game' do isOffScreen dla dynamicznego Zooma
         if (typeof b.isOffScreen === 'function' && b.isOffScreen(state.camera, game)) { 
             b.release(); 
             continue; 
@@ -314,7 +314,7 @@ export function checkCollisions(state) {
         for (let i = eBullets.length - 1; i >= 0; i--) {
             const eb = eBullets[i];
             if (!eb) continue;
-            // FIX: Przekazanie game do isOffScreen dla Zooma
+            // FIX v1.14c: Poprawne przekazanie 'game' dla dynamicznego Zooma pociskĂłw wrogĂłw
             if (typeof eb.isOffScreen === 'function' && eb.isOffScreen(state.camera, game)) { 
                 eb.release(); 
                 continue; 

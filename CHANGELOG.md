@@ -6,6 +6,29 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 # Changelog
 
+## [0.107] - 2025-12-29
+
+### Naprawiono
+- **Problemy z Zoom/FOV**: Poprawiono działanie przybliżenia mid-game. Ustawienia suwaka są teraz aktualizowane na żywo i poprawnie synchronizowane z localStorage oraz plikami zapisu.
+- **Filtr Zamrożenia**: Naprawiono błąd renderowania efektu zamrożenia, który nie pokrywał całego ekranu przy zoomie 60%.
+- **Zasięg Pocisków**: Drastycznie zwiększono margines renderowania pocisków (z 50 do 2000 world units), co zapobiega ich znikaniu przy krawędziach widoku na oddaleniu 60%.
+- **Spawning Wrogów**: Zwiększono marginesy spawnowania wrogów (do 500 world units), aby uniknąć pojawiania się mobów wewnątrz widocznego obszaru przy dużym oddaleniu.
+- **Wizualia Menu**: Poprawiono wygląd flag wyboru języka (usunięto owalny kształt, dodano poświatę i białą ramkę dla wybranych opcji).
+- **Dostępność Broni**: Naprawiono błąd filtrowania, przez który Plujkojad (AutoGun) mógł nie pojawiać się w menu ulepszeń.
+
+### Zmieniono
+- **Balans Przeciwników**: 
+  - Szkeletal: HP -30% (z 10 na 7).
+  - Drwal Zjebadło, Elden Hejter, Syndrom Oblężenia: HP -20%.
+  - Wykopek (Aggressive): Prędkość poruszania się -15%.
+- **Leczenie**: Ziemniaczki (Heal Pickup), Kapliczki (Shrine) oraz lizu-lizu Wężojada (SnakeEater) przywracają teraz zawsze 100% zdrowia.
+- **Rozwój Postaci**: 
+  - Perk Obrażenia (Damage): Wprowadzono nieliniowy, progresywny przyrost obrażeń (+2, +3, +4, +5, +6, +7).
+  - Perk Tłuczek (Nova): Delikatnie osłabiono przyrost obrażeń na wyższych poziomach.
+- **System Opisów**: Wprowadzono dynamiczne opisy perków wykorzystujące placeholder {val}, dzięki czemu gracz widzi rzeczywistą wartość premii dla danego poziomu.
+
+---
+
 ## [0.106] - 2025-12-28
 ### Dodano
 - **Pełne wsparcie dla Gamepada:** Obsługa kontrolerów w menu i podczas rozgrywki.

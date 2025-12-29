@@ -1,5 +1,5 @@
 // ==============
-// GAMEDATA.JS (v1.27e - FOV Range 60-130%)
+// GAMEDATA.JS (v1.27h - Health Bonus Revert & Balance Sync)
 // Lokalizacja: /js/config/gameData.js
 // ==============
 
@@ -8,7 +8,7 @@ export const PLAYER_CONFIG = {
   SIZE: 15,
   INITIAL_HEALTH: 120,
   INITIAL_PICKUP_RANGE: 30,
-  HEAL_AMOUNT: 30
+  HEAL_AMOUNT: 20 // Przywrócono do 20
 };
 
 export const COLLISION_CONFIG = {
@@ -42,7 +42,6 @@ export const GAME_CONFIG = {
   XP_THRESHOLD_LEVEL: 6 
 };
 
-// AKTUALIZACJA ZAKRESU FOV (0.6 = 60%)
 export const ZOOM_CONFIG = {
   MIN: 0.6,
   MAX: 1.3,
@@ -103,7 +102,7 @@ export const MAP_CONFIG = {
         type: 'shrine', variants: 1, size: 180, minScale: 1.4, maxScale: 1.4, 
         hitboxScale: 0.6, spriteOffset: -0.3, hasShadow: true, shadowScale: 1.0, 
         shadowOffsetY: 20, hp: Infinity, isSolid: true, canRotate: false, 
-        cooldown: 120, healAmount: 100, text: "Rzyć umyta, sytość zdobyta", textOffset: -85 
+        cooldown: 120, healAmount: 999, text: "Rzyć umyta, sytość zdobyta", textOffset: -85 
     }
   }
 };
@@ -166,15 +165,15 @@ export const GEM_CONFIG = { BASE_LIFE: 35.0, FADE_TIME: 5.0 };
 
 export const PERK_CONFIG = {
   firerate: { value: 0.80, max: 6 },
-  damage: { value: 3, max: 6 },
+  damage: { max: 6 }, 
   multishot: { value: 1, max: 4 },
   pierce: { value: 1, max: 4 },
   autogun: { max: 1 },
   orbital: { max: 5, calculateDamage: (level) => (3 + level * 2), calculateRadius: (level) => ((50 + 6 * level) * 2.25), calculateSpeed: (level) => (1.2 + 0.2 * level) },
-  nova: { max: 6, calculateDamage: (level) => (15 + level * 5), calculateCooldown: (level) => Math.max(0.5, 3.0 - (level * 0.4)), calculateCount: (level) => 2 + level, calculatePierce: (level) => 1 + Math.floor(level / 3) },
+  nova: { max: 6, calculateDamage: (level) => (15 + level * 4), calculateCooldown: (level) => Math.max(0.5, 3.0 - (level * 0.4)), calculateCount: (level) => 2 + level, calculatePierce: (level) => 1 + Math.floor(level / 3) },
   speed: { value: 1.10, max: 4 },
-  pickup: { value: 1.25, max: 3 }, 
-  health: { value: 30, max: 3 },
+  pickup: { value: 1.40, max: 3 }, 
+  health: { value: 20, max: 3 }, // Przywrócono do 20
   whip: { max: 5, HITBOX_RADIUS: 30, calculateCooldown: (level) => (Math.max(1.0, 3.0 - 0.4 * level)), calculateDamage: (level) => (10 + (level - 1) * 2.5), calculateDrawScale: (level) => (100 + 25 * (level - 1)), calculateCount: (level) => { const counts = [0, 1, 2, 3, 4, 4]; return counts[level] || 4; } },
   chainLightning: { max: 6, VISUAL_DURATION: 0.25, calculateCooldown: (level) => [0, 2.5, 2.3, 2.1, 1.9, 1.7, 1.6][level] || 1.6, calculateDamage: (level) => (10 + level * 3), calculateTargets: (level) => [0, 1, 2, 3, 4, 5, 6][level] || 6, }
 };
@@ -199,12 +198,12 @@ export const EFFECTS_CONFIG = {
 };
 
 export const ENEMY_STATS = {
-  standard: { type: 'standard', hp: 10, speed: 105, size: 60, damage: 10, color: '#D32F2F', score: 10, xp: 1, drops: BASE_DROP_RATES },
+  standard: { type: 'standard', hp: 7, speed: 105, size: 60, damage: 10, color: '#D32F2F', score: 10, xp: 1, drops: BASE_DROP_RATES },
   horde: { type: 'horde', hp: 8, speed: 95, size: 43, damage: 8, color: '#2E7D32', score: 10, xp: 1, drops: BASE_DROP_RATES },
   aggressive: { 
       type: 'aggressive', 
       hp: 12, 
-      speed: 110, 
+      speed: 94, 
       size: 52, 
       damage: 10, 
       color: '#E91E63', 
@@ -218,11 +217,11 @@ export const ENEMY_STATS = {
   tank: { type: 'tank', hp: 100, speed: 70, size: 108, damage: 15, color: '#F5F5F5', score: 20, xp: 1, drops: BASE_DROP_RATES },
   ranged: { type: 'ranged', hp: 12, speed: 110, size: 54, damage: 10, color: '#795548', score: 15, xp: 1, drops: BASE_DROP_RATES, attackRange: 300, attackCooldown: 1.8, projectileSpeed: WEAPON_CONFIG.RANGED_ENEMY_BULLET.SPEED, projectileDamage: WEAPON_CONFIG.RANGED_ENEMY_BULLET.DAMAGE },
   
-  elite: { type: 'elite', hp: 250, speed: 115, size: 120, damage: 15, color: '#9C27B0', score: 80, xp: 1, drops: {} }, 
-  wall: { type: 'wall', hp: 200, speed: 8, size: 88, damage: 20, color: '#9E9E9E', score: 25, xp: 0, drops: {} },
+  elite: { type: 'elite', hp: 200, speed: 115, size: 120, damage: 15, color: '#9C27B0', score: 80, xp: 1, drops: {} }, 
+  wall: { type: 'wall', hp: 160, speed: 8, size: 88, damage: 20, color: '#9E9E9E', score: 25, xp: 0, drops: {} },
   lumberjack: { 
     type: 'lumberjack', 
-    hp: 300, 
+    hp: 240, 
     speed: 120, 
     size: 90, 
     damage: 20, 
@@ -244,7 +243,7 @@ export const ENEMY_STATS = {
     score: 150, 
     xp: 3, 
     drops: {}, 
-    healAmount: 100, 
+    healAmount: 999, 
     healCooldown: 60.0, 
     hasShadow: false,
     shadowOffsetY: 50,      

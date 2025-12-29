@@ -1,5 +1,5 @@
 // ==============
-// SAVEMANAGER.JS (v1.09 - Safe Serialization & FOV Support)
+// SAVEMANAGER.JS (v1.09b - Zoom Load Fix)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
@@ -42,9 +42,6 @@ const WEAPON_CLASS_MAP = {
     ChainLightningWeapon: ChainLightningWeapon 
 };
 
-/**
- * Usuwa znaki kontrolne (0-31), które psują JSON.parse w niektórych przeglądarkach.
- */
 function sanitizeString(str) {
     if (typeof str !== 'string') return str;
     return str.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
@@ -76,10 +73,6 @@ export function clearSavedGame() {
     console.log('[SaveManager] Zapis gry usunięty.');
 }
 
-/**
- * Główna funkcja zapisu. 
- * Jawnie mapujemy pola, aby uniknąć TypeError przy serializacji klas z referencjami do DOM/Assetów.
- */
 export function saveGame(state) {
     try {
         const { 
@@ -91,7 +84,6 @@ export function saveGame(state) {
         let shadowData = {};
         if (game._getShadows) shadowData = game._getShadows();
 
-        // Bezpieczna serializacja aktywnych obiektów z pul
         const activeBullets = bulletsPool.activeItems.map(b => ({
             x: b.x, y: b.y, vx: b.vx, vy: b.vy, size: b.size, 
             damage: b.damage, color: b.color, pierce: b.pierce
@@ -175,7 +167,6 @@ export function loadGame(savedStateInput, state, uiData) {
         pickups, chests, hazards, bombIndicators
     } = state;
 
-    // Resetowanie aktualnej sceny
     enemies.length = 0;
     pickups.length = 0;
     chests.length = 0;
@@ -187,11 +178,16 @@ export function loadGame(savedStateInput, state, uiData) {
     particlePool.releaseAll();
     hitTextPool.releaseAll();
 
-    // Przywracanie danych logicznych
     Object.assign(game, savedState.game);
     Object.assign(settings, savedState.settings);
     
-    // Czyścimy stare perki przed przypisaniem nowych
+    // POPRAWKA v1.09b: Synchronizacja Zooma po załadowaniu danych gry
+    // Zapewnia to, że suwak z opcji zawsze ma pierwszeństwo przed starym zapisem
+    const savedZoom = localStorage.getItem('szkeletal_zoom');
+    if (savedZoom) {
+        game.zoomLevel = parseInt(savedZoom) / 100;
+    }
+
     Object.keys(perkLevels).forEach(key => delete perkLevels[key]);
     Object.assign(perkLevels, savedState.perkLevels);
     
@@ -203,7 +199,6 @@ export function loadGame(savedStateInput, state, uiData) {
         );
     }
 
-    // Rekonstrukcja Gracza i Broni
     player.x = savedState.player.x;
     player.y = savedState.player.y;
     player.speed = savedState.player.speed;
@@ -218,7 +213,6 @@ export function loadGame(savedStateInput, state, uiData) {
         }
     }
 
-    // Rekonstrukcja Przeciwników
     const loadedEnemies = savedState.enemies || [];
     for (const savedEnemy of loadedEnemies) {
         const EnemyClass = ENEMY_CLASS_MAP[savedEnemy.type];
@@ -229,7 +223,6 @@ export function loadGame(savedStateInput, state, uiData) {
         }
     }
     
-    // Rekonstrukcja Pocisków
     const loadedBullets = savedState.bullets || [];
     for (const b of loadedBullets) {
         const newBullet = bulletsPool.get(); 
@@ -246,7 +239,6 @@ export function loadGame(savedStateInput, state, uiData) {
         }
     }
 
-    // Rekonstrukcja Ziemniaczków (XP)
     const loadedGems = savedState.gems || [];
     for (const g of loadedGems) {
         const newGem = gemsPool.get();
@@ -255,7 +247,6 @@ export function loadGame(savedStateInput, state, uiData) {
         }
     }
     
-    // Rekonstrukcja Zagrożeń i Skrzyń
     const loadedHazards = savedState.hazards || [];
     for (const h of loadedHazards) {
         const newHazard = new Hazard(h.x, h.y, h.isMega, h.scale);

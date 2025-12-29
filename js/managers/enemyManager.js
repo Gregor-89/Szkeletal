@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v1.12 - Spawning Margin Fix & Full Restoration)
+// ENEMYMANAGER.JS (v1.12b - Zoom-Aware Spawning Margin Fix)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -155,18 +155,19 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
         }
     }
 
-    // LOGIKA ZOOM-AWARE SPAWN - POPRAWKA DLA v0.107c
+    // POPRAWKA MARGINESU SPAWNOWANIA (v1.12b)
     const zoom = game.zoomLevel || 1.0;
     const vWidth = canvas.width / zoom;
     const vHeight = canvas.height / zoom;
-    // Zwiększony margines bazowy do 150 i skalowanie przez zoom
-    const margin = 150 / zoom; 
+    
+    // Zwiększono margines bazowy z 150 na 500, aby przy zoomie 60% moby nie pojawiały się na ekranie
+    const margin = 500 / zoom; 
 
     let x, y;
-    const viewLeft = camera.offsetX;
-    const viewRight = camera.offsetX + vWidth;
-    const viewTop = camera.offsetY;
-    const viewBottom = camera.offsetY + vHeight;
+    const viewLeft = camera.offsetX - (vWidth - canvas.width) / 2;
+    const viewRight = viewLeft + vWidth;
+    const viewTop = camera.offsetY - (vHeight - canvas.height) / 2;
+    const viewBottom = viewTop + vHeight;
     const worldWidth = camera.worldWidth;
     const worldHeight = camera.worldHeight;
 
@@ -221,17 +222,18 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
         bossType = availableBosses[Math.floor(Math.random() * availableBosses.length)];
     }
 
-    // LOGIKA ZOOM-AWARE DLA BOSSÓW - POPRAWKA v0.107c
     const zoom = game.zoomLevel || 1.0;
     const vWidth = canvas.width / zoom;
     const vHeight = canvas.height / zoom;
-    const margin = 200 / zoom; 
+    
+    // Zwiększono margines bossów z 200 na 600
+    const margin = 600 / zoom; 
 
     let x, y;
-    const viewLeft = camera.offsetX;
-    const viewRight = camera.offsetX + vWidth;
-    const viewTop = camera.offsetY;
-    const viewBottom = camera.offsetY + vHeight;
+    const viewLeft = camera.offsetX - (vWidth - canvas.width) / 2;
+    const viewRight = viewLeft + vWidth;
+    const viewTop = camera.offsetY - (vHeight - canvas.height) / 2;
+    const viewBottom = viewTop + vHeight;
     const worldWidth = camera.worldWidth;
     const worldHeight = camera.worldHeight;
 

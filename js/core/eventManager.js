@@ -1,5 +1,5 @@
 // ==============
-// EVENTMANAGER.JS (v1.01 - Fix Imports & Start)
+// EVENTMANAGER.JS (v1.02 - Sync Zoom Config)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
@@ -85,6 +85,14 @@ function wrappedLoadConfig() {
     const fpsEl = document.getElementById('chkFPS');
     const labelsEl = document.getElementById('chkPickupLabels');
     
+    // POPRAWKA v1.02: Pobieranie wartości Zooma przy ładowaniu konfiguracji (np. przed Startem)
+    const zoomSlider = document.getElementById('zoomSlider');
+    if (zoomSlider) {
+        const val = parseInt(zoomSlider.value);
+        gameStateRef.game.zoomLevel = val / 100;
+        localStorage.setItem('szkeletal_zoom', val);
+    }
+    
     gameStateRef.game.hyper = !!(hyperEl && hyperEl.checked);
     gameStateRef.game.screenShakeDisabled = !!(shakeEl && !shakeEl.checked);
     uiDataRef.showFPS = !!(fpsEl && fpsEl.checked);
@@ -125,7 +133,7 @@ function initEvents() {
     document.getElementById('btnStart').addEventListener('click', () => {
         devSettings.presetLoaded = false;
         resetDevTime();
-        wrappedLoadConfig();
+        wrappedLoadConfig(); // <-- Tutaj teraz syncuje Zooma
         wrappedStartRun();
     });
     document.getElementById('btnContinue').addEventListener('click', () => {
@@ -151,7 +159,7 @@ function initEvents() {
         gameOverOverlay.style.display = 'none';
         devSettings.presetLoaded = false;
         resetDevTime();
-        wrappedLoadConfig();
+        wrappedLoadConfig(); // <-- Tutaj też syncuje Zooma
         wrappedStartRun();
     });
     document.getElementById('btnMenu').addEventListener('click', () => {

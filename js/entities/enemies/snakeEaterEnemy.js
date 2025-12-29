@@ -1,5 +1,5 @@
 // ==============
-// SNAKEEATERENEMY.JS (v1.19 - Performance Optimization)
+// SNAKEEATERENEMY.JS (v1.19b - Full Heal Support)
 // Lokalizacja: /js/entities/enemies/snakeEaterEnemy.js
 // ==============
 
@@ -102,12 +102,12 @@ export class SnakeEaterEnemy extends Enemy {
     }
   }
   
+  // FIX v1.19b: Lizanie teraz zawsze leczy do 100% (maxHealth)
   tryHealPlayer(game, player, hitTextPool, hitTexts) {
     if (this.healTimer <= 0) {
-      const healVal = this.stats.healAmount || 100;
       const oldHp = game.health;
-      game.health = Math.min(game.maxHealth, game.health + healVal);
-      const actualHealed = game.health - oldHp;
+      game.health = game.maxHealth;
+      const actualHealed = game.maxHealth - oldHp;
       
       const enemyText = getLang('snake_heal_quote_enemy') || "Mmm, ja zrobić Panu dobrze, HAU HAU!";
       const offset = this.stats.quoteOffsetY || -120;
@@ -129,7 +129,7 @@ export class SnakeEaterEnemy extends Enemy {
       );
       
       if (actualHealed > 0) {
-        addHitText(hitTextPool, hitTexts, player.x, player.y - 30, actualHealed, "#00FF00", "+HP", 2.0);
+        addHitText(hitTextPool, hitTexts, player.x, player.y - 30, actualHealed, "#00FF00", "+HP (FULL)");
       }
       
       this.healTimer = this.healCooldownMax;
@@ -188,27 +188,25 @@ export class SnakeEaterEnemy extends Enemy {
     }
     
     // 2. Rysowanie MOCNEJ POŚWIATY (Glow) - OPTYMALIZACJA
-    // Zastąpiono shadowBlur (kosztowne) gradientem radialnym (tanie)
     if (this.healTimer <= 0) {
       const pulse = 0.8 + 0.2 * Math.sin(game.time * 6);
-      const glowSize = (this.size * this.visualScale) * 0.8 * pulse; // Rozmiar poświaty
+      const glowSize = (this.size * this.visualScale) * 0.8 * pulse;
       
       ctx.save();
-      ctx.globalCompositeOperation = 'screen'; // Lepsze mieszanie kolorów dla poświaty
+      ctx.globalCompositeOperation = 'screen';
       
       const grad = ctx.createRadialGradient(0, 0, glowSize * 0.2, 0, 0, glowSize);
-      grad.addColorStop(0, 'rgba(102, 187, 106, 0.8)'); // Jasny środek (#66BB6A)
+      grad.addColorStop(0, 'rgba(102, 187, 106, 0.8)');
       grad.addColorStop(0.5, 'rgba(102, 187, 106, 0.3)');
-      grad.addColorStop(1, 'rgba(102, 187, 106, 0.0)'); // Przezroczyste krawędzie
+      grad.addColorStop(1, 'rgba(102, 187, 106, 0.0)');
       
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.arc(0, 0, glowSize, 0, Math.PI * 2);
       ctx.fill();
       
-      // Dodatkowy "Hot Core" (opcjonalnie, dla intensywności)
       const coreGrad = ctx.createRadialGradient(0, 0, glowSize * 0.1, 0, 0, glowSize * 0.4);
-      coreGrad.addColorStop(0, 'rgba(178, 255, 89, 0.6)'); // Limonkowy środek
+      coreGrad.addColorStop(0, 'rgba(178, 255, 89, 0.6)');
       coreGrad.addColorStop(1, 'rgba(178, 255, 89, 0.0)');
       
       ctx.fillStyle = coreGrad;
@@ -218,7 +216,6 @@ export class SnakeEaterEnemy extends Enemy {
       
       ctx.restore();
       
-      // Rysowanie Sprite'a (bez shadowBlur)
       const sheetW = this.sprite.naturalWidth;
       const sheetH = this.sprite.naturalHeight;
       const frameW = sheetW / this.cols;
@@ -234,7 +231,6 @@ export class SnakeEaterEnemy extends Enemy {
       
       ctx.drawImage(this.sprite, sx, sy, frameW, frameH, -destW / 2, -destH / 2, destW, destH);
     } else {
-      // 3. Rysowanie Sprite'a (zwykłe)
       const sheetW = this.sprite.naturalWidth;
       const sheetH = this.sprite.naturalHeight;
       const frameW = sheetW / this.cols;
@@ -258,7 +254,6 @@ export class SnakeEaterEnemy extends Enemy {
     
     ctx.restore();
     
-    // 4. Pasek Życia
     if (this.showHealthBar && this.hp < this.maxHp) {
       this.drawCustomHealthBar(ctx);
     }

@@ -1,5 +1,5 @@
 // ==============
-// PERKS.JS (v1.02 - Full Integrity Check)
+// PERKS.JS (v1.02e - Dynamic Value Providers)
 // Lokalizacja: /js/config/perks.js
 // ==============
 
@@ -12,6 +12,7 @@ export const perkPool = [
     icon: 'icon_autogun',
     emoji: '🔫',
     color: '#FFF',
+    max: 1, 
     apply: (state, perk) => {
        import('../config/weapons/autoGun.js').then(module => {
            const AutoGun = module.AutoGun;
@@ -31,9 +32,10 @@ export const perkPool = [
     icon: 'icon_firerate',
     emoji: '⏩',
     color: '#FFFF00',
-    value: 0.85, // -15% cooldownu
+    value: 0.80, // -20% cooldownu
     max: 6,
     requiresWeapon: 'AutoGun',
+    formatVal: () => 20, 
     apply: (state, perk) => {
        const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
        if (w) {
@@ -50,14 +52,20 @@ export const perkPool = [
     icon: 'icon_damage',
     emoji: '💥',
     color: '#FF0000',
-    value: 2, // +2 DMG (Reforged Balance)
     max: 6,
     requiresWeapon: 'AutoGun',
+    /**
+     * (v1.02e) Progresywne skalowanie: +2, +3, +4, +5, +6, +7.
+     */
+    formatVal: (currentLvl) => currentLvl + 2,
     apply: (state, perk) => {
        const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
        if (w) {
-           if(w.bulletDamage !== undefined) w.bulletDamage += perk.value;
-           if(w.damage !== undefined) w.damage += perk.value;
+           const currentLvl = state.perkLevels[perk.id] || 0;
+           const bonus = currentLvl + 2; 
+           if(w.bulletDamage !== undefined) w.bulletDamage += bonus;
+           if(w.damage !== undefined) w.damage += bonus;
+           console.log(`[PERK-DMG] AutoGun: Dodano +${bonus} dmg.`);
        }
     }
   },
@@ -72,6 +80,7 @@ export const perkPool = [
     value: 1,
     max: 4,
     requiresWeapon: 'AutoGun',
+    formatVal: () => 1,
     apply: (state, perk) => {
        const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
        if(w) w.multishot += perk.value;
@@ -88,6 +97,7 @@ export const perkPool = [
     value: 1,
     max: 4,
     requiresWeapon: 'AutoGun',
+    formatVal: () => 1,
     apply: (state, perk) => {
        const w = state.player.weapons.find(x => x.constructor.name === 'AutoGun');
        if(w) w.pierce += perk.value;
@@ -123,7 +133,7 @@ export const perkPool = [
     icon: 'icon_nova',
     emoji: '💫',
     color: '#FF5722',
-    max: 6, // Zgodnie z nowym balansem
+    max: 6,
     apply: (state, perk) => {
        import('../config/weapons/novaWeapon.js').then(module => {
            const NovaWeapon = module.NovaWeapon;
@@ -191,6 +201,7 @@ export const perkPool = [
     color: '#00E676',
     value: 1.10,
     max: 4,
+    formatVal: () => 10,
     apply: (state, perk) => {
        state.player.speedMultiplier *= perk.value;
     }
@@ -205,6 +216,7 @@ export const perkPool = [
     color: '#9C27B0',
     value: 1.40,
     max: 3,
+    formatVal: () => 40,
     apply: (state, perk) => {
        state.game.pickupRange *= perk.value;
     }
@@ -217,8 +229,9 @@ export const perkPool = [
     icon: 'icon_health',
     emoji: '❤️',
     color: '#E91E63',
-    value: 30, // +30 HP (Reforged Balance)
+    value: 20, 
     max: 3,
+    formatVal: () => 30,
     apply: (state, perk) => {
        state.game.maxHealth += perk.value;
        state.game.health = Math.min(state.game.maxHealth, state.game.health + perk.value);
