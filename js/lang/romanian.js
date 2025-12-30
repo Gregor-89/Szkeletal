@@ -1,5 +1,5 @@
 // ==============
-// ROMANIAN.JS (v1.13 - Shop Fixes)
+// ROMANIAN.JS (v1.14d - Points Currency Localization)
 // Lokalizacja: /js/lang/romanian.js
 // ==============
 
@@ -22,7 +22,7 @@ export const LANG_RO = {
   ui_dev_hitbox: "Hitboxes:",
   
   ui_coffee_title: "CAFEA FIERBINTE",
-  ui_coffee_desc: "Felicitări. Tocmai ți-ai depreciat ireversibil câteva minute din timp, deși eu însumi, într-un act de masochism pur, am dedicat zeci de ore promptării verticale a algoritmilor AI în ultimele două luni.<br><br>Să fim obiectivi: la fel cum 'ludologii' noștri nativi (a nu se confunda cu cercetătorii reali de jocuri) demonstrează de facto o lipsă imanentă de competență în mecanici, specializându-se în principal pe achiziția de conținut străin, nici eu nu posed nicio cunoștință de codare, estetică pixel-art sau naratologie. Acest proiect este un 'pato-construct' construit din blocuri generative – cartof cu cartof.<br><br>A meritat această urmărire teleologică efortul? Absolut nu. Cine în toate mințile ar vrea să participe la acest pastiș mai mult de câteva minute? Chiar dacă este doar o parodie lejeră, iar orice asemănare cu 'vaci de muls râsete' cunoscute din mediul ludologic este, desigur, complet stocastică și întâmplătoare.<br><br>Totuși, dacă în ciuda tuturor lucrurilor percepi vreo valoare a efortului în această sperietoare, poți face o subvenție voluntară pentru cafeaua mea virtuală sau să contribui la un sac de cartofi. Datorită acestui fapt, voi iniția singur procesul culinar și îmi voi pregăti cartofi delicioși.<br><br>Aha, activarea interfeței cu butoane de mai jos va debloca – pur și simplu, ca o transgresiune veselă – <span style=\"color:#E91E63;font-weight:bold;\">un skin alternativ, 'fierbinte', pentru Drakul</span>.<br><br>Intră în mental. Distracție plăcută.",
+  ui_coffee_desc: "Felicitări. Tocmai ți-ai depreciat ireversibil câteva minute din timp, deși eu însumi, într-un act de masochism pur, am dedicat zeci de ore promptării verticale a algoritmilor AI în ultimele două luni.<br><br>Să fim obiectivi: la fel cum 'ludologii' noștri nativi (a nu se confunda cu cercetătorii reali de jocuri) demonstrează de facto o lipsă imanentă de competență în mecanici, specializându-se în principal pe achiziția de conținut străin, nici eu nu posed nicio cunoștință de codare, estetică pixel-art sau naratologie. Acest projekt este un 'pato-construct' construit din blocuri generative – cartof cu cartof.<br><br>A meritat această urmărire teleologică efortul? Absolut nu. Cine în toate mințile ar vrea să participe la acest pastiș mai mult de câteva minute? Chiar dacă este doar o parodie lejeră, iar orice asemănare cu 'vaci de muls râsete' cunoscute din mediul ludologic este, desigur, complet stocastică și întâmplătoare.<br><br>Totuși, dacă în ciuda tuturor lucrurilor percepi vreo valoare a efortului în această sperietoare, poți face o subvenție voluntară pentru cafeaua mea virtuală sau să contribui la un sac de cartofi. Datorită acestui fapt, voi iniția singur procesul culinar și îmi voi pregăti cartofi delicioși.<br><br>Aha, activarea interfeței cu butoane de mai jos va debloca – pur și simplu, ca o transgresiune veselă – <span style=\"color:#E91E63;font-weight:bold;\">un skin alternativ, 'fierbinte', pentru Drakul</span>.<br><br>Intră în mental. Distracție plăcută.",
   ui_coffee_btn: "CUMPĂRĂ CAFEA",
   ui_coffee_unlocked: "NIMENI NU VERIFICĂ ASTA - SKIN DEBLOCAT",
   ui_coffee_footer: "Salutări mulțimii Wykop de la <a href=\"https://wykop.pl/tag/bekazludologuff\" target=\"_blank\" style=\"color:#FFD700;text-decoration:none;\">#bekazludologuff</a> și etichetele aferente.",
@@ -35,7 +35,7 @@ export const LANG_RO = {
   ui_dev_btn_apply: "APLICĂ",
   ui_dev_btn_peaceful: "PAȘNIC",
   
-  ui_config_music: "MUZICĂ",
+  ui_config_music: "MUZYCĂ",
   ui_config_sfx: "SFX",
   ui_config_fov: "CÂMP VIZUAL (ZOOM)",
   
@@ -135,7 +135,8 @@ export const LANG_RO = {
 
   ui_shop_title: "MAGAZIN DE CARTOFI",
   ui_shop_wallet: "PUNCTE DISPONIBILE:",
-  ui_shop_info: "<strong>CUM FUNCȚIONEAZĂ?</strong><br>Bugetul tău este cel mai mare scor (High Score) din toate sesiunile. Punctele nu se acumulează – pentru a avea mai multe, trebuie să-ți bați recordul! Achizițiile oferă un <strong>bonus de pornire imediat</strong>, permițându-ți să progresezi mai rapid. <br><strong>NOTĂ:</strong> Fiecare achiziție ulterioară costă cu ~50% mai mult, așa că cheltuiește cu înțelepciune!",
+  ui_shop_info_title: "CUM FUNCȚIONEAZĂ?",
+  ui_shop_info: "Bugetul tău este cel mai mare scor (High Score) din toate sesiunile. Punctele nu se acumulează – pentru a avea mai multe, trebuie să-ți bați recordul! Achizițiile oferă un <strong>bonus de pornire imediat</strong>, permițându-ți să progresezi mai rapid. <br><br><strong>NOTĂ:</strong> Fiecare achiziție ulterioară costă cu ~50% mai mult, așa că cheltuiește cu înțelepciune!",
   ui_shop_owned: "[CUMPĂRAT]",
   ui_shop_maxed: "LIMITĂ ATINSĂ",
   ui_shop_active_start: "ACTIV LA START",
@@ -147,25 +148,25 @@ export const LANG_RO = {
   ui_config_title_game: "Setări Joc",
   ui_config_nick: "PORECLA TA",
   ui_config_skin: "ASPECT CARACTER",
-  ui_config_tutorial: "TUTORIAL",
+  ui_config_tutorial: "ARATĂ TUTORIAL",
   ui_config_tutorial_btn: "REDARE",
   
-  ui_config_joystick: "Poziție Joystick:",
-  ui_config_joy_left: "Stânga",
-  ui_config_joy_right: "Dreapta",
-  ui_config_joy_off: "Oprit",
-  ui_config_hyper: "⚡ Mod Hyper (+20% ritm)",
-  ui_config_shake: "📳 Tremur Ecran",
+  ui_config_joystick: "JOYSTICK",
+  ui_config_joy_left: "STÂNGA",
+  ui_config_joy_right: "DREAPTA",
+  ui_config_joy_off: "OPRIT",
+  ui_config_hyper: "MOD HYPER",
+  ui_config_shake: "TREMUR ECRAN",
   ui_config_title_visual: "Vizual",
-  ui_config_fps: "📊 Arată FPS",
+  ui_config_fps: "ARATĂ FPS",
   ui_config_fps_pos: "Poziție FPS:",
   ui_config_fps_pos_left: "Stânga",
   ui_config_fps_pos_right: "Dreapta",
-  ui_config_labels: "🏷️ Etichete Pickup",
+  ui_config_labels: "ETICHETE",
   ui_config_style: "Stil:",
   ui_config_style_circle: "🔵 Cercuri",
   ui_config_style_emoji: "😀 Emoji",
-  ui_config_title_lang: "Limbă",
+  ui_config_title_lang: "LIMBĂ",
   
   ui_guide_title: "Ghidul Contelui",
   ui_guide_intro: "Fii Conte. Mănâncă cartofi. Biciuiește inamici.",
@@ -201,7 +202,7 @@ export const LANG_RO = {
   ui_gameover_title: "💀 GAME OVER",
   ui_gameover_score: "🎯 Scor:",
   ui_gameover_level: "⭐ Nivel:",
-  ui_gameover_time: "⏱️ Timp:",
+  ui_gameover_time: "Timp:",
   ui_gameover_kills: "⚔️ Ucideri:",
   ui_gameover_retry: "REÎNCEARCĂ",
   ui_gameover_menu: "MENU",
@@ -209,7 +210,7 @@ export const LANG_RO = {
   ui_gameover_sent: "TRIMIS!",
   ui_gameover_error: "EROARE REȚEA",
   
-  ui_scores_title: "REGISTRUL PIERZĂTORILOR",
+  ui_scores_title: "CRONICILE CELOR CĂZUȚI",
   ui_scores_clear: "🗑️ ȘTERGE",
   ui_scores_clear_local: "ȘTERGE LOCAL", 
   ui_scores_col_rank: "#",
@@ -263,7 +264,7 @@ export const LANG_RO = {
   enemy_elite_desc: "Hater de Elită cu Sațietate uriașă. Folosește specială la fiecare 7s: șarjă, proiectile sau chemare ajutor. Lasă LudoBox.",
   enemy_wall_name: "Sindrom Asediu",
   enemy_wall_desc: "Apare într-un inel perfect. Foarte lent și dur. După aprox. 34-40s detonează, distrugând totul în jur.",
-  enemy_lumberjack_name: "Tăietor Eșuat",
+  enemy_lumberjack_name: "Lumberjack Zjebadlo",
   enemy_lumberjack_desc: "Gardian al cringe-ului forestier. Aruncă topoare curcubeu rotitoare și lasă o 'Urmă Toxică'. Ai grijă, sau te anulează!",
   enemy_snakeEater_name: "MâncătorDeȘerpi",
   enemy_snakeEater_desc: "Altar Mobil. Nu atacă. Urmează Contele. Te vindecă o dată pe minut dacă îl atingi.",
@@ -321,7 +322,7 @@ export const LANG_RO = {
   quote_gameover_3: "Relaxează-te. Kiszczak e praf și la alte jocuri...",
   quote_gameover_4: "Ai dat 20%, tot e mai mult decât Arkadidick scriind o recenzie...",
   quote_gameover_5: "Cu așa joc nu meriți cartofi delicioși...",
-  quote_gameover_6: "Tăietor Eșuat o trage mai bine babelor decât joci tu...",
+  quote_gameover_6: "Lumberjack Zjebadlo o trage mai bine babelor decât joci tu...",
   quote_gameover_7: "Ce ești, MâncătorDeȘerpi, nu faci față?",
   quote_gameover_8: "Tu bați vagabondul sau vagabondul te bate pe tine?",
   quote_gameover_9: "Doar să nu fugi în România de rușine...",
@@ -353,6 +354,14 @@ export const LANG_RO = {
   stat_killed_ranged: "Vagabonzi Uciși",
   stat_killed_elite: "Elden Hateri Uciși",
   stat_killed_wall: "Sindroame Asediu Distruse",
-  stat_killed_lumberjack: "Tăietori Eșuați Uciși",
-  stat_killed_snakeEater: "MâncătoriDeȘerpi Uciși"
+  stat_killed_lumberjack: "Lumberjack Zjebadlos Uciși",
+  stat_killed_snakeEater: "MâncătoriDeȘerpi Uciși",
+
+  ui_installed: "INSTALAT",
+  ui_multishot: "Multishot",
+  ui_pierce: "Penetrare",
+  ui_targets: "ținte",
+  ui_level_short: "NIV.",
+  // ZMIANA v0.110f: Dodano klucz dla waluty punktowej
+  ui_shop_currency: "PCT"
 };

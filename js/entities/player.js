@@ -1,5 +1,5 @@
 // ==============
-// PLAYER.JS (v1.10 - Shield Blink Tuned)
+// PLAYER.JS (v1.10b - Shield Blink QoL)
 // Lokalizacja: /js/entities/player.js
 // ==============
 
@@ -235,21 +235,20 @@ export class Player {
             ctx.filter = 'sepia(1) hue-rotate(60deg) saturate(2)';
         }
         
-        // POPRAWIONE MIGANIE TARCZY
         if (game.shield) {
             let alpha = 0.5;
             let strokeAlpha = 0.8;
             
             if (game.shieldT < 3.0) {
-                // Zmniejszona częstotliwość (2Hz -> 6.5Hz) dla lepszej czytelności
-                const freq = 2 + (3.0 - game.shieldT) * 1.5; 
+                // ZMIANA v0.110d: Zmniejszono częstotliwość migania tarczy o połowę (mnożnik 0.75 zamiast 1.5)
+                const freq = 2 + (3.0 - game.shieldT) * 0.75; 
                 const blinkVal = Math.sin((performance.now() / 1000) * freq * Math.PI * 2);
                 
                 if (blinkVal > 0) {
-                    alpha = 0.8;       // Bardzo widoczne
+                    alpha = 0.8;       
                     strokeAlpha = 1.0;
                 } else {
-                    alpha = 0.1;       // Prawie niewidoczne
+                    alpha = 0.1;       
                     strokeAlpha = 0.2;
                 }
             }
@@ -271,7 +270,7 @@ export class Player {
             ctx.fill();
 
             ctx.shadowBlur = 0; 
-            ctx.strokeStyle = `rgba(200, 240, 255, ${strokeAlpha})`; // Pulsujący obrys
+            ctx.strokeStyle = `rgba(200, 240, 255, ${strokeAlpha})`; 
             ctx.lineWidth = 2;
             ctx.setLineDash([15, 12]); 
             

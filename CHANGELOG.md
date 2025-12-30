@@ -6,6 +6,32 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 # Changelog
 
+## [0.110] - 2025-12-30
+### Dodano
+- **Pełna responsywność (Liquid Layout):** Gra dynamicznie dopasowuje się do rozmiaru okna przeglądarki, wspierając urządzenia od telefonów po telewizory.
+- **Optymalizacja trybu horyzontalnego (Landscape):** Specjalne reguły CSS dla szerokich ekranów, skalujące logo i interfejs menu, aby zapobiec scrollowaniu.
+- **Paginacja Tabeli Wyników:** Wdrożono pobieranie wielu stron danych z API Talo (limit do 1000 rekordów), co pozwala na wyświetlenie faktycznie wszystkich wyników w zakładce "Wszystkie".
+- **Zakładka Statystyk:** Dodano nową sekcję w tabeli liderów wyświetlającą szczegółowe metryki lokalne i globalne (liczba gier, unikalni gracze, statystyki zabójstw konkretnych typów wrogów).
+- **Lokalizacja i18n:** Pełne tłumaczenie interfejsu Sklepiku, Kronik Poległych, menu Pauzy oraz ekranów wznawiania gry w 3 językach (PL, EN, RO).
+- **Stylizowane Scrollbary:** Wprowadzono retro paski przewijania oraz dynamiczne cienie (Shadow Scroll) informujące o ukrytej treści w listach i opisach.
+
+### Naprawiono
+- **Błąd Czasu Gry:** Naprawiono naliczanie czasu podczas pauzy. Czas gry jest teraz zatrzymywany poprawnie wraz z logiką świata.
+- **Sortowanie Tabel:** Naprawiono mechanizm sortowania kolumn w tabelach wyników, który przestawał działać po odświeżeniu widoku.
+- **Interfejs UI:** Naprawiono ucinanie górnych i dolnych pasków statystyk w orientacji pionowej i poziomej poprzez zastosowanie elastycznego kontenera Flexbox.
+- **Tarcza Gracza:** Dwukrotnie zmniejszono częstotliwość migania tarczy w końcowej fazie jej trwania dla lepszego komfortu wizualnego.
+- **Wybór Języka:** Usunięto nieestetyczne białe ramki focusu z flag językowych w menu głównym.
+- **Reset Sklepu:** Zastąpiono systemowe okno `confirm()` ostylowanym i przetłumaczonym modalem gry.
+
+### Zmieniono
+- **Licznik FPS:** Opcja wyświetlania klatek na sekundę jest teraz domyślnie wyłączona przy starcie gry.
+- **Hyper Mode:** Ukryto opcję Hyper Mode w menu konfiguracji (funkcjonalność wyłączona w tej wersji).
+- **Nazewnictwo:** Zaktualizowano tytuł Mauzoleum na "Kroniki Poległych" oraz usunięto cenzurę z nazw niektórych bossów (Lumberjack).
+- **Dynamiczna Waluta:** Oznaczenie waluty w sklepie (PKT/PTS/PCT) jest teraz dynamicznie pobierane z plików językowych.
+
+---
+
+
 ## [0.109] - 2025-12-30
 ### NAPRAWIONO
 - **Progress Bar:** Naprawiono błąd licznika zasobów na ekranie ładowania (poprawiono z błędnego 110/71 na poprawne 131/131). System teraz precyzyjnie i dynamicznie sumuje wszystkie grafiki (110) oraz dźwięki (21) przed startem aplikacji.

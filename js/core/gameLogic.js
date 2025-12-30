@@ -1,5 +1,5 @@
 // ==============
-// GAMELOGIC.JS (v1.13 - Quotes Color Fix)
+// GAMELOGIC.JS (v0.110 - Dynamic Viewport Camera Fix)
 // Lokalizacja: /js/core/gameLogic.js
 // ==============
 
@@ -24,6 +24,7 @@ export function updateCamera(player, camera, canvasWidth, canvasHeight) {
     player.x = Math.max(player.size / 2, Math.min(camera.worldWidth - player.size / 2, player.x));
     player.y = Math.max(player.size / 2, Math.min(camera.worldHeight - player.size / 2, player.y));
     
+    // ZMIANA v0.110: Kamera teraz precyzyjnie używa dynamicznego viewWidth/viewHeight przekazanego z main.js
     let targetX = player.x - camera.viewWidth / 2;
     let targetY = player.y - camera.viewHeight / 2;
     
@@ -50,6 +51,7 @@ export function updateGame(state, dt, levelUpFn, openChestFn, camera) {
         killEnemy(idx, e, game, settings, enemies, particlePool, gemsPool, pickups, enemyIdCounter, chests, fromOrbital, preventDrops);
 
     player.update(dt, game, keys, jVec(), camera); 
+    // ZMIANA v0.110: Przekazujemy aktualne wymiary canvasu, które są teraz responsywne
     updateCamera(player, camera, canvas.width, canvas.height);
 
     if (!devSettings.godMode) {

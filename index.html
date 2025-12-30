@@ -75,7 +75,7 @@
             </div>
         </div>
         <div id="bonusPanel"></div>
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <canvas id="gameCanvas"></canvas>
     </div>
     
     <div id="gameInfo">
@@ -135,14 +135,14 @@
         <h2 id="shopTitle" class="retro-title">SKLEPIK ZIEMNIACZANY</h2>
         
         <div class="shop-wallet-container" style="text-align:center; margin-bottom:10px; background:rgba(0,0,0,0.4); padding:15px; border:1px solid #444;">
-            <div style="font-size:1.8rem; color:#fff;">DOSTĘPNE PUNKTY: <span id="shopWalletPoints" style="color:var(--accent-green);">0</span></div>
+            <div id="lblShopWallet" style="font-size:1.8rem; color:#fff;">DOSTĘPNE PUNKTY: <span id="shopWalletPoints" style="color:var(--accent-green);">0</span></div>
         </div>
 
         <div class="retro-scroll-box">
             <div id="shopInfoNote" style="font-size:1rem; color:#aaa; margin-bottom:15px; border-left:4px solid var(--accent-gold); padding-left:10px;">
-                <strong>JAK TO DZIAŁA?</strong><br>
-                Twoim budżetem jest Twój najwyższy wynik (High Score) ze wszystkich sesji. Punkty nie sumują się – aby mieć ich więcej, musisz pobić swój rekord! Zakupy ulepszeń dają <strong>natychmiastowy bonus na start każdej gry</strong>, co pozwoli Ci szybciej progressować i wbijać wyższe poziomy wertykalności. <br>
-                <strong>UWAGA:</strong> Każdy kolejny zakup kosztuje o ok. 50% więcej niż poprzedni, więc wydawaj punkty rozważnie!
+                <strong id="shopInfoNoteTitle">JAK TO DZIAŁA?</strong><br>
+                <span id="shopInfoNoteText">Twoim budżetem jest Twój najwyższy wynik (High Score) ze wszystkich sesji. Punkty nie sumują się – aby mieć ich więcej, musisz pobić swój rekord! Zakupy ulepszeń dają <strong>natychmiastowy bonus na start każdej gry</strong>, co pozwoli Ci szybciej progressować i wbijać wyższe poziomy wertykalności. <br>
+                <strong>UWAGA:</strong> Każdy kolejny zakup kosztuje o ok. 50% więcej niż poprzedni, więc wydawaj punkty rozważnie!</span>
             </div>
             <div id="shopContainer" class="perk-grid"></div>
         </div>
@@ -154,7 +154,7 @@
       </div>
 
       <div id="view-scores" class="menu-view">
-        <h2 id="scoresTitle" class="retro-title">MAUZOLEUM</h2>
+        <h2 id="scoresTitle" class="retro-title">KRONIKI POLEGŁYCH</h2>
         <div class="score-tabs-container">
             <button id="tabLocalScores" class="score-tab active">LOKALNE</button>
             <button id="tabOnlineScores" class="score-tab">ONLINE</button>
@@ -171,7 +171,7 @@
             <table id="retroScoreTable" class="sortable-table">
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th data-sort="tempRank">#</th>
                         <th data-sort="name">NICK</th>
                         <th data-sort="score">PKT</th>
                         <th data-sort="kills">ZAB</th>
@@ -200,7 +200,7 @@
             </div>
             <input type="checkbox" id="chkHyper" style="display:none;">
             <input type="checkbox" id="chkShake" checked style="display:none;">
-            <input type="checkbox" id="chkFPS" checked style="display:none;">
+            <input type="checkbox" id="chkFPS" style="display:none;">
             <input type="checkbox" id="chkPickupLabels" checked style="display:none;">
             <input type="checkbox" id="chkTutorial" style="display:none;"> 
 
@@ -209,9 +209,9 @@
                 <div class="skin-selector" id="skinSelector"></div>
             </div>
             <div class="config-row"><span id="lblJoy">JOYSTICK</span><button class="retro-toggle" id="toggleJoy">PRAWA</button></div>
-            <div class="config-row"><span id="lblHyper">HYPER MODE</span><button class="retro-toggle off" id="toggleHyper">WYŁ</button></div>
+            <div class="config-row" style="display:none;"><span id="lblHyper">HYPER MODE</span><button class="retro-toggle off" id="toggleHyper">WYŁ</button></div>
             <div class="config-row"><span id="lblShake">WSTRZĄSY</span><button class="retro-toggle on" id="toggleShake">WŁ</button></div>
-            <div class="config-row"><span id="lblFPS">LICZNIK FPS</span><button class="retro-toggle on" id="toggleFPS">WŁ</button></div>
+            <div class="config-row"><span id="lblFPS">LICZNIK FPS</span><button class="retro-toggle off" id="toggleFPS">WYŁ</button></div>
             <div class="config-row"><span id="lblLabels">PODPISY</span><button class="retro-toggle on" id="toggleLabels">WŁ</button></div>
             <div class="config-row">
                 <span id="lblMusic">MUZYKA</span>
@@ -428,7 +428,13 @@
         <table id="goScoreTable" class="sortable-table"> 
           <thead>
               <tr>
-                  <th>#</th><th data-sort="name">NICK</th><th data-sort="score">PKT</th><th data-sort="kills">ZAB</th><th data-sort="level">LVL</th><th data-sort="time">CZAS</th><th data-sort="date">DATA</th>
+                  <th data-sort="tempRank">#</th>
+                  <th data-sort="name">NICK</th>
+                  <th data-sort="score">PKT</th>
+                  <th data-sort="kills">ZAB</th>
+                  <th data-sort="level">LVL</th>
+                  <th data-sort="time">CZAS</th>
+                  <th data-sort="date">DATA</th>
               </tr>
           </thead> 
           <tbody id="scoresBodyGameOver"></tbody> 

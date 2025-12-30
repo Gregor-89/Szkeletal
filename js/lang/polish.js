@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v1.13 - Shop Fixes)
+// POLISH.JS (v1.14c - Points Currency Localization)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -22,7 +22,7 @@ export const LANG_PL = {
   ui_dev_hitbox: "Hitboxy:",
   
   ui_coffee_title: "HOT COFFEE",
-  ui_coffee_desc: "Gratulacje. Właśnie dokonałeś bezpowrotnej deprecjacji kilku minut swojego czasu, choć ja sam, w akcie czystego masochizmu, poświęciłem ich dziesiątki na wertykalne promptowanie algorytmów AI przez ostatnie dwa miesiące.<br><br>Musimy postawić sprawę obiektywnie: tak samo jak nasi rodzimi „ludolodzy” (nie mylić z faktycznymi groznawcami) de facto wykazują immanentny brak kompetencji w temacie mechanik, specjalizując się głównie w akwizycji cudzego contentu, tak i ja nie posiadam żadnej wiedzy o kodowaniu, estetyce pixel-artu czy narratologii. Ten projekt to „pato-konstrukt” zbudowany z klocków generatywnych – ziemniak po ziemniaku.<br><br>Czy ta teleologiczna pogoń była warta zachodu? Absolutnie nie. Kto o zdrowych zmysłach chciałby partycypować w tym paszyżu dłużej niż kilka minut? Nawet jeśli to tylko luźna parodia, a wszelkie podobieństwa do znanych nam „śmiechodojów” ze środowiska ludologicznego są oczywiście zupełnie stochastyczne i przypadkowe.<br><br>Niemniej, jeśli mimo wszystko dostrzegasz w tym chochole jakikolwiek walor napracowania, możesz dokonać dobrowolnej subwencji na moją wirtualną kawkę lub dorzucić się do worka kartofli. Dzięki temu sam zainicjuję proces kulinarny i przygotuję sobie pyszne ziemniaczki.<br><br>Aha, aktywacja poniższego interfejsu przyciskowego odblokuje – ot tak, w ramach radosnej transgresji – <span style=\"color:#E91E63;font-weight:bold;\">alternatywną, „gorącą” skórkę Drakula</span>.<br><br>Wejdź w mental. Have fun.",
+  ui_coffee_desc: "Gratulacje. Właśnie dokonałeś bezpowrotnej deprecjacji kilku minut swojego czasu, choć ja sam, w akcie czystego masochizmu, poświęciłem ich dziesiątki na wertykalne promptowanie algorytmów AI przez ostatnie dwa miesiące.<br><br>Musimy postawić sprawę obiektywnie: tak samo jak nasi rodzimi „ludolodzy” (nie miylić z faktycznymi groznawcami) de facto wykazują immanentny brak kompetencji w temacie mechanik, specjalizując się głównie w akwizycji cudzego contentu, tak i ja nie posiadam żadnej wiedzy o kodowaniu, estetyce pixel-artu czy narratologii. Ten projekt to „pato-konstrukt” zbudowany z klocków generatywnych – ziemniak po ziemniaku.<br><br>Czy ta teleologiczna pogoń była warta zachodu? Absolutnie nie. Kto o zdrowych zmysłach chciałby partycypować w tym paszyżu dłużej niż kilka minut? Nawet jeśli to tylko luźna parodia, a wszelkie podobieństwa do znanych nam „śmiechodojów” ze środowiska ludologicznego są oczywiście zupełnie stochastyczne i przypadkowe.<br><br>Niemniej, jeśli mimo wszystko dostrzegasz w tym chochole jakikolwiek walor napracowania, możesz dokonać dobrowolnej subwencji na moją wirtualną kawkę lub dorzucić się do worka kartofli. Dzięki temu sam zainicjuję proces kulinarny i przygotuję sobie pyszne ziemniaczki.<br><br>Aha, aktywacja poniższego interfejsu przyciskowego odblokuje – ot tak, w ramach radosnej transgresji – <span style=\"color:#E91E63;font-weight:bold;\">alternatywną, „gorącą” skórkę Drakula</span>.<br><br>Wejdź w mental. Have fun.",
   ui_coffee_btn: "POSTAW KAWKĘ",
   ui_coffee_unlocked: "NIKT TEGO NIE SPRAWDZA - SKIN ODBLOKOWANY",
   ui_coffee_footer: "Pozdrawiam wykopową gawędź z <a href=\"https://wykop.pl/tag/bekazludologuff\" target=\"_blank\" style=\"color:#FFD700;text-decoration:none;\">#bekazludologuff</a> i powiązanych tagów.",
@@ -60,7 +60,7 @@ export const LANG_PL = {
   
   quote_hunger_1: "Ziemniaczki jeść muszę, bo się uduszę!",
   quote_hunger_2: "Gdy głód doskwiera, to mi sytość odbiera!",
-  quote_hunger_3: "Gdy nie zjem mych pyszności, to braknie mi sytości!",
+  quote_hunger_3: "Gdy nie zjem mych pyszności, to braknie mi mi sytości!",
   quote_hunger_4: "Dajcie mnie ziemniaki, bo mam w kiszkach braki!",
   quote_hunger_5: "Kiszki marsza grają, gdzieś tu się ziemniaczki czają!",
   
@@ -135,7 +135,8 @@ export const LANG_PL = {
   
   ui_shop_title: "SKLEPIK ZIEMNIACZANY",
   ui_shop_wallet: "DOSTĘPNE PUNKTY:",
-  ui_shop_info: "<strong>JAK TO DZIAŁA?</strong><br>Twoim budżetem jest Twój najwyższy wynik (High Score) ze wszystkich sesji. Punkty nie sumują się – aby mieć ich więcej, musisz pobić swój rekord! Zakupy ulepszeń dają <strong>natychmiastowy bonus na start każdej gry</strong>, co pozwoli Ci szybciej progressować i wbijać wyższe poziomy wertykalności. <br><strong>UWAGA:</strong> Każdy kolejny zakup kosztuje o ok. 50% więcej niż poprzedni, więc wydawaj punkty rozważnie!",
+  ui_shop_info_title: "JAK TO DZIAŁA?",
+  ui_shop_info: "Twoim budżetem jest Twój najwyższy wynik (High Score) ze wszystkich sesji. Punkty nie sumują się – aby mieć ich więcej, musisz pobić swój rekord! Zakupy ulepszeń dają <strong>natychmiastowy bonus na start każdej gry</strong>, co pozwoli Ci szybciej progressować i wbijać wyższe poziomy wertykalności. <br><br><strong>UWAGA:</strong> Każdy kolejny zakup kosztuje o ok. 50% więcej niż poprzedni, więc wydawaj punkty rozważnie!",
   ui_shop_owned: "[WYKUPIONE]",
   ui_shop_maxed: "OSIĄGNIĘTO LIMIT",
   ui_shop_active_start: "AKTYWNE NA START",
@@ -147,25 +148,25 @@ export const LANG_PL = {
   ui_config_title_game: "Ustawienia Rozgrywki",
   ui_config_nick: "TWOJA KSYWKA",
   ui_config_skin: "WYGLĄD POSTACI",
-  ui_config_tutorial: "SAMOUCZEK",
+  ui_config_tutorial: "POKAZUJ SAMOUCZEK",
   ui_config_tutorial_btn: "ODTWÓRZ",
   
-  ui_config_joystick: "Pozycja joysticka:",
-  ui_config_joy_left: "Lewa",
-  ui_config_joy_right: "Prawa",
-  ui_config_joy_off: "Wyłączony",
-  ui_config_hyper: "⚡ Hyper Mode (+20% tempo)",
-  ui_config_shake: "📳 Drżenie ekranu",
+  ui_config_joystick: "JOYSTICK",
+  ui_config_joy_left: "LEWA",
+  ui_config_joy_right: "PRAWA",
+  ui_config_joy_off: "WYŁ",
+  ui_config_hyper: "HYPER MODE",
+  ui_config_shake: "WSTRZĄSY",
   ui_config_title_visual: "Wizualia",
-  ui_config_fps: "📊 Pokaż FPS",
+  ui_config_fps: "LICZNIK FPS",
   ui_config_fps_pos: "Pozycja FPS:",
   ui_config_fps_pos_left: "Lewa",
   ui_config_fps_pos_right: "Prawa",
-  ui_config_labels: "🏷️ Podpisy pickupów",
+  ui_config_labels: "PODPISY",
   ui_config_style: "Styl:",
   ui_config_style_circle: "🔵 Kółka",
   ui_config_style_emoji: "😀 Emoji",
-  ui_config_title_lang: "Język",
+  ui_config_title_lang: "JĘZYK",
   
   ui_guide_title: "Przewodnik Hrabiego",
   ui_guide_intro: "Bądź Hrabią. Jedz ziemniaki. Biczuj wrogów.",
@@ -209,11 +210,11 @@ export const LANG_PL = {
   ui_gameover_sent: "WYSŁANO!",
   ui_gameover_error: "BŁĄD SIECI",
   
-  ui_scores_title: "REJESTR PRZEGRYWÓW",
+  ui_scores_title: "KRONIKI POLEGŁYCH",
   ui_scores_clear: "🗑️ WYCZYŚĆ",
   ui_scores_clear_local: "WYCZYŚĆ LOKALNE", 
   ui_scores_col_rank: "#",
-  ui_scores_col_nick: "KSYWKA",
+  ui_scores_col_nick: "NICK",
   ui_scores_col_score: "PKT",
   ui_scores_col_kills: "ZAB",
   ui_scores_col_level: "LVL",
@@ -221,7 +222,7 @@ export const LANG_PL = {
   ui_scores_col_date: "DATA",
   
   ui_confirm_title: "POTWIERDŹ",
-  ui_confirm_clear_scores: "Czy na pewno wyczyścić wyniki?",
+  ui_confirm_clear_scores: "Czy wyczyścić wyniki?",
   ui_confirm_yes: "TAK",
   ui_confirm_no: "NIE",
   
@@ -354,5 +355,13 @@ export const LANG_PL = {
   stat_killed_elite: "Zabitych Elden Hejterów",
   stat_killed_wall: "Zniszczonych Syndromów Oblężenia",
   stat_killed_lumberjack: "Zabitych Drwali Zjebadlo",
-  stat_killed_snakeEater: "Zabitych Wężojadów"
+  stat_killed_snakeEater: "Zabitych Wężojadów",
+  
+  ui_installed: "ZAINSTALOWANO",
+  ui_multishot: "Multishot",
+  ui_pierce: "Przebicie",
+  ui_targets: "cel(i)",
+  ui_level_short: "POZ.",
+  // ZMIANA v0.110f: Dodano klucz dla waluty punktowej
+  ui_shop_currency: "PKT"
 };

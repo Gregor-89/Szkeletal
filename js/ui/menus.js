@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.33h - Full Code Restore & Export Fix)
+// MENUS.JS (v1.33l - Shop Currency i18n Fix)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -30,7 +30,42 @@ const STATIC_TRANSLATION_MAP = {
     'navDev': 'ui_menu_tab_dev', 
     'navCoffee': 'ui_coffee_title',
     'navShop': 'ui_menu_shop',
-    'coffeeFooter': 'ui_coffee_footer' // Przywrócenie stopki
+    'coffeeFooter': 'ui_coffee_footer',
+    'shopTitle': 'ui_shop_title',
+    'shopInfoNoteTitle': 'ui_shop_info_title',
+    'shopInfoNoteText': 'ui_shop_info',
+    'lblShopWallet': 'ui_shop_wallet',
+    'btnResetShop': 'ui_shop_reset_btn',
+    'scoresTitle': 'ui_scores_title',
+    'btnClearScoresMenu': 'ui_scores_clear_local',
+    'lblNick': 'ui_config_nick',
+    'lblSkin': 'ui_config_skin',
+    'lblJoy': 'ui_config_joystick',
+    'lblHyper': 'ui_config_hyper',
+    'lblShake': 'ui_config_shake',
+    'lblFPS': 'ui_config_fps',
+    'lblLabels': 'ui_config_labels',
+    'lblMusic': 'ui_config_music',
+    'lblSFX': 'ui_config_sfx',
+    'lblFOV': 'ui_config_fov',
+    'lblLang': 'ui_config_title_lang',
+    'lblTutorial': 'ui_config_tutorial',
+    'btnIntroSkip': 'ui_intro_skip',
+    'btnIntroPrev': 'ui_intro_prev',
+    'configTitleMain': 'ui_config_title_game',
+    'coffeeTitle': 'ui_coffee_title',
+    'coffeeBtn': 'ui_coffee_btn',
+    'lblSupporters': 'ui_coffee_supporters_header',
+    'pauseTitle': 'ui_pause_title',
+    'btnResume': 'ui_pause_resume',
+    'btnPauseMenu': 'ui_pause_menu',
+    'resumeOverlayTitle': 'ui_ready_title',
+    'tabLocalScores': 'ui_scores_local',
+    'tabOnlineScores': 'ui_scores_online',
+    'tabStats': 'ui_tab_stats',
+    'confirmTitle': 'ui_confirm_title',
+    'btnConfirmYes': 'ui_confirm_yes',
+    'btnConfirmNo': 'ui_confirm_no'
 };
 
 export function updateStaticTranslations() {
@@ -39,7 +74,6 @@ export function updateStaticTranslations() {
         if (el) {
             const text = getLang(key);
             if (text && !text.startsWith('[')) {
-                // Jeśli tekst zawiera HTML (jak link do wykopu), używamy innerHTML
                 if (text.includes('<') && text.includes('>')) el.innerHTML = text;
                 else el.innerText = text;
             }
@@ -49,9 +83,15 @@ export function updateStaticTranslations() {
     const coffeeDesc = document.getElementById('coffeeDesc');
     if (coffeeDesc) coffeeDesc.innerHTML = getLang('ui_coffee_desc');
 
-    const btnScores = document.getElementById('navScores');
-    if (btnScores && getCurrentLangCode() === 'pl') btnScores.innerText = "KRONIKI POLEGŁYCH";
-    
+    const walletLabel = document.getElementById('lblShopWallet');
+    if (walletLabel) {
+        const walletPoints = document.getElementById('shopWalletPoints');
+        const translatedLabel = getLang('ui_shop_wallet') || "DOSTĘPNE PUNKTY:";
+        // ZMIANA v0.110f: Waluta w portfelu również jest tłumaczona
+        const currency = getLang('ui_shop_currency') || "PKT";
+        walletLabel.innerHTML = `${translatedLabel} <span id="shopWalletPoints" style="color:var(--accent-green);">${walletPoints ? walletPoints.textContent : '0'}</span> ${currency}`;
+    }
+
     const btnSubmit = document.getElementById('btnSubmitScore');
     if(btnSubmit && btnSubmit.style.display !== 'none' && btnSubmit.textContent !== getLang('ui_gameover_sent')) {
         btnSubmit.textContent = getLang('ui_gameover_submit') || "WYŚLIJ WYNIK";
@@ -107,6 +147,8 @@ export function generateShop() {
     container.innerHTML = '';
 
     const nextCost = shopManager.calculateNextCost();
+    // ZMIANA v0.110f: Pobranie przetłumaczonej nazwy waluty
+    const currency = getLang('ui_shop_currency') || "PKT";
 
     Object.values(SHOP_CONFIG.UPGRADES).forEach(upg => {
         const perkData = perkPool.find(p => p.id === upg.id);
@@ -139,7 +181,7 @@ export function generateShop() {
         info.className = 'perk-info';
         
         const title = document.createElement('h4');
-        const levelTag = `<span class=\"badge\" style=\"color: ${isMaxed ? 'var(--accent-green)' : '#aaa'}\">POZ. ${currentLvl}/${maxLvl}</span>`;
+        const levelTag = `<span class="badge" style="color: ${isMaxed ? 'var(--accent-green)' : '#aaa'}">${getLang('ui_hud_level').toUpperCase()} ${currentLvl}/${maxLvl}</span>`;
         title.innerHTML = `${getLang(`perk_${upg.id}_name`) || upg.id.toUpperCase()} ${levelTag}`;
         
         let descText = getLang(`perk_${upg.id}_desc`) || "Ulepszenie startowe.";
@@ -156,16 +198,17 @@ export function generateShop() {
         costTag.style.fontSize = '0.9rem';
         
         if (isMaxed) {
-            costTag.innerHTML = `<span style=\"color:var(--accent-green);\">${getLang('ui_shop_maxed') || 'OSIĄGNIĘTO LIMIT'}</span>`;
+            costTag.innerHTML = `<span style="color:var(--accent-green);">${getLang('ui_shop_maxed') || 'OSIĄGNIĘTO LIMIT'}</span>`;
         } else {
             const color = canBuy ? 'var(--accent-gold)' : 'var(--accent-red)';
             const costLbl = getLang('ui_shop_cost') || 'KOSZT:';
-            costTag.innerHTML = `${costLbl} <span style=\"color:${color}; font-weight:bold;\">${nextCost.toLocaleString()} PKT</span>`;
+            // ZMIANA v0.110f: Użycie dynamicznej waluty w kosztach
+            costTag.innerHTML = `${costLbl} <span style="color:${color}; font-weight:bold;">${nextCost.toLocaleString()} ${currency}</span>`;
             
             if (currentLvl === 0 && upg.dependsOn && shopManager.getUpgradeLevel(upg.dependsOn) === 0) {
                 const depName = getLang(`perk_${upg.dependsOn}_name`) || upg.dependsOn;
                 const reqLbl = getLang('ui_shop_requires') || 'WYMAGA:';
-                costTag.innerHTML += `<br><span style=\"color:var(--accent-red); font-size:0.8rem;\">${reqLbl} ${depName}</span>`;
+                costTag.innerHTML += `<br><span style="color:var(--accent-red); font-size:0.8rem;">${reqLbl} ${depName}</span>`;
             }
         }
 
@@ -235,9 +278,9 @@ function updateTutorialTexts() {
     if (btnClose) btnClose.textContent = getLang('ui_tutorial_btn_close');
     if (tutList) {
         tutList.innerHTML = `
-            <li style=\"margin-bottom:12px;\"><b>${getLang('ui_tutorial_ctrl_title')}</b><br>${getLang('ui_tutorial_ctrl_desc')}</li>
-            <li style=\"margin-bottom:12px;\"><b>${getLang('ui_tutorial_hunger_title')}</b><br>${getLang('ui_tutorial_hunger_desc')}</li>
-            <li style=\"margin-bottom:12px;\"><b>${getLang('ui_tutorial_prog_title')}</b><br>${getLang('ui_tutorial_prog_desc')}</li>
+            <li style="margin-bottom:12px;"><b>${getLang('ui_tutorial_ctrl_title')}</b><br>${getLang('ui_tutorial_ctrl_desc')}</li>
+            <li style="margin-bottom:12px;"><b>${getLang('ui_tutorial_hunger_title')}</b><br>${getLang('ui_tutorial_hunger_desc')}</li>
+            <li style="margin-bottom:12px;"><b>${getLang('ui_tutorial_prog_title')}</b><br>${getLang('ui_tutorial_prog_desc')}</li>
             <li><b>${getLang('ui_tutorial_boss_title')}</b><br>${getLang('ui_tutorial_boss_desc')}</li>
         `;
     }
@@ -307,7 +350,7 @@ async function fetchSupporters() {
         return; 
     }
 
-    listContainer.innerHTML = '<span class=\"pulse\">Łączenie z Suppi...</span>';
+    listContainer.innerHTML = '<span class="pulse">Łączenie z Suppi...</span>';
     const suppiUrl = 'https://suppi.pl/gregor'; 
     const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(suppiUrl)}`;
 
@@ -322,9 +365,9 @@ async function fetchSupporters() {
         
         let html = '';
         if (rows.length === 0) {
-            html = '<div style=\"color:#888; font-style:italic; margin-top:10px;\">Brak widocznych wpłat na profilu.</div>';
+            html = '<div style="color:#888; font-style:italic; margin-top:10px;">Brak widocznych wpłat na profilu.</div>';
         } else {
-            html = '<ul style=\"list-style:none; padding:0; margin:0; width:100%;\">';
+            html = '<ul style="list-style:none; padding:0; margin:0; width:100%;">';
             rows.forEach((row) => {
                 const nameEl = row.querySelector('.fund-contributor-name .wrap-ellipsis');
                 const name = nameEl ? nameEl.innerText.trim() : "Anonim";
@@ -332,9 +375,9 @@ async function fetchSupporters() {
                 let amount = "Darowizna", timeAgo = "";
                 if (dataEls.length > 0) amount = dataEls[0].innerText.trim();
                 if (dataEls.length > 1) timeAgo = dataEls[1].innerText.trim();
-                html += `<li style=\"margin-bottom:8px; background:rgba(255,255,255,0.05); padding:8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;\">
-                        <div style=\"text-align:left;\"><span style=\"color:#4CAF50; font-weight:bold; display:block;\">${name}</span><span style=\"font-size:0.8em; color:#666;\">${timeAgo}</span></div>
-                        <span style=\"color:#FFD700; font-weight:bold; font-size:1.1em;\">${amount}</span></li>`;
+                html += `<li style="margin-bottom:8px; background:rgba(255,255,255,0.05); padding:8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="text-align:left;"><span style="color:#4CAF50; font-weight:bold; display:block;">${name}</span><span style="font-size:0.8em; color:#666;">${timeAgo}</span></div>
+                        <span style="color:#FFD700; font-weight:bold; font-size:1.1em;">${amount}</span></li>`;
             });
             html += '</ul>';
         }
@@ -345,8 +388,8 @@ async function fetchSupporters() {
     } catch (e) {
         console.warn("[Supporters] Dane niedostępne.");
         listContainer.innerHTML = `
-            <div style=\"color:#D32F2F; font-size:0.9em; margin-bottom: 10px;\">Błąd pobierania danych.</div>
-            <button id=\"btnRetrySuppi\" class=\"menu-button\" style=\"padding: 5px 15px; font-size: 0.8em;\">PONÓW</button>
+            <div style="color:#D32F2F; font-size:0.9em; margin-bottom: 10px;">Błąd pobierania danych.</div>
+            <button id="btnRetrySuppi" class="menu-button" style="padding: 5px 15px; font-size: 0.8em;">PONÓW</button>
         `;
         const retryBtn = document.getElementById('btnRetrySuppi');
         if (retryBtn) {
@@ -369,9 +412,6 @@ export function switchView(viewId) {
     if (viewId === 'view-coffee') { 
         playSound('MusicIntro'); 
         fetchSupporters(); 
-        const desc = document.getElementById('coffeeDesc');
-        if (desc) desc.innerHTML = getLang('ui_coffee_desc');
-        // Aktualizacja stopki przy wejściu do menu kawy
         updateStaticTranslations();
     }
     else if (viewId === 'view-main') {
@@ -383,13 +423,14 @@ export function switchView(viewId) {
     }
     if (viewId === 'view-scores') { if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard(); setTimeout(() => { updateStaticTranslations(); }, 100); }
     if (viewId === 'view-guide') generateGuide(); 
-    if (viewId === 'view-shop') generateShop(); 
+    if (viewId === 'view-shop') { generateShop(); updateStaticTranslations(); }
     if (viewId === 'view-config') {
         generateSkinSelector(); initLanguageSelector(); 
         const zoomSlider = document.getElementById('zoomSlider');
         const zoomValue = document.getElementById('zoomValue');
         const savedZoom = localStorage.getItem('szkeletal_zoom') || (window.lastGameRef ? Math.round((window.lastGameRef.zoomLevel || 1.0) * 100) : 100);
         if (zoomSlider && zoomValue) { zoomSlider.value = savedZoom; zoomValue.innerText = savedZoom + "%"; }
+        updateStaticTranslations();
     }
     if (viewId === 'view-main') updateMainMenuStats();
 }
@@ -446,7 +487,7 @@ function getFocusableElements() {
     for (const ovId of priorityOverlays) {
         const ov = document.getElementById(ovId);
         if (ov && ov.style.display !== 'none' && ov.style.display !== '') {
-             const items = Array.from(ov.querySelectorAll('button:not([disabled]), input:not([type=\"radio\"]), .perk, .skin-option, .lang-label-wrapper'))
+             const items = Array.from(ov.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
                          .filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
              if (items.length > 0) return items;
         }
@@ -455,7 +496,7 @@ function getFocusableElements() {
     if (menuOverlay && menuOverlay.style.display !== 'none') {
         const activeView = document.querySelector('.menu-view.active');
         if (activeView) {
-            return Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type=\"radio\"]), .perk, .skin-option, .lang-label-wrapper'))
+            return Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
                          .filter(el => el.offsetParent !== null);
         }
     }
@@ -592,6 +633,9 @@ export function initRetroToggles(game, uiData) {
     setupToggle('toggleLabels', 'chkPickupLabels', () => { uiData.pickupShowLabels = !!document.getElementById('chkPickupLabels').checked; });
     setupToggle('toggleTutorial', 'chkTutorial'); 
     
+    const hbRow = document.getElementById('toggleHyper') ? document.getElementById('toggleHyper').parentElement : null;
+    if(hbRow) hbRow.style.display = 'none';
+
     const hb = document.getElementById('toggleHyper'); if(hb) updateToggleVisual(hb, game.hyper);
     const sb = document.getElementById('toggleShake'); if(sb) updateToggleVisual(sb, !game.screenShakeDisabled);
     const fb = document.getElementById('toggleFPS'); if(fb) updateToggleVisual(fb, uiData.showFPS);
@@ -623,11 +667,41 @@ export function initRetroToggles(game, uiData) {
             setTimeout(() => { 
                 unlockSkin('hot'); 
                 playSound('ChestReward'); 
-                // Zmiana tekstu i koloru na niebieski
                 coffeeBtn.innerText = getLang('ui_coffee_unlocked') || "NIKT TEGO NIE SPRAWDZA - SKIN ODBLOKOWANY";
                 coffeeBtn.style.backgroundColor = "#2196F3"; 
                 coffeeBtn.style.borderColor = "#0D47A1";
             }, 2000); 
+        };
+    }
+
+    const resetShopBtn = document.getElementById('btnResetShop');
+    if (resetShopBtn) {
+        resetShopBtn.onclick = () => {
+            const overlay = document.getElementById('confirmOverlay');
+            const confirmTxt = document.getElementById('confirmText');
+            const btnYes = document.getElementById('btnConfirmYes');
+            const btnNo = document.getElementById('btnConfirmNo');
+
+            if (overlay && confirmTxt) {
+                confirmTxt.innerText = getLang('ui_shop_reset_confirm') || "CZY NA PEWNO CHCESZ ZRESETOWAĆ ULEPSZENIA? WYDANE PUNKTY NIE ZOSTANĄ ZWRÓCONE!";
+                updateStaticTranslations(); 
+                overlay.style.display = 'flex';
+                playSound('Click');
+
+                btnYes.onclick = () => {
+                    if (shopManager) {
+                        shopManager.resetUpgrades();
+                        playSound('Click');
+                        generateShop();
+                    }
+                    overlay.style.display = 'none';
+                };
+
+                btnNo.onclick = () => {
+                    playSound('Click');
+                    overlay.style.display = 'none';
+                };
+            }
         };
     }
 
@@ -679,12 +753,12 @@ export function generateGuide() {
         { asset: 'icon_nova', nameKey: 'perk_nova_name', descKey: 'perk_nova_desc' },
         { asset: 'icon_lightning', nameKey: 'perk_chainLightning_name', descKey: 'perk_chainLightning_desc' }
     ];
-    let html = `<h4 style=\"color:#4caf50; margin-bottom:15px; text-align:center;\">📖 ${getLang('ui_guide_title')}</h4>`;
+    let html = `<h4 style="color:#4caf50; margin-bottom:15px; text-align:center;">📖 ${getLang('ui_guide_title')}</h4>`;
     guideData.forEach(item => {
-        if (item.header) html += `<div class=\"guide-section-title\" style=\"margin-top:20px; border-bottom:1px solid #444; color:#FFD700; font-size:1.2em;\">${item.header}</div>`;
+        if (item.header) html += `<div class="guide-section-title" style="margin-top:20px; border-bottom:1px solid #444; color:#FFD700; font-size:1.2em;">${item.header}</div>`;
         else {
-            let icon = item.customImg ? `<img src=\"${item.customImg}\" class=\"guide-icon\">` : (item.asset ? `<img src=\"${getAsset(item.asset).src}\" class=\"guide-icon\">` : '❓');
-            html += `<div class=\"guide-entry\"><div class=\"guide-icon-wrapper\">${icon}</div><div class=\"guide-text-wrapper\"><strong style=\"color:#FFD700;\">${getLang(item.nameKey)}</strong><br><span style=\"color:#ccc; font-size:16px;\">${getLang(item.descKey)}</span></div></div>`;
+            let icon = item.customImg ? `<img src="${item.customImg}" class="guide-icon">` : (item.asset ? `<img src="${getAsset(item.asset).src}" class="guide-icon">` : '❓');
+            html += `<div class="guide-entry"><div class="guide-icon-wrapper">${icon}</div><div class="guide-text-wrapper"><strong style="color:#FFD700;">${getLang(item.nameKey)}</strong><br><span style="color:#ccc; font-size:16px;">${getLang(item.descKey)}</span></div></div>`;
         }
     });
     gc.innerHTML = html;

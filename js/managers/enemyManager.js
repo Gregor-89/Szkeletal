@@ -1,5 +1,5 @@
 // ==============
-// ENEMYMANAGER.JS (v1.12b - Zoom-Aware Spawning Margin Fix)
+// ENEMYMANAGER.JS (v0.110 - Responsive Spawning Fix)
 // Lokalizacja: /js/managers/enemyManager.js
 // ==============
 
@@ -155,23 +155,26 @@ export function spawnEnemy(enemies, game, canvas, enemyIdCounter, camera) {
         }
     }
 
-    // POPRAWKA MARGINESU SPAWNOWANIA (v1.12b)
+    // ZMIANA v0.110: Spawnowanie wrogów teraz dynamicznie uwzględnia rozmiar widoku.
+    // Pobieramy aktualne wymiary widoku z kamery (zsynchronizowane z canvasem).
     const zoom = game.zoomLevel || 1.0;
-    const vWidth = canvas.width / zoom;
-    const vHeight = canvas.height / zoom;
+    const vWidth = camera.viewWidth / zoom;
+    const vHeight = camera.viewHeight / zoom;
     
-    // Zwiększono margines bazowy z 150 na 500, aby przy zoomie 60% moby nie pojawiały się na ekranie
-    const margin = 500 / zoom; 
+    // Zwiększono margines bazowy do 600, aby przy bardzo szerokich ekranach (TV) moby nie pojawiały się na krawędzi.
+    const margin = 600 / zoom; 
 
     let x, y;
-    const viewLeft = camera.offsetX - (vWidth - canvas.width) / 2;
+    // Granice aktualnie widocznego obszaru świata
+    const viewLeft = camera.offsetX;
     const viewRight = viewLeft + vWidth;
-    const viewTop = camera.offsetY - (vHeight - canvas.height) / 2;
+    const viewTop = camera.offsetY;
     const viewBottom = viewTop + vHeight;
     const worldWidth = camera.worldWidth;
     const worldHeight = camera.worldHeight;
 
     const edge = Math.random();
+    // Losujemy pozycję poza krawędziami widoku, ale w granicach świata.
     if (edge < 0.25) { x = viewLeft + Math.random() * vWidth; y = viewTop - margin; }
     else if (edge < 0.5) { x = viewLeft + Math.random() * vWidth; y = viewBottom + margin; }
     else if (edge < 0.75) { x = viewLeft - margin; y = viewTop + Math.random() * vHeight; }
@@ -222,17 +225,16 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
         bossType = availableBosses[Math.floor(Math.random() * availableBosses.length)];
     }
 
+    // ZMIANA v0.110: Analogiczne poprawki dla Bossów - margines zwiększony dla wsparcia szerokich ekranów.
     const zoom = game.zoomLevel || 1.0;
-    const vWidth = canvas.width / zoom;
-    const vHeight = canvas.height / zoom;
-    
-    // Zwiększono margines bossów z 200 na 600
-    const margin = 600 / zoom; 
+    const vWidth = camera.viewWidth / zoom;
+    const vHeight = camera.viewHeight / zoom;
+    const margin = 700 / zoom; 
 
     let x, y;
-    const viewLeft = camera.offsetX - (vWidth - canvas.width) / 2;
+    const viewLeft = camera.offsetX;
     const viewRight = viewLeft + vWidth;
-    const viewTop = camera.offsetY - (vHeight - canvas.height) / 2;
+    const viewTop = camera.offsetY;
     const viewBottom = viewTop + vHeight;
     const worldWidth = camera.worldWidth;
     const worldHeight = camera.worldHeight;

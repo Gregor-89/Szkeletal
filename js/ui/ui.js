@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.17c - Toggle-based Tutorial Launch)
+// UI.JS (v1.17d - Resume Header i18n)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -126,6 +126,7 @@ export async function startRun(game, resetAllFn, uiData) {
     game.running = true;
     
     const currentTime = performance.now();
+    // ZMIANA v0.110f: Startujemy czas od offsetu dev (zwykle 0)
     game.time = startOffset; 
     uiData.startTime = currentTime - startOffset * 1000;
     uiData.lastTime = currentTime;
@@ -142,18 +143,15 @@ export async function startRun(game, resetAllFn, uiData) {
         LeaderboardService.trackStat('games_played', 1);
     }
 
-    // POPRAWKA v1.17c: Logika oparta na przełączniku "chkTutorial"
     const tutorialCheckbox = document.getElementById('chkTutorial');
     const tutorialSeenOnce = localStorage.getItem('szkeletal_tutorial_seen');
     
-    // Pokaż jeśli: wymuszono w opcjach LUB nigdy nie widzieliśmy i nie jest odznaczony w sesji
     if ((tutorialCheckbox && tutorialCheckbox.checked) || !tutorialSeenOnce) {
         const overlay = document.getElementById('tutorialOverlay');
         if (overlay) {
             overlay.style.display = 'flex';
             Menus.updateStaticTranslations();
             game.paused = true; 
-            // Po pierwszym automatycznym pokazaniu oznaczamy jako widziany
             localStorage.setItem('szkeletal_tutorial_seen', 'true');
         }
     } else {
@@ -334,6 +332,10 @@ export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
     let t = timerDuration;
     if(resumeOverlay) resumeOverlay.style.display = 'flex';
     
+    // ZMIANA v0.110f: Gwarantowana lokalizacja tytułu "Przygotuj się"
+    const readyTitle = document.getElementById('resumeOverlayTitle');
+    if(readyTitle) readyTitle.textContent = getLang('ui_ready_title') || "PRZYGOTUJ SIĘ";
+
     const id = setInterval(() => {
         t = Math.max(0, t - 0.05);
         if(resumeText) resumeText.textContent = `${getLang('ui_resume_text')} ${t.toFixed(2)} s`;

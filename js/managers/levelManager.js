@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v1.15 - Full Restore & Stats Fix)
+// LEVELMANAGER.JS (v1.15b - Multi-language Stats Fix)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -119,21 +119,21 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
         { icon: iconSpeed, label: getLang('perk_speed_name'), value: player.speedMultiplier.toFixed(2) + 'x' }, 
         { icon: iconPickup, label: getLang('perk_pickup_name'), value: pickupVal },
         
-        { icon: iconWhip, label: `${getLang('perk_whip_name')} (Lvl)`, value: `${whip ? whip.level : '1'} / ${PERK_CONFIG.whip?.max || 5}` },
+        { icon: iconWhip, label: `${getLang('perk_whip_name')} (${getLang('ui_level_short')})`, value: `${whip ? whip.level : '1'} / ${PERK_CONFIG.whip?.max || 5}` },
         { icon: iconWhip, label: `${getLang('perk_whip_name')} (Dmg)`, value: `${whip ? (whip.damage || 0).toFixed(1) : '1'}` },
         
         { icon: iconOrbital, label: getLang('perk_orbital_name'), value: `${orbital ? orbital.level : '0'} / ${PERK_CONFIG.orbital?.max || 5}` },
         { icon: iconNova, label: getLang('perk_nova_name'), value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova?.max || 5}` },
         
-        ...(chainLightning ? [{ icon: iconLightning, label: `${getLang('perk_chainLightning_name')} (Lvl)`, value: `${chainLightning.level} / ${PERK_CONFIG.chainLightning?.max || 6}` }] : []),
+        ...(chainLightning ? [{ icon: iconLightning, label: `${getLang('perk_chainLightning_name')} (${getLang('ui_level_short')})`, value: `${chainLightning.level} / ${PERK_CONFIG.chainLightning?.max || 6}` }] : []),
 
         ...(autoGun ? [
-            { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: `ZAINSTALOWANY` },
+            { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: getLang('ui_installed') },
             { icon: iconDamage, label: `${getLang('perk_damage_name')}`, value: `${autoGun.bulletDamage.toFixed(0)}` },
             { icon: iconFirerate, label: `${getLang('perk_firerate_name')}`, value: `${(1000 / autoGun.fireRate).toFixed(2)}/s` },
-            // NOWOŚĆ: Dodanie brakujących statystyk
-            { icon: iconMultishot, label: `Multishot`, value: `+${autoGun.multishot}` },
-            { icon: iconPierce, label: `Przebicie`, value: `${autoGun.pierce} cel(i)` }
+            // ZMIANA v0.110f: Pełna lokalizacja statystyk dynamicznych broni
+            { icon: iconMultishot, label: getLang('ui_multishot'), value: `+${autoGun.multishot}` },
+            { icon: iconPierce, label: getLang('ui_pierce'), value: `${autoGun.pierce} ${getLang('ui_targets')}` }
         ] : [
             { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: `---` }
         ])
@@ -158,7 +158,8 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
         if (lvl > 0) {
             const row = document.createElement('div');
             row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.fontSize = '0.9rem'; row.style.color = perk.color || '#fff';
-            row.innerHTML = `<span>${perk.emoji || ''} ${getLang(perk.name)}</span> <span>POZ. ${lvl}</span>`;
+            // ZMIANA v0.110f: Lokalizacja etykiety POZ.
+            row.innerHTML = `<span>${perk.emoji || ''} ${getLang(perk.name)}</span> <span>${getLang('ui_level_short')} ${lvl}</span>`;
             perkList.appendChild(row);
         }
     });
@@ -270,10 +271,11 @@ export function openChest(game, perkLevels, uiData, player) {
         const dynamicDesc = getDynamicDesc(reward, currentLevel);
         let iconHTML = reward.icon ? `<img src="${getAsset(reward.icon).src}" class="chest-reward-img">` : `<div class="chest-reward-icon">${reward.emoji || '🎁'}</div>`;
 
+        // ZMIANA v0.110f: Lokalizacja słowa Poziom w widoku skrzyni
         chestRewardDisplay.innerHTML = `
         ${iconHTML}<div class="chest-reward-name">${getLang(reward.name)}</div>
         <div class="chest-reward-desc">${dynamicDesc}</div>
-        <div class="chest-reward-level">Poziom: ${currentLevel} » ${currentLevel + 1}</div>
+        <div class="chest-reward-level">${getLang('ui_hud_level')}: ${currentLevel} » ${currentLevel + 1}</div>
         <div class="chest-reward-level-bar"><div class="chest-reward-level-fill" style="width:${progress}%;"></div></div>`;
     } else {
         chestRewardDisplay.innerHTML = `<div class="chest-reward-icon">😔</div><div class="chest-reward-name">${getLang('ui_chest_empty_title')}</div><div class="chest-reward-desc">${getLang('ui_chest_empty_desc')}</div>`;

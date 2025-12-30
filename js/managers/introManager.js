@@ -1,5 +1,5 @@
 // ==============
-// INTROMANAGER.JS (v1.01 - Intro Music)
+// INTROMANAGER.JS (v1.01b - Intro Controls Localization)
 // Lokalizacja: /js/managers/introManager.js
 // ==============
 
@@ -42,14 +42,21 @@ function loadSlide(index) {
     
     if (btnIntroPrev) {
         btnIntroPrev.style.display = (index === 0) ? 'none' : 'inline-block';
+        // ZMIANA v0.110f: Lokalizacja przycisku Wstecz
+        btnIntroPrev.textContent = getLang('ui_intro_prev') || "WSTECZ";
     }
     
     if (btnIntroNext) {
         if (index === INTRO_SLIDES.length - 1) {
-            btnIntroNext.textContent = getLang('ui_intro_finish');
+            btnIntroNext.textContent = getLang('ui_intro_finish') || "MENU";
         } else {
-            btnIntroNext.textContent = getLang('ui_intro_next');
+            btnIntroNext.textContent = getLang('ui_intro_next') || "DALEJ";
         }
+    }
+    
+    // ZMIANA v0.110f: Lokalizacja przycisku Pomiń
+    if (btnIntroSkip) {
+        btnIntroSkip.textContent = getLang('ui_intro_skip') || "POMIŃ";
     }
     
     if (index > 0) playSound('Click');
@@ -68,10 +75,6 @@ function prevSlide() {
 function finishIntro() {
     markIntroAsSeen();
     introOverlay.style.display = 'none';
-    
-    // ZMIANA: Powrót do muzyki menu po zakończeniu intro (niezależnie czy skip czy koniec)
-    // Uwaga: showMenu też odpala MusicMenu, ale tu jest bezpieczniej.
-    // Jeśli jednak 'showMenu' zostanie wywołane, to ono przejmie kontrolę.
     
     if (window.wrappedShowMenu) {
         window.wrappedShowMenu(false);
@@ -120,7 +123,6 @@ export function displayIntro() {
     gameStateRef.game.paused = true;
     introOverlay.style.display = 'flex';
     
-    // ZMIANA: Uruchom muzykę intro
     playSound('MusicIntro');
     
     currentSlideIndex = 0;

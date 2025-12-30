@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v1.05d - Intro Music & Splash Fix)
+// MAIN.JS (v1.05g - Pause Timer & Responsive Fix)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -18,13 +18,13 @@ import { updateVisualEffects, updateParticles } from './managers/effects.js';
 import { initInput } from './ui/input.js';
 import { devSettings, initDevTools } from './services/dev.js';
 import { updateGame } from './core/gameLogic.js';
-import { initAudio, loadAudio, playSound, AUDIO_ASSET_LIST } from './services/audio.js'; // ZMIANA: Dodano AUDIO_ASSET_LIST
+import { initAudio, loadAudio, playSound, AUDIO_ASSET_LIST } from './services/audio.js'; 
 import { PlayerBullet, EnemyBullet } from './entities/bullet.js';
 import { Gem } from './entities/gem.js';
 import { Particle } from './entities/particle.js';
 import { HitText } from './entities/hitText.js';
 import { Hazard } from './entities/hazard.js'; 
-import { loadAssets, assetDefinitions } from './services/assets.js'; // ZMIANA: Dodano assetDefinitions
+import { loadAssets, assetDefinitions } from './services/assets.js'; 
 import { VERSION } from './config/version.js';
 import { displayScores } from './services/scoreManager.js';
 import { getLang } from './services/i18n.js';
@@ -39,6 +39,12 @@ class Camera {
         this.viewHeight = viewHeight;
         this.offsetX = 0;
         this.offsetY = 0;
+    }
+
+    // ZMIANA v0.110b: Aktualizacja wymiarów widoku kamery
+    updateViewDimensions(viewWidth, viewHeight) {
+        this.viewWidth = viewWidth;
+        this.viewHeight = viewHeight;
     }
 }
 
@@ -183,11 +189,32 @@ function updateGameTitle() {
     if (menuVer) menuVer.textContent = `v${VERSION}`;
 }
 
+// ZMIANA v0.110b: Ulepszona obsługa zmiany rozmiaru okna
+function handleResize() {
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const availableWidth = rect.width;
+    const availableHeight = rect.height;
+    if (availableWidth === 0 || availableHeight === 0) return;
+    canvas.width = availableWidth;
+    canvas.height = availableHeight;
+    if (camera) {
+        camera.updateViewDimensions(canvas.width, canvas.height);
+    }
+    if (stars.length > 0) initStars();
+}
+
 function initializeCanvas() {
     if (canvas !== null) return; 
 
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
+
+    // ZMIANA v0.110b: Dynamiczna inicjalizacja wymiarów
+    handleResize();
+    window.addEventListener('resize', () => {
+        requestAnimationFrame(handleResize);
+    });
 
     const worldSize = WORLD_CONFIG.SIZE;
     const worldWidth = canvas.width * worldSize;
@@ -242,7 +269,8 @@ const uiData = {
     currentChestReward: null,
     pickupShowLabels: true,
     pickupStyleEmoji: false,
-    showFPS: true,
+    // ZMIANA v0.110d: FPS domyślnie wyłączony
+    showFPS: false,
     fpsPosition: 'right',
     gameData: { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG },
     obstacles: obstacles 
@@ -354,7 +382,8 @@ function loop(currentTime){
                 return; 
             }
 
-            game.time = (currentTime - uiData.startTime) / 1000;
+            // ZMIANA v0.110f: Czas gry teraz narasta krokowo o dt, co zapobiega jego doliczaniu podczas pauzy
+            game.time += dt; 
             update(dt); 
             uiData.drawCallback();
             updateUI(game, player, settings, null);
@@ -455,7 +484,6 @@ function launchApp() {
     initAudio();
     LeaderboardService.trackUniquePlayer();
 
-    // POPRAWKA: Dynamiczne obliczanie łącznej liczby zasobów (110 obrazów + 21 dźwięków = 131)
     const totalAssets = Object.keys(assetDefinitions).length + AUDIO_ASSET_LIST.length;
     let loadedCount = 0;
 

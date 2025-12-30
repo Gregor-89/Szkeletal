@@ -1,5 +1,5 @@
 // ==============
-// LEADERBOARDUI.JS (v1.09 - Added Playtime Row)
+// LEADERBOARDUI.JS (v1.10 - Fixed Sorting & Dynamic i18n)
 // Lokalizacja: /js/ui/leaderboardUI.js
 // ==============
 
@@ -79,9 +79,12 @@ function setupTableSorting(tableId, callback) {
     if (!table) return;
     const headers = table.querySelectorAll('th[data-sort]');
     headers.forEach(th => {
-        th.onclick = () => {
-            let col = th.dataset.sort;
-            if (col === 'rank' || th.innerText.includes('#')) col = 'tempRank';
+        // ZMIANA v0.110f: Usunięcie starych listenerów (klonowanie węzła) przed dodaniem nowych
+        const newTh = th.cloneNode(true);
+        th.parentNode.replaceChild(newTh, th);
+        newTh.onclick = () => {
+            let col = newTh.dataset.sort;
+            if (col === 'rank' || newTh.innerText.includes('#')) col = 'tempRank';
             callback(col);
             playSound('Click');
         };
@@ -109,13 +112,6 @@ export function initLeaderboardUI() {
     const filterBtns = document.querySelectorAll('.filter-btn');
     const tableHeader = document.querySelector('#retroScoreTable thead tr');
 
-    setupTableSorting('retroScoreTable', (col) => {
-        if (currentLeaderboardMode === 'stats') return; 
-        if (col === currentSortColumn) currentSortDir = currentSortDir === 'desc' ? 'asc' : 'desc';
-        else { currentSortColumn = col; currentSortDir = 'desc'; if (col === 'tempRank') currentSortDir = 'asc'; }
-        updateView();
-    });
-
     const updateView = async () => {
         const tableBody = document.getElementById('scoresBodyMenu');
         const emptyMsg = document.getElementById('scoresEmptyMsg');
@@ -135,13 +131,10 @@ export function initLeaderboardUI() {
             `;
             
             if(loadingMsg) loadingMsg.style.display = 'block';
-            
             const globalStats = await LeaderboardService.getGlobalStats();
             const localStats = LeaderboardService.getLocalStats();
-            
             if(loadingMsg) loadingMsg.style.display = 'none';
             
-            // ZMIANA: Dodano total_playtime_seconds do listy
             let statRows = [
                 { key: 'games_played', label: getLang('stat_games_played') },
                 { key: 'unique_players', label: getLang('stat_unique_players') },
@@ -183,14 +176,16 @@ export function initLeaderboardUI() {
         
         if(tableHeader) {
              tableHeader.innerHTML = `
-                <th>#</th>
-                <th data-sort="name">NICK</th>
-                <th data-sort="score">PKT</th>
-                <th data-sort="kills">ZAB</th>
-                <th data-sort="level">LVL</th>
-                <th data-sort="time">CZAS</th>
-                <th data-sort="date">DATA</th>
+                <th data-sort="tempRank">${getLang('ui_scores_col_rank') || '#'}</th>
+                <th data-sort="name">${getLang('ui_scores_col_nick') || 'NICK'}</th>
+                <th data-sort="score">${getLang('ui_scores_col_score') || 'PKT'}</th>
+                <th data-sort="kills">${getLang('ui_scores_col_kills') || 'ZAB'}</th>
+                <th data-sort="level">${getLang('ui_scores_col_level') || 'LVL'}</th>
+                <th data-sort="time">${getLang('ui_scores_col_time') || 'CZAS'}</th>
+                <th data-sort="date">${getLang('ui_scores_col_date') || 'DATA'}</th>
              `;
+             // Ponowne podpięcie sortowania po zmianie HTML nagłówka
+             setupTableSorting('retroScoreTable', onSortClick);
         }
 
         let rawData = [];
@@ -213,6 +208,13 @@ export function initLeaderboardUI() {
         const sortedScores = sortData([...rawData], currentSortColumn, currentSortDir);
         displayScores('scoresBodyMenu', null, sortedScores); 
         if (tableBody && tableBody.children.length === 0 && emptyMsg) emptyMsg.style.display = 'block';
+    };
+
+    const onSortClick = (col) => {
+        if (currentLeaderboardMode === 'stats') return; 
+        if (col === currentSortColumn) currentSortDir = currentSortDir === 'desc' ? 'asc' : 'desc';
+        else { currentSortColumn = col; currentSortDir = 'desc'; if (col === 'tempRank') currentSortDir = 'asc'; }
+        updateView();
     };
 
     window.wrappedResetLeaderboard = () => {
@@ -348,17 +350,32 @@ export function initGameOverTabs() {
     const clearBtn = document.getElementById('btnClearScoresGO');
     const filterBtns = document.querySelectorAll('#goOnlineFilters .filter-btn');
 
-    setupTableSorting('goScoreTable', (col) => {
-        if (col === currentGOSortColumn) currentGOSortDir = currentGOSortDir === 'desc' ? 'asc' : 'desc';
+    const onGOSortClick = (col) => {
+        if (col === currentGOSortColumn) currentGOSortDir = currentGOSortDir === 'asc' ? 'desc' : 'asc';
         else { currentGOSortColumn = col; currentGOSortDir = 'desc'; if (col === 'tempRank') currentGOSortDir = 'asc'; }
         updateGOView();
-    });
+    };
 
     const updateGOView = async () => {
         const tableBody = document.getElementById('scoresBodyGameOver');
+        const tableHeader = document.querySelector('#goScoreTable thead tr');
+        
         if(tableBody) tableBody.innerHTML = '';
-        let rawData = [];
+        
+        if(tableHeader) {
+            tableHeader.innerHTML = `
+                <th data-sort="tempRank">${getLang('ui_scores_col_rank') || '#'}</th>
+                <th data-sort="name">${getLang('ui_scores_col_nick') || 'NICK'}</th>
+                <th data-sort="score">${getLang('ui_scores_col_score') || 'PKT'}</th>
+                <th data-sort="kills">${getLang('ui_scores_col_kills') || 'ZAB'}</th>
+                <th data-sort="level">${getLang('ui_scores_col_level') || 'LVL'}</th>
+                <th data-sort="time">${getLang('ui_scores_col_time') || 'CZAS'}</th>
+                <th data-sort="date">${getLang('ui_scores_col_date') || 'DATA'}</th>
+            `;
+            setupTableSorting('goScoreTable', onGOSortClick);
+        }
 
+        let rawData = [];
         if (goMode === 'local') {
             if(filtersDiv) filtersDiv.style.display = 'none';
             if(clearBtn) clearBtn.style.display = 'inline-block';

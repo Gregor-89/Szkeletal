@@ -1,5 +1,5 @@
 // ==============
-// ENGLISH.JS (v1.13 - Shop Fixes)
+// ENGLISH.JS (v1.14d - Points Currency Localization)
 // Lokalizacja: /js/lang/english.js
 // ==============
 
@@ -135,7 +135,8 @@ export const LANG_EN = {
 
   ui_shop_title: "POTATO SHOP",
   ui_shop_wallet: "AVAILABLE POINTS:",
-  ui_shop_info: "<strong>HOW IT WORKS?</strong><br>Your budget is your highest score (High Score) from all sessions. Points do not accumulate – to have more, you must beat your record! Purchased upgrades give an <strong>immediate starting bonus</strong>, allowing you to progress faster and reach higher verticality levels. <br><strong>NOTE:</strong> Each subsequent purchase costs ~50% more, so spend wisely!",
+  ui_shop_info_title: "HOW IT WORKS?",
+  ui_shop_info: "Your budget is your highest score (High Score) from all sessions. Points do not accumulate – to have more, you must beat your record! Purchased upgrades give an <strong>immediate starting bonus</strong>, allowing you to progress faster and reach higher verticality levels. <br><br><strong>NOTE:</strong> Each subsequent purchase costs ~50% more, so spend wisely!",
   ui_shop_owned: "[OWNED]",
   ui_shop_maxed: "LIMIT REACHED",
   ui_shop_active_start: "ACTIVE AT START",
@@ -147,25 +148,25 @@ export const LANG_EN = {
   ui_config_title_game: "Gameplay Settings",
   ui_config_nick: "YOUR NICKNAME",
   ui_config_skin: "CHARACTER SKIN",
-  ui_config_tutorial: "TUTORIAL",
+  ui_config_tutorial: "SHOW TUTORIAL",
   ui_config_tutorial_btn: "PLAY",
   
-  ui_config_joystick: "Joystick Position:",
-  ui_config_joy_left: "Left",
-  ui_config_joy_right: "Right",
-  ui_config_joy_off: "Disabled",
-  ui_config_hyper: "⚡ Hyper Mode (+20% pace)",
-  ui_config_shake: "📳 Screen Shake",
+  ui_config_joystick: "JOYSTICK",
+  ui_config_joy_left: "LEFT",
+  ui_config_joy_right: "RIGHT",
+  ui_config_joy_off: "OFF",
+  ui_config_hyper: "HYPER MODE",
+  ui_config_shake: "SCREEN SHAKE",
   ui_config_title_visual: "Visuals",
-  ui_config_fps: "📊 Show FPS",
+  ui_config_fps: "SHOW FPS",
   ui_config_fps_pos: "FPS Position:",
   ui_config_fps_pos_left: "Left",
   ui_config_fps_pos_right: "Right",
-  ui_config_labels: "🏷️ Pickup Labels",
+  ui_config_labels: "LABELS",
   ui_config_style: "Style:",
   ui_config_style_circle: "🔵 Circles",
   ui_config_style_emoji: "😀 Emoji",
-  ui_config_title_lang: "Language",
+  ui_config_title_lang: "LANGUAGE",
   
   ui_guide_title: "Count's Guide",
   ui_guide_intro: "Be the Count. Eat potatoes. Whip enemies.",
@@ -209,7 +210,7 @@ export const LANG_EN = {
   ui_gameover_sent: "SENT!",
   ui_gameover_error: "NETWORK ERROR",
   
-  ui_scores_title: "REGISTRY OF LOSERS",
+  ui_scores_title: "CHRONICLES OF FALLEN",
   ui_scores_clear: "🗑️ CLEAR",
   ui_scores_clear_local: "CLEAR LOCAL", 
   ui_scores_col_rank: "#",
@@ -221,7 +222,7 @@ export const LANG_EN = {
   ui_scores_col_date: "DATE",
   
   ui_confirm_title: "CONFIRM",
-  ui_confirm_clear_scores: "Are you sure you want to clear scores?",
+  ui_confirm_clear_scores: "Confirm clearing scores?",
   ui_confirm_yes: "YES",
   ui_confirm_no: "NO",
   
@@ -263,7 +264,7 @@ export const LANG_EN = {
   enemy_elite_desc: "Elite Hater with huge Satiety. Uses special every 7s: charge, projectiles, or summon help. Drops LudoBox.",
   enemy_wall_name: "Siege Syndrome",
   enemy_wall_desc: "Spawns in a perfect ring. Very slow and tough. Detonates after ~34-40s, destroying everything nearby.",
-  enemy_lumberjack_name: "Lumberjack F**kup",
+  enemy_lumberjack_name: "Lumberjack Zjebadlo",
   enemy_lumberjack_desc: "Guardian of forest cringe. Throws spinning rainbow axes and leaves toxic 'Rainbow Trail'. Watch out, or get cancelled!",
   enemy_snakeEater_name: "SnakeEater",
   enemy_snakeEater_desc: "Mobile Shrine. Does not attack. Follows the Count. Heals you once a minute if you touch him.",
@@ -300,7 +301,7 @@ export const LANG_EN = {
   
   ui_stat_level: "Level",
   ui_stat_health: "Health",
-  ui_stat_speed: "Vitesse",
+  ui_stat_speed: "Spd",
   ui_stat_enemies: "Kill",
   ui_stat_time: "Time",
   
@@ -321,7 +322,7 @@ export const LANG_EN = {
   quote_gameover_3: "Relax. Kiszczak sucks at other games too...",
   quote_gameover_4: "You gave 20%, still more than Arkadidick writing a review...",
   quote_gameover_5: "With gameplay like this, you don't earn delicious potatoes...",
-  quote_gameover_6: "Lumberjack F**kup bangs old grannies better than you slash in this game...",
+  quote_gameover_6: "Lumberjack Zjebadlo bangs old grannies better than you slash in this game...",
   quote_gameover_7: "What are you, SnakeEater, can't handle it?",
   quote_gameover_8: "Are you beating the bum, or is the bum beating you?",
   quote_gameover_9: "Just don't run away to Romania out of shame...",
@@ -353,6 +354,14 @@ export const LANG_EN = {
   stat_killed_ranged: "Bums Killed",
   stat_killed_elite: "Elden Haters Killed",
   stat_killed_wall: "Siege Syndromes Destroyed",
-  stat_killed_lumberjack: "Lumberjack F**kups Killed",
-  stat_killed_snakeEater: "SnakeEaters Killed"
+  stat_killed_lumberjack: "Lumberjack Zjebadlos Killed",
+  stat_killed_snakeEater: "SnakeEaters Killed",
+
+  ui_installed: "INSTALLED",
+  ui_multishot: "Multishot",
+  ui_pierce: "Pierce",
+  ui_targets: "target(s)",
+  ui_level_short: "LVL",
+  // ZMIANA v0.110f: Dodano klucz dla waluty punktowej
+  ui_shop_currency: "PTS"
 };

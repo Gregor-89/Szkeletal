@@ -1,5 +1,5 @@
 // ==============
-// LEADERBOARD.JS (v1.17 - Fix JSON & Date Filtering)
+// LEADERBOARD.JS (v0.110e - Robust Pagination & Multi-Page Fetch)
 // Lokalizacja: /js/services/leaderboard.js
 // ==============
 
@@ -39,7 +39,7 @@ let cachedAliasId = null;
 let cachedPlayerId = null;
 let cachedSessionToken = null;
 
-// --- FUNKCJA NAPRAWCZA JSON (Klucz do naprawy błędów konsoli) ---
+// --- FUNKCJA NAPRAWCZA JSON ---
 function safeJsonParse(str, fallback) {
     if (!str) return fallback;
     try {
@@ -301,48 +301,78 @@ export const LeaderboardService = {
     const now = Date.now();
     let entries = [];
     
-    // Uproszczone: ZAWSZE pobieramy 200 ostatnich wyników bez filtrowania daty w API.
-    // Dzięki temu filtrowanie po stronie klienta (poniżej) zadziała poprawnie na pełnym zestawie.
     if (cache.data && (now - cache.lastFetch < cache.CACHE_DURATION)) {
         entries = cache.data;
     } else {
-      let url = `${API_URL}/leaderboards/${LEADERBOARD_NAME}/entries?page=0&limit=200&withDeleted=false`;
-      
-      try {
-        const response = await fetch(url, { headers: { 'Authorization': `Bearer ${getApiKey()}`, 'Content-Type': 'application/json' } });
-        const data = await response.json();
-        if (data.entries && Array.isArray(data.entries)) {
-            entries = data.entries.map(e => {
-                let propsMap = {};
-                if (Array.isArray(e.props)) e.props.forEach(p => { propsMap[p.key] = p.value; });
-                else if (typeof e.props === 'object') propsMap = e.props; 
-                
-                let dateStr = e.created_at || e.createdAt || e.updatedAt;
-                let entryDate = dateStr ? new Date(dateStr) : null;
+      // ZMIANA v0.110e: Pętla pobierania wszystkich stron wyników (Talo ma limit 50 na stronę)
+      let page = 0;
+      const limitPerPage = 50; 
+      let hasMore = true;
+      let allFetchedEntries = [];
 
-                return {
-                    name: propsMap.nickname || "Anonim",
-                    score: parseFloat(e.score),
-                    time: parseInt(propsMap.time) || 0,
-                    level: parseInt(propsMap.level) || 1,
-                    kills: parseInt(propsMap.kills) || 0,
-                    date: entryDate
-                };
-            }).filter(e => e.date !== null);
+      try {
+        while (hasMore && page < 20) { // Limit bezpieczeństwa: 1000 rekordów (20 stron po 50)
+          let url = `${API_URL}/leaderboards/${LEADERBOARD_NAME}/entries?page=${page}&limit=${limitPerPage}&withDeleted=false`;
+          
+          const response = await fetch(url, { 
+              headers: { 
+                  'Authorization': `Bearer ${getApiKey()}`, 
+                  'Content-Type': 'application/json' 
+              } 
+          });
+          
+          const data = await response.json();
+          
+          if (data.entries && Array.isArray(data.entries) && data.entries.length > 0) {
+              const mapped = data.entries.map(e => {
+                  let propsMap = {};
+                  if (Array.isArray(e.props)) e.props.forEach(p => { propsMap[p.key] = p.value; });
+                  else if (typeof e.props === 'object') propsMap = e.props; 
+                  
+                  let dateStr = e.created_at || e.createdAt || e.updatedAt;
+                  let entryDate = dateStr ? new Date(dateStr) : null;
+
+                  return {
+                      name: propsMap.nickname || "Anonim",
+                      score: parseFloat(e.score),
+                      time: parseInt(propsMap.time) || 0,
+                      level: parseInt(propsMap.level) || 1,
+                      kills: parseInt(propsMap.kills) || 0,
+                      date: entryDate
+                  };
+              }).filter(e => e.date !== null);
+
+              allFetchedEntries = allFetchedEntries.concat(mapped);
+              
+              // Jeśli Talo zwróciło mniej rekordów niż limit strony, oznacza to koniec danych
+              if (data.entries.length < limitPerPage) {
+                  hasMore = false;
+              } else {
+                  page++;
+              }
+          } else {
+              hasMore = false;
+          }
         }
+        
+        entries = allFetchedEntries;
         cache.data = entries;
         cache.lastFetch = now;
-      } catch (e) { entries = []; }
+        
+        console.log(`[Leaderboard] Pobrano łącznie ${entries.length} wyników (Strony: ${page + 1}).`);
+        
+      } catch (e) { 
+          console.error("[Leaderboard] Błąd pobierania wielu stron:", e);
+          entries = []; 
+      }
     }
     
-    // FILTROWANIE CLIENT-SIDE (Teraz działa na wszystkich pobranych danych)
+    // FILTROWANIE CLIENT-SIDE (Działa na pełnym pobranym zestawie danych)
     let filteredEntries = [...entries];
     if (period !== 'all') {
         const dateNow = new Date();
         const startOfDay = new Date(dateNow.setHours(0,0,0,0));
-        // Tydzień to 7 dni wstecz
         const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        // Miesiąc to 30 dni wstecz
         const oneMonthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         
         filteredEntries = entries.filter(e => {
@@ -369,6 +399,7 @@ export const LeaderboardService = {
     }
     
     displayEntries.sort((a, b) => b.score - a.score);
-    return displayEntries.slice(0, 100);
+    // Zwracamy Top 200 do tabeli interfejsu
+    return displayEntries.slice(0, 200);
   }
 };
