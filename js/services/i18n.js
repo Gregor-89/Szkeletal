@@ -1,5 +1,5 @@
 // ==============
-// I18N.JS (v0.99f - Hot-Swap Full)
+// I18N.JS (v0.99g - Language Auto-Detect)
 // Lokalizacja: /js/services/i18n.js
 // ==============
 
@@ -7,35 +7,45 @@ import { LANG_PL } from '../lang/polish.js';
 import { LANG_EN } from '../lang/english.js';
 import { LANG_RO } from '../lang/romanian.js';
 
-// Mapa języków (klucze 'pl', 'en', 'ro')
 const LANGUAGES = {
   'pl': LANG_PL,
   'en': LANG_EN,
   'ro': LANG_RO
 };
 
-const DEFAULT_LANG_CODE = 'pl';
-let currentLangCode = localStorage.getItem('szkeletal_lang') || DEFAULT_LANG_CODE;
+const DEFAULT_LANG_CODE = 'en'; // Domyślny dla reszty świata
+
+// Funkcja autodetekcji języka systemowego
+function detectSystemLanguage() {
+  const sysLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+  if (sysLang.startsWith('pl')) return 'pl';
+  if (sysLang.startsWith('ro')) return 'ro';
+  return DEFAULT_LANG_CODE;
+}
+
+// Inicjalizacja: najpierw localStorage, potem system, na końcu fallback
+let currentLangCode = localStorage.getItem('szkeletal_lang');
+if (!currentLangCode) {
+  currentLangCode = detectSystemLanguage();
+  localStorage.setItem('szkeletal_lang', currentLangCode);
+  console.log(`[i18n] Autodetekcja języka: ${currentLangCode}`);
+}
 
 if (!LANGUAGES[currentLangCode]) {
-  currentLangCode = DEFAULT_LANG_CODE;
+  currentLangCode = 'pl'; // Ostateczny bezpiecznik projektu
 }
 
 export function getLang(key) {
   const langObj = LANGUAGES[currentLangCode];
-  // 1. Sprawdź w wybranym języku
   let text = langObj[key];
   
-  // 2. Fallback do PL (jeśli brak w wybranym, np. w RO)
   if (!text && currentLangCode !== 'pl') {
     text = LANGUAGES['pl'][key];
   }
   
-  // 3. Ostateczny fallback
   return text || `[${key}]`;
 }
 
-// Zmienia język "w locie" bez przeładowania (wywoływane przez ui.js)
 export function setLanguage(langCode) {
   if (LANGUAGES[langCode]) {
     currentLangCode = langCode;
@@ -50,12 +60,10 @@ export function getCurrentLangCode() {
   return currentLangCode;
 }
 
-// Kompatybilność wsteczna (jeśli coś starego tego używa)
 export function getCurrentLanguage() {
   return currentLangCode;
 }
 
-// Zwraca listę dla generatora w Opcjach
 export function getAvailableLanguages() {
   return [
     { code: 'pl', name: 'Polski' },

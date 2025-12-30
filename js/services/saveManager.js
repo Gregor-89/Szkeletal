@@ -1,5 +1,5 @@
 // ==============
-// SAVEMANAGER.JS (v1.09b - Zoom Load Fix)
+// SAVEMANAGER.JS (v1.09c - Empty Save Safe Exit)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
@@ -155,8 +155,9 @@ export function loadGame(savedStateInput, state, uiData) {
         savedState = getSavedGameFromStorage();
     }
 
+    // POPRAWKA v1.09c: Zmiana na console.warn i cichy powrót, aby uniknąć błędów Talo Loggera
     if (!savedState) {
-        console.error("[SaveManager] Nie odnaleziono poprawnego zapisu.");
+        console.warn("[SaveManager] Brak zapisu do wczytania.");
         return;
     }
 
@@ -181,8 +182,7 @@ export function loadGame(savedStateInput, state, uiData) {
     Object.assign(game, savedState.game);
     Object.assign(settings, savedState.settings);
     
-    // POPRAWKA v1.09b: Synchronizacja Zooma po załadowaniu danych gry
-    // Zapewnia to, że suwak z opcji zawsze ma pierwszeństwo przed starym zapisem
+    // Synchronizacja Zooma po załadowaniu danych gry
     const savedZoom = localStorage.getItem('szkeletal_zoom');
     if (savedZoom) {
         game.zoomLevel = parseInt(savedZoom) / 100;

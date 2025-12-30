@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.16 - Full Restore & Async Deterministic Flow)
+// UI.JS (v1.17c - Toggle-based Tutorial Launch)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -22,9 +22,9 @@ import * as Hud from './hud.js';
 import * as Menus from './menus.js';
 import * as LeaderboardUI from './leaderboardUI.js';
 import { LeaderboardService } from '../services/leaderboard.js'; 
-// IMPORTY SKLEPU
 import { shopManager } from '../services/shopManager.js';
 import { perkPool } from '../config/perks.js';
+import { setJoystickSide } from './input.js';
 
 let hpBarOuterRef = null;
 
@@ -95,8 +95,8 @@ export function showMenu(game, resetAllFn, uiData, allowContinue = false) {
     attachClearScoresListeners();
 }
 
-// ZMIANA: startRun staje się async dla obsługi await w resetAll
 export async function startRun(game, resetAllFn, uiData) {
+    LeaderboardService.trackUniquePlayer();
     LeaderboardUI.setGameRef(game);
 
     if (devSettings.presetLoaded && !devSettings.justStartedFromMenu) { 
@@ -142,20 +142,25 @@ export async function startRun(game, resetAllFn, uiData) {
         LeaderboardService.trackStat('games_played', 1);
     }
 
-    const tutorialSeen = localStorage.getItem('szkeletal_tutorial_seen');
-    if (!tutorialSeen) {
+    // POPRAWKA v1.17c: Logika oparta na przełączniku "chkTutorial"
+    const tutorialCheckbox = document.getElementById('chkTutorial');
+    const tutorialSeenOnce = localStorage.getItem('szkeletal_tutorial_seen');
+    
+    // Pokaż jeśli: wymuszono w opcjach LUB nigdy nie widzieliśmy i nie jest odznaczony w sesji
+    if ((tutorialCheckbox && tutorialCheckbox.checked) || !tutorialSeenOnce) {
         const overlay = document.getElementById('tutorialOverlay');
         if (overlay) {
             overlay.style.display = 'flex';
             Menus.updateStaticTranslations();
             game.paused = true; 
+            // Po pierwszym automatycznym pokazaniu oznaczamy jako widziany
+            localStorage.setItem('szkeletal_tutorial_seen', 'true');
         }
     } else {
         game.paused = false; 
     }
 }
 
-// ZMIANA: resetAll staje się async, aby obsłużyć wczytywanie ulepszeń Sklepu
 export async function resetAll(canvas, settings, perkLevels, uiData, camera) {
     if (uiData.animationFrameId !== null) { 
         cancelAnimationFrame(uiData.animationFrameId); 
@@ -165,7 +170,14 @@ export async function resetAll(canvas, settings, perkLevels, uiData, camera) {
     uiData.startTime = 0;
     const game = uiData.game; 
 
-    // POPRAWKA v1.11j: Inicjalizacja poziomu Zooma przy każdym resecie (niezależnie od Dev Tools)
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    const joySaved = localStorage.getItem('szkeletal_joy_side');
+    if (isTouch && !joySaved) {
+        localStorage.setItem('szkeletal_joy_side', 'right');
+        setJoystickSide('right');
+        console.log("[UI] Wykryto urządzenie dotykowe. Aktywacja dżojstika.");
+    }
+
     const savedZoom = localStorage.getItem('szkeletal_zoom');
     game.zoomLevel = savedZoom ? parseInt(savedZoom) / 100 : 1.0;
     
@@ -202,13 +214,11 @@ export async function resetAll(canvas, settings, perkLevels, uiData, camera) {
         
         for (let key in perkLevels) delete perkLevels[key];
 
-        // LOGIKA SKLEPU v1.16: Deterministyczne ładowanie startowe
         if (shopManager && shopManager.boughtUpgrades) {
             const bought = shopManager.boughtUpgrades;
             const shopIds = Object.keys(bought);
             if (shopIds.length > 0) {
                 const state = { game, player: uiData.player, settings, weapons: uiData.player.weapons, perkLevels };
-                // Faza 1: Bronie (czekamy na importy klas)
                 const weaponIds = shopIds.filter(id => {
                     const p = perkPool.find(x => x.id === id);
                     return p && p.type === 'weapon';
@@ -221,7 +231,6 @@ export async function resetAll(canvas, settings, perkLevels, uiData, camera) {
                     }
                     perkLevels[id] = level;
                 }
-                // Faza 2: Statystyki (teraz na pewno znajdą broń w player.weapons)
                 const statIds = shopIds.filter(id => {
                     const p = perkPool.find(x => x.id === id);
                     return p && p.type !== 'weapon';
@@ -370,7 +379,6 @@ export function gameOver(game, uiData) {
     const playerNick = localStorage.getItem('szkeletal_player_nick') || "GRACZ";
     saveScore(currentRun, playerNick); 
     
-    // INTEGRACJA SKLEPU: Aktualizacja rekordu
     if (shopManager && !game.isCheated) {
         shopManager.updateMaxScore(Math.floor(game.score));
     }

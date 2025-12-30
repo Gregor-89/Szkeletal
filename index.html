@@ -17,7 +17,6 @@
   .retro-btn.indigo { border-color: #7986CB; color: #C5CAE9; background: #303F9F; }
   .retro-btn.indigo:hover { background: #3F51B5; box-shadow: 0 0 10px #7986CB; }
   
-  /* Naprawa koloru niebieskiego dla Sklepu - standardowy rozmiar */
   .retro-btn.blue { border-color: #42A5F5; color: #E3F2FD; background: #1565C0; }
   .retro-btn.blue:hover { background: #1976D2; box-shadow: 0 0 10px #42A5F5; }
 </style>
@@ -203,6 +202,8 @@
             <input type="checkbox" id="chkShake" checked style="display:none;">
             <input type="checkbox" id="chkFPS" checked style="display:none;">
             <input type="checkbox" id="chkPickupLabels" checked style="display:none;">
+            <input type="checkbox" id="chkTutorial" style="display:none;"> 
+
             <div class="config-row" style="flex-direction:column; align-items:flex-start;">
                 <div id="lblSkin" style="width:100%; margin-bottom: 8px; color: #eee;">WYGLĄD POSTACI:</div>
                 <div class="skin-selector" id="skinSelector"></div>
@@ -229,8 +230,8 @@
             </div>
             <div class="config-row"><span id="lblLang">JĘZYK</span><div id="lang-selector-container" class="retro-lang-row"></div></div>
             <div class="config-row">
-                <span id="lblTutorial">SAMOUCZEK</span>
-                <button id="btnShowTutorialConfig" class="retro-btn small">ODTWÓRZ</button>
+                <span id="lblTutorial">POKAZUJ SAMOUCZEK</span>
+                <button id="toggleTutorial" class="retro-toggle off">WYŁ</button>
             </div>
         </div>
         <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>

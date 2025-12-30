@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.32 - Shop UI Polishing)
+// MENUS.JS (v1.33h - Full Code Restore & Export Fix)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -44,6 +44,9 @@ export function updateStaticTranslations() {
         }
     }
     
+    const coffeeDesc = document.getElementById('coffeeDesc');
+    if (coffeeDesc) coffeeDesc.innerHTML = getLang('ui_coffee_desc');
+
     const btnScores = document.getElementById('navScores');
     if (btnScores && getCurrentLangCode() === 'pl') btnScores.innerText = "KRONIKI POLEGŁYCH";
     
@@ -115,7 +118,6 @@ export function generateShop() {
         const el = document.createElement('div');
         el.className = 'perk perk-graphic';
         
-        // ZMIANA: Wizualne przygaszanie ulepszeń na maksie
         if (isMaxed) {
             el.style.borderColor = 'var(--accent-green)';
             el.style.opacity = '0.6';
@@ -152,7 +154,6 @@ export function generateShop() {
         costTag.style.fontSize = '0.9rem';
         
         if (isMaxed) {
-            // TERAZ WYŚWIETLI PRZETŁUMACZONY TEKST
             costTag.innerHTML = `<span style="color:var(--accent-green);">${getLang('ui_shop_maxed') || 'OSIĄGNIĘTO LIMIT'}</span>`;
         } else {
             const color = canBuy ? 'var(--accent-gold)' : 'var(--accent-red)';
@@ -293,24 +294,34 @@ function initLanguageSelector() {
     });
 }
 
-async function fetchSupporters(retries = 3) {
+async function fetchSupporters() {
     const listContainer = document.getElementById('supportersList');
     if (!listContainer) return;
+
     const lastFetch = sessionStorage.getItem('suppi_last_fetch');
     const cachedData = sessionStorage.getItem('suppi_data');
-    if (lastFetch && cachedData && (Date.now() - lastFetch < 300000)) { listContainer.innerHTML = cachedData; return; }
+    if (lastFetch && cachedData && (Date.now() - lastFetch < 300000)) { 
+        listContainer.innerHTML = cachedData; 
+        return; 
+    }
+
     listContainer.innerHTML = '<span class="pulse">Łączenie z Suppi...</span>';
     const suppiUrl = 'https://suppi.pl/gregor'; 
     const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(suppiUrl)}`;
+
     try {
         const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error("Fetch failed");
+
         const data = await response.json();
         const parser = new DOMParser();
         const doc = parser.parseFromString(data.contents, 'text/html');
         const rows = doc.querySelectorAll('.contributor-row');
+        
         let html = '';
-        if (rows.length === 0) html = '<div style="color:#888; font-style:italic; margin-top:10px;">Brak widocznych wpłat na profilu.<br>Zostań pierwszym Mecenasem!</div>';
-        else {
+        if (rows.length === 0) {
+            html = '<div style="color:#888; font-style:italic; margin-top:10px;">Brak widocznych wpłat na profilu.</div>';
+        } else {
             html = '<ul style="list-style:none; padding:0; margin:0; width:100%;">';
             rows.forEach((row) => {
                 const nameEl = row.querySelector('.fund-contributor-name .wrap-ellipsis');
@@ -326,10 +337,23 @@ async function fetchSupporters(retries = 3) {
             html += '</ul>';
         }
         listContainer.innerHTML = html;
-        sessionStorage.setItem('suppi_data', html); sessionStorage.setItem('suppi_last_fetch', Date.now());
+        sessionStorage.setItem('suppi_data', html); 
+        sessionStorage.setItem('suppi_last_fetch', Date.now());
+
     } catch (e) {
-        if (retries > 0) setTimeout(() => fetchSupporters(retries - 1), 1000); 
-        else listContainer.innerHTML = '<div style="color:#D32F2F; font-size:0.9em;">Błąd pobierania listy.<br>Spróbuj ponownie później.</div>';
+        console.warn("[Supporters] Dane niedostępne.");
+        listContainer.innerHTML = `
+            <div style="color:#D32F2F; font-size:0.9em; margin-bottom: 10px;">Błąd pobierania danych.</div>
+            <button id="btnRetrySuppi" class="menu-button" style="padding: 5px 15px; font-size: 0.8em;">PONÓW</button>
+        `;
+        const retryBtn = document.getElementById('btnRetrySuppi');
+        if (retryBtn) {
+            retryBtn.onclick = (event) => {
+                event.stopPropagation();
+                playSound('Click');
+                fetchSupporters();
+            };
+        }
     }
 }
 
@@ -340,7 +364,12 @@ export function switchView(viewId) {
     focusedElement = null;
     document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
     
-    if (viewId === 'view-coffee') { playSound('MusicIntro'); fetchSupporters(); }
+    if (viewId === 'view-coffee') { 
+        playSound('MusicIntro'); 
+        fetchSupporters(); 
+        const desc = document.getElementById('coffeeDesc');
+        if (desc) desc.innerHTML = getLang('ui_coffee_desc');
+    }
     else if (viewId === 'view-main') {
         playSound('MusicMenu'); updateFlagHighlights(); 
         setTimeout(() => {
@@ -406,28 +435,31 @@ function generateSkinSelector() {
 }
 
 function getFocusableElements() {
-    const overlays = ['gameOverOverlay', 'levelUpOverlay', 'pauseOverlay', 'introOverlay', 'confirmOverlay', 'nickInputOverlay'];
-    for (const ovId of overlays) {
+    const priorityOverlays = [
+        'confirmOverlay', 'nickInputOverlay', 'tutorialOverlay', 
+        'chestOverlay', 'levelUpOverlay', 'pauseOverlay', 'gameOverOverlay', 'introOverlay'
+    ];
+    for (const ovId of priorityOverlays) {
         const ov = document.getElementById(ovId);
         if (ov && ov.style.display !== 'none' && ov.style.display !== '') {
-             return Array.from(ov.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'));
+             const items = Array.from(ov.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
+                         .filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
+             if (items.length > 0) return items;
         }
     }
     const menuOverlay = document.getElementById('menuOverlay');
     if (menuOverlay && menuOverlay.style.display !== 'none') {
         const activeView = document.querySelector('.menu-view.active');
         if (activeView) {
-            const all = Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'));
-            const flags = all.filter(el => el.id && el.id.startsWith('btnLang'));
-            const others = all.filter(el => !el.id || !el.id.startsWith('btnLang'));
-            return [...others, ...flags];
+            return Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
+                         .filter(el => el.offsetParent !== null);
         }
     }
     return [];
 }
 
 function isGameplayActive() {
-    const overlays = ['menuOverlay', 'pauseOverlay', 'levelUpOverlay', 'gameOverOverlay', 'introOverlay', 'chestOverlay'];
+    const overlays = ['menuOverlay', 'pauseOverlay', 'levelUpOverlay', 'gameOverOverlay', 'introOverlay', 'chestOverlay', 'tutorialOverlay'];
     for (const id of overlays) {
         const el = document.getElementById(id);
         if (el && el.style.display !== 'none' && el.style.display !== '') return false;
@@ -435,36 +467,44 @@ function isGameplayActive() {
     return true;
 }
 
+export function forceFocusFirst() {
+    focusedElement = null;
+    document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
+    navCooldown = 0; 
+}
+
 function updateGamepadMenu() {
     navCooldown--; if (navCooldown > 0) return;
     const gpState = getGamepadButtonState(); if (Object.keys(gpState).length === 0) return;
-
     if (gpState.A && !lastGpState.A) {
         const splash = document.getElementById('splashOverlay');
         if (splash && splash.style.display !== 'none' && !splash.classList.contains('fade-out')) {
-             splash.classList.add('fade-out'); setTimeout(() => { splash.style.display = 'none'; }, 1000); 
-             document.dispatchEvent(new Event('touchstart')); navCooldown = 30; return;
+             window.dispatchEvent(new Event('touchstart')); 
+             navCooldown = 30; return;
         }
     }
     if (gpState.Start && !lastGpState.Start) {
         if (isGameplayActive()) { document.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Escape'})); navCooldown = 15; return; }
     }
-    if (isGameplayActive()) return;
-
-    const focusables = getFocusableElements(); if (focusables.length === 0) return;
-    if (document.getElementById('menuOverlay').style.display !== 'none' && document.getElementById('view-main').classList.contains('active')) {
-        if (!focusedElement || !focusables.includes(focusedElement)) {
-             const btnStart = document.getElementById('btnStart'); if(btnStart) { focusedElement = btnStart; btnStart.classList.add('focused'); }
-        }
-    } else {
-        if (!focusedElement || !focusables.includes(focusedElement)) {
-            const current = document.querySelector('.focused');
-            focusedElement = (current && focusables.includes(current)) ? current : focusables[0];
-            if(focusedElement) focusedElement.classList.add('focused');
+    const rawGp = pollGamepad();
+    if (rawGp && rawGp.axes) {
+        const tutorial = document.getElementById('tutorialOverlay');
+        if (tutorial && tutorial.style.display !== 'none') {
+            const scrollY = rawGp.axes[3]; 
+            if (Math.abs(scrollY) > 0.2) {
+                const scrollBox = tutorial.querySelector('.retro-scroll-box');
+                if (scrollBox) scrollBox.scrollTop += scrollY * 20;
+            }
         }
     }
-
-    const rawGp = pollGamepad(); let moveDir = { up: false, down: false, left: false, right: false };
+    if (isGameplayActive()) return;
+    const focusables = getFocusableElements(); if (focusables.length === 0) return;
+    if (!focusedElement || !focusables.includes(focusedElement)) {
+        if (focusedElement) { focusedElement.classList.remove('focused'); focusedElement.blur(); }
+        focusedElement = focusables[0];
+        if (focusedElement) { focusedElement.classList.add('focused'); focusedElement.focus(); }
+    }
+    let moveDir = { up: false, down: false, left: false, right: false };
     if (gpState.Up) moveDir.up = true; if (gpState.Down) moveDir.down = true;
     if (gpState.Left) moveDir.left = true; if (gpState.Right) moveDir.right = true;
     if (rawGp && rawGp.axes) {
@@ -478,12 +518,25 @@ function updateGamepadMenu() {
             }
         }
     }
-
+    const isRange = focusedElement && focusedElement.tagName === 'INPUT' && focusedElement.type === 'range';
     let index = focusables.indexOf(focusedElement); let moved = false;
-    if (moveDir.down || moveDir.right) { index++; if (index >= focusables.length) index = 0; moved = true; }
-    else if (moveDir.up || moveDir.left) { index--; if (index < 0) index = focusables.length - 1; moved = true; } 
-
+    if (moveDir.down) { index++; moved = true; }
+    else if (moveDir.up) { index--; moved = true; }
+    else if (moveDir.right) {
+        if (isRange) {
+            focusedElement.value = Math.min(parseInt(focusedElement.max), parseInt(focusedElement.value) + 5);
+            focusedElement.dispatchEvent(new Event('input')); navCooldown = 5; 
+        } else { index++; moved = true; }
+    }
+    else if (moveDir.left) {
+        if (isRange) {
+            focusedElement.value = Math.max(parseInt(focusedElement.min), parseInt(focusedElement.value) - 5);
+            focusedElement.dispatchEvent(new Event('input')); navCooldown = 5;
+        } else { index--; moved = true; }
+    }
     if (moved) {
+        if (index >= focusables.length) index = 0;
+        if (index < 0) index = focusables.length - 1;
         if (focusedElement) { focusedElement.classList.remove('focused'); focusedElement.blur(); }
         focusedElement = focusables[index];
         if (focusedElement) {
@@ -492,16 +545,15 @@ function updateGamepadMenu() {
         }
         navCooldown = 12; 
     }
-
     if (gpState.A && !lastGpState.A) {
         if (focusedElement) {
             const el = focusedElement;
             if (el.id === 'btnLangPL') { setLanguage('pl'); updateStaticTranslations(); playSound('Click'); }
             else if (el.id === 'btnLangEN') { setLanguage('en'); updateStaticTranslations(); playSound('Click'); }
             else if (el.id === 'btnLangRO') { setLanguage('ro'); updateStaticTranslations(); playSound('Click'); }
-            else { el.focus(); el.click(); }
+            else { el.focus(); el.click(); navCooldown = 2; }
         }
-        navCooldown = 15;
+        lastGpState = { ...gpState }; return;
     }
     if (gpState.B && !lastGpState.B) {
         const activeView = document.querySelector('.menu-view.active');
@@ -518,7 +570,15 @@ export function initRetroToggles(game, uiData) {
     const setupToggle = (btnId, chkId, callback) => {
         const btn = document.getElementById(btnId); const chk = document.getElementById(chkId);
         if(btn && chk) {
-            btn.onclick = () => { chk.checked = !chk.checked; updateToggleVisual(btn, chk.checked); playSound('Click'); if(callback) callback(); };
+            const saved = localStorage.getItem('szkeletal_' + chkId);
+            if(saved !== null) chk.checked = (saved === 'true');
+            btn.onclick = () => { 
+                chk.checked = !chk.checked; 
+                localStorage.setItem('szkeletal_' + chkId, chk.checked);
+                updateToggleVisual(btn, chk.checked); playSound('Click'); 
+                if(callback) callback(); 
+            };
+            updateToggleVisual(btn, chk.checked);
         }
     };
 
@@ -526,11 +586,13 @@ export function initRetroToggles(game, uiData) {
     setupToggle('toggleShake', 'chkShake', () => { game.screenShakeDisabled = !document.getElementById('chkShake').checked; });
     setupToggle('toggleFPS', 'chkFPS', () => { uiData.showFPS = !!document.getElementById('chkFPS').checked; });
     setupToggle('toggleLabels', 'chkPickupLabels', () => { uiData.pickupShowLabels = !!document.getElementById('chkPickupLabels').checked; });
+    setupToggle('toggleTutorial', 'chkTutorial'); 
     
     const hb = document.getElementById('toggleHyper'); if(hb) updateToggleVisual(hb, game.hyper);
     const sb = document.getElementById('toggleShake'); if(sb) updateToggleVisual(sb, !game.screenShakeDisabled);
     const fb = document.getElementById('toggleFPS'); if(fb) updateToggleVisual(fb, uiData.showFPS);
     const lb = document.getElementById('toggleLabels'); if(lb) updateToggleVisual(lb, uiData.pickupShowLabels);
+    const tb = document.getElementById('toggleTutorial'); if(tb) updateToggleVisual(tb, document.getElementById('chkTutorial').checked);
 
     const joyBtn = document.getElementById('toggleJoy');
     if(joyBtn) {
@@ -544,16 +606,27 @@ export function initRetroToggles(game, uiData) {
         zoomSlider.value = Math.round((game.zoomLevel || 1.0) * 100);
         zoomValueText.innerText = zoomSlider.value + "%";
         zoomSlider.oninput = (e) => {
-            const val = parseInt(e.target.value);
-            const zoomFactor = val / 100;
-            game.zoomLevel = zoomFactor;
-            zoomValueText.innerText = val + "%";
+            const val = parseInt(e.target.value); const zoomFactor = val / 100;
+            game.zoomLevel = zoomFactor; zoomValueText.innerText = val + "%";
             localStorage.setItem('szkeletal_zoom', val);
         };
     }
 
+    // --- POPRAWKA coffeeBtn ---
     const coffeeBtn = document.getElementById('coffeeBtn');
-    if (coffeeBtn) coffeeBtn.onclick = () => { playSound('Click'); setTimeout(() => { unlockSkin('hot'); playSound('ChestReward'); }, 2000); };
+    if (coffeeBtn) {
+        coffeeBtn.onclick = () => { 
+            playSound('Click'); 
+            setTimeout(() => { 
+                unlockSkin('hot'); 
+                playSound('ChestReward'); 
+                // Zmiana tekstu i koloru
+                coffeeBtn.innerText = getLang('ui_coffee_unlocked') || "SKIN ODBLOKOWANY!";
+                coffeeBtn.style.backgroundColor = "#2196F3"; // Niebieski
+                coffeeBtn.style.borderColor = "#0D47A1";
+            }, 2000); 
+        };
+    }
 
     const volMusic = document.getElementById('volMusic');
     if (volMusic) volMusic.oninput = (e) => { setMusicVolume(parseInt(e.target.value) / 100); }; 

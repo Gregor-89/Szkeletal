@@ -1,5 +1,5 @@
 // ==============
-// INPUT.JS (v1.13 - Multi-Stick & D-Pad Movement)
+// INPUT.JS (v1.14 - Precision Deadzone & Menu Stick Support)
 // Lokalizacja: /js/ui/input.js
 // ==============
 
@@ -15,9 +15,8 @@ let onJoyStart = () => {};
 let onJoyEnd = () => {};
 let jActive = false, jStartX = 0, jStartY = 0, jMoveX = 0, jMoveY = 0;
 
-// --- ZMIENNE GAMEPADA ---
 let gamepadIndex = null;
-const GAMEPAD_DEADZONE = 0.2;
+const GAMEPAD_DEADZONE = 0.25; // ZWIĘKSZONO dla stabilności menu
 
 export function initInput(escapeFn, joyStartFn, joyEndFn) {
     onEscapePress = escapeFn;
@@ -25,7 +24,6 @@ export function initInput(escapeFn, joyStartFn, joyEndFn) {
     onJoyEnd = joyEndFn;
 }
 
-// Obsługa podłączenia pada
 window.addEventListener("gamepadconnected", (e) => {
     console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
         e.gamepad.index, e.gamepad.id,
@@ -42,7 +40,6 @@ window.addEventListener("gamepaddisconnected", (e) => {
     }
 });
 
-// Funkcja pomocnicza do pobierania obiektu gamepada
 export function pollGamepad() {
     if (gamepadIndex === null) return null;
     const gp = navigator.getGamepads()[gamepadIndex];
@@ -50,11 +47,9 @@ export function pollGamepad() {
     return gp;
 }
 
-// Zwraca wektor ruchu (suma dotyku + WSZYSTKIE GAŁKI I KRZYŻAK PADA)
 export function jVec() {
     let dx = 0, dy = 0;
 
-    // 1. Joystick ekranowy (Dotyk/Mysz)
     if (jActive && joyZone && !joyZone.classList.contains('off')) {
         let jx = jMoveX - jStartX;
         let jy = jMoveY - jStartY;
@@ -65,10 +60,8 @@ export function jVec() {
         dy += jy / max;
     }
 
-    // 2. Gamepad
     const gp = pollGamepad();
     if (gp) {
-        // --- Lewa Gałka (Axes 0, 1) ---
         let lx = gp.axes[0];
         let ly = gp.axes[1];
         if (Math.abs(lx) < GAMEPAD_DEADZONE) lx = 0;
@@ -76,7 +69,6 @@ export function jVec() {
         dx += lx;
         dy += ly;
 
-        // --- Prawa Gałka (Axes 2, 3) - Opcjonalnie ---
         if (gp.axes.length >= 4) {
             let rx = gp.axes[2];
             let ry = gp.axes[3];
@@ -86,15 +78,12 @@ export function jVec() {
             dy += ry;
         }
 
-        // --- D-Pad (Krzyżak - Buttons 12, 13, 14, 15) ---
-        // 12=Up, 13=Down, 14=Left, 15=Right
         if (gp.buttons[12] && gp.buttons[12].pressed) dy -= 1.0;
         if (gp.buttons[13] && gp.buttons[13].pressed) dy += 1.0;
         if (gp.buttons[14] && gp.buttons[14].pressed) dx -= 1.0;
         if (gp.buttons[15] && gp.buttons[15].pressed) dx += 1.0;
     }
 
-    // Normalizacja sumy
     const len = Math.hypot(dx, dy);
     if (len > 1.0) {
         dx /= len;
@@ -104,22 +93,21 @@ export function jVec() {
     return { x: dx, y: dy };
 }
 
-// Eksportujemy funkcję do sprawdzania przycisków (dla nawigacji w menu)
 export function getGamepadButtonState() {
     const gp = pollGamepad();
     if (!gp) return {};
 
     const state = {
-        A: gp.buttons[0].pressed, // Cross / A
-        B: gp.buttons[1].pressed, // Circle / B
-        X: gp.buttons[2].pressed, // Square / X
-        Y: gp.buttons[3].pressed, // Triangle / Y
+        A: gp.buttons[0].pressed, 
+        B: gp.buttons[1].pressed, 
+        X: gp.buttons[2].pressed, 
+        Y: gp.buttons[3].pressed, 
         LB: gp.buttons[4].pressed,
         RB: gp.buttons[5].pressed,
         LT: gp.buttons[6].pressed,
         RT: gp.buttons[7].pressed,
         Select: gp.buttons[8].pressed,
-        Start: gp.buttons[9].pressed, // Options / Menu
+        Start: gp.buttons[9].pressed, 
         Up: gp.buttons[12].pressed,
         Down: gp.buttons[13].pressed,
         Left: gp.buttons[14].pressed,

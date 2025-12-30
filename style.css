@@ -1,4 +1,4 @@
-/* style.css (v1.15 - Full + Gamepad & Skins) */
+/* style.css (v1.18 - Full Code Restore & Clipping Fix) */
 
 :root {
     --bg-color: #050505;
@@ -186,7 +186,9 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
 .menu-view { display: none; flex-direction: column; height: 100%; animation: fadeIn 0.2s; overflow: hidden; }
 .menu-view.active { display: flex; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-.logo-area { text-align: center; margin-bottom: 20px; flex-shrink: 0; }
+
+.logo-area { text-align: center; margin-bottom: 35px; flex-shrink: 0; }
+
 .pixel-logo { max-width: 80%; height: auto; image-rendering: pixelated; filter: drop-shadow(0 4px 0 #000); }
 .version-tag { color: #666; font-size: 1.2rem; margin-top: 5px; letter-spacing: 2px; }
 .retro-title { text-align: center; color: var(--accent-gold); font-size: 2.5rem; margin: 0 0 15px 0; text-shadow: 3px 3px 0 #000; border-bottom: 2px dashed #444; padding-bottom: 10px; flex-shrink: 0; }
@@ -194,7 +196,8 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
 
 .menu-list { 
     display: flex; flex-direction: column; gap: 12px; flex-grow: 1; 
-    padding: 0 10% 20px 10%; 
+    /* POPRAWKA v1.18: Zwiększony padding-top dla zapobiegania obcinaniu ramki selectu */
+    padding: 25px 10% 20px 10%; 
     overflow-y: auto; 
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
@@ -393,7 +396,7 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
         justify-content: flex-start;
         padding-top: 20px;
         overflow-y: auto;
-        z-index: 2000; /* Bardzo wysoki Z-index */
+        z-index: 2000; 
     }
 }
 /* Wysoki z-index dla overlayów input */
@@ -452,10 +455,12 @@ canvas { background: #111; border: 2px solid #333; box-shadow: 0 0 20px #000; wi
     image-rendering: pixelated;
 }
 
-/* DODANO STYL DLA NAWIGACJI PADEM */
+/* DODANO STYL DLA NAWIGACJI PADEM (v0.109) */
 .focused {
-    outline: 2px solid var(--accent-gold);
-    box-shadow: 0 0 15px var(--accent-gold);
-    background-color: rgba(255, 215, 0, 0.1);
+    outline: 3px solid var(--accent-gold) !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+    background-color: rgba(255, 215, 0, 0.1) !important;
     transform: scale(1.02);
+    z-index: 10;
 }

@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v1.05b - Zoom Initialization)
+// MAIN.JS (v1.05d - Intro Music & Splash Fix)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -69,7 +69,6 @@ const _gState = {
     _cheater: false 
 };
 
-// POPRAWKA v1.05b: Dodano zoomLevel do głównej definicji obiektu
 const game = {
   level:1, maxHealth: PLAYER_CONFIG.INITIAL_HEALTH, 
   time:0, running:false, paused:true, inMenu:true,
@@ -516,10 +515,24 @@ function finishSplashSequence() {
     window.removeEventListener('mousedown', advanceSplash);
     window.removeEventListener('touchstart', advanceSplash);
     splashOverlay.classList.add('fade-out');
+
+    initAudio(); 
+    
     setTimeout(() => {
         splashOverlay.style.display = 'none';
+        
+        // POPRAWKA v1.05d: Muzyka menu nie powinna przerywać muzyki intro
+        const introWillShow = !localStorage.getItem('szkeletal_intro_seen');
+        
         if (!game.running) {
             initializeIntro(gameStateRef); 
+            
+            setTimeout(() => {
+                // Odtwórz muzykę menu tylko jeśli intro NIE jest aktywne
+                if (!game.running && (!introOverlay || introOverlay.style.display !== 'flex')) {
+                    playSound('MusicMenu');
+                }
+            }, 100);
         }
     }, 1000); 
 }

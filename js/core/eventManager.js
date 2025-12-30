@@ -1,9 +1,9 @@
 // ==============
-// EVENTMANAGER.JS (v1.04 - Tutorial Fix & Shop Integration)
+// EVENTMANAGER.JS (v1.05d - Focus Reset Integration)
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
-import { switchView, updateStaticTranslations } from '../ui/menus.js';
+import { switchView, updateStaticTranslations, forceFocusFirst } from '../ui/menus.js';
 import { showMenu, resetAll, pauseGame, resumeGame, gameOver, startRun } from '../ui/ui.js';
 
 import { levelUp, pickPerk, openChest } from '../managers/levelManager.js';
@@ -19,7 +19,6 @@ import { shopManager } from '../services/shopManager.js';
 let gameStateRef = null;
 let uiDataRef = null;
 
-// ZMIANA: Wrappery stają się async dla obsługi sklepu
 async function wrappedShowMenu(allowContinue = false) {
     uiDataRef.animationFrameId = uiDataRef.animationFrameId;
     showMenu(uiDataRef.game, wrappedResetAll, uiDataRef, allowContinue);
@@ -44,7 +43,6 @@ async function wrappedResetAll() {
     uiDataRef.camera = gameStateRef.camera;
     if (window.SIEGE_EVENT_CONFIG) uiDataRef.settings.currentSiegeInterval = window.SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
     
-    // Używamy await dla async resetAll
     await resetAll(uiDataRef.canvas, uiDataRef.settings, uiDataRef.perkLevels, uiDataRef, uiDataRef.camera);
     
     gameStateRef.enemyIdCounter = 0;
@@ -159,7 +157,6 @@ function initEvents() {
         btn.addEventListener('click', () => switchView('view-main'));
     });
 
-    // NOWOŚĆ: Obsługa przycisku START w tutorialu
     const btnCloseTutorial = document.getElementById('btnCloseTutorial');
     if (btnCloseTutorial) {
         btnCloseTutorial.addEventListener('click', () => {
@@ -170,6 +167,21 @@ function initEvents() {
                 gameStateRef.game.paused = false;
             }
             playSound('Click');
+            forceFocusFirst(); // Reset focusu po zamknięciu, by wrócił do menu
+        });
+    }
+
+    const btnReplayTutorial = document.getElementById('btnShowTutorialConfig');
+    if (btnReplayTutorial) {
+        btnReplayTutorial.addEventListener('click', () => {
+            localStorage.removeItem('szkeletal_tutorial_seen'); 
+            const overlay = document.getElementById('tutorialOverlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                if (gameStateRef && gameStateRef.game) gameStateRef.game.paused = true;
+                playSound('Click');
+                forceFocusFirst(); // KLUCZOWE: Wymusza przeskok focusu na overlay tutoriala
+            }
         });
     }
     
