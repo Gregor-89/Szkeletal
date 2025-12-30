@@ -34,7 +34,6 @@ const STATIC_TRANSLATION_MAP = {
     'shopTitle': 'ui_shop_title',
     'shopInfoNoteTitle': 'ui_shop_info_title',
     'shopInfoNoteText': 'ui_shop_info',
-    'lblShopWallet': 'ui_shop_wallet',
     'btnResetShop': 'ui_shop_reset_btn',
     'scoresTitle': 'ui_scores_title',
     'btnClearScoresMenu': 'ui_scores_clear_local',
@@ -85,11 +84,13 @@ export function updateStaticTranslations() {
 
     const walletLabel = document.getElementById('lblShopWallet');
     if (walletLabel) {
+        // POPRAWKA: Ręczne zarządzanie portfelem, aby nie usuwać elementu SPAN
         const walletPoints = document.getElementById('shopWalletPoints');
         const translatedLabel = getLang('ui_shop_wallet') || "DOSTĘPNE PUNKTY:";
-        // ZMIANA v0.110f: Waluta w portfelu również jest tłumaczona
         const currency = getLang('ui_shop_currency') || "PKT";
-        walletLabel.innerHTML = `${translatedLabel} <span id="shopWalletPoints" style="color:var(--accent-green);">${walletPoints ? walletPoints.textContent : '0'}</span> ${currency}`;
+        const currentVal = walletPoints ? walletPoints.textContent : (shopManager ? shopManager.getWalletBalance().toLocaleString() : '0');
+        
+        walletLabel.innerHTML = `${translatedLabel} <span id="shopWalletPoints" style="color:var(--accent-green);">${currentVal}</span> ${currency}`;
     }
 
     const btnSubmit = document.getElementById('btnSubmitScore');
@@ -147,7 +148,6 @@ export function generateShop() {
     container.innerHTML = '';
 
     const nextCost = shopManager.calculateNextCost();
-    // ZMIANA v0.110f: Pobranie przetłumaczonej nazwy waluty
     const currency = getLang('ui_shop_currency') || "PKT";
 
     Object.values(SHOP_CONFIG.UPGRADES).forEach(upg => {
@@ -202,7 +202,6 @@ export function generateShop() {
         } else {
             const color = canBuy ? 'var(--accent-gold)' : 'var(--accent-red)';
             const costLbl = getLang('ui_shop_cost') || 'KOSZT:';
-            // ZMIANA v0.110f: Użycie dynamicznej waluty w kosztach
             costTag.innerHTML = `${costLbl} <span style="color:${color}; font-weight:bold;">${nextCost.toLocaleString()} ${currency}</span>`;
             
             if (currentLvl === 0 && upg.dependsOn && shopManager.getUpgradeLevel(upg.dependsOn) === 0) {

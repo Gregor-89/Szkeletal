@@ -381,8 +381,6 @@ export function gameOver(game, uiData) {
     
     if (shopManager && !game.isCheated) {
         shopManager.updateMaxScore(Math.floor(game.score));
-        // ZMIANA v0.110f: Dodatkowe wymuszenie zapisu po aktualizacji wyniku
-        shopManager.save();
     }
 
     playSound('MusicMenu');
