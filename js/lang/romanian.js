@@ -12,7 +12,7 @@ export const LANG_RO = {
   ui_nick_modal_title: "SEMNEAZĂ",
   ui_nick_modal_text: "Înainte de a trimite, introdu porecla:",
   ui_nick_modal_confirm: "CONFIRMĂ",
-  ui_nick_modal_cancel: "ANULEAZĂ",
+  ui_nick_modal_cancel: "ANULĂM",
   ui_nick_limit_info: "(Max 20 caractere, A-Z, 0-9)",
   
   ui_dev_scen_min: "MIN",
@@ -24,6 +24,7 @@ export const LANG_RO = {
   ui_coffee_title: "CAFEA FIERBINTE",
   ui_coffee_desc: "Felicitări. Tocmai ți-ai depreciat ireversibil câteva minute din timp, deși eu însumi, într-un act de masochism pur, am dedicat zeci de ore promptării verticale a algoritmilor AI în ultimele două luni.<br><br>Să fim obiectivi: la fel cum 'ludologii' noștri nativi (a nu se confunda cu cercetătorii reali de jocuri) demonstrează de facto o lipsă imanentă de competență în mecanici, specializându-se în principal pe achiziția de conținut străin, nici eu nu posed nicio cunoștință de codare, estetică pixel-art sau naratologie. Acest proiect este un 'pato-construct' construit din blocuri generative – cartof cu cartof.<br><br>A meritat această urmărire teleologică efortul? Absolut nu. Cine în toate mințile ar vrea să participe la acest pastiș mai mult de câteva minute? Chiar dacă este doar o parodie lejeră, iar orice asemănare cu 'vaci de muls râsete' cunoscute din mediul ludologic este, desigur, complet stocastică și întâmplătoare.<br><br>Totuși, dacă în ciuda tuturor lucrurilor percepi vreo valoare a efortului în această sperietoare, poți face o subvenție voluntară pentru cafeaua mea virtuală sau să contribui la un sac de cartofi. Datorită acestui fapt, voi iniția singur procesul culinar și îmi voi pregăti cartofi delicioși.<br><br>Aha, activarea interfeței cu butoane de mai jos va debloca – pur și simplu, ca o transgresiune veselă – <span style=\"color:#E91E63;font-weight:bold;\">un skin alternativ, 'fierbinte', pentru Drakul</span>.<br><br>Intră în mental. Distracție plăcută.",
   ui_coffee_btn: "CUMPĂRĂ CAFEA",
+  ui_coffee_unlocked: "NIMENI NU VERIFICĂ ASTA - SKIN DEBLOCAT",
   ui_coffee_footer: "Salutări mulțimii Wykop de la <a href=\"https://wykop.pl/tag/bekazludologuff\" target=\"_blank\" style=\"color:#FFD700;text-decoration:none;\">#bekazludologuff</a> și etichetele aferente.",
   ui_coffee_supporters_header: "🏆 ULTIMII 5 MECENAȚI AI CARTOFULUI 🏆",
   
@@ -306,7 +307,7 @@ export const LANG_RO = {
   ui_scores_local: "LOCAL",
   ui_scores_online: "ONLINE",
   ui_filter_today: "AZI",
-  ui_filter_weekly: "SĂPTĂMÂNAL",
+  ui_filter_weekly: "SĂPTÂMÂNAL",
   ui_filter_monthly: "LUNAR",
   ui_filter_all: "TOATE",
   

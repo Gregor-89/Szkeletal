@@ -36,7 +36,8 @@ export function loadAssets(onProgress) {
   });
 }
 
-const assetDefinitions = {
+// ZMIANA: Dodano export, aby main.js mógł policzyć zasoby przed startem
+export const assetDefinitions = {
   'player': 'player/drakul_spritesheet.png',
   
   // POPRAWKA v0.103: Rozdzielenie static i spritesheet dla domyślnego skina

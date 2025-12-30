@@ -29,7 +29,8 @@ const STATIC_TRANSLATION_MAP = {
     'btnReplayIntroMain': 'ui_menu_replay_intro',
     'navDev': 'ui_menu_tab_dev', 
     'navCoffee': 'ui_coffee_title',
-    'navShop': 'ui_menu_shop'
+    'navShop': 'ui_menu_shop',
+    'coffeeFooter': 'ui_coffee_footer' // Przywrócenie stopki
 };
 
 export function updateStaticTranslations() {
@@ -38,6 +39,7 @@ export function updateStaticTranslations() {
         if (el) {
             const text = getLang(key);
             if (text && !text.startsWith('[')) {
+                // Jeśli tekst zawiera HTML (jak link do wykopu), używamy innerHTML
                 if (text.includes('<') && text.includes('>')) el.innerHTML = text;
                 else el.innerText = text;
             }
@@ -137,7 +139,7 @@ export function generateShop() {
         info.className = 'perk-info';
         
         const title = document.createElement('h4');
-        const levelTag = `<span class="badge" style="color: ${isMaxed ? 'var(--accent-green)' : '#aaa'}">POZ. ${currentLvl}/${maxLvl}</span>`;
+        const levelTag = `<span class=\"badge\" style=\"color: ${isMaxed ? 'var(--accent-green)' : '#aaa'}\">POZ. ${currentLvl}/${maxLvl}</span>`;
         title.innerHTML = `${getLang(`perk_${upg.id}_name`) || upg.id.toUpperCase()} ${levelTag}`;
         
         let descText = getLang(`perk_${upg.id}_desc`) || "Ulepszenie startowe.";
@@ -154,16 +156,16 @@ export function generateShop() {
         costTag.style.fontSize = '0.9rem';
         
         if (isMaxed) {
-            costTag.innerHTML = `<span style="color:var(--accent-green);">${getLang('ui_shop_maxed') || 'OSIĄGNIĘTO LIMIT'}</span>`;
+            costTag.innerHTML = `<span style=\"color:var(--accent-green);\">${getLang('ui_shop_maxed') || 'OSIĄGNIĘTO LIMIT'}</span>`;
         } else {
             const color = canBuy ? 'var(--accent-gold)' : 'var(--accent-red)';
             const costLbl = getLang('ui_shop_cost') || 'KOSZT:';
-            costTag.innerHTML = `${costLbl} <span style="color:${color}; font-weight:bold;">${nextCost.toLocaleString()} PKT</span>`;
+            costTag.innerHTML = `${costLbl} <span style=\"color:${color}; font-weight:bold;\">${nextCost.toLocaleString()} PKT</span>`;
             
             if (currentLvl === 0 && upg.dependsOn && shopManager.getUpgradeLevel(upg.dependsOn) === 0) {
                 const depName = getLang(`perk_${upg.dependsOn}_name`) || upg.dependsOn;
                 const reqLbl = getLang('ui_shop_requires') || 'WYMAGA:';
-                costTag.innerHTML += `<br><span style="color:var(--accent-red); font-size:0.8rem;">${reqLbl} ${depName}</span>`;
+                costTag.innerHTML += `<br><span style=\"color:var(--accent-red); font-size:0.8rem;\">${reqLbl} ${depName}</span>`;
             }
         }
 
@@ -233,9 +235,9 @@ function updateTutorialTexts() {
     if (btnClose) btnClose.textContent = getLang('ui_tutorial_btn_close');
     if (tutList) {
         tutList.innerHTML = `
-            <li style="margin-bottom:12px;"><b>${getLang('ui_tutorial_ctrl_title')}</b><br>${getLang('ui_tutorial_ctrl_desc')}</li>
-            <li style="margin-bottom:12px;"><b>${getLang('ui_tutorial_hunger_title')}</b><br>${getLang('ui_tutorial_hunger_desc')}</li>
-            <li style="margin-bottom:12px;"><b>${getLang('ui_tutorial_prog_title')}</b><br>${getLang('ui_tutorial_prog_desc')}</li>
+            <li style=\"margin-bottom:12px;\"><b>${getLang('ui_tutorial_ctrl_title')}</b><br>${getLang('ui_tutorial_ctrl_desc')}</li>
+            <li style=\"margin-bottom:12px;\"><b>${getLang('ui_tutorial_hunger_title')}</b><br>${getLang('ui_tutorial_hunger_desc')}</li>
+            <li style=\"margin-bottom:12px;\"><b>${getLang('ui_tutorial_prog_title')}</b><br>${getLang('ui_tutorial_prog_desc')}</li>
             <li><b>${getLang('ui_tutorial_boss_title')}</b><br>${getLang('ui_tutorial_boss_desc')}</li>
         `;
     }
@@ -305,7 +307,7 @@ async function fetchSupporters() {
         return; 
     }
 
-    listContainer.innerHTML = '<span class="pulse">Łączenie z Suppi...</span>';
+    listContainer.innerHTML = '<span class=\"pulse\">Łączenie z Suppi...</span>';
     const suppiUrl = 'https://suppi.pl/gregor'; 
     const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(suppiUrl)}`;
 
@@ -320,9 +322,9 @@ async function fetchSupporters() {
         
         let html = '';
         if (rows.length === 0) {
-            html = '<div style="color:#888; font-style:italic; margin-top:10px;">Brak widocznych wpłat na profilu.</div>';
+            html = '<div style=\"color:#888; font-style:italic; margin-top:10px;\">Brak widocznych wpłat na profilu.</div>';
         } else {
-            html = '<ul style="list-style:none; padding:0; margin:0; width:100%;">';
+            html = '<ul style=\"list-style:none; padding:0; margin:0; width:100%;\">';
             rows.forEach((row) => {
                 const nameEl = row.querySelector('.fund-contributor-name .wrap-ellipsis');
                 const name = nameEl ? nameEl.innerText.trim() : "Anonim";
@@ -330,9 +332,9 @@ async function fetchSupporters() {
                 let amount = "Darowizna", timeAgo = "";
                 if (dataEls.length > 0) amount = dataEls[0].innerText.trim();
                 if (dataEls.length > 1) timeAgo = dataEls[1].innerText.trim();
-                html += `<li style="margin-bottom:8px; background:rgba(255,255,255,0.05); padding:8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
-                        <div style="text-align:left;"><span style="color:#4CAF50; font-weight:bold; display:block;">${name}</span><span style="font-size:0.8em; color:#666;">${timeAgo}</span></div>
-                        <span style="color:#FFD700; font-weight:bold; font-size:1.1em;">${amount}</span></li>`;
+                html += `<li style=\"margin-bottom:8px; background:rgba(255,255,255,0.05); padding:8px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;\">
+                        <div style=\"text-align:left;\"><span style=\"color:#4CAF50; font-weight:bold; display:block;\">${name}</span><span style=\"font-size:0.8em; color:#666;\">${timeAgo}</span></div>
+                        <span style=\"color:#FFD700; font-weight:bold; font-size:1.1em;\">${amount}</span></li>`;
             });
             html += '</ul>';
         }
@@ -343,8 +345,8 @@ async function fetchSupporters() {
     } catch (e) {
         console.warn("[Supporters] Dane niedostępne.");
         listContainer.innerHTML = `
-            <div style="color:#D32F2F; font-size:0.9em; margin-bottom: 10px;">Błąd pobierania danych.</div>
-            <button id="btnRetrySuppi" class="menu-button" style="padding: 5px 15px; font-size: 0.8em;">PONÓW</button>
+            <div style=\"color:#D32F2F; font-size:0.9em; margin-bottom: 10px;\">Błąd pobierania danych.</div>
+            <button id=\"btnRetrySuppi\" class=\"menu-button\" style=\"padding: 5px 15px; font-size: 0.8em;\">PONÓW</button>
         `;
         const retryBtn = document.getElementById('btnRetrySuppi');
         if (retryBtn) {
@@ -369,6 +371,8 @@ export function switchView(viewId) {
         fetchSupporters(); 
         const desc = document.getElementById('coffeeDesc');
         if (desc) desc.innerHTML = getLang('ui_coffee_desc');
+        // Aktualizacja stopki przy wejściu do menu kawy
+        updateStaticTranslations();
     }
     else if (viewId === 'view-main') {
         playSound('MusicMenu'); updateFlagHighlights(); 
@@ -442,7 +446,7 @@ function getFocusableElements() {
     for (const ovId of priorityOverlays) {
         const ov = document.getElementById(ovId);
         if (ov && ov.style.display !== 'none' && ov.style.display !== '') {
-             const items = Array.from(ov.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
+             const items = Array.from(ov.querySelectorAll('button:not([disabled]), input:not([type=\"radio\"]), .perk, .skin-option, .lang-label-wrapper'))
                          .filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
              if (items.length > 0) return items;
         }
@@ -451,7 +455,7 @@ function getFocusableElements() {
     if (menuOverlay && menuOverlay.style.display !== 'none') {
         const activeView = document.querySelector('.menu-view.active');
         if (activeView) {
-            return Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
+            return Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type=\"radio\"]), .perk, .skin-option, .lang-label-wrapper'))
                          .filter(el => el.offsetParent !== null);
         }
     }
@@ -612,7 +616,6 @@ export function initRetroToggles(game, uiData) {
         };
     }
 
-    // --- POPRAWKA coffeeBtn ---
     const coffeeBtn = document.getElementById('coffeeBtn');
     if (coffeeBtn) {
         coffeeBtn.onclick = () => { 
@@ -620,9 +623,9 @@ export function initRetroToggles(game, uiData) {
             setTimeout(() => { 
                 unlockSkin('hot'); 
                 playSound('ChestReward'); 
-                // Zmiana tekstu i koloru
-                coffeeBtn.innerText = getLang('ui_coffee_unlocked') || "SKIN ODBLOKOWANY!";
-                coffeeBtn.style.backgroundColor = "#2196F3"; // Niebieski
+                // Zmiana tekstu i koloru na niebieski
+                coffeeBtn.innerText = getLang('ui_coffee_unlocked') || "NIKT TEGO NIE SPRAWDZA - SKIN ODBLOKOWANY";
+                coffeeBtn.style.backgroundColor = "#2196F3"; 
                 coffeeBtn.style.borderColor = "#0D47A1";
             }, 2000); 
         };
@@ -676,12 +679,12 @@ export function generateGuide() {
         { asset: 'icon_nova', nameKey: 'perk_nova_name', descKey: 'perk_nova_desc' },
         { asset: 'icon_lightning', nameKey: 'perk_chainLightning_name', descKey: 'perk_chainLightning_desc' }
     ];
-    let html = `<h4 style="color:#4caf50; margin-bottom:15px; text-align:center;">📖 ${getLang('ui_guide_title')}</h4>`;
+    let html = `<h4 style=\"color:#4caf50; margin-bottom:15px; text-align:center;\">📖 ${getLang('ui_guide_title')}</h4>`;
     guideData.forEach(item => {
-        if (item.header) html += `<div class="guide-section-title" style="margin-top:20px; border-bottom:1px solid #444; color:#FFD700; font-size:1.2em;">${item.header}</div>`;
+        if (item.header) html += `<div class=\"guide-section-title\" style=\"margin-top:20px; border-bottom:1px solid #444; color:#FFD700; font-size:1.2em;\">${item.header}</div>`;
         else {
-            let icon = item.customImg ? `<img src="${item.customImg}" class="guide-icon">` : (item.asset ? `<img src="${getAsset(item.asset).src}" class="guide-icon">` : '❓');
-            html += `<div class="guide-entry"><div class="guide-icon-wrapper">${icon}</div><div class="guide-text-wrapper"><strong style="color:#FFD700;">${getLang(item.nameKey)}</strong><br><span style="color:#ccc; font-size:16px;">${getLang(item.descKey)}</span></div></div>`;
+            let icon = item.customImg ? `<img src=\"${item.customImg}\" class=\"guide-icon\">` : (item.asset ? `<img src=\"${getAsset(item.asset).src}\" class=\"guide-icon\">` : '❓');
+            html += `<div class=\"guide-entry\"><div class=\"guide-icon-wrapper\">${icon}</div><div class=\"guide-text-wrapper\"><strong style=\"color:#FFD700;\">${getLang(item.nameKey)}</strong><br><span style=\"color:#ccc; font-size:16px;\">${getLang(item.descKey)}</span></div></div>`;
         }
     });
     gc.innerHTML = html;

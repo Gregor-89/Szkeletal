@@ -14,7 +14,8 @@ let isLoadTriggered = false;
 const loadedSounds = new Map();
 const lastPlayTime = new Map(); 
 
-const AUDIO_ASSET_LIST = [
+// ZMIANA: Dodano export dla poprawnego liczenia progress baru
+export const AUDIO_ASSET_LIST = [
     { id: 'Click', src: 'sounds/ui_click.mp3' },
     { id: 'LevelUp', src: 'sounds/level_up.mp3' },
     { id: 'PerkPick', src: 'sounds/perk_pick.mp3' },
@@ -48,7 +49,7 @@ const MusicManager = {
     bags: {
         menu: [],
         gameplay: [],
-        intro: [] // ZMIANA: Nowy worek dla intro
+        intro: [] 
     },
 
     init() {
@@ -68,7 +69,6 @@ const MusicManager = {
     getNextTrack(context) {
         let bag = this.bags[context];
         
-        // ZMIANA: Wybór odpowiedniej playlisty
         let masterList;
         if (context === 'menu') masterList = MUSIC_CONFIG.MENU_PLAYLIST;
         else if (context === 'intro') masterList = MUSIC_CONFIG.INTRO_PLAYLIST;
@@ -104,7 +104,6 @@ const MusicManager = {
             return;
         }
 
-        // ZMIANA: Obsługa folderu intro
         let folder = 'sounds/gameplay/';
         if (context === 'menu') folder = 'sounds/menu/';
         if (context === 'intro') folder = 'sounds/intro/';
@@ -209,9 +208,7 @@ export function initAudio() {
         MusicManager.init();
         isAudioInitialized = true;
         
-        if (!isLoadTriggered) {
-            loadAudio();
-        }
+        // ZMIANA: Usunięto stąd automatyczne loadAudio(), by main.js mogło kontrolować progres
     } catch (e) { 
         console.error("BŁĄD KRYTYCZNY AUDIO:", e); 
     }
@@ -293,7 +290,6 @@ export function playSound(eventName) {
 
     if (eventName === 'MusicMenu') { MusicManager.play('menu'); return; }
     if (eventName === 'MusicGameplay') { MusicManager.play('gameplay'); return; }
-    // ZMIANA: Obsługa MusicIntro
     if (eventName === 'MusicIntro') { MusicManager.play('intro'); return; }
     if (eventName === 'MusicStop') { MusicManager.stop(); return; }
 

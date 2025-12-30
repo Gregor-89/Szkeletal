@@ -18,13 +18,13 @@ import { updateVisualEffects, updateParticles } from './managers/effects.js';
 import { initInput } from './ui/input.js';
 import { devSettings, initDevTools } from './services/dev.js';
 import { updateGame } from './core/gameLogic.js';
-import { initAudio, loadAudio, playSound } from './services/audio.js'; 
+import { initAudio, loadAudio, playSound, AUDIO_ASSET_LIST } from './services/audio.js'; // ZMIANA: Dodano AUDIO_ASSET_LIST
 import { PlayerBullet, EnemyBullet } from './entities/bullet.js';
 import { Gem } from './entities/gem.js';
 import { Particle } from './entities/particle.js';
 import { HitText } from './entities/hitText.js';
 import { Hazard } from './entities/hazard.js'; 
-import { loadAssets } from './services/assets.js';
+import { loadAssets, assetDefinitions } from './services/assets.js'; // ZMIANA: Dodano assetDefinitions
 import { VERSION } from './config/version.js';
 import { displayScores } from './services/scoreManager.js';
 import { getLang } from './services/i18n.js';
@@ -455,7 +455,8 @@ function launchApp() {
     initAudio();
     LeaderboardService.trackUniquePlayer();
 
-    const totalAssets = (loadAssets.totalAssets || 50) + (loadAudio.totalSounds || 20);
+    // POPRAWKA: Dynamiczne obliczanie łącznej liczby zasobów (110 obrazów + 21 dźwięków = 131)
+    const totalAssets = Object.keys(assetDefinitions).length + AUDIO_ASSET_LIST.length;
     let loadedCount = 0;
 
     const updateProgress = () => {
@@ -521,14 +522,12 @@ function finishSplashSequence() {
     setTimeout(() => {
         splashOverlay.style.display = 'none';
         
-        // POPRAWKA v1.05d: Muzyka menu nie powinna przerywać muzyki intro
         const introWillShow = !localStorage.getItem('szkeletal_intro_seen');
         
         if (!game.running) {
             initializeIntro(gameStateRef); 
             
             setTimeout(() => {
-                // Odtwórz muzykę menu tylko jeśli intro NIE jest aktywne
                 if (!game.running && (!introOverlay || introOverlay.style.display !== 'flex')) {
                     playSound('MusicMenu');
                 }
