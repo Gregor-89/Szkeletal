@@ -1,16 +1,17 @@
 // ==============
-// SHOPMANAGER.JS (v1.10 - Multi-Level Upgrades)
+// SHOPMANAGER.JS (v1.10c - Final Points Fix)
 // Lokalizacja: /js/services/shopManager.js
 // ==============
 
 import { SHOP_CONFIG } from '../config/gameData.js';
 import { perkPool } from '../config/perks.js';
+import { getLang } from './i18n.js';
 
 const STORAGE_KEYS = {
   MAX_SCORE: 'szkeletal_persistent_max_score',
   SPENT: 'szkeletal_spent_points',
-  UPGRADES: 'szkeletal_bought_upgrades_v2', // Nowy klucz dla struktury poziomów
-  TOTAL_PURCHASES: 'szkeletal_shop_total_count', // Licznik wszystkich kupionych poziomów dla ceny
+  UPGRADES: 'szkeletal_bought_upgrades_v2',
+  TOTAL_PURCHASES: 'szkeletal_shop_total_count',
   CHECKSUM: 'szkeletal_shop_integrity_v2'
 };
 
@@ -21,22 +22,27 @@ class ShopManager {
   constructor() {
     this.maxScore = parseInt(localStorage.getItem(STORAGE_KEYS.MAX_SCORE)) || 0;
     this.spentPoints = parseInt(localStorage.getItem(STORAGE_KEYS.SPENT)) || 0;
-    // Obiekt przechowujący ulepszenia jako { upgradeId: poziom }
-    this.boughtUpgrades = JSON.parse(localStorage.getItem(STORAGE_KEYS.UPGRADES)) || {};
+    
+    const storedUpgrades = localStorage.getItem(STORAGE_KEYS.UPGRADES);
+    this.boughtUpgrades = storedUpgrades ? JSON.parse(storedUpgrades) : {};
+    
     this.totalPurchases = parseInt(localStorage.getItem(STORAGE_KEYS.TOTAL_PURCHASES)) || 0;
-    this.validateIntegrity();
+    
+    // Walidacja przy starcie - logujemy błąd, ale pozwalamy grać na danych z localStorage
+    if (!this.validateIntegrity()) {
+      console.warn("[SHOP] Data integrity warning. Points loaded from local storage.");
+    }
   }
   
   validateIntegrity() {
     const storedCheck = localStorage.getItem(STORAGE_KEYS.CHECKSUM);
-    const currentData = JSON.stringify(this.boughtUpgrades) + this.maxScore + this.spentPoints + this.totalPurchases;
-    const calculatedCheck = encrypt(currentData.length);
+    if (!storedCheck) return true;
     
-    if (storedCheck && storedCheck !== calculatedCheck) {
-      console.warn("[SHOP] Integrity Breach Detected!");
-      return false;
-    }
-    return true;
+    // ZMIANA v0.110f: Bardziej stabilna metoda sumy kontrolnej bazująca na wartościach liczbowych
+    const checksumBase = this.maxScore + this.spentPoints + this.totalPurchases;
+    const calculatedCheck = encrypt(checksumBase);
+    
+    return storedCheck === calculatedCheck;
   }
   
   save() {
@@ -45,16 +51,19 @@ class ShopManager {
     localStorage.setItem(STORAGE_KEYS.UPGRADES, JSON.stringify(this.boughtUpgrades));
     localStorage.setItem(STORAGE_KEYS.TOTAL_PURCHASES, this.totalPurchases);
     
-    const currentData = JSON.stringify(this.boughtUpgrades) + this.maxScore + this.spentPoints + this.totalPurchases;
-    localStorage.setItem(STORAGE_KEYS.CHECKSUM, encrypt(currentData.length));
+    // Zapis nowej sumy kontrolnej
+    const checksumBase = this.maxScore + this.spentPoints + this.totalPurchases;
+    localStorage.setItem(STORAGE_KEYS.CHECKSUM, encrypt(checksumBase));
+    
+    console.log(`[SHOP] Data saved. Wallet: ${this.getWalletBalance()} (Max: ${this.maxScore}, Spent: ${this.spentPoints})`);
   }
   
   getWalletBalance() {
-    return Math.max(0, this.maxScore - this.spentPoints);
+    const balance = this.maxScore - this.spentPoints;
+    return balance > 0 ? balance : 0;
   }
   
   calculateNextCost() {
-    // Koszt skaluje się na podstawie całkowitej liczby zakupionych poziomów
     let cost = SHOP_CONFIG.BASE_COST * Math.pow(SHOP_CONFIG.COST_MULTIPLIER, this.totalPurchases);
     return Math.round(cost / 1000) * 1000;
   }
@@ -70,15 +79,12 @@ class ShopManager {
     
     const currentLvl = this.getUpgradeLevel(upgradeId);
     
-    // Sprawdź limit poziomów (z perkPool)
     if (currentLvl >= (perkData.max || 1)) return false;
     
-    // Sprawdź zależności (tylko poziom 1 wymaga zależności)
     if (currentLvl === 0 && config.dependsOn && this.getUpgradeLevel(config.dependsOn) === 0) {
       return false;
     }
     
-    // Sprawdź środki
     return this.getWalletBalance() >= this.calculateNextCost();
   }
   
@@ -100,14 +106,17 @@ class ShopManager {
   
   resetUpgrades() {
     this.boughtUpgrades = {};
+    this.spentPoints = 0;
     this.totalPurchases = 0;
     this.save();
   }
   
   updateMaxScore(newScore) {
-    if (newScore > this.maxScore) {
-      this.maxScore = newScore;
+    const scoreToAdd = Math.floor(newScore);
+    if (scoreToAdd > this.maxScore) {
+      this.maxScore = scoreToAdd;
       this.save();
+      console.log(`[SHOP] New High Score updated: ${this.maxScore}`);
       return true;
     }
     return false;
@@ -115,6 +124,10 @@ class ShopManager {
   
   isOwned(upgradeId) {
     return this.getUpgradeLevel(upgradeId) > 0;
+  }
+  
+  getCurrencyLabel() {
+    return getLang('ui_shop_currency') || "PKT";
   }
 }
 

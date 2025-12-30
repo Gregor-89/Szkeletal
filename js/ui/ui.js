@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.17d - Resume Header i18n)
+// UI.JS (v1.17e - Shop Sync Fix)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -126,7 +126,6 @@ export async function startRun(game, resetAllFn, uiData) {
     game.running = true;
     
     const currentTime = performance.now();
-    // ZMIANA v0.110f: Startujemy czas od offsetu dev (zwykle 0)
     game.time = startOffset; 
     uiData.startTime = currentTime - startOffset * 1000;
     uiData.lastTime = currentTime;
@@ -332,7 +331,6 @@ export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
     let t = timerDuration;
     if(resumeOverlay) resumeOverlay.style.display = 'flex';
     
-    // ZMIANA v0.110f: Gwarantowana lokalizacja tytułu "Przygotuj się"
     const readyTitle = document.getElementById('resumeOverlayTitle');
     if(readyTitle) readyTitle.textContent = getLang('ui_ready_title') || "PRZYGOTUJ SIĘ";
 
@@ -383,6 +381,8 @@ export function gameOver(game, uiData) {
     
     if (shopManager && !game.isCheated) {
         shopManager.updateMaxScore(Math.floor(game.score));
+        // ZMIANA v0.110f: Dodatkowe wymuszenie zapisu po aktualizacji wyniku
+        shopManager.save();
     }
 
     playSound('MusicMenu');
