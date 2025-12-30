@@ -6,6 +6,22 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 # Changelog
 
+## [0.109] - 2025-12-30
+### NAPRAWIONO
+- **Progress Bar:** Naprawiono błąd licznika zasobów na ekranie ładowania (poprawiono z błędnego 110/71 na poprawne 131/131). System teraz precyzyjnie i dynamicznie sumuje wszystkie grafiki (110) oraz dźwięki (21) przed startem aplikacji.
+- **Menu Hot Coffee - Obsługa Błędów:** Wprowadzono bezpieczne pobieranie listy "Ziemniaczanych Mecenasów". W przypadku braku połączenia lub błędu proxy, gra nie wyrzuca już błędów w konsoli, lecz wyświetla przyjazny komunikat.
+- **Menu Hot Coffee - Przycisk Ponowienia:** Dodano interaktywny przycisk "PONÓW", który pojawia się tylko w przypadku błędu sieci, pozwalając na ręczne odświeżenie listy wspierających bez restartu gry.
+- **Logika Odblokowania Skina:** Naprawiono błąd wizualny przycisku "POSTAW KAWKĘ". Po odblokowaniu skórki "Hot", przycisk poprawnie zmienia kolor na niebieski oraz wyświetla unikalny tekst: „NIKT TEGO NIE SPRAWDZA - SKIN ODBLOKOWANY”.
+- **Stopka Hot Coffee:** Przywrócono oryginalną treść stopki z pozdrowieniami dla wykopowego tagu `#bekazludologuff`. Naprawiono funkcjonalność linku, który teraz poprawnie przekierowuje do serwisu Wykop.pl.
+
+### ZMIENIONO
+- **System Ładowania:** Zreorganizowano inicjalizację modułu audio. Funkcja `loadAudio` jest teraz kontrolowana bezpośrednio przez główny preloader w `main.js`, co umożliwiło raportowanie postępu wczytywania dźwięków do paska postępu.
+- **Lokalizacja (i18n):** Dodano brakujące klucze tłumaczeń (`ui_coffee_unlocked`, `ui_coffee_footer`) dla wszystkich trzech wspieranych języków: polskiego, angielskiego i rumuńskiego.
+- **Eksporty Zasobów:** Pliki `assets.js` oraz `audio.js` eksportują teraz swoje definicje, co pozwala na centralne i dokładne zarządzanie zasobami przez silnik gry.
+
+
+---
+
 ## [0.108] - 2025-12-29
 ### DODANO
 - **System Sklepu (Ziemniaczany Sklepik):** Wprowadzono system stałego rozwoju (Meta-Progression).
