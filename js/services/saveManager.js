@@ -1,5 +1,5 @@
 // ==============
-// SAVEMANAGER.JS (v1.09c - Empty Save Safe Exit)
+// SAVEMANAGER.JS (v1.09c - Restore Game Visibility Fix)
 // Lokalizacja: /js/services/saveManager.js
 // ==============
 
@@ -149,13 +149,12 @@ export function saveGame(state) {
     }
 }
 
-export function loadGame(savedStateInput, state, uiData) {
+export async function loadGame(savedStateInput, state, uiData) {
     let savedState = savedStateInput;
     if (!savedState) {
         savedState = getSavedGameFromStorage();
     }
 
-    // POPRAWKA v1.09c: Zmiana na console.warn i cichy powrót, aby uniknąć błędów Talo Loggera
     if (!savedState) {
         console.warn("[SaveManager] Brak zapisu do wczytania.");
         return;
@@ -182,7 +181,6 @@ export function loadGame(savedStateInput, state, uiData) {
     Object.assign(game, savedState.game);
     Object.assign(settings, savedState.settings);
     
-    // Synchronizacja Zooma po załadowaniu danych gry
     const savedZoom = localStorage.getItem('szkeletal_zoom');
     if (savedZoom) {
         game.zoomLevel = parseInt(savedZoom) / 100;
@@ -275,6 +273,10 @@ export function loadGame(savedStateInput, state, uiData) {
     
     const menuOverlay = document.getElementById('menuOverlay');
     if (menuOverlay) menuOverlay.style.display = 'none';
+
+    // FIX v0.110l: Przywrócenie widoczności planszy gry
+    const gameContainer = document.getElementById('gameContainer');
+    if (gameContainer) gameContainer.style.display = 'flex';
     
     game.inMenu = false; 
     game.paused = false; 

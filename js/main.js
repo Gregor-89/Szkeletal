@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v1.05g - Pause Timer & Responsive Fix)
+// MAIN.JS (v1.05h - Integrity & Black Screen Final Fix)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -41,7 +41,7 @@ class Camera {
         this.offsetY = 0;
     }
 
-    // ZMIANA v0.110b: Aktualizacja wymiarów widoku kamery
+    // FIX v0.110k: Aktualizacja wymiarów widoku kamery
     updateViewDimensions(viewWidth, viewHeight) {
         this.viewWidth = viewWidth;
         this.viewHeight = viewHeight;
@@ -107,7 +107,7 @@ Object.defineProperty(game, 'score', {
             console.warn("Integrity Check Fail: Score corrupted!");
         }
         _gState.score = val;
-        _gState._sShadow = encrypt(val);
+        _gState._sShadow = encrypt(val); // FIX v0.110k: Dodano _gState.
     },
     enumerable: true
 });
@@ -120,7 +120,7 @@ Object.defineProperty(game, 'health', {
             console.warn("Integrity Check Fail: Health corrupted!");
         }
         _gState.health = val;
-        _gState._hShadow = encrypt(val);
+        _gState._hShadow = encrypt(val); // FIX v0.110k: Dodano _gState.
     },
     enumerable: true
 });
@@ -189,15 +189,11 @@ function updateGameTitle() {
     if (menuVer) menuVer.textContent = `v${VERSION}`;
 }
 
-// ZMIANA v0.110b: Ulepszona obsługa zmiany rozmiaru okna
+// FIX v0.110k: Stabilne pobieranie wymiarów okna
 function handleResize() {
     if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const availableWidth = rect.width;
-    const availableHeight = rect.height;
-    if (availableWidth === 0 || availableHeight === 0) return;
-    canvas.width = availableWidth;
-    canvas.height = availableHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     if (camera) {
         camera.updateViewDimensions(canvas.width, canvas.height);
     }
@@ -210,7 +206,6 @@ function initializeCanvas() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
 
-    // ZMIANA v0.110b: Dynamiczna inicjalizacja wymiarów
     handleResize();
     window.addEventListener('resize', () => {
         requestAnimationFrame(handleResize);
@@ -269,7 +264,6 @@ const uiData = {
     currentChestReward: null,
     pickupShowLabels: true,
     pickupStyleEmoji: false,
-    // ZMIANA v0.110d: FPS domyślnie wyłączony
     showFPS: false,
     fpsPosition: 'right',
     gameData: { PLAYER_CONFIG, GAME_CONFIG, WORLD_CONFIG, SIEGE_EVENT_CONFIG },
@@ -355,6 +349,9 @@ function loop(currentTime){
             (introOverlay && introOverlay.style.display === 'flex')) {
             game.paused = true;
         }
+
+        // FIX v0.110k: Zapewnienie rozdzielczości przed renderowaniem
+        if (canvas.width === 0 || canvas.height === 0) handleResize();
         
         updateVisualEffects(dt, [], [], bombIndicators); 
         updateParticles(dt, particles); 
@@ -382,7 +379,6 @@ function loop(currentTime){
                 return; 
             }
 
-            // ZMIANA v0.110f: Czas gry teraz narasta krokowo o dt, co zapobiega jego doliczaniu podczas pauzy
             game.time += dt; 
             update(dt); 
             uiData.drawCallback();

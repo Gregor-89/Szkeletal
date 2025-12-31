@@ -1,9 +1,10 @@
 // ==============
-// INPUT.JS (v1.14 - Precision Deadzone & Menu Stick Support)
+// INPUT.JS (v1.14b - Full Restore & Gamepad Navigation Fix)
 // Lokalizacja: /js/ui/input.js
 // ==============
 
 import { initAudio, playSound } from '../services/audio.js';
+import { pauseGame, resumeGame } from './ui.js'; // Dodano brakujący import dla obsługi pauzy
 
 const joyZone = document.getElementById('joystickZone');
 const joy = document.getElementById('joystick');
@@ -16,7 +17,9 @@ let onJoyEnd = () => {};
 let jActive = false, jStartX = 0, jStartY = 0, jMoveX = 0, jMoveY = 0;
 
 let gamepadIndex = null;
-const GAMEPAD_DEADZONE = 0.25; // ZWIĘKSZONO dla stabilności menu
+const GAMEPAD_DEADZONE = 0.25; 
+let lastBtnTime = 0;
+const BTN_COOLDOWN = 200;
 
 export function initInput(escapeFn, joyStartFn, joyEndFn) {
     onEscapePress = escapeFn;
@@ -40,11 +43,129 @@ window.addEventListener("gamepaddisconnected", (e) => {
     }
 });
 
-export function pollGamepad() {
-    if (gamepadIndex === null) return null;
+// POPRAWKA v0.110d: Dodano obsługę parametrów dla pętli menu
+export function pollGamepad(game, uiData) {
+    if (gamepadIndex === null) return { x: 0, y: 0 };
     const gp = navigator.getGamepads()[gamepadIndex];
-    if (!gp) return null;
-    return gp;
+    if (!gp) return { x: 0, y: 0 };
+
+    let gx = gp.axes[0];
+    let gy = gp.axes[1];
+    if (Math.abs(gx) < GAMEPAD_DEADZONE) gx = 0;
+    if (Math.abs(gy) < GAMEPAD_DEADZONE) gy = 0;
+
+    const now = performance.now();
+
+    // NAWIGACJA W MENU (Tylko gdy spauzowane lub w menu)
+    if (game && (game.paused || game.inMenu)) {
+        if (now - lastBtnTime > BTN_COOLDOWN) {
+            let dir = null;
+            if (gp.buttons[12].pressed || gy < -0.5) dir = 'up';
+            if (gp.buttons[13].pressed || gy > 0.5) dir = 'down';
+            if (gp.buttons[14].pressed || gx < -0.5) dir = 'left';
+            if (gp.buttons[15].pressed || gx > 0.5) dir = 'right';
+
+            if (dir) {
+                lastBtnTime = now;
+                handleGamepadNav(dir, game, uiData);
+            }
+
+            if (gp.buttons[0].pressed) { // Przycisk A
+                lastBtnTime = now;
+                const curr = document.activeElement;
+                if (curr) curr.click();
+            }
+            
+            if (gp.buttons[1].pressed) { // Przycisk B
+                lastBtnTime = now;
+                const backBtn = document.querySelector('.menu-view.active .nav-back');
+                if (backBtn) backBtn.click();
+            }
+        }
+
+        // SCROLLOWANIE PRAWĄ GAŁKĄ
+        let scrollY = gp.axes[3];
+        if (Math.abs(scrollY) > GAMEPAD_DEADZONE) {
+            const scrollBox = document.querySelector('.menu-view.active .retro-scroll-box, #levelUpPanel .perk-grid, #statsDisplayPause');
+            if (scrollBox) {
+                scrollBox.scrollTop += scrollY * 25; 
+            }
+        }
+    }
+
+    // OBSŁUGA PRZYCISKU START (PAUZA)
+    if (gp.buttons[9].pressed && now - lastBtnTime > 500) {
+        lastBtnTime = now;
+        if (game && game.paused && !game.inMenu) resumeGame(game);
+        else if (game && !game.paused) pauseGame(game, uiData.settings, uiData.player.weapons, uiData.player);
+    }
+
+    return { x: gx, y: gy };
+}
+
+// FIX v0.110d: Logika nawigacji z blokadą przeskoku na suwakach
+function handleGamepadNav(dir, game, uiData) {
+    const activeView = document.querySelector('.menu-view.active');
+    if (!activeView) return;
+
+    const focusable = Array.from(activeView.querySelectorAll('.retro-btn, .retro-toggle, .retro-range, .skin-option, [tabindex="0"]'))
+        .filter(el => el.offsetParent !== null);
+    
+    if (focusable.length === 0) return;
+
+    const curr = document.activeElement;
+    
+    // Jeśli fokus jest na suwaku, lewo/prawo zmienia wartość, a nie przycisk
+    if (curr && (curr.classList.contains('retro-range') || curr.type === 'range')) {
+        if (dir === 'left' || dir === 'right') {
+            const step = parseFloat(curr.step) || 5; 
+            const val = parseFloat(curr.value);
+            curr.value = dir === 'left' ? val - step : val + step;
+            curr.dispatchEvent(new Event('input', { bubbles: true }));
+            curr.dispatchEvent(new Event('change', { bubbles: true }));
+            return; 
+        }
+    }
+
+    let next;
+    if (!focusable.includes(curr)) {
+        next = focusable[0];
+    } else {
+        const idx = focusable.indexOf(curr);
+        if (dir === 'up' || dir === 'left') next = focusable[(idx - 1 + focusable.length) % focusable.length];
+        else next = focusable[(idx + 1) % focusable.length];
+    }
+
+    if (next) {
+        focusable.forEach(el => el.classList.remove('focused'));
+        next.focus();
+        next.classList.add('focused');
+        playSound('UI_Click');
+    }
+}
+
+// PRZYWRÓCONO: Niezbędna funkcja eksportowana
+export function getGamepadButtonState() {
+    if (gamepadIndex === null) return {};
+    const gp = navigator.getGamepads()[gamepadIndex];
+    if (!gp) return {};
+
+    return {
+        A: gp.buttons[0].pressed, 
+        B: gp.buttons[1].pressed, 
+        X: gp.buttons[2].pressed, 
+        Y: gp.buttons[3].pressed, 
+        LB: gp.buttons[4].pressed,
+        RB: gp.buttons[5].pressed,
+        LT: gp.buttons[6].pressed,
+        RT: gp.buttons[7].pressed,
+        Select: gp.buttons[8].pressed,
+        Start: gp.buttons[9].pressed, 
+        Up: gp.buttons[12].pressed,
+        Down: gp.buttons[13].pressed,
+        Left: gp.buttons[14].pressed,
+        Right: gp.buttons[15].pressed
+    };
 }
 
 export function jVec() {
@@ -60,7 +181,7 @@ export function jVec() {
         dy += jy / max;
     }
 
-    const gp = pollGamepad();
+    const gp = navigator.getGamepads()[gamepadIndex];
     if (gp) {
         let lx = gp.axes[0];
         let ly = gp.axes[1];
@@ -85,35 +206,9 @@ export function jVec() {
     }
 
     const len = Math.hypot(dx, dy);
-    if (len > 1.0) {
-        dx /= len;
-        dy /= len;
-    }
+    if (len > 1.0) { dx /= len; dy /= len; }
 
     return { x: dx, y: dy };
-}
-
-export function getGamepadButtonState() {
-    const gp = pollGamepad();
-    if (!gp) return {};
-
-    const state = {
-        A: gp.buttons[0].pressed, 
-        B: gp.buttons[1].pressed, 
-        X: gp.buttons[2].pressed, 
-        Y: gp.buttons[3].pressed, 
-        LB: gp.buttons[4].pressed,
-        RB: gp.buttons[5].pressed,
-        LT: gp.buttons[6].pressed,
-        RT: gp.buttons[7].pressed,
-        Select: gp.buttons[8].pressed,
-        Start: gp.buttons[9].pressed, 
-        Up: gp.buttons[12].pressed,
-        Down: gp.buttons[13].pressed,
-        Left: gp.buttons[14].pressed,
-        Right: gp.buttons[15].pressed
-    };
-    return state;
 }
 
 export function setJoystickSide(side) {
@@ -136,26 +231,20 @@ function jSet(dx, dy) {
 function jStart(e) {
     if (!joyZone || joyZone.classList.contains('off')) return;
     jActive = true;
-    
     initAudio();
     onJoyStart();
-    
     const p = e.touches ? e.touches[0] : e;
     const r = joyZone.getBoundingClientRect();
-    
     jStartX = p.clientX - r.left - 75; 
     jStartY = p.clientY - r.top - 75;
     jMoveX = jStartX; jMoveY = jStartY; jSet(0, 0);
     e.preventDefault();
-    
-    playSound('Click');
 }
 
 function jMove(e) {
     if (!jActive || !joyZone || joyZone.classList.contains('off')) return;
     const p = e.touches ? e.touches[0] : e;
     const r = joyZone.getBoundingClientRect();
-    
     jMoveX = p.clientX - r.left - 75; 
     jMoveY = p.clientY - r.top - 75;
     jSet(jMoveX - jStartX, jMoveY - jStartY);
@@ -172,9 +261,7 @@ document.addEventListener('keydown', e => {
     const k = e.key.toLowerCase();
     keys[k] = true;
     initAudio();
-    if (k === 'escape') {
-        onEscapePress();
-    }
+    if (k === 'escape') onEscapePress();
 });
 
 document.addEventListener('keyup', e => {

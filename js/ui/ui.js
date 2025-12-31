@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.17h - Flow Polish & Navigation Sync)
+// UI.JS (v1.17h - Flow Polish & Syntax Fix - Restoration v0.110l)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -40,6 +40,9 @@ export function showMenu(game, resetAllFn, uiData, allowContinue = false) {
     devSettings.presetLoaded = false; 
     
     LeaderboardUI.setGameRef(game);
+
+    const gameContainer = document.getElementById('gameContainer');
+    if (gameContainer) gameContainer.style.display = 'none';
 
     if (!allowContinue) { 
         if (resetAllFn) {
@@ -93,12 +96,13 @@ export function showMenu(game, resetAllFn, uiData, allowContinue = false) {
     else displayScores('scoresBodyMenu');
     
     attachClearScoresListeners();
-
-    // Wymuszenie fokusu po wejściu do menu głównego
     Menus.forceFocusFirst();
 }
 
 export async function startRun(game, resetAllFn, uiData) {
+    const gameContainer = document.getElementById('gameContainer');
+    if (gameContainer) gameContainer.style.display = 'flex';
+
     LeaderboardService.trackUniquePlayer();
     LeaderboardUI.setGameRef(game);
 
@@ -139,8 +143,6 @@ export async function startRun(game, resetAllFn, uiData) {
         uiData.settings.currentSiegeInterval = startOffset + 10.0; 
     }
     
-    console.log("[UI] startRun: Gra uruchomiona deterministycznie.");
-
     if (LeaderboardService && LeaderboardService.trackStat) {
         LeaderboardService.trackStat('games_played', 1);
     }
@@ -176,7 +178,6 @@ export async function resetAll(canvas, settings, perkLevels, uiData, camera) {
     if (isTouch && !joySaved) {
         localStorage.setItem('szkeletal_joy_side', 'right');
         setJoystickSide('right');
-        console.log("[UI] Wykryto urzÄ…dzenie dotykowe. Aktywacja dĹĽojstika.");
     }
 
     const savedZoom = localStorage.getItem('szkeletal_zoom');
@@ -256,7 +257,7 @@ export async function resetAll(canvas, settings, perkLevels, uiData, camera) {
         settings.lastHazardSpawn = 0; 
         settings.lastSiegeEvent = 0; 
         settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
-        settings.siegeState = 'idle';
+        settings.siegeState = 'idle'; // Syntax fix v0.110k
         settings.siegeWarningT = 0;
 
         game.newEnemyWarningT = 0; 
@@ -327,6 +328,9 @@ export function pauseGame(game, settings, weapons, player) {
 export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
     game.manualPause = false;
     
+    const gameContainer = document.getElementById('gameContainer');
+    if (gameContainer) gameContainer.style.display = 'flex';
+
     if(pauseOverlay) pauseOverlay.style.display = 'none'; 
     if(levelUpOverlay) levelUpOverlay.style.display = 'none'; 
     if(chestOverlay) chestOverlay.style.display = 'none'; 
@@ -342,7 +346,7 @@ export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
     if(resumeOverlay) resumeOverlay.style.display = 'flex';
     
     const readyTitle = document.getElementById('resumeOverlayTitle');
-    if(readyTitle) readyTitle.textContent = getLang('ui_ready_title') || "PRZYGOTUJ SIÄ ";
+    if(readyTitle) readyTitle.textContent = getLang('ui_ready_title') || "PRZYGOTUJ SIĘ";
 
     const id = setInterval(() => {
         t = Math.max(0, t - 0.05);
@@ -415,7 +419,6 @@ export function gameOver(game, uiData) {
 
     Hud.resetHealthBarVisuals();
     Menus.updateStaticTranslations(); 
-
     Menus.forceFocusFirst();
     
     if (LeaderboardService && LeaderboardService.trackStat) {

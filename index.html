@@ -60,8 +60,7 @@
     </div>
   </div>
 
-  <div id="gameContainer">
-    <div class="game-view">
+  <div id="gameContainer" style="display:none;"> <div class="game-view">
         <div class="bars-container">
             <div class="bars-left">
                 <div id="playerHPBarOuter"><div id="playerHPBarInner"></div><div id="playerHPBarTxt"></div></div>
@@ -193,11 +192,6 @@
       <div id="view-config" class="menu-view">
         <h2 id="configTitleMain" class="retro-title">KONFIGURACJA</h2>
         <div class="retro-scroll-box config-list">
-            <div class="config-row" style="flex-direction:column; align-items:flex-start;">
-                <span id="lblNick" style="margin-bottom:5px; color:#FFD700;">TWOJA KSYWKA:</span>
-                <input type="text" id="inpPlayerNick" class="retro-input" maxlength="20" placeholder="Wpisz nick..." value="GRACZ">
-                <span id="lblNickLimitConfig" style="font-size:0.8rem; color:#666;">(Max 20 znaków, A-Z, 0-9)</span>
-            </div>
             <input type="checkbox" id="chkHyper" style="display:none;">
             <input type="checkbox" id="chkShake" checked style="display:none;">
             <input type="checkbox" id="chkFPS" style="display:none;">
@@ -228,10 +222,15 @@
                     <span id="zoomValue" style="min-width:50px; text-align:right; color:#FFD700; font-family:'VT323', monospace; font-size:1.5rem;">100%</span>
                 </div>
             </div>
-            <div class="config-row"><span id="lblLang">JĘZYK</span><div id="lang-selector-container" class="retro-lang-row"></div></div>
             <div class="config-row">
                 <span id="lblTutorial">POKAZUJ SAMOUCZEK</span>
                 <button id="toggleTutorial" class="retro-toggle off">WYŁ</button>
+            </div>
+            <div class="config-row"><span id="lblLang">JĘZYK</span><div id="lang-selector-container" class="retro-lang-row"></div></div>
+            <div class="config-row" style="flex-direction:column; align-items:flex-start;">
+                <span id="lblNick" style="margin-bottom:5px; color:#FFD700;">TWOJA KSYWKA:</span>
+                <input type="text" id="inpPlayerNick" class="retro-input" maxlength="20" placeholder="Wpisz nick..." value="GRACZ">
+                <span id="lblNickLimitConfig" style="font-size:0.8rem; color:#666;">(Max 20 znaków, A-Z, 0-9)</span>
             </div>
         </div>
         <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>

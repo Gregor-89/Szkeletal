@@ -1,5 +1,5 @@
 // ==============
-// DRAW.JS (v1.03d - Render Culling Distance Fix)
+// DRAW.JS (v1.03e - Final Camera Centering & Zoom Safety)
 // Lokalizacja: /js/core/draw.js
 // ==============
 
@@ -144,17 +144,17 @@ export function draw(ctx, state, ui, fps) {
     
     const { pickupStyleEmoji, pickupShowLabels } = ui;
     
-    const zoom = game.zoomLevel || 1.0; 
+    // FIX v0.110k: Czysty mnożnik zoomu dla idealnych proporcji (bez mnożników rozdzielczości)
+    const zoom = Math.max(0.1, game.zoomLevel || 1.0); 
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
     const vWidth = canvas.width / zoom;
     const vHeight = canvas.height / zoom;
 
-    // POPRAWKA RENDERINGU: Zwiększenie marginesu wycinania (Culling)
-    // Zwiększono margines z 300 na 800, aby pociski nie znikaly przy zoomie 60%
     const margin = 800 / zoom; 
 
+    // FIX v0.110k: Precyzyjne obliczanie środka skalowania
     const viewLeft = camera.offsetX - (vWidth - canvas.width) / 2;
     const viewTop = camera.offsetY - (vHeight - canvas.height) / 2;
     
@@ -165,6 +165,7 @@ export function draw(ctx, state, ui, fps) {
 
     ctx.save(); 
 
+    // Skalowanie względem środka ekranu
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.scale(zoom, zoom);
     ctx.translate(-canvas.width / 2, -canvas.height / 2);

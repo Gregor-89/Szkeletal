@@ -1,4 +1,4 @@
-/* style.css (v0.110j - Gold Focus & Level Up Layout Fix) */
+/* style.css (v1.18d - Total UI Restoration & Polish v0.110m) */
 
 :root {
     --bg-color: #050505;
@@ -49,7 +49,6 @@ body {
     }
 }
 
-/* POPRAWIONY FOCUS - TYLKO ZĹ OTY GLOW I RAMKA, BEZ BIAĹ EJ RAMKI */
 .focused {
     outline: none !important;
     border: 3px solid var(--accent-gold) !important;
@@ -59,7 +58,6 @@ body {
     transition: transform 0.1s ease !important;
     color: #fff !important;
     text-shadow: 2px 2px 4px #000 !important;
-    /* Zachowanie oryginalnego koloru tĹ‚a z lekkim rozjaĹ›nieniem */
     background-image: linear-gradient(rgba(255,255,255,0.25), rgba(255,255,255,0.25)) !important;
 }
 
@@ -67,7 +65,7 @@ body {
     position: relative; 
     width: 100vw; 
     height: 100vh; 
-    display: flex; 
+    display: none; 
     flex-direction: column; 
     align-items: center; 
     justify-content: space-between; 
@@ -169,6 +167,7 @@ body {
     to { transform: translateY(-50%) scale(1.1); filter: drop-shadow(0 0 10px red); }
 }
 
+/* FIX v0.110m: Zmieniono na contain, aby uniknąć elips i rozciągnięcia grafiki */
 canvas { 
     background: #111; 
     border: 2px solid #333; 
@@ -221,6 +220,37 @@ canvas {
 .retro-frame { width: 95%; max-width: 800px; height: 90vh; max-height: 800px; background: var(--frame-bg); border: 4px solid #333; box-shadow: inset 0 0 0 4px #000, 0 0 30px #000; padding: 20px; display: flex; flex-direction: column; position: relative; overflow: hidden; backdrop-filter: blur(4px); }
 .retro-frame.small { max-width: 600px; height: auto; max-height: 700px; } 
 
+/* FIX v0.110m: Przywrócono 3-kolumnowy układ perków w menu Level Up */
+#levelUpPanel.retro-frame.wide { 
+    width: 95%; 
+    max-width: 1000px; 
+    height: auto; 
+    max-height: 95vh; 
+}
+
+#perks.perk-grid { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 15px; 
+    padding: 10px;
+    overflow-y: visible;
+}
+
+/* Scrollowalne statystyki w Level Up */
+.stats-panel {
+    margin-top: 15px;
+    border-top: 2px solid #444;
+    padding-top: 10px;
+}
+.stats-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 8px; 
+    max-height: 200px; 
+    overflow-y: auto; 
+    padding-right: 5px;
+}
+
 .retro-scroll-box { 
     flex-grow: 1; 
     overflow-y: auto; 
@@ -258,21 +288,22 @@ canvas {
     color: var(--accent-gold);
     text-decoration: underline;
 }
+
+/* Wskaźniki sortowania w tabelach */
+.sortable-table th[data-sort]::after {
+    content: ' ↕';
+    font-size: 0.8rem;
+    opacity: 0.5;
+}
+.sortable-table th.sort-asc::after { content: ' ↑'; opacity: 1; color: var(--accent-gold); }
+.sortable-table th.sort-desc::after { content: ' ↓'; opacity: 1; color: var(--accent-gold); }
+
 #retroScoreTable td:last-child, #goScoreTable td:last-child { font-size: 0.8em; color: #888; }
 
 .guide-entry { display: flex; flex-direction: row; align-items: flex-start; margin-bottom: 12px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px; }
 .guide-icon-wrapper { width: 50px; min-width: 50px; margin-right: 15px; display: flex; justify-content: center; }
 .guide-text-wrapper { flex: 1; text-align: left; }
 
-#perks.perk-grid { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 10px; 
-    overflow-y: auto; 
-    max-height: 60vh; 
-    touch-action: pan-y;
-    padding: 10px; 
-}
 .perk { background: #222; border: 2px solid #666; padding: 10px; cursor: pointer; text-align: left; transition: transform 0.1s; min-height: 80px; display: flex; flex-direction: row; align-items: center; }
 .perk:hover { transform: scale(1.02); border-color: #fff; background: #333; }
 
@@ -283,12 +314,6 @@ canvas {
 .perk h4 { margin: 0 0 5px 0; font-size: 1.3rem; color: var(--accent-gold); }
 .perk p { margin: 0; font-size: 1rem; color: #ccc; }
 .perk .badge { font-size: 0.8rem; background: #000; padding: 2px 4px; border-radius: 4px; margin-left: 5px; color: #aaa; white-space: nowrap; }
-
-.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.9rem; }
-.stat-item { background: #111; border: 1px solid #444; padding: 4px; display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 5px; }
-.stat-item-icon { width: 40px; text-align: center; display:flex; justify-content: center; }
-.stat-item-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #aaa; }
-.stat-item-value { font-weight: bold; color: #fff; text-align: right; }
 
 .qr-wrapper { background: #fff; padding: 10px; border-radius: 4px; display: flex; justify-content: center; align-items: center; }
 
@@ -356,6 +381,35 @@ canvas {
 .intro-image { max-width: 100%; max-height: 100%; object-fit: contain; }
 .intro-controls { padding: 15px; background: #111; border-top: 2px solid #333; display: flex; justify-content: space-between; }
 
+/* FIX v0.110m: Kompleksowa poprawka centrowania przycisków akcji (Powrót, Reset) */
+.menu-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    width: 100%;
+    padding: 0 20px;
+}
+
+/* Ujednolicenie przycisku POWRÓT we wszystkich widokach */
+.nav-back {
+    margin: 8px auto !important;
+    max-width: 400px;
+    width: 100%;
+}
+
+/* Sklep: Reset obok Powrotu */
+#view-shop .menu-actions {
+    flex-direction: row;
+    justify-content: center;
+}
+#view-shop .nav-back, #view-shop #btnResetShop {
+    flex: 1;
+    max-width: 300px;
+    margin: 5px !important;
+}
+
 @media (max-width: 600px) {
     .retro-frame { width: 100%; height: 100%; border: none; border-radius: 0; }
     .retro-btn { padding: 14px; font-size: 1.4rem; }
@@ -372,56 +426,9 @@ canvas {
     .retro-btn { padding: 8px; font-size: 1.2rem; }
     .version-tag { font-size: 0.8rem; margin-top: 2px; }
     .spacer { min-height: 5px; }
-    
     #gameInfo { font-size: 0.8rem; padding: 2px; }
     .stat-icon-img { width: 24px; height: 24px; }
-    
     #joystickZone { bottom: 60px; scale: 0.8; transform-origin: bottom right; }
-
-    /* POPRAWKA DLA NISKICH EKRANĂ“W (TABLETY) - EKRAM LEVEL UP */
-    #levelUpOverlay .retro-frame {
-        height: 98vh;
-        max-height: 98vh;
-        padding: 10px;
-    }
-    #levelUpOverlay .perk-grid {
-        flex-direction: row !important;
-        flex-wrap: nowrap;
-        gap: 8px;
-        overflow-y: visible;
-        max-height: none;
-        padding: 10px !important; 
-    }
-    #levelUpOverlay .perk {
-        flex: 1;
-        min-height: auto;
-        padding: 8px;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-    #levelUpOverlay .perk-img-wrapper {
-        margin-right: 0;
-        margin-bottom: 5px;
-        width: 48px;
-        height: 48px;
-    }
-    #levelUpOverlay .perk h4 { font-size: 1rem; }
-    #levelUpOverlay .perk p { font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-    /* ZWIÄ˜KSZONE OKNO STATYSTYK DLA LEVEL UP */
-    #statsDisplayPause, .stats-grid {
-        max-height: 35vh; /* WiÄ™ksza przestrzeĹ„ zamiast 80px */
-        overflow-y: auto;
-        border-top: 1px solid #444;
-        margin-top: 5px;
-        padding-top: 5px;
-    }
-}
-
-/* POPRAWKA MARGINESĂ“W DLA PRZYCISKĂ“W POWROTU */
-.nav-back {
-    margin: 8px 25px !important;
 }
 
 .lang-quick-switch button,
@@ -447,30 +454,11 @@ canvas {
 #chestRewardDisplay img {
     max-width: 96px; 
     max-height: 96px;
-    width: auto;
-    height: auto;
-    display: block;
-    margin: 10px auto;
-    object-fit: contain;
-    border: 2px solid #444; 
-    background: #222; 
-    padding: 5px; 
-    border-radius: 8px;
+    width: auto; height: auto; display: block; margin: 10px auto; object-fit: contain; border: 2px solid #444; background: #222; padding: 5px; border-radius: 8px;
 }
 
-#chestRewardDisplay h3 {
-    color: var(--accent-gold);
-    margin: 10px 0 5px 0;
-    font-size: 1.8rem;
-    text-shadow: 2px 2px 0 #000;
-}
-
-#chestRewardDisplay p {
-    font-size: 1.2rem;
-    color: #ccc;
-    max-width: 400px;
-    margin: 0 auto 10px auto;
-}
+#chestRewardDisplay h3 { color: var(--accent-gold); margin: 10px 0 5px 0; font-size: 1.8rem; text-shadow: 2px 2px 0 #000; }
+#chestRewardDisplay p { font-size: 1.2rem; color: #ccc; max-width: 400px; margin: 0 auto 10px auto; }
 
 .retro-range {
     -webkit-appearance: none;
@@ -501,54 +489,20 @@ canvas {
 }
 
 #loadingOverlay {
-    position: fixed;
-    inset: 0;
-    background: #000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 300; 
+    position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 300; 
 }
-
-.loading-container {
-    width: 80%;
-    max-width: 400px;
-    text-align: center;
-}
-
-.loading-text {
-    color: var(--accent-gold);
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-    letter-spacing: 2px;
-    animation: blink 1s infinite;
-}
-
+.loading-container { width: 80%; max-width: 400px; text-align: center; }
+.loading-text { color: var(--accent-gold); font-size: 1.5rem; margin-bottom: 10px; letter-spacing: 2px; animation: blink 1s infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-.loading-bar-border {
-    width: 100%;
-    height: 24px;
-    border: 3px solid #333;
-    background: #111;
-    padding: 2px;
-    box-shadow: 0 0 10px #000;
-}
-
-.loading-bar-fill {
-    height: 100%;
-    background: var(--accent-green);
-    width: 0%;
-    transition: width 0.1s linear;
-}
+.loading-bar-border { width: 100%; height: 24px; border: 3px solid #333; background: #111; padding: 2px; box-shadow: 0 0 10px #000; }
+.loading-bar-fill { height: 100%; background: var(--accent-green); width: 0%; transition: width 0.1s linear; }
 
 .score-tabs-container { display: flex; width: 100%; margin-bottom: 10px; border-bottom: 2px solid #444; }
 .score-tab { flex: 1; background: rgba(0,0,0,0.3); border: none; border-bottom: 4px solid transparent; color: #888; font-family: var(--font-retro); font-size: 1.5rem; padding: 10px; cursor: pointer; transition: all 0.2s; }
 .score-tab.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); background: rgba(255, 215, 0, 0.05); }
 .score-tab.small { font-size: 1.2rem; padding: 5px; }
 
-.score-filters { display: center; justify-content: center; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+.score-filters { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
 .filter-btn { background: #222; border: 1px solid #444; color: #888; font-family: var(--font-retro); font-size: 1rem; padding: 4px 8px; cursor: pointer; }
 .filter-btn.active { background: #444; color: #fff; border-color: var(--accent-gold); }
 
@@ -567,70 +521,15 @@ canvas {
 
 @media (max-height: 500px) {
     .mobile-friendly-modal {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        max-height: 100vh;
-        border: none;
-        border-radius: 0;
-        justify-content: flex-start;
-        padding-top: 20px;
-        overflow-y: auto;
-        z-index: 2000; 
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; max-height: 100vh; border: none; border-radius: 0; justify-content: flex-start; padding-top: 20px; overflow-y: auto; z-index: 2000; 
     }
 }
 #nickInputOverlay { z-index: 1500; align-items: flex-start; padding-top: 50px; overflow-y: auto; }
 
-.skin-selector {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin: 15px 0;
-    flex-wrap: wrap;
-}
-
-.skin-option {
-    width: 120px;
-    height: 120px;
-    border: 2px solid #444;
-    background: rgba(0,0,0,0.3);
-    cursor: pointer;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.skin-option:hover {
-    border-color: #888;
-    background: rgba(255,255,255,0.05);
-}
-
-.skin-option.selected {
-    border-color: var(--accent-gold);
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-    background: rgba(255, 215, 0, 0.1);
-}
-
-.skin-option.locked {
-    filter: grayscale(1) brightness(0.5);
-    border-color: #333;
-}
-
-.skin-option.locked:after {
-    content: "🔒";
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    font-size: 16px;
-}
-
-.skin-option img {
-    max-width: 90%;
-    max-height: 90%;
-    object-fit: contain;
-    image-rendering: pixelated;
-}
+.skin-selector { display: flex; justify-content: center; gap: 20px; margin: 15px 0; flex-wrap: wrap; }
+.skin-option { width: 120px; height: 120px; border: 2px solid #444; background: rgba(0,0,0,0.3); cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.skin-option:hover { border-color: #888; background: rgba(255,255,255,0.05); }
+.skin-option.selected { border-color: var(--accent-gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); background: rgba(255, 215, 0, 0.1); }
+.skin-option.locked { filter: grayscale(1) brightness(0.5); border-color: #333; }
+.skin-option.locked:after { content: "🔒"; position: absolute; bottom: 2px; right: 2px; font-size: 16px; }
+.skin-option img { max-width: 90%; max-height: 90%; object-fit: contain; image-rendering: pixelated; }
