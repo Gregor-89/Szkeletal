@@ -1,5 +1,5 @@
 // ==============
-// INPUT.JS (v1.14c - Clean Polling & Gamepad API Fix)
+// INPUT.JS (v1.14d - Clean Polling & Gamepad API Fix)
 // Lokalizacja: /js/ui/input.js
 // ==============
 

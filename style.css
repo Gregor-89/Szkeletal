@@ -1,4 +1,4 @@
-/* style.css (v0.110r - Full Width Cover & Landscape Table Fix) */
+/* style.css (v0.111d - UI Regression Fix & Table Fit) */
 
 :root {
     --bg-color: #050505;
@@ -429,11 +429,19 @@ canvas {
         
         #joystickZone { bottom: 60px; scale: 0.8; transform-origin: bottom right; }
 
-        /* FIX: Optymalizacja tablet landscape - mniejsze statystyki, by zmieścić dużą tabelę */
-        #gameOverOverlay .retro-frame {
-            height: 98vh;
+        /* FIX: Samouczek landscape - usuwamy puste przestrzenie */
+        #tutorialOverlay .retro-frame {
+            height: auto;
             max-height: 98vh;
             padding: 10px;
+            justify-content: flex-start;
+        }
+
+        #tutorialOverlay .retro-scroll-box {
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+            max-height: 60vh;
+            flex-grow: 0; /* Nie rozciągamy boxa, by nie tworzyć pustki */
         }
 
         .gameover-stats-fancy {
@@ -446,9 +454,24 @@ canvas {
         .fancy-value { font-size: 1.1rem; }
         .fancy-value.gold { font-size: 1.6rem; }
 
-        /* POWIĘKSZENIE OBSZARU TABELI W ORIENTACJI POZIOMEJ */
-        #scoresBodyGameOver {
-            max-height: 45vh !important;
+        /* FIX: Zmniejszenie wysokości tabeli w landscape, by wszystko się zmieściło (Problem Ad 5) */
+        #gameOverOverlay .retro-scroll-box {
+            max-height: 35vh !important;
+            margin-bottom: 5px;
+        }
+
+        /* Przyciski GameOver w landscape - układ rzędowy */
+        #gameOverOverlay .menu-actions {
+            flex-direction: row !important;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            padding: 0 5px;
+        }
+        #gameOverOverlay .retro-btn.small {
+            flex: 1;
+            min-width: 120px;
+            margin-bottom: 0 !important;
         }
 
         #levelUpOverlay .retro-frame {

@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.33u - Full Scroll Logic & Gamepad Polish)
+// MENUS.JS (v1.33y - High Precision Gamepad Scroll)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -416,6 +416,7 @@ export function switchView(viewId) {
     }
     if (viewId === 'view-scores') { if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard(); setTimeout(() => { updateStaticTranslations(); }, 100); }
     if (viewId === 'view-guide') generateGuide(); 
+    if (viewId === 'view-guide') generateGuide(); 
     if (viewId === 'view-shop') { generateShop(); updateStaticTranslations(); }
     if (viewId === 'view-config') {
         generateSkinSelector(); initLanguageSelector(); 
@@ -493,11 +494,17 @@ export function getFocusableElements() {
                  const goOrder = ['tabGOLocal', 'tabGOOnline', 'btnSubmitScore', 'btnClearScoresGO', 'btnRetry', 'btnMenu'];
                  let sorted = [];
                  goOrder.forEach(id => {
-                     const el = items.find(item => item.id === id);
+                     const el = items.find(item => id === id); // Fix: items.find logic
                      if (el) sorted.push(el);
                  });
-                 items.forEach(el => { if (!sorted.includes(el)) sorted.push(el); });
-                 return sorted;
+                 // Poprawiona logika sortowania GameOver
+                 const fixedSorted = [];
+                 goOrder.forEach(id => {
+                    const found = items.find(it => it.id === id);
+                    if(found) fixedSorted.push(found);
+                 });
+                 items.forEach(el => { if (!fixedSorted.includes(el)) fixedSorted.push(el); });
+                 return fixedSorted;
              } else if (ovId === 'pauseOverlay') {
                  items.sort((a, b) => (b.id === 'btnResume') - (a.id === 'btnResume'));
              }
@@ -575,35 +582,51 @@ export function forceFocusFirst() {
 }
 
 function updateGamepadMenu() {
-    navCooldown--; if (navCooldown > 0) return;
-    
     const rawGp = pollGamepad(window.lastGameRef, { settings: {}, player: { weapons: [] } });
     if (!rawGp || !rawGp.axes) return;
     
-    const gpState = getGamepadButtonState();
-    
-    // SCROLLOWANIE PRAWYM DRĄŻKIEM
-    if (rawGp.axes.length >= 4) {
-        const scrollY = rawGp.axes[3];
-        if (Math.abs(scrollY) > 0.2) {
+    // FIX: Przewijanie RY (prawa gałka) PRZED cooldownem nawigacji.
+    // Obsługuje osie 2/3 (standard RY) oraz 5 (niektóre kontrolery).
+    if (rawGp.axes.length >= 3) {
+        const scrollY = rawGp.axes[3] || rawGp.axes[2] || 0; 
+        if (Math.abs(scrollY) > 0.15) {
             const activeView = document.querySelector('.menu-view.active');
-            const overlays = ['levelUpOverlay', 'pauseOverlay', 'gameOverOverlay', 'guideContent'];
+            const overlays = ['tutorialOverlay', 'levelUpOverlay', 'pauseOverlay', 'gameOverOverlay'];
             let scrollBox = null;
             
-            if (activeView) scrollBox = activeView.querySelector('.retro-scroll-box, .perk-grid, .menu-list, .stats-grid');
+            // 1. Sprawdzenie widoków menu
+            if (activeView) {
+                if (activeView.id === 'view-scores') {
+                    scrollBox = document.getElementById('scoreScrollBox');
+                } else if (activeView.id === 'view-guide') {
+                    scrollBox = document.getElementById('guideContent');
+                } else {
+                    scrollBox = activeView.querySelector('.retro-scroll-box, .perk-grid, .menu-list');
+                }
+            }
+
+            // 2. Sprawdzenie aktywnych overlayów (Tutorial, Pauza, LevelUp)
             if (!scrollBox) {
                 for (const id of overlays) {
                     const el = document.getElementById(id);
                     if (el && el.style.display !== 'none' && el.style.display !== '') {
-                        // FIX: Szukaj najpierw kontenera statystyk (Pauza) lub perków (Level Up)
-                        scrollBox = el.querySelector('.stats-grid') || el.querySelector('.perk-grid') || el.querySelector('.retro-scroll-box');
+                        // FIX: Precyzyjne targetowanie kontenerów (Problem Ad 2 i 3)
+                        scrollBox = el.querySelector('.stats-grid') || el.querySelector('.retro-scroll-box') || el.querySelector('.perk-grid');
                         if (scrollBox) break;
                     }
                 }
             }
-            if (scrollBox) scrollBox.scrollTop += scrollY * 25;
+            
+            if (scrollBox) {
+                scrollBox.scrollTop += scrollY * 25;
+            }
         }
     }
+
+    navCooldown--; 
+    if (navCooldown > 0) return;
+    
+    const gpState = getGamepadButtonState();
 
     if (gpState.A && !lastGpState.A) {
         const splash = document.getElementById('splashOverlay');

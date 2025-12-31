@@ -393,7 +393,7 @@ export function gameOver(game, uiData) {
     const playerNick = localStorage.getItem('szkeletal_player_nick') || "GRACZ";
     saveScore(currentRun, playerNick); 
     
-    // POPRAWKA: Przekazanie wyniku do sklepu (Logika High Score)
+    // POPRAWKA: Przekazanie wyniku do sklepu (Logika High Score) - Problem nr 6
     if (shopManager && !game.isCheated) {
         shopManager.updateMaxScore(Math.floor(game.score));
         shopManager.save();
