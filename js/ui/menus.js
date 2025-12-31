@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.33p - Final Nav Hierarchy & Right Stick Scroll Fix)
+// MENUS.JS (v1.33u - Full Scroll Logic & Gamepad Polish)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -404,7 +404,6 @@ export function switchView(viewId) {
     const target = document.getElementById(viewId);
     if (target) { target.classList.add('active'); playSound('Click'); }
     
-    // Zapewnij fokus na odpowiednim przycisku dla nowego widoku
     forceFocusFirst();
     
     if (viewId === 'view-coffee') { 
@@ -474,7 +473,6 @@ function generateSkinSelector() {
 }
 
 export function getFocusableElements() {
-    // 1. Priorytety nakĹ‚adek (overlays)
     const priorityOverlays = [
         'confirmOverlay', 'nickInputOverlay', 'tutorialOverlay', 
         'chestOverlay', 'levelUpOverlay', 'pauseOverlay', 'gameOverOverlay', 'introOverlay'
@@ -484,16 +482,23 @@ export function getFocusableElements() {
         const ov = document.getElementById(ovId);
         if (ov && ov.style.display !== 'none' && ov.style.display !== '') {
              let items = Array.from(ov.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
-                         .filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
+                         .filter(el => {
+                             const style = window.getComputedStyle(el);
+                             return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+                         });
              
              if (ovId === 'introOverlay') {
-                 // W intro priorytetem jest "DALEJ"
                  items.sort((a, b) => (b.id === 'btnIntroNext') - (a.id === 'btnIntroNext'));
              } else if (ovId === 'gameOverOverlay') {
-                 // Po game over priorytetem jest "JESZCZE RAZ"
-                 items.sort((a, b) => (b.id === 'btnRetry') - (a.id === 'btnRetry'));
+                 const goOrder = ['tabGOLocal', 'tabGOOnline', 'btnSubmitScore', 'btnClearScoresGO', 'btnRetry', 'btnMenu'];
+                 let sorted = [];
+                 goOrder.forEach(id => {
+                     const el = items.find(item => item.id === id);
+                     if (el) sorted.push(el);
+                 });
+                 items.forEach(el => { if (!sorted.includes(el)) sorted.push(el); });
+                 return sorted;
              } else if (ovId === 'pauseOverlay') {
-                 // W pauzie priorytetem jest "WZNÓW"
                  items.sort((a, b) => (b.id === 'btnResume') - (a.id === 'btnResume'));
              }
              
@@ -501,33 +506,35 @@ export function getFocusableElements() {
         }
     }
 
-    // 2. Menu gĹ‚Ăłwne - RÄ˜CZNE WYMUSZENIE KOLEJNOĹšCI (FLAGI NA GĂ“RZE -> NOWA GRA -> KONTYNUUJ)
     const menuOverlay = document.getElementById('menuOverlay');
     if (menuOverlay && menuOverlay.style.display !== 'none') {
         const activeView = document.querySelector('.menu-view.active');
         if (activeView) {
-            let all = Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
+            let all = Array.from(activeView.querySelectorAll('button:not([disabled]), input, .perk, .skin-option, .lang-label-wrapper'))
                          .filter(el => el.offsetParent !== null);
 
             if (activeView.id === 'view-main') {
-                // KOLEJNOĹšÄ† ZGODNIE Z PROĹšBÄ„: Flagi -> Nowa Gra -> Kontynuuj -> Sklep -> intro -> Coffee -> Dev
                 const order = [
                     'btnLangPL', 'btnLangEN', 'btnLangRO', 
                     'btnStart', 'btnContinue', 'navShop', 
                     'navScores', 'navConfig', 'navGuide', 
                     'btnReplayIntroMain', 'navCoffee', 'navDev'
                 ];
-                
                 let sorted = [];
                 order.forEach(id => {
                     const el = all.find(item => item.id === id);
-                    if (el && window.getComputedStyle(el).display !== 'none') {
-                        sorted.push(el);
-                    }
+                    if (el && window.getComputedStyle(el).display !== 'none') sorted.push(el);
                 });
                 all.forEach(el => { if (!sorted.includes(el)) sorted.push(el); });
                 return sorted;
             }
+
+            if (activeView.id === 'view-config') {
+                let skins = all.filter(el => el.classList.contains('skin-option'));
+                let rest = all.filter(el => !el.classList.contains('skin-option'));
+                return [...skins, ...rest];
+            }
+
             return all;
         }
     }
@@ -549,41 +556,52 @@ export function forceFocusFirst() {
     focusedElement = null;
     
     if (focusables.length > 0) {
-        // DOMYĹšLNY WYBĂ“R: Nowa Gra lub Kontynuuj (zamiast flag)
-        const priority = focusables.find(el => el.id === 'btnStart') || focusables.find(el => el.id === 'btnContinue');
+        const activeView = document.querySelector('.menu-view.active');
+        let priority = null;
+        
+        if (activeView && activeView.id === 'view-main') {
+            priority = focusables.find(el => el.id === 'btnStart') || focusables.find(el => el.id === 'btnContinue');
+        } else if (activeView && activeView.id === 'view-config') {
+            priority = focusables.find(el => el.classList.contains('skin-option') && el.classList.contains('selected')) || focusables.find(el => el.classList.contains('skin-option'));
+        }
+        
         focusedElement = priority || focusables[0];
-        focusedElement.classList.add('focused');
-        focusedElement.focus();
+        if (focusedElement) {
+            focusedElement.classList.add('focused');
+            focusedElement.focus();
+        }
     }
     navCooldown = 20; 
 }
 
 function updateGamepadMenu() {
     navCooldown--; if (navCooldown > 0) return;
-    const gpState = getGamepadButtonState(); if (Object.keys(gpState).length === 0) return;
     
-    const rawGp = pollGamepad();
+    const rawGp = pollGamepad(window.lastGameRef, { settings: {}, player: { weapons: [] } });
+    if (!rawGp || !rawGp.axes) return;
     
-    // PRZYWRĂ“CONE I ROZBUDOWANE SCROLLOWANIE PRAWYM DRÄ„ĹťKIEM (Axes[3])
-    if (rawGp && rawGp.axes && rawGp.axes.length >= 4) {
+    const gpState = getGamepadButtonState();
+    
+    // SCROLLOWANIE PRAWYM DRĄŻKIEM
+    if (rawGp.axes.length >= 4) {
         const scrollY = rawGp.axes[3];
         if (Math.abs(scrollY) > 0.2) {
-            // Szukamy kontenera do przewijania w widoku lub w nakĹ‚adkach (np. Level Up stats)
             const activeView = document.querySelector('.menu-view.active');
+            const overlays = ['levelUpOverlay', 'pauseOverlay', 'gameOverOverlay', 'guideContent'];
             let scrollBox = null;
             
-            if (activeView) {
-                scrollBox = activeView.querySelector('.retro-scroll-box, .perk-grid, .menu-list, .stats-grid');
-            }
-            
-            // JeĹ›li nie znaleziono w widoku, szukaj w dowolnej otwartej nakĹ‚adce (Level Up, Guide etc)
+            if (activeView) scrollBox = activeView.querySelector('.retro-scroll-box, .perk-grid, .menu-list, .stats-grid');
             if (!scrollBox) {
-                scrollBox = document.querySelector('.retro-overlay .retro-scroll-box, .retro-overlay .stats-grid, .retro-overlay .perk-grid');
+                for (const id of overlays) {
+                    const el = document.getElementById(id);
+                    if (el && el.style.display !== 'none' && el.style.display !== '') {
+                        // FIX: Szukaj najpierw kontenera statystyk (Pauza) lub perków (Level Up)
+                        scrollBox = el.querySelector('.stats-grid') || el.querySelector('.perk-grid') || el.querySelector('.retro-scroll-box');
+                        if (scrollBox) break;
+                    }
+                }
             }
-
-            if (scrollBox) {
-                scrollBox.scrollTop += scrollY * 25;
-            }
+            if (scrollBox) scrollBox.scrollTop += scrollY * 25;
         }
     }
 
@@ -594,11 +612,11 @@ function updateGamepadMenu() {
              navCooldown = 30; return;
         }
     }
-    if (gpState.Start && !lastGpState.Start) {
-        if (isGameplayActive()) { document.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Escape'})); navCooldown = 15; return; }
-    }
     
-    if (isGameplayActive()) return;
+    if (isGameplayActive()) {
+        lastGpState = { ...gpState };
+        return;
+    }
     
     const focusables = getFocusableElements(); if (focusables.length === 0) return;
     
@@ -607,18 +625,29 @@ function updateGamepadMenu() {
         forceFocusFirst();
     }
     
+    const curr = focusedElement;
     let moveDir = { up: false, down: false, left: false, right: false };
-    if (gpState.Up) moveDir.up = true; if (gpState.Down) moveDir.down = true;
-    if (gpState.Left) moveDir.left = true; if (gpState.Right) moveDir.right = true;
     
-    if (rawGp && rawGp.axes) {
-        if (rawGp.axes[1] < -0.5) moveDir.up = true; if (rawGp.axes[1] > 0.5) moveDir.down = true;
-        if (rawGp.axes[0] < -0.5) moveDir.left = true; if (rawGp.axes[0] > 0.5) moveDir.right = true;
+    if (gpState.Up || rawGp.axes[1] < -0.5) moveDir.up = true;
+    if (gpState.Down || rawGp.axes[1] > 0.5) moveDir.down = true;
+    if (gpState.Left || rawGp.axes[0] < -0.5) moveDir.left = true;
+    if (gpState.Right || rawGp.axes[0] > 0.5) moveDir.right = true;
+    
+    if (curr && (curr.type === 'range' || curr.classList.contains('retro-range'))) {
+        if (moveDir.left || moveDir.right) {
+            const step = parseFloat(curr.step) || 5; 
+            const val = parseFloat(curr.value);
+            curr.value = moveDir.left ? val - step : val + step;
+            curr.dispatchEvent(new Event('input', { bubbles: true }));
+            curr.dispatchEvent(new Event('change', { bubbles: true }));
+            navCooldown = 5; 
+            lastGpState = { ...gpState };
+            return; 
+        }
     }
     
     let index = focusables.indexOf(focusedElement); let moved = false;
     
-    // Nawigacja liniowa
     if (moveDir.down || moveDir.right) { index++; moved = true; }
     else if (moveDir.up || moveDir.left) { index--; moved = true; }
     
@@ -641,9 +670,8 @@ function updateGamepadMenu() {
             if (el.id === 'btnLangPL') { setLanguage('pl'); updateStaticTranslations(); playSound('Click'); }
             else if (el.id === 'btnLangEN') { setLanguage('en'); updateStaticTranslations(); playSound('Click'); }
             else if (el.id === 'btnLangRO') { setLanguage('ro'); updateStaticTranslations(); playSound('Click'); }
-            else { el.click(); navCooldown = 5; }
+            else { el.click(); navCooldown = 10; }
         }
-        lastGpState = { ...gpState }; return;
     }
     
     if (gpState.B && !lastGpState.B) {
@@ -716,7 +744,7 @@ export function initRetroToggles(game, uiData) {
             setTimeout(() => { 
                 unlockSkin('hot'); 
                 playSound('ChestReward'); 
-                coffeeBtn.innerText = getLang('ui_coffee_unlocked') || "NIKT TEGO NIE SPRAWDZA - SKIN ODBLOKOWANY";
+                coffeeBtn.innerText = getLang('ui_coffee_unlocked') || "SKIN ODBLOKOWANY";
                 coffeeBtn.style.backgroundColor = "#2196F3"; 
                 coffeeBtn.style.borderColor = "#0D47A1";
             }, 2000); 

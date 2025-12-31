@@ -1,4 +1,4 @@
-/* style.css (v0.110n - Full Restoration & UI Logic Fixes) */
+/* style.css (v0.110r - Full Width Cover & Landscape Table Fix) */
 
 :root {
     --bg-color: #050505;
@@ -49,7 +49,6 @@ body {
     }
 }
 
-/* POPRAWIONY FOCUS - TYLKO ZĹ OTY GLOW I RAMKA, BEZ BIAĹ EJ RAMKI */
 .focused {
     outline: none !important;
     border: 3px solid var(--accent-gold) !important;
@@ -59,7 +58,6 @@ body {
     transition: transform 0.1s ease !important;
     color: #fff !important;
     text-shadow: 2px 2px 4px #000 !important;
-    /* Zachowanie oryginalnego koloru tĹ‚a z lekkim rozjaĹ›nieniem */
     background-image: linear-gradient(rgba(255,255,255,0.25), rgba(255,255,255,0.25)) !important;
 }
 
@@ -169,7 +167,7 @@ body {
     to { transform: translateY(-50%) scale(1.1); filter: drop-shadow(0 0 10px red); }
 }
 
-/* FIX v0.110n: Zmieniono na contain, aby uniknąć elips (zniekształceń proporcji) */
+/* FIX: 'cover' wypełnia pełną szerokość i wysokość zachowując proporcje grafik */
 canvas { 
     background: #111; 
     border: 2px solid #333; 
@@ -178,7 +176,7 @@ canvas {
     flex: 1; 
     min-height: 0; 
     image-rendering: pixelated; 
-    object-fit: contain; 
+    object-fit: cover; 
 }
 
 #gameInfo { 
@@ -222,7 +220,6 @@ canvas {
 .retro-frame { width: 95%; max-width: 800px; height: 90vh; max-height: 800px; background: var(--frame-bg); border: 4px solid #333; box-shadow: inset 0 0 0 4px #000, 0 0 30px #000; padding: 20px; display: flex; flex-direction: column; position: relative; overflow: hidden; backdrop-filter: blur(4px); }
 .retro-frame.small { max-width: 600px; height: auto; max-height: 700px; } 
 
-/* FIX v0.110n: Przywrócono układ 3-kolumnowy perków w Level Up */
 #levelUpPanel.retro-frame.wide { 
     width: 95%; 
     max-width: 1000px; 
@@ -238,7 +235,6 @@ canvas {
     overflow-y: auto;
 }
 
-/* Scrollowalne statystyki w Level Up */
 .stats-panel {
     margin-top: 15px;
     border-top: 2px solid #444;
@@ -291,7 +287,6 @@ canvas {
     text-decoration: underline;
 }
 
-/* Wskaźniki sortowania */
 .sortable-table th[data-sort]::after {
     content: ' ↕';
     font-size: 0.8rem;
@@ -309,13 +304,27 @@ canvas {
 #perks.perk-grid { 
     display: flex; 
     flex-direction: column; 
-    gap: 10px; 
+    gap: 15px; 
     overflow-y: auto; 
     max-height: 60vh; 
     touch-action: pan-y;
-    padding: 10px; 
+    padding: 15px; 
 }
-.perk { background: #222; border: 2px solid #666; padding: 10px; cursor: pointer; text-align: left; transition: transform 0.1s; min-height: 80px; display: flex; flex-direction: row; align-items: center; }
+
+/* FIX: Boczne marginesy dla perków, by podświetlenie nie było ucięte */
+.perk { 
+    background: #222; 
+    border: 2px solid #666; 
+    padding: 10px; 
+    cursor: pointer; 
+    text-align: left; 
+    transition: transform 0.1s; 
+    min-height: 80px; 
+    display: flex; 
+    flex-direction: row; 
+    align-items: center; 
+    margin: 5px 10px;
+}
 .perk:hover { transform: scale(1.02); border-color: #fff; background: #333; }
 
 .perk.perk-graphic { display: flex; flex-direction: row; align-items: center; }
@@ -420,7 +429,28 @@ canvas {
         
         #joystickZone { bottom: 60px; scale: 0.8; transform-origin: bottom right; }
 
-        /* POPRAWKA DLA NISKICH EKRANĂ“W (TABLETY) - EKRAM LEVEL UP */
+        /* FIX: Optymalizacja tablet landscape - mniejsze statystyki, by zmieścić dużą tabelę */
+        #gameOverOverlay .retro-frame {
+            height: 98vh;
+            max-height: 98vh;
+            padding: 10px;
+        }
+
+        .gameover-stats-fancy {
+            margin-bottom: 5px;
+            gap: 5px;
+        }
+
+        .fancy-stat-box { padding: 4px; }
+        .fancy-label { font-size: 0.7rem; }
+        .fancy-value { font-size: 1.1rem; }
+        .fancy-value.gold { font-size: 1.6rem; }
+
+        /* POWIĘKSZENIE OBSZARU TABELI W ORIENTACJI POZIOMEJ */
+        #scoresBodyGameOver {
+            max-height: 45vh !important;
+        }
+
         #levelUpOverlay .retro-frame {
             height: 98vh;
             max-height: 98vh;
@@ -441,6 +471,7 @@ canvas {
             flex-direction: column;
             align-items: center;
             text-align: center;
+            margin: 5px;
         }
         #levelUpOverlay .perk-img-wrapper {
             margin-right: 0;
@@ -451,9 +482,8 @@ canvas {
         #levelUpOverlay .perk h4 { font-size: 1rem; }
         #levelUpOverlay .perk p { font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* ZWIÄ˜KSZONE OKNO STATYSTYK DLA LEVEL UP */
         #statsDisplayPause, .stats-grid {
-            max-height: 35vh; /* WiÄ™ksza przestrzeĹ„ zamiast 80px */
+            max-height: 25vh;
             overflow-y: auto;
             border-top: 1px solid #444;
             margin-top: 5px;
@@ -461,7 +491,6 @@ canvas {
         }
     }
 
-    /* FIX v0.110n: Poprawka marginesów dla przycisku Powrót i centrowania akcji */
     .menu-actions {
         display: flex;
         flex-direction: column;
@@ -478,7 +507,6 @@ canvas {
         width: 100%;
     }
 
-    /* Sklep: Reset obok Powrotu */
     #view-shop .menu-actions {
         flex-direction: row;
         justify-content: center;
@@ -612,7 +640,7 @@ canvas {
     .score-tab.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); background: rgba(255, 215, 0, 0.05); }
     .score-tab.small { font-size: 1.2rem; padding: 5px; }
 
-    .score-filters { display: center; justify-content: center; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+    .score-filters { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
     .filter-btn { background: #222; border: 1px solid #444; color: #888; font-family: var(--font-retro); font-size: 1rem; padding: 4px 8px; cursor: pointer; }
     .filter-btn.active { background: #444; color: #fff; border-color: var(--accent-gold); }
 

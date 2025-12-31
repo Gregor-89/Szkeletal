@@ -1,5 +1,5 @@
 // ==============
-// LEADERBOARDUI.JS (v1.10 - Fixed Sorting & Dynamic i18n)
+// LEADERBOARDUI.JS (v1.11 - Sorting Arrows & Tab Polish)
 // Lokalizacja: /js/ui/leaderboardUI.js
 // ==============
 
@@ -74,12 +74,30 @@ function formatPlaytime(seconds) {
     return parts.join(" ");
 }
 
+// POMOCNICZA: Aktualizacja wizualna nagłówków (strzałki)
+function updateHeaderVisuals(tableId, activeCol, activeDir) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const headers = table.querySelectorAll('th[data-sort]');
+    headers.forEach(th => {
+        let baseText = th.innerText.replace(/[▲▼]/g, '').trim();
+        const col = th.dataset.sort === 'rank' ? 'tempRank' : th.dataset.sort;
+        
+        if (col === activeCol) {
+            th.innerText = baseText + (activeDir === 'asc' ? ' ▲' : ' ▼');
+            th.classList.add('sorted-column');
+        } else {
+            th.innerText = baseText;
+            th.classList.remove('sorted-column');
+        }
+    });
+}
+
 function setupTableSorting(tableId, callback) {
     const table = document.getElementById(tableId);
     if (!table) return;
     const headers = table.querySelectorAll('th[data-sort]');
     headers.forEach(th => {
-        // ZMIANA v0.110f: Usunięcie starych listenerów (klonowanie węzła) przed dodaniem nowych
         const newTh = th.cloneNode(true);
         th.parentNode.replaceChild(newTh, th);
         newTh.onclick = () => {
@@ -184,8 +202,8 @@ export function initLeaderboardUI() {
                 <th data-sort="time">${getLang('ui_scores_col_time') || 'CZAS'}</th>
                 <th data-sort="date">${getLang('ui_scores_col_date') || 'DATA'}</th>
              `;
-             // Ponowne podpięcie sortowania po zmianie HTML nagłówka
              setupTableSorting('retroScoreTable', onSortClick);
+             updateHeaderVisuals('retroScoreTable', currentSortColumn, currentSortDir);
         }
 
         let rawData = [];
@@ -238,7 +256,10 @@ export function initLeaderboardUI() {
         if(tabStats) {
             tabStats.onclick = () => {
                 currentLeaderboardMode = 'stats';
-                tabStats.classList.add('active'); tabLocal.classList.remove('active'); tabOnline.classList.remove('active');
+                // FIX: Dodano poprawne podświetlenie zakładki statystyk
+                tabStats.classList.add('active'); 
+                if(tabLocal) tabLocal.classList.remove('active'); 
+                if(tabOnline) tabOnline.classList.remove('active');
                 playSound('Click'); updateView();
             };
         }
@@ -373,6 +394,7 @@ export function initGameOverTabs() {
                 <th data-sort="date">${getLang('ui_scores_col_date') || 'DATA'}</th>
             `;
             setupTableSorting('goScoreTable', onGOSortClick);
+            updateHeaderVisuals('goScoreTable', currentGOSortColumn, currentGOSortDir);
         }
 
         let rawData = [];

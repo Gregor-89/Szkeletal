@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v1.05h - Integrity & Black Screen Final Fix)
+// MAIN.JS (v1.05g - Pause Timer & Responsive Fix)
 // Lokalizacja: /js/main.js
 // ==============
 
@@ -41,7 +41,7 @@ class Camera {
         this.offsetY = 0;
     }
 
-    // FIX v0.110k: Aktualizacja wymiarów widoku kamery
+    // ZMIANA v0.110b: Aktualizacja wymiarów widoku kamery przy zmianie okna
     updateViewDimensions(viewWidth, viewHeight) {
         this.viewWidth = viewWidth;
         this.viewHeight = viewHeight;
@@ -64,6 +64,7 @@ let frameCount = 0;
 let lastEnemyCounterUpdate = 0;
 const ENEMY_COUNTER_UPDATE_INTERVAL = 200;
 
+// System integralności danych (Anty-cheat)
 const SALT = 7492; 
 const encrypt = (val) => Math.floor((val * 17 + SALT) ^ 0xDEADBEEF); 
 
@@ -107,7 +108,7 @@ Object.defineProperty(game, 'score', {
             console.warn("Integrity Check Fail: Score corrupted!");
         }
         _gState.score = val;
-        _gState._sShadow = encrypt(val); // FIX v0.110k: Dodano _gState.
+        _gState._sShadow = encrypt(val);
     },
     enumerable: true
 });
@@ -120,7 +121,7 @@ Object.defineProperty(game, 'health', {
             console.warn("Integrity Check Fail: Health corrupted!");
         }
         _gState.health = val;
-        _gState._hShadow = encrypt(val); // FIX v0.110k: Dodano _gState.
+        _gState._hShadow = encrypt(val);
     },
     enumerable: true
 });
@@ -189,13 +190,29 @@ function updateGameTitle() {
     if (menuVer) menuVer.textContent = `v${VERSION}`;
 }
 
-// FIX v0.110k: Stabilne pobieranie wymiarów okna
+// ZMIANA v0.110b: Ulepszona obsługa zmiany rozmiaru okna - wymuszona pełna szerokość
 function handleResize() {
     if (!canvas) return;
+    
+    // Pobieramy wysokość HUDa dla precyzyjnego obliczenia wysokości pola gry
+    const hudTop = document.querySelector('.bars-container');
+    const hudBottom = document.getElementById('gameInfo');
+    
+    let availableHeight = window.innerHeight;
+    if (hudTop) availableHeight -= hudTop.offsetHeight;
+    if (hudBottom) availableHeight -= hudBottom.offsetHeight;
+
+    // Ustawiamy szerokość na pełne okno, wysokość na to co zostało między HUDami
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.height = Math.max(300, availableHeight - 10); 
+
     if (camera) {
         camera.updateViewDimensions(canvas.width, canvas.height);
+        // Środkowanie kamery przy zmianie rozmiaru w menu, aby uniknąć czarnych pasów
+        if (game.inMenu && player) {
+            camera.offsetX = player.x - canvas.width / 2;
+            camera.offsetY = player.y - canvas.height / 2;
+        }
     }
     if (stars.length > 0) initStars();
 }
@@ -206,6 +223,7 @@ function initializeCanvas() {
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
 
+    // Dynamiczna inicjalizacja wymiarów przed startem
     handleResize();
     window.addEventListener('resize', () => {
         requestAnimationFrame(handleResize);
@@ -220,6 +238,7 @@ function initializeCanvas() {
     
     generateMap(obstacles, player);
 
+    // Inicjalizacja pul obiektów
     playerBulletPool = new ObjectPool(PlayerBullet, 500);
     enemyBulletPool = new ObjectPool(EnemyBullet, 500);
     gemsPool = new ObjectPool(Gem, 3000); 
@@ -315,6 +334,7 @@ function update(dt){
       canvas.style.backgroundPosition = `${-roundedX}px ${-roundedY}px`;
   }
   
+  // Periodyczne sprawdzanie integralności
   if (Math.random() < 0.01) {
       if (encrypt(game.score) !== _gState._sShadow) game.isCheated = true;
       if (encrypt(game.health) !== _gState._hShadow) game.isCheated = true;
@@ -349,9 +369,6 @@ function loop(currentTime){
             (introOverlay && introOverlay.style.display === 'flex')) {
             game.paused = true;
         }
-
-        // FIX v0.110k: Zapewnienie rozdzielczości przed renderowaniem
-        if (canvas.width === 0 || canvas.height === 0) handleResize();
         
         updateVisualEffects(dt, [], [], bombIndicators); 
         updateParticles(dt, particles); 
@@ -545,8 +562,6 @@ function finishSplashSequence() {
     
     setTimeout(() => {
         splashOverlay.style.display = 'none';
-        
-        const introWillShow = !localStorage.getItem('szkeletal_intro_seen');
         
         if (!game.running) {
             initializeIntro(gameStateRef); 

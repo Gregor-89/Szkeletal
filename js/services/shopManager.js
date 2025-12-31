@@ -1,5 +1,5 @@
 // ==============
-// SHOPMANAGER.JS (v1.10 - Multi-Level Upgrades)
+// SHOPMANAGER.JS (v1.10e - Point Persistence Fix)
 // Lokalizacja: /js/services/shopManager.js
 // ==============
 
@@ -19,21 +19,41 @@ const encrypt = (val) => Math.floor((val * 17 + SALT) ^ 0xDEADBEEF).toString(16)
 
 class ShopManager {
   constructor() {
-    this.maxScore = parseInt(localStorage.getItem(STORAGE_KEYS.MAX_SCORE)) || 0;
-    this.spentPoints = parseInt(localStorage.getItem(STORAGE_KEYS.SPENT)) || 0;
-    // Obiekt przechowujący ulepszenia jako { upgradeId: poziom }
-    const storedUpgrades = localStorage.getItem(STORAGE_KEYS.UPGRADES);
-    this.boughtUpgrades = storedUpgrades ? JSON.parse(storedUpgrades) : {};
-    this.totalPurchases = parseInt(localStorage.getItem(STORAGE_KEYS.TOTAL_PURCHASES)) || 0;
+    this.load();
     this.validateIntegrity();
   }
   
-  validateIntegrity() {
-    const storedHash = localStorage.getItem(STORAGE_KEYS.CHECKSUM);
-    const currentHash = encrypt(this.maxScore + this.spentPoints + this.totalPurchases);
-    if (storedHash && storedHash !== currentHash) {
-      console.warn("[Shop] Wykryto nieautoryzowaną zmianę punktów sklepiku!");
+  load() {
+    // FIX: Zawsze rzutujemy na Number i parsujemy int, by uniknąć NaN w pamięci
+    const rawMax = localStorage.getItem(STORAGE_KEYS.MAX_SCORE);
+    const rawSpent = localStorage.getItem(STORAGE_KEYS.SPENT);
+    const rawTotal = localStorage.getItem(STORAGE_KEYS.TOTAL_PURCHASES);
+    
+    this.maxScore = Number(rawMax) || 0;
+    this.spentPoints = Number(rawSpent) || 0;
+    this.totalPurchases = Number(rawTotal) || 0;
+    
+    const storedUpgrades = localStorage.getItem(STORAGE_KEYS.UPGRADES);
+    try {
+      this.boughtUpgrades = storedUpgrades ? JSON.parse(storedUpgrades) : {};
+    } catch (e) {
+      console.error("[SHOP] Dane ulepszeń uszkodzone, używam pustego obiektu.");
+      this.boughtUpgrades = {};
     }
+  }
+  
+  validateIntegrity() {
+    const storedCheck = localStorage.getItem(STORAGE_KEYS.CHECKSUM);
+    const currentData = JSON.stringify(this.boughtUpgrades) + this.maxScore + this.spentPoints + this.totalPurchases;
+    const calculatedCheck = encrypt(currentData.length);
+    
+    if (storedCheck && storedCheck !== calculatedCheck) {
+      console.warn("[SHOP] Integracja danych naruszona. Próba automatycznej naprawy...");
+      // Naprawiamy checksum zamiast zerować punkty
+      this.save();
+      return false;
+    }
+    return true;
   }
   
   save() {
@@ -41,19 +61,27 @@ class ShopManager {
     localStorage.setItem(STORAGE_KEYS.SPENT, this.spentPoints.toString());
     localStorage.setItem(STORAGE_KEYS.UPGRADES, JSON.stringify(this.boughtUpgrades));
     localStorage.setItem(STORAGE_KEYS.TOTAL_PURCHASES, this.totalPurchases.toString());
-    localStorage.setItem(STORAGE_KEYS.CHECKSUM, encrypt(this.maxScore + this.spentPoints + this.totalPurchases));
+    
+    const currentData = JSON.stringify(this.boughtUpgrades) + this.maxScore + this.spentPoints + this.totalPurchases;
+    localStorage.setItem(STORAGE_KEYS.CHECKSUM, encrypt(currentData.length));
   }
   
+  // LOGIKA ORYGINALNA: Punkty w sklepie to Twój najwyższy uzyskany wynik
   updateMaxScore(newScore) {
-    if (newScore > this.maxScore) {
-      this.maxScore = Math.floor(newScore);
+    const scoreVal = Math.floor(Number(newScore) || 0);
+    if (scoreVal > this.maxScore) {
+      console.log(`[SHOP] NOWY REKORD PUNKTOWY: ${scoreVal}. Poprzedni: ${this.maxScore}`);
+      this.maxScore = scoreVal;
       this.save();
-      console.log("[Shop] Nowy High Score zapisany jako budżet:", this.maxScore);
+      return true;
     }
+    return false;
   }
   
   getWalletBalance() {
-    return Math.max(0, this.maxScore - this.spentPoints);
+    // Portfel to Twój HighScore minus to co wydałeś na ulepszenia
+    const balance = Number(this.maxScore) - Number(this.spentPoints);
+    return Math.max(0, balance);
   }
   
   getUpgradeLevel(upgradeId) {
@@ -61,10 +89,9 @@ class ShopManager {
   }
   
   calculateNextCost() {
-    // Każdy kupiony poziom (dowolnego ulepszenia) podnosi cenę o 50% bazy
-    const baseCost = SHOP_CONFIG.BASE_COST || 100;
-    const multiplier = 1.5;
-    return Math.floor(baseCost * Math.pow(multiplier, this.totalPurchases));
+    // Koszt skaluje się na podstawie całkowitej liczby zakupionych poziomów
+    let cost = SHOP_CONFIG.BASE_COST * Math.pow(SHOP_CONFIG.COST_MULTIPLIER || 1.5, this.totalPurchases);
+    return Math.round(cost / 1000) * 1000 || 1000;
   }
   
   canBuy(upgradeId) {
@@ -104,10 +131,14 @@ class ShopManager {
   
   resetUpgrades() {
     this.boughtUpgrades = {};
-    this.spentPoints = 0; // POPRAWKA: Resetujemy też wydane punkty
+    this.spentPoints = 0;
     this.totalPurchases = 0;
     this.save();
-    console.log("[Shop] Wszystkie ulepszenia zostały zresetowane.");
+    console.log("[SHOP] Ulepszenia zresetowane.");
+  }
+  
+  isOwned(upgradeId) {
+    return this.getUpgradeLevel(upgradeId) > 0;
   }
 }
 

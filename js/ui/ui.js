@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.17h - Flow Polish & Syntax Fix - Restoration v0.110l)
+// UI.JS (v1.17k - Shop Sync & Gamepad Polish)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -257,7 +257,7 @@ export async function resetAll(canvas, settings, perkLevels, uiData, camera) {
         settings.lastHazardSpawn = 0; 
         settings.lastSiegeEvent = 0; 
         settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
-        settings.siegeState = 'idle'; // Syntax fix v0.110k
+        settings.siegeState = 'idle'; 
         settings.siegeWarningT = 0;
 
         game.newEnemyWarningT = 0; 
@@ -393,6 +393,7 @@ export function gameOver(game, uiData) {
     const playerNick = localStorage.getItem('szkeletal_player_nick') || "GRACZ";
     saveScore(currentRun, playerNick); 
     
+    // POPRAWKA: Przekazanie wyniku do sklepu (Logika High Score)
     if (shopManager && !game.isCheated) {
         shopManager.updateMaxScore(Math.floor(game.score));
         shopManager.save();
@@ -419,6 +420,7 @@ export function gameOver(game, uiData) {
 
     Hud.resetHealthBarVisuals();
     Menus.updateStaticTranslations(); 
+    // Wymuszamy fokus na przycisku Retry dla gamepadów
     Menus.forceFocusFirst();
     
     if (LeaderboardService && LeaderboardService.trackStat) {

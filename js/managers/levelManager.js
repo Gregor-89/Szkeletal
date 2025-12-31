@@ -1,5 +1,5 @@
 // ==============
-// LEVELMANAGER.JS (v1.15b - Multi-language Stats Fix)
+// LEVELMANAGER.JS (v1.15c - Multi-language Stats Fix & Safety Patch)
 // Lokalizacja: /js/managers/levelManager.js
 // ==============
 
@@ -111,29 +111,29 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
     const iconMultishot = getIcon('icon_multishot', '🎯');
     const iconPierce = getIcon('icon_pierce', '➡️');
 
-    const pickupVal = (game.pickupRange || PLAYER_CONFIG.INITIAL_PICKUP_RANGE).toFixed(0);
+    // FIX: Zabezpieczenie przed undefined/NaN
+    const pickupVal = (game.pickupRange || PLAYER_CONFIG.INITIAL_PICKUP_RANGE || 100).toFixed(0);
 
     const stats = [
-        { icon: iconLevel, label: getLang('ui_hud_level'), value: game.level },
-        { icon: iconHealth, label: getLang('ui_hud_hp_name'), value: `${Math.floor(game.health)}/${game.maxHealth}` },
-        { icon: iconSpeed, label: getLang('perk_speed_name'), value: player.speedMultiplier.toFixed(2) + 'x' }, 
+        { icon: iconLevel, label: getLang('ui_hud_level'), value: game.level || 1 },
+        { icon: iconHealth, label: getLang('ui_hud_hp_name'), value: `${Math.floor(game.health || 0)}/${game.maxHealth || 100}` },
+        { icon: iconSpeed, label: getLang('perk_speed_name'), value: (player.speedMultiplier || 1).toFixed(2) + 'x' }, 
         { icon: iconPickup, label: getLang('perk_pickup_name'), value: pickupVal },
         
-        { icon: iconWhip, label: `${getLang('perk_whip_name')} (${getLang('ui_level_short')})`, value: `${whip ? whip.level : '1'} / ${PERK_CONFIG.whip?.max || 5}` },
+        { icon: iconWhip, label: `${getLang('perk_whip_name')} (${getLang('ui_level_short')})`, value: `${whip ? (whip.level || 1) : '1'} / ${PERK_CONFIG.whip?.max || 5}` },
         { icon: iconWhip, label: `${getLang('perk_whip_name')} (Dmg)`, value: `${whip ? (whip.damage || 0).toFixed(1) : '1'}` },
         
-        { icon: iconOrbital, label: getLang('perk_orbital_name'), value: `${orbital ? orbital.level : '0'} / ${PERK_CONFIG.orbital?.max || 5}` },
-        { icon: iconNova, label: getLang('perk_nova_name'), value: `${nova ? nova.level : '0'} / ${PERK_CONFIG.nova?.max || 5}` },
+        { icon: iconOrbital, label: getLang('perk_orbital_name'), value: `${orbital ? (orbital.level || 0) : '0'} / ${PERK_CONFIG.orbital?.max || 5}` },
+        { icon: iconNova, label: getLang('perk_nova_name'), value: `${nova ? (nova.level || 0) : '0'} / ${PERK_CONFIG.nova?.max || 5}` },
         
-        ...(chainLightning ? [{ icon: iconLightning, label: `${getLang('perk_chainLightning_name')} (${getLang('ui_level_short')})`, value: `${chainLightning.level} / ${PERK_CONFIG.chainLightning?.max || 6}` }] : []),
+        ...(chainLightning ? [{ icon: iconLightning, label: `${getLang('perk_chainLightning_name')} (${getLang('ui_level_short')})`, value: `${chainLightning.level || 1} / ${PERK_CONFIG.chainLightning?.max || 6}` }] : []),
 
         ...(autoGun ? [
             { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: getLang('ui_installed') },
-            { icon: iconDamage, label: `${getLang('perk_damage_name')}`, value: `${autoGun.bulletDamage.toFixed(0)}` },
-            { icon: iconFirerate, label: `${getLang('perk_firerate_name')}`, value: `${(1000 / autoGun.fireRate).toFixed(2)}/s` },
-            // ZMIANA v0.110f: Pełna lokalizacja statystyk dynamicznych broni
-            { icon: iconMultishot, label: getLang('ui_multishot'), value: `+${autoGun.multishot}` },
-            { icon: iconPierce, label: getLang('ui_pierce'), value: `${autoGun.pierce} ${getLang('ui_targets')}` }
+            { icon: iconDamage, label: `${getLang('perk_damage_name')}`, value: `${(autoGun.bulletDamage || 0).toFixed(0)}` },
+            { icon: iconFirerate, label: `${getLang('perk_firerate_name')}`, value: `${(1000 / (autoGun.fireRate || 500)).toFixed(2)}/s` },
+            { icon: iconMultishot, label: getLang('ui_multishot'), value: `+${autoGun.multishot || 0}` },
+            { icon: iconPierce, label: getLang('ui_pierce'), value: `${autoGun.pierce || 0} ${getLang('ui_targets')}` }
         ] : [
             { icon: iconAutoGun, label: getLang('perk_autogun_name'), value: `---` }
         ])
@@ -158,7 +158,6 @@ export function updateStatsUI(game, player, settings, weapons, targetElement = s
         if (lvl > 0) {
             const row = document.createElement('div');
             row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.fontSize = '0.9rem'; row.style.color = perk.color || '#fff';
-            // ZMIANA v0.110f: Lokalizacja etykiety POZ.
             row.innerHTML = `<span>${perk.emoji || ''} ${getLang(perk.name)}</span> <span>${getLang('ui_level_short')} ${lvl}</span>`;
             perkList.appendChild(row);
         }
@@ -271,7 +270,6 @@ export function openChest(game, perkLevels, uiData, player) {
         const dynamicDesc = getDynamicDesc(reward, currentLevel);
         let iconHTML = reward.icon ? `<img src="${getAsset(reward.icon).src}" class="chest-reward-img">` : `<div class="chest-reward-icon">${reward.emoji || '🎁'}</div>`;
 
-        // ZMIANA v0.110f: Lokalizacja słowa Poziom w widoku skrzyni
         chestRewardDisplay.innerHTML = `
         ${iconHTML}<div class="chest-reward-name">${getLang(reward.name)}</div>
         <div class="chest-reward-desc">${dynamicDesc}</div>
