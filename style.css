@@ -1,4 +1,4 @@
-/* style.css (v0.110e - Ultimate Language Flag UI Fix) */
+/* style.css (v0.110j - Gold Focus & Level Up Layout Fix) */
 
 :root {
     --bg-color: #050505;
@@ -13,7 +13,7 @@
 
 * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
 
-/* Globalne stylizowane scrollbary dla silnika Webkit (Chrome, Safari, Edge) */
+/* Globalne stylizowane scrollbary */
 ::-webkit-scrollbar {
     width: 12px;
 }
@@ -36,7 +36,33 @@ body {
     overflow: hidden; touch-action: none; 
 }
 
-/* Kontener główny teraz wymusza układ pionowy i brak scrolla */
+/* --- ANIMACJA I STYL FOKUSU (GAMEPAD / KEYBOARD) --- */
+@keyframes focusGlowPulse {
+    0% { 
+        box-shadow: 0 0 10px var(--accent-gold), inset 0 0 5px var(--accent-gold); 
+    }
+    50% { 
+        box-shadow: 0 0 25px var(--accent-gold), inset 0 0 15px var(--accent-gold); 
+    }
+    100% { 
+        box-shadow: 0 0 10px var(--accent-gold), inset 0 0 5px var(--accent-gold); 
+    }
+}
+
+/* POPRAWIONY FOCUS - TYLKO ZĹ OTY GLOW I RAMKA, BEZ BIAĹ EJ RAMKI */
+.focused {
+    outline: none !important;
+    border: 3px solid var(--accent-gold) !important;
+    animation: focusGlowPulse 1.2s infinite ease-in-out !important;
+    transform: scale(1.05) !important;
+    z-index: 999 !important;
+    transition: transform 0.1s ease !important;
+    color: #fff !important;
+    text-shadow: 2px 2px 4px #000 !important;
+    /* Zachowanie oryginalnego koloru tĹ‚a z lekkim rozjaĹ›nieniem */
+    background-image: linear-gradient(rgba(255,255,255,0.25), rgba(255,255,255,0.25)) !important;
+}
+
 #gameContainer { 
     position: relative; 
     width: 100vw; 
@@ -48,7 +74,6 @@ body {
     overflow: hidden;
 }
 
-/* Game-view zajmuje całą dostępną przestrzeń między paskami */
 .game-view { 
     display: flex; 
     flex-direction: column; 
@@ -196,7 +221,6 @@ canvas {
 .retro-frame { width: 95%; max-width: 800px; height: 90vh; max-height: 800px; background: var(--frame-bg); border: 4px solid #333; box-shadow: inset 0 0 0 4px #000, 0 0 30px #000; padding: 20px; display: flex; flex-direction: column; position: relative; overflow: hidden; backdrop-filter: blur(4px); }
 .retro-frame.small { max-width: 600px; height: auto; max-height: 700px; } 
 
-/* Liquid Scroll Indicators dla retro-scroll-box */
 .retro-scroll-box { 
     flex-grow: 1; 
     overflow-y: auto; 
@@ -207,8 +231,6 @@ canvas {
     font-size: 1.3rem; 
     touch-action: pan-y; 
     -webkit-overflow-scrolling: touch;
-
-    /* Shadow-Scroll: cienie pojawiają się tylko gdy jest treść do przewinięcia */
     background:
         linear-gradient(rgba(10,10,10,0.9) 30%, rgba(10,10,10,0)),
         linear-gradient(rgba(10,10,10,0), rgba(10,10,10,0.9) 70%) 0 100%,
@@ -242,7 +264,15 @@ canvas {
 .guide-icon-wrapper { width: 50px; min-width: 50px; margin-right: 15px; display: flex; justify-content: center; }
 .guide-text-wrapper { flex: 1; text-align: left; }
 
-#perks.perk-grid { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 60vh; touch-action: pan-y; }
+#perks.perk-grid { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    overflow-y: auto; 
+    max-height: 60vh; 
+    touch-action: pan-y;
+    padding: 10px; 
+}
 .perk { background: #222; border: 2px solid #666; padding: 10px; cursor: pointer; text-align: left; transition: transform 0.1s; min-height: 80px; display: flex; flex-direction: row; align-items: center; }
 .perk:hover { transform: scale(1.02); border-color: #fff; background: #333; }
 
@@ -273,7 +303,6 @@ canvas {
 .retro-title { text-align: center; color: var(--accent-gold); font-size: 2.5rem; margin: 0 0 15px 0; text-shadow: 3px 3px 0 #000; border-bottom: 2px dashed #444; padding-bottom: 10px; flex-shrink: 0; }
 .text-red { color: var(--accent-red); }
 
-/* Wskaźniki przewijania dla głównej listy menu */
 .menu-list { 
     display: flex; flex-direction: column; gap: 12px; flex-grow: 1; 
     padding: 25px 10% 20px 10%; 
@@ -281,8 +310,6 @@ canvas {
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
     justify-content: flex-start;
-
-    /* Shadow Scroll dla listy przycisków */
     background:
         linear-gradient(var(--frame-bg) 30%, rgba(15,15,15,0)),
         linear-gradient(rgba(15,15,15,0), var(--frame-bg) 70%) 0 100%,
@@ -350,9 +377,53 @@ canvas {
     .stat-icon-img { width: 24px; height: 24px; }
     
     #joystickZone { bottom: 60px; scale: 0.8; transform-origin: bottom right; }
+
+    /* POPRAWKA DLA NISKICH EKRANĂ“W (TABLETY) - EKRAM LEVEL UP */
+    #levelUpOverlay .retro-frame {
+        height: 98vh;
+        max-height: 98vh;
+        padding: 10px;
+    }
+    #levelUpOverlay .perk-grid {
+        flex-direction: row !important;
+        flex-wrap: nowrap;
+        gap: 8px;
+        overflow-y: visible;
+        max-height: none;
+        padding: 10px !important; 
+    }
+    #levelUpOverlay .perk {
+        flex: 1;
+        min-height: auto;
+        padding: 8px;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    #levelUpOverlay .perk-img-wrapper {
+        margin-right: 0;
+        margin-bottom: 5px;
+        width: 48px;
+        height: 48px;
+    }
+    #levelUpOverlay .perk h4 { font-size: 1rem; }
+    #levelUpOverlay .perk p { font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* ZWIÄ˜KSZONE OKNO STATYSTYK DLA LEVEL UP */
+    #statsDisplayPause, .stats-grid {
+        max-height: 35vh; /* WiÄ™ksza przestrzeĹ„ zamiast 80px */
+        overflow-y: auto;
+        border-top: 1px solid #444;
+        margin-top: 5px;
+        padding-top: 5px;
+    }
 }
 
-/* ZMIANA v0.110e: Agresywne usunięcie wszelkich ramek z przycisków języków (focus, active, selection) */
+/* POPRAWKA MARGINESĂ“W DLA PRZYCISKĂ“W POWROTU */
+.nav-back {
+    margin: 8px 25px !important;
+}
+
 .lang-quick-switch button,
 .lang-quick-switch button:focus,
 .lang-quick-switch button:active,
@@ -477,7 +548,7 @@ canvas {
 .score-tab.active { color: var(--accent-gold); border-bottom-color: var(--accent-gold); background: rgba(255, 215, 0, 0.05); }
 .score-tab.small { font-size: 1.2rem; padding: 5px; }
 
-.score-filters { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+.score-filters { display: center; justify-content: center; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
 .filter-btn { background: #222; border: 1px solid #444; color: #888; font-family: var(--font-retro); font-size: 1rem; padding: 4px 8px; cursor: pointer; }
 .filter-btn.active { background: #444; color: #fff; border-color: var(--accent-gold); }
 
@@ -562,13 +633,4 @@ canvas {
     max-height: 90%;
     object-fit: contain;
     image-rendering: pixelated;
-}
-
-.focused {
-    outline: 3px solid var(--accent-gold) !important;
-    outline-offset: 2px;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
-    background-color: rgba(255, 215, 0, 0.1) !important;
-    transform: scale(1.02);
-    z-index: 10;
 }

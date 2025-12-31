@@ -1,5 +1,5 @@
 // ==============
-// MENUS.JS (v1.33l - Shop Currency i18n Fix)
+// MENUS.JS (v1.33p - Final Nav Hierarchy & Right Stick Scroll Fix)
 // Lokalizacja: /js/ui/menus.js
 // ==============
 
@@ -34,6 +34,7 @@ const STATIC_TRANSLATION_MAP = {
     'shopTitle': 'ui_shop_title',
     'shopInfoNoteTitle': 'ui_shop_info_title',
     'shopInfoNoteText': 'ui_shop_info',
+    'lblShopWallet': 'ui_shop_wallet',
     'btnResetShop': 'ui_shop_reset_btn',
     'scoresTitle': 'ui_scores_title',
     'btnClearScoresMenu': 'ui_scores_clear_local',
@@ -84,13 +85,10 @@ export function updateStaticTranslations() {
 
     const walletLabel = document.getElementById('lblShopWallet');
     if (walletLabel) {
-        // POPRAWKA: Ręczne zarządzanie portfelem, aby nie usuwać elementu SPAN
         const walletPoints = document.getElementById('shopWalletPoints');
         const translatedLabel = getLang('ui_shop_wallet') || "DOSTĘPNE PUNKTY:";
         const currency = getLang('ui_shop_currency') || "PKT";
-        const currentVal = walletPoints ? walletPoints.textContent : (shopManager ? shopManager.getWalletBalance().toLocaleString() : '0');
-        
-        walletLabel.innerHTML = `${translatedLabel} <span id="shopWalletPoints" style="color:var(--accent-green);">${currentVal}</span> ${currency}`;
+        walletLabel.innerHTML = `${translatedLabel} <span id="shopWalletPoints" style="color:var(--accent-green);">${walletPoints ? walletPoints.textContent : '0'}</span> ${currency}`;
     }
 
     const btnSubmit = document.getElementById('btnSubmitScore');
@@ -405,8 +403,9 @@ export function switchView(viewId) {
     document.querySelectorAll('.menu-view').forEach(el => { el.classList.remove('active'); });
     const target = document.getElementById(viewId);
     if (target) { target.classList.add('active'); playSound('Click'); }
-    focusedElement = null;
-    document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
+    
+    // Zapewnij fokus na odpowiednim przycisku dla nowego widoku
+    forceFocusFirst();
     
     if (viewId === 'view-coffee') { 
         playSound('MusicIntro'); 
@@ -415,10 +414,6 @@ export function switchView(viewId) {
     }
     else if (viewId === 'view-main') {
         playSound('MusicMenu'); updateFlagHighlights(); 
-        setTimeout(() => {
-            const btnStart = document.getElementById('btnStart');
-            if (btnStart) { focusedElement = btnStart; btnStart.classList.add('focused'); btnStart.focus(); }
-        }, 50);
     }
     if (viewId === 'view-scores') { if(window.wrappedResetLeaderboard) window.wrappedResetLeaderboard(); setTimeout(() => { updateStaticTranslations(); }, 100); }
     if (viewId === 'view-guide') generateGuide(); 
@@ -478,25 +473,62 @@ function generateSkinSelector() {
     });
 }
 
-function getFocusableElements() {
+export function getFocusableElements() {
+    // 1. Priorytety nakĹ‚adek (overlays)
     const priorityOverlays = [
         'confirmOverlay', 'nickInputOverlay', 'tutorialOverlay', 
         'chestOverlay', 'levelUpOverlay', 'pauseOverlay', 'gameOverOverlay', 'introOverlay'
     ];
+    
     for (const ovId of priorityOverlays) {
         const ov = document.getElementById(ovId);
         if (ov && ov.style.display !== 'none' && ov.style.display !== '') {
-             const items = Array.from(ov.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
+             let items = Array.from(ov.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
                          .filter(el => el.offsetParent !== null || window.getComputedStyle(el).display !== 'none');
+             
+             if (ovId === 'introOverlay') {
+                 // W intro priorytetem jest "DALEJ"
+                 items.sort((a, b) => (b.id === 'btnIntroNext') - (a.id === 'btnIntroNext'));
+             } else if (ovId === 'gameOverOverlay') {
+                 // Po game over priorytetem jest "JESZCZE RAZ"
+                 items.sort((a, b) => (b.id === 'btnRetry') - (a.id === 'btnRetry'));
+             } else if (ovId === 'pauseOverlay') {
+                 // W pauzie priorytetem jest "WZNÓW"
+                 items.sort((a, b) => (b.id === 'btnResume') - (a.id === 'btnResume'));
+             }
+             
              if (items.length > 0) return items;
         }
     }
+
+    // 2. Menu gĹ‚Ăłwne - RÄ˜CZNE WYMUSZENIE KOLEJNOĹšCI (FLAGI NA GĂ“RZE -> NOWA GRA -> KONTYNUUJ)
     const menuOverlay = document.getElementById('menuOverlay');
     if (menuOverlay && menuOverlay.style.display !== 'none') {
         const activeView = document.querySelector('.menu-view.active');
         if (activeView) {
-            return Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
+            let all = Array.from(activeView.querySelectorAll('button:not([disabled]), input:not([type="radio"]), .perk, .skin-option, .lang-label-wrapper'))
                          .filter(el => el.offsetParent !== null);
+
+            if (activeView.id === 'view-main') {
+                // KOLEJNOĹšÄ† ZGODNIE Z PROĹšBÄ„: Flagi -> Nowa Gra -> Kontynuuj -> Sklep -> intro -> Coffee -> Dev
+                const order = [
+                    'btnLangPL', 'btnLangEN', 'btnLangRO', 
+                    'btnStart', 'btnContinue', 'navShop', 
+                    'navScores', 'navConfig', 'navGuide', 
+                    'btnReplayIntroMain', 'navCoffee', 'navDev'
+                ];
+                
+                let sorted = [];
+                order.forEach(id => {
+                    const el = all.find(item => item.id === id);
+                    if (el && window.getComputedStyle(el).display !== 'none') {
+                        sorted.push(el);
+                    }
+                });
+                all.forEach(el => { if (!sorted.includes(el)) sorted.push(el); });
+                return sorted;
+            }
+            return all;
         }
     }
     return [];
@@ -512,14 +544,49 @@ function isGameplayActive() {
 }
 
 export function forceFocusFirst() {
-    focusedElement = null;
+    const focusables = getFocusableElements();
     document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
-    navCooldown = 0; 
+    focusedElement = null;
+    
+    if (focusables.length > 0) {
+        // DOMYĹšLNY WYBĂ“R: Nowa Gra lub Kontynuuj (zamiast flag)
+        const priority = focusables.find(el => el.id === 'btnStart') || focusables.find(el => el.id === 'btnContinue');
+        focusedElement = priority || focusables[0];
+        focusedElement.classList.add('focused');
+        focusedElement.focus();
+    }
+    navCooldown = 20; 
 }
 
 function updateGamepadMenu() {
     navCooldown--; if (navCooldown > 0) return;
     const gpState = getGamepadButtonState(); if (Object.keys(gpState).length === 0) return;
+    
+    const rawGp = pollGamepad();
+    
+    // PRZYWRĂ“CONE I ROZBUDOWANE SCROLLOWANIE PRAWYM DRÄ„ĹťKIEM (Axes[3])
+    if (rawGp && rawGp.axes && rawGp.axes.length >= 4) {
+        const scrollY = rawGp.axes[3];
+        if (Math.abs(scrollY) > 0.2) {
+            // Szukamy kontenera do przewijania w widoku lub w nakĹ‚adkach (np. Level Up stats)
+            const activeView = document.querySelector('.menu-view.active');
+            let scrollBox = null;
+            
+            if (activeView) {
+                scrollBox = activeView.querySelector('.retro-scroll-box, .perk-grid, .menu-list, .stats-grid');
+            }
+            
+            // JeĹ›li nie znaleziono w widoku, szukaj w dowolnej otwartej nakĹ‚adce (Level Up, Guide etc)
+            if (!scrollBox) {
+                scrollBox = document.querySelector('.retro-overlay .retro-scroll-box, .retro-overlay .stats-grid, .retro-overlay .perk-grid');
+            }
+
+            if (scrollBox) {
+                scrollBox.scrollTop += scrollY * 25;
+            }
+        }
+    }
+
     if (gpState.A && !lastGpState.A) {
         const splash = document.getElementById('splashOverlay');
         if (splash && splash.style.display !== 'none' && !splash.classList.contains('fade-out')) {
@@ -530,78 +597,61 @@ function updateGamepadMenu() {
     if (gpState.Start && !lastGpState.Start) {
         if (isGameplayActive()) { document.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Escape'})); navCooldown = 15; return; }
     }
-    const rawGp = pollGamepad();
-    if (rawGp && rawGp.axes) {
-        const tutorial = document.getElementById('tutorialOverlay');
-        if (tutorial && tutorial.style.display !== 'none') {
-            const scrollY = rawGp.axes[3]; 
-            if (Math.abs(scrollY) > 0.2) {
-                const scrollBox = tutorial.querySelector('.retro-scroll-box');
-                if (scrollBox) scrollBox.scrollTop += scrollY * 20;
-            }
-        }
-    }
+    
     if (isGameplayActive()) return;
+    
     const focusables = getFocusableElements(); if (focusables.length === 0) return;
+    
     if (!focusedElement || !focusables.includes(focusedElement)) {
         if (focusedElement) { focusedElement.classList.remove('focused'); focusedElement.blur(); }
-        focusedElement = focusables[0];
-        if (focusedElement) { focusedElement.classList.add('focused'); focusedElement.focus(); }
+        forceFocusFirst();
     }
+    
     let moveDir = { up: false, down: false, left: false, right: false };
     if (gpState.Up) moveDir.up = true; if (gpState.Down) moveDir.down = true;
     if (gpState.Left) moveDir.left = true; if (gpState.Right) moveDir.right = true;
+    
     if (rawGp && rawGp.axes) {
         if (rawGp.axes[1] < -0.5) moveDir.up = true; if (rawGp.axes[1] > 0.5) moveDir.down = true;
         if (rawGp.axes[0] < -0.5) moveDir.left = true; if (rawGp.axes[0] > 0.5) moveDir.right = true;
-        if (rawGp.axes.length >= 4) {
-            const scrollY = rawGp.axes[3];
-            if (Math.abs(scrollY) > 0.2) {
-                const activeView = document.querySelector('.menu-view.active');
-                if (activeView) { const scrollBox = activeView.querySelector('.retro-scroll-box, .config-list, .menu-list'); if (scrollBox) scrollBox.scrollTop += scrollY * 15; }
-            }
-        }
     }
-    const isRange = focusedElement && focusedElement.tagName === 'INPUT' && focusedElement.type === 'range';
+    
     let index = focusables.indexOf(focusedElement); let moved = false;
-    if (moveDir.down) { index++; moved = true; }
-    else if (moveDir.up) { index--; moved = true; }
-    else if (moveDir.right) {
-        if (isRange) {
-            focusedElement.value = Math.min(parseInt(focusedElement.max), parseInt(focusedElement.value) + 5);
-            focusedElement.dispatchEvent(new Event('input')); navCooldown = 5; 
-        } else { index++; moved = true; }
-    }
-    else if (moveDir.left) {
-        if (isRange) {
-            focusedElement.value = Math.max(parseInt(focusedElement.min), parseInt(focusedElement.value) - 5);
-            focusedElement.dispatchEvent(new Event('input')); navCooldown = 5;
-        } else { index--; moved = true; }
-    }
+    
+    // Nawigacja liniowa
+    if (moveDir.down || moveDir.right) { index++; moved = true; }
+    else if (moveDir.up || moveDir.left) { index--; moved = true; }
+    
     if (moved) {
         if (index >= focusables.length) index = 0;
         if (index < 0) index = focusables.length - 1;
         if (focusedElement) { focusedElement.classList.remove('focused'); focusedElement.blur(); }
         focusedElement = focusables[index];
         if (focusedElement) {
-            focusedElement.classList.add('focused'); focusedElement.focus(); focusedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            focusedElement.classList.add('focused'); focusedElement.focus(); 
+            focusedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             playSound('Click'); updateFlagHighlights();
         }
-        navCooldown = 12; 
+        navCooldown = 15; 
     }
+    
     if (gpState.A && !lastGpState.A) {
         if (focusedElement) {
             const el = focusedElement;
             if (el.id === 'btnLangPL') { setLanguage('pl'); updateStaticTranslations(); playSound('Click'); }
             else if (el.id === 'btnLangEN') { setLanguage('en'); updateStaticTranslations(); playSound('Click'); }
             else if (el.id === 'btnLangRO') { setLanguage('ro'); updateStaticTranslations(); playSound('Click'); }
-            else { el.focus(); el.click(); navCooldown = 2; }
+            else { el.click(); navCooldown = 5; }
         }
         lastGpState = { ...gpState }; return;
     }
+    
     if (gpState.B && !lastGpState.B) {
         const activeView = document.querySelector('.menu-view.active');
-        if (activeView && activeView.id !== 'view-main') { const backBtn = activeView.querySelector('.nav-back'); if (backBtn) backBtn.click(); }
+        if (activeView && activeView.id !== 'view-main') { 
+            const backBtn = activeView.querySelector('.nav-back'); 
+            if (backBtn) backBtn.click(); 
+        }
         navCooldown = 15;
     }
     lastGpState = { ...gpState };
@@ -679,7 +729,7 @@ export function initRetroToggles(game, uiData) {
             const overlay = document.getElementById('confirmOverlay');
             const confirmTxt = document.getElementById('confirmText');
             const btnYes = document.getElementById('btnConfirmYes');
-            const btnNo = document.getElementById('btnConfirmNo');
+            const btnConfirmNo = document.getElementById('btnConfirmNo');
 
             if (overlay && confirmTxt) {
                 confirmTxt.innerText = getLang('ui_shop_reset_confirm') || "CZY NA PEWNO CHCESZ ZRESETOWAĆ ULEPSZENIA? WYDANE PUNKTY NIE ZOSTANĄ ZWRÓCONE!";
@@ -696,7 +746,7 @@ export function initRetroToggles(game, uiData) {
                     overlay.style.display = 'none';
                 };
 
-                btnNo.onclick = () => {
+                btnConfirmNo.onclick = () => {
                     playSound('Click');
                     overlay.style.display = 'none';
                 };

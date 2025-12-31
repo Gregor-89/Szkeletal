@@ -1,5 +1,5 @@
 // ==============
-// UI.JS (v1.17e - Shop Sync Fix)
+// UI.JS (v1.17h - Flow Polish & Navigation Sync)
 // Lokalizacja: /js/ui/ui.js
 // ==============
 
@@ -93,6 +93,9 @@ export function showMenu(game, resetAllFn, uiData, allowContinue = false) {
     else displayScores('scoresBodyMenu');
     
     attachClearScoresListeners();
+
+    // Wymuszenie fokusu po wejściu do menu głównego
+    Menus.forceFocusFirst();
 }
 
 export async function startRun(game, resetAllFn, uiData) {
@@ -152,6 +155,7 @@ export async function startRun(game, resetAllFn, uiData) {
             Menus.updateStaticTranslations();
             game.paused = true; 
             localStorage.setItem('szkeletal_tutorial_seen', 'true');
+            Menus.forceFocusFirst();
         }
     } else {
         game.paused = false; 
@@ -172,7 +176,7 @@ export async function resetAll(canvas, settings, perkLevels, uiData, camera) {
     if (isTouch && !joySaved) {
         localStorage.setItem('szkeletal_joy_side', 'right');
         setJoystickSide('right');
-        console.log("[UI] Wykryto urządzenie dotykowe. Aktywacja dżojstika.");
+        console.log("[UI] Wykryto urzÄ…dzenie dotykowe. Aktywacja dĹĽojstika.");
     }
 
     const savedZoom = localStorage.getItem('szkeletal_zoom');
@@ -194,7 +198,9 @@ export async function resetAll(canvas, settings, perkLevels, uiData, camera) {
             eliteInterval: GAME_CONFIG.ELITE_SPAWN_INTERVAL, 
             lastHazardSpawn: 0, 
             lastSiegeEvent: 0, 
-            currentSiegeInterval: SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME 
+            currentSiegeInterval: SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME,
+            siegeState: 'idle',
+            siegeWarningT: 0
         });
         settings.lastFire = 0; 
         settings.lastElite = 0;
@@ -250,6 +256,9 @@ export async function resetAll(canvas, settings, perkLevels, uiData, camera) {
         settings.lastHazardSpawn = 0; 
         settings.lastSiegeEvent = 0; 
         settings.currentSiegeInterval = SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
+        settings.siegeState = 'idle';
+        settings.siegeWarningT = 0;
+
         game.newEnemyWarningT = 0; 
         game.newEnemyWarningType = null; 
         game.totalKills = 0; 
@@ -312,6 +321,7 @@ export function pauseGame(game, settings, weapons, player) {
     } catch (e) { console.error(e); }
     
     Menus.updateStaticTranslations(); 
+    Menus.forceFocusFirst();
 }
 
 export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
@@ -332,7 +342,7 @@ export function resumeGame(game, timerDuration = UI_CONFIG.RESUME_TIMER) {
     if(resumeOverlay) resumeOverlay.style.display = 'flex';
     
     const readyTitle = document.getElementById('resumeOverlayTitle');
-    if(readyTitle) readyTitle.textContent = getLang('ui_ready_title') || "PRZYGOTUJ SIĘ";
+    if(readyTitle) readyTitle.textContent = getLang('ui_ready_title') || "PRZYGOTUJ SIÄ ";
 
     const id = setInterval(() => {
         t = Math.max(0, t - 0.05);
@@ -381,6 +391,7 @@ export function gameOver(game, uiData) {
     
     if (shopManager && !game.isCheated) {
         shopManager.updateMaxScore(Math.floor(game.score));
+        shopManager.save();
     }
 
     playSound('MusicMenu');
@@ -404,12 +415,15 @@ export function gameOver(game, uiData) {
 
     Hud.resetHealthBarVisuals();
     Menus.updateStaticTranslations(); 
+
+    Menus.forceFocusFirst();
     
     if (LeaderboardService && LeaderboardService.trackStat) {
         LeaderboardService.trackStat('total_playtime_seconds', finalTimeValue);
     }
     
     if (LeaderboardService && LeaderboardService.syncSessionStats) {
+        LeaderboardService.trackStat('deaths', 1);
         LeaderboardService.syncSessionStats();
     }
 }
