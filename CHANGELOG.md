@@ -6,6 +6,23 @@ Tutaj dokumentowane są wszystkie ważniejsze zmiany wprowadzane w projekcie "Sz
 
 # Changelog
 
+## [0.115] - 2026-01-08 (Beta)
+### Dodano
+- **Orbital Flash:** Orbitalne Ziemniaczki (oraz wszystkie inne pociski przebijające) migają teraz na biało przy trafieniu w przeciwnika lub przeszkodę, zapewniając lepszy feedback wizualny.
+
+### Naprawiono
+- **Game Start Bug:** Naprawiono błąd umożliwiający rozpoczęcie gry (klawiszem Enter) w trakcie trwania Intro, co powodowało desynchronizację.
+- **FPS Counter:** Licznik klatek na sekundę nie zasłania już innych elementów UI i jest poprawnie pozycjonowany (Y=55).
+- **Crash Perków:** Usunięto błąd krytyczny występujący przy próbie nałożenia efektów broni na pusty ekwipunek.
+- **Ustawienia:** Suwaki głośności i Zoom są teraz poprawnie zapisywane i wczytywane z pamięci przeglądarki.
+- **UI Game Over:** Przyciski "Wyślij Wynik" i "Wyczyść Lokalne" są teraz ułożone w jednej linii dla lepszej ergonomii.
+
+### Balans (Gameplay Tuning)
+- **Szybsza Akcja:** Skrócono czas ochronny na starcie (4s -> 1s) i zwiększono początkowe tempo pojawiania się wrogów (0.006 -> 0.015).
+- **Zasięg Pocisków:** Znacznie zwiększono zasięg renderowania pocisków, aby nie znikały przedwcześnie przy maksymalnym oddaleniu kamery (Zoom 60%).
+
+---
+
 ## [0.114] - 2026-01-08
 ### Dodano
 - **Obsługa Klawiatury (Full Keyboard Support):** Zaimplementowano pełne sterowanie grą bez myszki.
