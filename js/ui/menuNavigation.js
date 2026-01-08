@@ -130,6 +130,10 @@ export function updateGamepadMenu() {
     const rawGp = pollGamepad(window.lastGameRef, { settings: {}, player: { weapons: [] } });
     if (!rawGp || !rawGp.axes) return;
 
+    // FIX: Blokada inputu menu podczas Splash Screenów (również podczas fade-out)
+    const splash = document.getElementById('splashOverlay');
+    if (splash && splash.style.display !== 'none') return;
+
     // FIX Ad 5: Poprawione scrollowanie gamepadem (Obniżony próg czułości do 0.1, zwiększona prędkość)
     if (rawGp.axes.length >= 3) {
         const scrollY = rawGp.axes[3] || rawGp.axes[2] || 0;

@@ -558,10 +558,14 @@
           <tbody id="scoresBodyGameOver"></tbody>
         </table>
       </div>
-      <button id="btnSubmitScore" class="retro-btn small indigo" style="margin-bottom:10px; display:none;">WYŚLIJ
-        WYNIK</button>
+      <div class="gameover-extra-buttons"
+        style="display:flex; justify-content:center; gap:10px; width:100%; flex-wrap:wrap; margin-bottom:10px;">
+        <button id="btnSubmitScore" class="retro-btn small indigo" style="display:none; flex:1; min-width:140px;">WYŚLIJ
+          WYNIK</button>
+        <button id="btnClearScoresGO" class="retro-btn small danger" style="flex:1; min-width:140px;">WYCZYŚĆ
+          LOKALNE</button>
+      </div>
       <div id="submitMsg" style="text-align:center; font-size:1rem; margin-bottom:5px; height:20px;"></div>
-      <button id="btnClearScoresGO" class="retro-btn small danger" style="margin-bottom:10px;">WYCZYŚĆ LOKALNE</button>
       <div class="menu-actions">
         <button id="btnRetry" class="retro-btn primary">JESZCZE RAZ</button>
         <button id="btnMenu" class="retro-btn">MENU</button>

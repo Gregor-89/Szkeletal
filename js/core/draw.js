@@ -8,7 +8,7 @@ import { get as getAsset } from '../services/assets.js';
 import { getLang } from '../services/i18n.js';
 import { devSettings } from '../services/dev.js';
 import { OrbitalWeapon } from '../config/weapons/orbitalWeapon.js';
-import { ENEMY_STATS, HUNGER_CONFIG } from '../config/gameData.js'; 
+import { ENEMY_STATS, HUNGER_CONFIG } from '../config/gameData.js';
 
 let backgroundPattern = null;
 let generatedPatternScale = 0;
@@ -16,15 +16,15 @@ let generatedPatternScale = 0;
 const renderList = [];
 
 const SHADOW_OFFSETS = {
-    'aggressive': 0.24, 'ranged': 0.25, 'elite': 0.24, 'wall': 0.25,       
+    'aggressive': 0.24, 'ranged': 0.25, 'elite': 0.24, 'wall': 0.25,
     'kamikaze': 0.52, 'horde': 0.49, 'player': 0.42, 'default': 0.45,
-    'lumberjack': 0.12 
+    'lumberjack': 0.12
 };
 
 function drawBackground(ctx, camera) {
-    const TILE_SCALE = 0.25; 
+    const TILE_SCALE = 0.25;
     const bgTexture = getAsset('bg_grass');
-    
+
     if (bgTexture) {
         if (!backgroundPattern || generatedPatternScale !== TILE_SCALE) {
             try {
@@ -33,10 +33,10 @@ function drawBackground(ctx, camera) {
                 const offscreenCanvas = document.createElement('canvas');
                 offscreenCanvas.width = tileWidth; offscreenCanvas.height = tileHeight;
                 const offCtx = offscreenCanvas.getContext('2d');
-                offCtx.imageSmoothingEnabled = false; 
+                offCtx.imageSmoothingEnabled = false;
                 offCtx.drawImage(bgTexture, 0, 0, tileWidth, tileHeight);
                 backgroundPattern = ctx.createPattern(offscreenCanvas, 'repeat');
-                generatedPatternScale = TILE_SCALE; 
+                generatedPatternScale = TILE_SCALE;
             } catch (e) { backgroundPattern = null; }
         }
         if (backgroundPattern) {
@@ -50,16 +50,16 @@ function drawBackground(ctx, camera) {
 
 function drawShadow(ctx, x, y, size, visualScale = 1.0, enemyType = 'default') {
     ctx.save();
-    
+
     let offsetMult = SHADOW_OFFSETS[enemyType] || SHADOW_OFFSETS['default'];
-    
+
     if (ENEMY_STATS[enemyType] && ENEMY_STATS[enemyType].shadowOffset !== undefined) {
         offsetMult = ENEMY_STATS[enemyType].shadowOffset;
     }
-    
+
     const offset = (size * visualScale) * offsetMult;
-    ctx.translate(x, y + offset); 
-    ctx.scale(1 + (visualScale - 1) * 0.5, 0.3); 
+    ctx.translate(x, y + offset);
+    ctx.scale(1 + (visualScale - 1) * 0.5, 0.3);
     ctx.beginPath(); ctx.arc(0, 0, size * 0.6, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.fill();
     ctx.restore();
@@ -67,15 +67,15 @@ function drawShadow(ctx, x, y, size, visualScale = 1.0, enemyType = 'default') {
 
 function drawEnemyHealthBar(ctx, e) {
     if ((e.type !== 'tank' && e.type !== 'elite' && e.type !== 'wall' && e.type !== 'lumberjack') || !e.showHealthBar) return;
-    
+
     const visualScale = e.visualScale || 1.5;
     const w = 40; const h = 6; const bx = -w / 2;
     const spriteH = e.size * visualScale;
     let yOffsetMod = 0;
-    if (e.type === 'elite') yOffsetMod = 38; 
+    if (e.type === 'elite') yOffsetMod = 38;
     else if (e.type === 'wall') yOffsetMod = 44;
-    else if (e.type === 'lumberjack') yOffsetMod = 20; 
-    
+    else if (e.type === 'lumberjack') yOffsetMod = 20;
+
     const by = -(spriteH / 2) - 8 + yOffsetMod;
     ctx.save(); ctx.translate(e.x, e.y);
     ctx.fillStyle = '#300'; ctx.fillRect(bx, by, w, h);
@@ -91,9 +91,9 @@ function drawFPS(ctx, fps, ui, canvas) {
         ctx.fillStyle = (fps >= 55) ? '#66bb6a' : (fps >= 40 ? '#ffca28' : '#ef5350');
         ctx.font = 'bold 16px Arial'; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 4;
         const fpsText = `${fps} FPS`;
-        if (ui.fpsPosition === 'right') { ctx.textAlign = 'right'; ctx.fillText(fpsText, canvas.width - 10, 20); } 
-        else { ctx.textAlign = 'left'; ctx.fillText(fpsText, 10, 20); }
-        ctx.shadowBlur = 0; 
+        if (ui.fpsPosition === 'right') { ctx.textAlign = 'right'; ctx.fillText(fpsText, canvas.width - 20, 55); }
+        else { ctx.textAlign = 'left'; ctx.fillText(fpsText, 20, 55); }
+        ctx.shadowBlur = 0;
     }
 }
 
@@ -103,13 +103,13 @@ function drawEnemyWarning(ctx, game, canvas) {
         const alpha = Math.min(1, game.newEnemyWarningT);
         const blink = 0.5 + 0.5 * Math.sin(performance.now() / 100);
         ctx.globalAlpha = alpha * blink;
-        ctx.font = 'bold 36px "VT323", monospace'; 
+        ctx.font = 'bold 36px "VT323", monospace';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = '#FF5252'; ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
         ctx.shadowColor = '#000'; ctx.shadowBlur = 10;
         const prefix = getLang('ui_warning_new_enemy') || 'NADCHODZI';
         const text = `${prefix}: ${game.newEnemyWarningType}`;
-        const x = canvas.width / 2; const y = canvas.height * 0.2; 
+        const x = canvas.width / 2; const y = canvas.height * 0.2;
         ctx.strokeText(text, x, y); ctx.fillText(text, x, y);
         ctx.restore();
     }
@@ -119,16 +119,16 @@ function drawHungerVignette(ctx, game, canvas) {
     if (game.hunger > 0 || game.isDying) return;
 
     ctx.save();
-    const pulse = (Math.sin(game.time * HUNGER_CONFIG.PULSE_SPEED) + 1) / 2; 
-    const alpha = 0.3 + (pulse * 0.2); 
+    const pulse = (Math.sin(game.time * HUNGER_CONFIG.PULSE_SPEED) + 1) / 2;
+    const alpha = 0.3 + (pulse * 0.2);
 
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
     const radius = Math.max(canvas.width, canvas.height) * 0.8;
 
     const grad = ctx.createRadialGradient(cx, cy, radius * 0.3, cx, cy, radius);
-    grad.addColorStop(0, 'rgba(255, 0, 0, 0)'); 
-    grad.addColorStop(1, `rgba(180, 0, 0, ${alpha})`); 
+    grad.addColorStop(0, 'rgba(255, 0, 0, 0)');
+    grad.addColorStop(1, `rgba(180, 0, 0, ${alpha})`);
 
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -136,34 +136,34 @@ function drawHungerVignette(ctx, game, canvas) {
 }
 
 export function draw(ctx, state, ui, fps) {
-    const { 
-        canvas, game, stars, player, enemies, bullets, eBullets, 
-        gems, pickups, chests, particles, hitTexts, bombIndicators, 
-        hazards, camera, obstacles 
+    const {
+        canvas, game, stars, player, enemies, bullets, eBullets,
+        gems, pickups, chests, particles, hitTexts, bombIndicators,
+        hazards, camera, obstacles
     } = state;
-    
-    const { pickupStyleEmoji, pickupShowLabels } = ui;
-    
-    // FIX v0.110k: Czysty mnożnik zoomu dla idealnych proporcji (bez mnożników rozdzielczości)
-    const zoom = Math.max(0.1, game.zoomLevel || 1.0); 
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height); 
+    const { pickupStyleEmoji, pickupShowLabels } = ui;
+
+    // FIX v0.110k: Czysty mnożnik zoomu dla idealnych proporcji (bez mnożników rozdzielczości)
+    const zoom = Math.max(0.1, game.zoomLevel || 1.0);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const vWidth = canvas.width / zoom;
     const vHeight = canvas.height / zoom;
 
-    const margin = 800 / zoom; 
+    const margin = 800 / zoom;
 
     // FIX v0.110k: Precyzyjne obliczanie środka skalowania
     const viewLeft = camera.offsetX - (vWidth - canvas.width) / 2;
     const viewTop = camera.offsetY - (vHeight - canvas.height) / 2;
-    
+
     const cullLeft = viewLeft - margin;
     const cullRight = viewLeft + vWidth + margin;
     const cullTop = viewTop - margin;
     const cullBottom = viewTop + vHeight + margin;
 
-    ctx.save(); 
+    ctx.save();
 
     // Skalowanie względem środka ekranu
     ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -177,7 +177,7 @@ export function draw(ctx, state, ui, fps) {
         game.shakeT -= 16;
         if (game.shakeT <= 0) game.shakeMag = 0;
     }
-    
+
     ctx.translate(-camera.offsetX, -camera.offsetY);
 
     drawBackground(ctx, camera);
@@ -187,7 +187,7 @@ export function draw(ctx, state, ui, fps) {
         ctx.fillStyle = 'rgba(100,200,255,0.12)';
         ctx.fillRect(viewLeft, viewTop, vWidth, vHeight);
     }
-    
+
     for (const h of hazards) {
         if (h.x + h.r < cullLeft || h.x - h.r > cullRight || h.y + h.r < cullTop || h.y - h.r > cullBottom) continue;
         h.draw(ctx);
@@ -198,13 +198,13 @@ export function draw(ctx, state, ui, fps) {
             if (obs.type === 'water' || obs.isRuined) {
                 const r = obs.size;
                 if (obs.x + r < cullLeft || obs.x - r > cullRight || obs.y + r < cullTop || obs.y - r > cullBottom) continue;
-                obs.update(state.dt || 0.016, player); 
+                obs.update(state.dt || 0.016, player);
                 obs.draw(ctx, player, game.time);
             }
         }
         for (const obs of obstacles) {
             if (obs.type === 'water' || obs.isRuined || !obs.hasShadow) continue;
-            const r = obs.size; 
+            const r = obs.size;
             if (obs.x + r < cullLeft || obs.x - r > cullRight || obs.y + r < cullTop || obs.y - r > cullBottom) continue;
             if (obs.drawShadow) obs.drawShadow(ctx);
         }
@@ -215,21 +215,21 @@ export function draw(ctx, state, ui, fps) {
 
     for (let i = 0; i < enemies.length; i++) {
         const e = enemies[i];
-        const radius = (e.size / 2) * 1.5; 
+        const radius = (e.size / 2) * 1.5;
         if (e.x + radius < cullLeft || e.x - radius > cullRight || e.y + radius < cullTop || e.y - radius > cullBottom) continue;
         renderList.push(e);
     }
-    
+
     if (obstacles) {
         for (const obs of obstacles) {
             if (obs.type === 'water' || obs.isRuined) continue;
-            const r = obs.size; 
+            const r = obs.size;
             if (obs.x + r < cullLeft || obs.x - r > cullRight || obs.y + r < cullTop || obs.y - r > cullBottom) continue;
             obs.update(state.dt || 0.016, player);
             renderList.push(obs);
         }
     }
-    
+
     for (const g of gems) {
         if (g.x < cullLeft || g.x > cullRight || g.y < cullTop || g.y > cullBottom) continue;
         g._renderType = 'gem'; renderList.push(g);
@@ -250,19 +250,19 @@ export function draw(ctx, state, ui, fps) {
         if (obj.type === 'player') {
             drawShadow(ctx, obj.x, obj.y, obj.size, 1.0, 'player');
             obj.draw(ctx, game);
-        } else if (obj.stats) { 
+        } else if (obj.stats) {
             if (!obj.isDead) {
                 if (obj.stats.hasShadow !== false) drawShadow(ctx, obj.x, obj.y, obj.size, obj.visualScale || 1.0, obj.type);
                 obj.draw(ctx, game); drawEnemyHealthBar(ctx, obj);
             }
-        } else if (obj.draw && !obj._renderType) { 
-             obj.draw(ctx, player, game.time);
+        } else if (obj.draw && !obj._renderType) {
+            obj.draw(ctx, player, game.time);
         } else if (obj._renderType === 'gem') {
-             if (obj.active) drawShadow(ctx, obj.x, obj.y, 10, 1.0, 'default');
-             obj.draw(ctx);
+            if (obj.active) drawShadow(ctx, obj.x, obj.y, 10, 1.0, 'default');
+            obj.draw(ctx);
         } else if (obj._renderType === 'pickup' || obj._renderType === 'chest') {
-             drawShadow(ctx, obj.x, obj.y, 20, 1.0, 'default');
-             obj.draw(ctx, pickupStyleEmoji, pickupShowLabels);
+            drawShadow(ctx, obj.x, obj.y, 20, 1.0, 'default');
+            obj.draw(ctx, pickupStyleEmoji, pickupShowLabels);
         }
     }
 
@@ -280,8 +280,8 @@ export function draw(ctx, state, ui, fps) {
         if (eb.x < cullLeft || eb.x > cullRight || eb.y < cullTop || eb.y > cullBottom) continue;
         eb.draw(ctx);
     }
-    
-    const batches = {}; 
+
+    const batches = {};
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         if (p.x < cullLeft || p.x > cullRight || p.y < cullTop || p.y > cullBottom) continue;
@@ -290,7 +290,7 @@ export function draw(ctx, state, ui, fps) {
             ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size); ctx.restore();
         } else {
             let alpha = Math.floor((p.life / p.maxLife) * 10) / 10;
-            if (alpha <= 0) continue; 
+            if (alpha <= 0) continue;
             const key = p.color + '_' + alpha;
             if (!batches[key]) batches[key] = [];
             batches[key].push(p);
@@ -308,16 +308,16 @@ export function draw(ctx, state, ui, fps) {
     ctx.globalAlpha = 1;
     for (const b of bombIndicators) {
         if (b.x - b.maxRadius > cullRight || b.x + b.maxRadius < cullLeft || b.y - b.maxRadius > cullBottom || b.y + b.maxRadius < cullTop) continue;
-        const progress = b.life / b.maxLife; 
+        const progress = b.life / b.maxLife;
         if (b.type === 'shockwave') {
-            const currentRadius = b.maxRadius * progress; const width = 20 * (1 - progress); const alpha = 1 - progress; 
+            const currentRadius = b.maxRadius * progress; const width = 20 * (1 - progress); const alpha = 1 - progress;
             ctx.save(); ctx.beginPath(); ctx.arc(Math.round(b.x), Math.round(b.y), currentRadius, 0, Math.PI * 2);
             ctx.strokeStyle = b.isWallNuke ? `rgba(100, 200, 255, ${alpha})` : `rgba(255, 165, 0, ${alpha})`;
             ctx.fillStyle = b.isWallNuke ? `rgba(100, 200, 255, ${alpha * 0.1})` : `rgba(255, 100, 0, ${alpha * 0.1})`;
             ctx.lineWidth = width; ctx.stroke(); ctx.fill(); ctx.restore();
-            continue; 
+            continue;
         }
-        const currentRadius = b.maxRadius * progress; const opacity = 0.9 * (1 - progress); 
+        const currentRadius = b.maxRadius * progress; const opacity = 0.9 * (1 - progress);
         if (b.isSiege) {
             const pulse = 1 + 0.2 * Math.sin(b.life * 8); const r = b.maxRadius * pulse;
             ctx.lineWidth = 5; ctx.strokeStyle = `rgba(255, 0, 255, ${opacity})`; ctx.shadowBlur = 15;
@@ -344,7 +344,7 @@ export function draw(ctx, state, ui, fps) {
         const ht = hitTexts[i]; if (ht.x < cullLeft || ht.x > cullRight || ht.y < cullTop || ht.y > cullBottom) continue;
         ctx.globalAlpha = Math.max(0, ht.life / ht.maxLife); ctx.fillStyle = ht.color; ctx.fillText(ht.text, Math.round(ht.x), Math.round(ht.y) - 30);
     }
-    ctx.restore(); 
+    ctx.restore();
 
     drawHungerVignette(ctx, game, canvas);
     drawEnemyWarning(ctx, game, canvas);

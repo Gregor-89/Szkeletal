@@ -310,11 +310,45 @@ export function initRetroToggles(game, uiData) {
 
     const zoomSlider = document.getElementById('zoomSlider');
     if (zoomSlider) {
+        // FIX: Inicjalizacja wartości suwaka
+        const savedZoom = localStorage.getItem('szkeletal_zoom');
+        if (savedZoom) zoomSlider.value = savedZoom;
+
         zoomSlider.oninput = (e) => {
             const val = parseInt(e.target.value);
             game.zoomLevel = val / 100;
             document.getElementById('zoomValue').innerText = val + "%";
             localStorage.setItem('szkeletal_zoom', val);
+        };
+    }
+
+    // FIX: Obsługa głośności Muzyki
+    const volMusic = document.getElementById('volMusic');
+    if (volMusic) {
+        const savedVol = localStorage.getItem('szkeletal_volMusic');
+        if (savedVol !== null) {
+            volMusic.value = savedVol;
+            setMusicVolume(parseInt(savedVol) / 100);
+        }
+        volMusic.oninput = (e) => {
+            const val = parseInt(e.target.value);
+            setMusicVolume(val / 100);
+            localStorage.setItem('szkeletal_volMusic', val);
+        };
+    }
+
+    // FIX: Obsługa głośności SFX
+    const volSFX = document.getElementById('volSFX');
+    if (volSFX) {
+        const savedVol = localStorage.getItem('szkeletal_volSFX');
+        if (savedVol !== null) {
+            volSFX.value = savedVol;
+            setSfxVolume(parseInt(savedVol) / 100);
+        }
+        volSFX.oninput = (e) => {
+            const val = parseInt(e.target.value);
+            setSfxVolume(val / 100);
+            localStorage.setItem('szkeletal_volSFX', val);
         };
     }
 

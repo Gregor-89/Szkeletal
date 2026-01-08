@@ -3,7 +3,7 @@
 // Lokalizacja: /js/core/eventManager.js
 // ==============
 
-import { switchView, updateStaticTranslations, forceFocusFirst, setFocusedElement } from '../ui/menus.js';
+import { switchView, updateStaticTranslations, forceFocusFirst, setFocusedElement, initRetroToggles } from '../ui/menus.js';
 import { setLanguage } from '../services/i18n.js';
 import { showMenu, resetAll, pauseGame, resumeGame, gameOver, startRun } from '../ui/ui.js';
 
@@ -132,6 +132,9 @@ export function initializeMainEvents(stateRef, uiRef) {
 function initEvents() {
     updateStaticTranslations();
 
+    // FIX: Inicjalizacja toggli (FPS, Shake, etc.)
+    initRetroToggles(gameStateRef.game, uiDataRef);
+
     // FIX: Klikalność flag myszką
     ['btnLangPL', 'btnLangEN', 'btnLangRO'].forEach(id => {
         const btn = document.getElementById(id);
@@ -148,6 +151,10 @@ function initEvents() {
     });
 
     document.getElementById('btnStart').addEventListener('click', () => {
+        // FIX: Blokada startu gry jeśli splash screeny są widoczne
+        const splash = document.getElementById('splashOverlay');
+        if (splash && splash.style.display !== 'none') return;
+
         devSettings.presetLoaded = false;
         resetDevTime();
         wrappedLoadConfig();

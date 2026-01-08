@@ -14,8 +14,8 @@ export class Bullet {
         this.size = 0;
         this.damage = 0;
         this.color = '#fff';
-        this.isEnemy = false; 
-        this.type = 'default'; 
+        this.isEnemy = false;
+        this.type = 'default';
         this.pool = null;
         this.life = Infinity;
         this.maxLife = Infinity;
@@ -30,7 +30,8 @@ export class Bullet {
         this.color = color;
         this.life = life;
         this.maxLife = life;
-        this.type = type; 
+        this.type = type;
+        this.flashT = 0; // FIX: Flash dla pocisków
     }
 
     /**
@@ -39,7 +40,7 @@ export class Bullet {
      */
     isOffScreen(camera, game) {
         const zoom = game ? (game.zoomLevel || 1.0) : 1.0;
-        
+
         // Obliczanie wirtualnych wymiarĂłw widoku
         const vWidth = camera.viewWidth / zoom;
         const vHeight = camera.viewHeight / zoom;
@@ -48,13 +49,13 @@ export class Bullet {
         const viewLeft = camera.offsetX - (vWidth - camera.viewWidth) / 2;
         const viewTop = camera.offsetY - (vHeight - camera.viewHeight) / 2;
 
-        // Margines skalowany zoomem - musi byÄ‡ znacznie wiÄ™kszy niĹĽ margines spawnu wrogĂłw
-        const margin = 1500 / zoom; 
+        // Margines skalowany zoomem - musi być znacznie większy niż margines spawnu wrogów
+        const margin = 2500 / zoom;
 
         return (
-            this.x < viewLeft - margin || 
-            this.x > viewLeft + vWidth + margin || 
-            this.y < viewTop - margin || 
+            this.x < viewLeft - margin ||
+            this.x > viewLeft + vWidth + margin ||
+            this.y < viewTop - margin ||
             this.y > viewTop + vHeight + margin
         );
     }
@@ -63,30 +64,33 @@ export class Bullet {
         if (this.pool) {
             this.pool.release(this);
         }
-        this.active = false; 
-        this.life = Infinity; 
+        this.active = false;
+        this.life = Infinity;
+        this.flashT = 0;
     }
 
     update(dt) {
         if (!this.active) return;
         this.x += this.vx * dt;
         this.y += this.vy * dt;
-        
+
         if (this.life !== Infinity) {
             this.life -= dt;
             if (this.life <= 0) {
                 this.release();
             }
         }
+
+        if (this.flashT > 0) this.flashT -= dt;
     }
 
     draw(ctx) {
         if (!this.active) return;
-        
+
         if (this.maxLife !== Infinity && this.life < 0.25) {
             ctx.globalAlpha = Math.max(0, this.life / 0.25);
         }
-        
+
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.fillStyle = this.color;
@@ -94,173 +98,187 @@ export class Bullet {
         ctx.arc(0, 0, this.size, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
-        
+
         ctx.globalAlpha = 1;
     }
 }
 
 export class PlayerBullet extends Bullet {
-  constructor() {
-    super(); 
-    this.pierce = 0;
-    this.bouncesLeft = 0;
-    this.lastEnemyHitId = -1;
-    this.curveDir = 0;
-    this.animParams = null;
-    this.animTimer = 0;
-    this.currentFrame = 0;
-    this.playerRef = null;
-    this.offsetX = 0;
-    this.offsetY = 0;
-    this.drawScale = 0;
-    this.spriteKey = null;
-    this.spriteScale = 1.0;
-  }
-  
-  init(x, y, vx, vy, size, damage, color, pierce, life = Infinity, bouncesLeft = 0, curveDir = 0, animParams = null, playerRef = null, drawScale = 0, spriteKey = null, spriteScale = 1.0) {
-    super.init(x, y, vx, vy, size, damage, color, life, 'player');
-    
-    this.pierce = pierce;
-    this.bouncesLeft = bouncesLeft;
-    this.lastEnemyHitId = -1;
-    this.curveDir = curveDir;
-    
-    this.animParams = animParams;
-    this.animTimer = 0;
-    this.currentFrame = 0;
-    
-    this.playerRef = playerRef;
-    if (this.playerRef) {
-        this.offsetX = this.x - this.playerRef.x;
-        this.offsetY = this.y - this.playerRef.y;
+    constructor() {
+        super();
+        this.pierce = 0;
+        this.bouncesLeft = 0;
+        this.lastEnemyHitId = -1;
+        this.curveDir = 0;
+        this.animParams = null;
+        this.animTimer = 0;
+        this.currentFrame = 0;
+        this.playerRef = null;
+        this.offsetX = 0;
+        this.offsetY = 0;
+        this.drawScale = 0;
+        this.spriteKey = null;
+        this.spriteScale = 1.0;
     }
-    
-    this.drawScale = drawScale;
-    this.spriteKey = spriteKey;
-    this.spriteScale = spriteScale;
-    
-    if (this.spriteKey && (Math.abs(vx) > 0 || Math.abs(vy) > 0)) {
-        this.rotation = Math.atan2(vy, vx);
-    } else {
-        this.rotation = 0;
+
+    init(x, y, vx, vy, size, damage, color, pierce, life = Infinity, bouncesLeft = 0, curveDir = 0, animParams = null, playerRef = null, drawScale = 0, spriteKey = null, spriteScale = 1.0) {
+        super.init(x, y, vx, vy, size, damage, color, life, 'player');
+
+        this.pierce = pierce;
+        this.bouncesLeft = bouncesLeft;
+        this.lastEnemyHitId = -1;
+        this.curveDir = curveDir;
+
+        this.animParams = animParams;
+        this.animTimer = 0;
+        this.currentFrame = 0;
+
+        this.playerRef = playerRef;
+        if (this.playerRef) {
+            this.offsetX = this.x - this.playerRef.x;
+            this.offsetY = this.y - this.playerRef.y;
+        }
+
+        this.drawScale = drawScale;
+        this.spriteKey = spriteKey;
+        this.spriteScale = spriteScale;
+
+        if (this.spriteKey && (Math.abs(vx) > 0 || Math.abs(vy) > 0)) {
+            this.rotation = Math.atan2(vy, vx);
+        } else {
+            this.rotation = 0;
+        }
     }
-  }
-  
-  release() {
-    super.release();
-    this.playerRef = null; 
-    this.offsetX = 0; this.offsetY = 0;
-    this.animParams = null; 
-    this.drawScale = 0; 
-    this.spriteKey = null; 
-  }
-  
-  update(dt) {
-    if (this.playerRef) {
-        this.x = this.playerRef.x + this.offsetX;
-        this.y = this.playerRef.y + this.offsetY;
-        
-        if (this.life !== Infinity) {
-            this.life -= dt;
-            if (this.life <= 0) {
-                this.release();
-                return; 
+
+    release() {
+        super.release();
+        this.playerRef = null;
+        this.offsetX = 0; this.offsetY = 0;
+        this.animParams = null;
+        this.drawScale = 0;
+        this.spriteKey = null;
+    }
+
+    update(dt) {
+        if (this.playerRef) {
+            this.x = this.playerRef.x + this.offsetX;
+            this.y = this.playerRef.y + this.offsetY;
+
+            if (this.life !== Infinity) {
+                this.life -= dt;
+                if (this.life <= 0) {
+                    this.release();
+                    return;
+                }
+            }
+        } else {
+            this.x += this.vx * dt;
+            this.y += this.vy * dt;
+            if (this.life !== Infinity) {
+                this.life -= dt;
+                if (this.life <= 0) {
+                    this.release();
+                    return;
+                }
             }
         }
-    } else {
-        this.x += this.vx * dt;
-        this.y += this.vy * dt;
-        if (this.life !== Infinity) {
-            this.life -= dt;
-            if (this.life <= 0) {
-                this.release();
+
+        if (!this.active) return;
+
+        if (this.flashT > 0) this.flashT -= dt;
+
+        if (this.animParams) {
+            this.animTimer += dt * 1000;
+            if (this.animTimer >= this.animParams.animSpeed) {
+                this.animTimer = 0;
+                this.currentFrame = (this.currentFrame + 1);
+                if (this.currentFrame >= this.animParams.frameCount) {
+                    this.currentFrame = this.animParams.frameCount - 1;
+                }
+            }
+        }
+    }
+
+    draw(ctx) {
+        if (!this.active) return;
+
+        if (this.drawScale <= 0.001 && !this.spriteKey) return;
+
+        if (this.animParams && this.playerRef) {
+            const ap = this.animParams;
+            const sprite = ap.spriteSheet;
+            if (!sprite) {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x - 5, this.y - this.size / 2, 10, this.size);
+                return;
+            }
+
+            if (this.maxLife !== Infinity && this.life < 0.25) {
+                ctx.globalAlpha = Math.max(0, this.life / 0.25);
+            } else {
+                ctx.globalAlpha = 1;
+            }
+
+            const scalePercent = (this.drawScale > 0 ? this.drawScale : this.size) / 100.0;
+            const drawWidth = ap.frameWidth * scalePercent;
+            const drawHeight = ap.frameHeight * scalePercent;
+            const sx = this.currentFrame * ap.frameWidth;
+            const sy = ap.animRow * ap.frameHeight;
+
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            if (this.curveDir === 1) ctx.scale(-1, 1);
+
+            // FIX: Flash Effect dla animowanych pocisków (np. Nova)
+            if (this.flashT > 0) ctx.filter = 'grayscale(1) brightness(5)';
+
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.drawImage(sprite, sx, sy, ap.frameWidth, ap.frameHeight, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+
+            ctx.filter = 'none';
+            ctx.restore();
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 1;
+            return;
+        }
+
+        if (this.spriteKey) {
+            const sprite = getAsset(this.spriteKey);
+            if (sprite) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                if (this.spriteKey === 'projectile_nova') {
+                    ctx.shadowColor = (this.flashT > 0) ? '#fff' : 'rgba(255, 50, 50, 0.8)';
+                    ctx.shadowBlur = (this.flashT > 0) ? 20 : 15;
+                }
+
+                const drawSize = this.size * 2 * this.spriteScale;
+                const aspect = sprite.naturalWidth / sprite.naturalHeight;
+                let w = drawSize;
+                let h = drawSize / aspect;
+                if (aspect > 1) { h = w / aspect; } else { w = h * aspect; }
+
+                ctx.imageSmoothingEnabled = false;
+
+                // FIX: Flash Effect dla pocisków (Filtr)
+                if (this.flashT > 0) ctx.filter = 'grayscale(1) brightness(5)';
+
+                ctx.drawImage(sprite, -w / 2, -h / 2, w, h);
+
+                ctx.filter = 'none';
+                ctx.restore();
                 return;
             }
         }
-    }
-    
-    if (!this.active) return;
 
-    if (this.animParams) {
-      this.animTimer += dt * 1000; 
-      if (this.animTimer >= this.animParams.animSpeed) {
-        this.animTimer = 0;
-        this.currentFrame = (this.currentFrame + 1); 
-        if (this.currentFrame >= this.animParams.frameCount) {
-          this.currentFrame = this.animParams.frameCount - 1;
-        }
-      }
-    }
-  }
-  
-  draw(ctx) {
-    if (!this.active) return;
-
-    if (this.drawScale <= 0.001 && !this.spriteKey) return;
-
-    if (this.animParams && this.playerRef) {
-      const ap = this.animParams;
-      const sprite = ap.spriteSheet;
-      if (!sprite) {
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x - 5, this.y - this.size / 2, 10, this.size);
-        return;
-      }
-      
-      if (this.maxLife !== Infinity && this.life < 0.25) {
-        ctx.globalAlpha = Math.max(0, this.life / 0.25);
-      } else {
         ctx.globalAlpha = 1;
-      }
-      
-      const scalePercent = (this.drawScale > 0 ? this.drawScale : this.size) / 100.0;
-      const drawWidth = ap.frameWidth * scalePercent; 
-      const drawHeight = ap.frameHeight * scalePercent;
-      const sx = this.currentFrame * ap.frameWidth;
-      const sy = ap.animRow * ap.frameHeight;
-      
-      ctx.save();
-      ctx.translate(this.x, this.y);
-      if (this.curveDir === 1) ctx.scale(-1, 1); 
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.drawImage(sprite, sx, sy, ap.frameWidth, ap.frameHeight, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
-      ctx.restore();
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.globalAlpha = 1;
-      return;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
     }
-
-    if (this.spriteKey) {
-        const sprite = getAsset(this.spriteKey);
-        if (sprite) {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(this.rotation);
-            
-            if (this.spriteKey === 'projectile_nova') {
-                ctx.shadowColor = 'rgba(255, 50, 50, 0.8)';
-                ctx.shadowBlur = 15;
-            }
-            
-            const drawSize = this.size * 2 * this.spriteScale;
-            const aspect = sprite.naturalWidth / sprite.naturalHeight;
-            let w = drawSize;
-            let h = drawSize / aspect;
-            if (aspect > 1) { h = w / aspect; } else { w = h * aspect; }
-
-            ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(sprite, -w / 2, -h / 2, w, h);
-            ctx.restore();
-            return;
-        }
-    }
-
-    ctx.globalAlpha = 1; 
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fill();
-  }
 }
 
 export class EnemyBullet extends Bullet {
@@ -276,10 +294,10 @@ export class EnemyBullet extends Bullet {
 
     init(x, y, vx, vy, size, damage, color, life = Infinity, type = 'default', rotation = 0) {
         super.init(x, y, vx, vy, size, damage, color, life, type);
-        
+
         if (this.type === 'bottle') {
             const dir = vx >= 0 ? 1 : -1;
-            this.rotSpeed = dir * 15; 
+            this.rotSpeed = dir * 15;
             this.rotation = rotation || Math.random() * Math.PI * 2;
         } else if (this.type === 'axe') {
             const dir = vx >= 0 ? 1 : -1;
@@ -303,7 +321,7 @@ export class EnemyBullet extends Bullet {
 
     draw(ctx) {
         if (!this.active) return;
-        
+
         ctx.save();
         ctx.translate(this.x, this.y);
 
@@ -321,19 +339,19 @@ export class EnemyBullet extends Bullet {
         if (asset) {
             if (this.type === 'axe') {
                 ctx.shadowColor = 'rgba(0, 255, 255, 0.5)';
-                ctx.shadowBlur = 6; 
+                ctx.shadowBlur = 6;
             } else {
-                ctx.shadowColor = 'rgba(255, 100, 100, 0.5)'; 
-                ctx.shadowBlur = 10; 
+                ctx.shadowColor = 'rgba(255, 100, 100, 0.5)';
+                ctx.shadowBlur = 10;
             }
-            
+
             if (this.rotation !== 0) ctx.rotate(this.rotation);
-            
+
             let drawWidth = this.size * 2;
             let drawHeight = this.size * 2;
 
             if (this.type === 'bottle') {
-                drawWidth = 22 * 0.625; 
+                drawWidth = 22 * 0.625;
                 drawHeight = 64 * 0.625;
             } else if (this.type === 'axe') {
                 const axeCfg = WEAPON_CONFIG.LUMBERJACK_AXE;
