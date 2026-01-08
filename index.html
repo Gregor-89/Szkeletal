@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Szkeletal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .lang-quick-switch button:focus,
+    .lang-quick-switch button:active {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    .retro-btn.indigo {
+      border-color: #7986CB;
+      color: #C5CAE9;
+      background: #303F9F;
+    }
+
+    .retro-btn.indigo:hover {
+      background: #3F51B5;
+      box-shadow: 0 0 10px #7986CB;
+    }
+
+    .retro-btn.blue {
+      border-color: #42A5F5;
+      color: #E3F2FD;
+      background: #1565C0;
+    }
+
+    .retro-btn.blue:hover {
+      background: #1976D2;
+      box-shadow: 0 0 10px #42A5F5;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="loadingOverlay">
+    <div class="loading-container">
+      <div id="loadingText" class="loading-text">WCZYTYWANIE ZASOBÓW...</div>
+      <div class="loading-bar-border">
+        <div id="loadingBarFill" class="loading-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="splashOverlay" style="display:none;">
+    <img id="splashImage" src="img/splash_dev.png" alt="Ekran powitalny">
+  </div>
+
+  <div id="nickInputOverlay" class="retro-overlay" style="display:none;">
+    <div class="retro-frame small text-center mobile-friendly-modal" style="border-color: var(--accent-gold);">
+      <h2 id="lblNickTitle" class="retro-title">PODPISZ SIĘ</h2>
+      <p id="lblNickText" style="color:#ccc; margin-bottom:10px;">Zanim wyślesz wynik, podaj ksywkę:</p>
+      <input type="text" id="inpQuickNick" class="retro-input" maxlength="20" placeholder="Anon" value="">
+      <p id="lblNickLimit" style="font-size:0.8rem; color:#666; margin-top:5px;">(Max 20 znaków, A-Z, 0-9)</p>
+      <div class="menu-actions" style="margin-top:20px;">
+        <button id="btnConfirmNick" class="retro-btn primary">ZATWIERDŹ</button>
+        <button id="btnCancelNick" class="retro-btn danger">ANULUJ</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tutorialOverlay" class="retro-overlay" style="display:none;">
+    <div class="retro-frame small text-center">
+      <h2 id="tutTitle" class="retro-title"></h2>
+      <div class="retro-scroll-box" style="text-align:left; font-size:1.3rem; line-height:1.4;">
+        <p id="tutIntro" style="color:#FFD700; margin-bottom:15px; text-align:center;"></p>
+        <ul id="tutList" style="list-style:none; padding:0;"></ul>
+      </div>
+      <button id="btnCloseTutorial" class="retro-btn primary pulse"></button>
+    </div>
+  </div>
+
+  <div id="gameContainer" style="display:none;">
+    <div class="game-view">
+      <div class="bars-container">
+        <div class="bars-left">
+          <div id="playerHPBarOuter">
+            <div id="playerHPBarInner"></div>
+            <div id="playerHPBarTxt"></div>
+          </div>
+          <div id="xpBarOuter">
+            <div id="xpBarFill"></div>
+            <div id="xpBarTxt"></div>
+          </div>
+        </div>
+        <div id="hungerWidget" class="hunger-widget" title="Głód Ziemniaczany">
+          <div id="hungerFill" class="hunger-fill">
+            <img src="img/pickups/gem_potato.png" alt="Potato Hunger" class="hunger-icon">
+          </div>
+          <img src="img/pickups/gem_potato.png" alt="Potato BG" class="hunger-icon-bg">
+        </div>
+      </div>
+      <div id="bonusPanel"></div>
+      <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div id="gameInfo">
+      <div class="stat"><span class="stat-icon"><img src="img/icons/hud_score.png" class="stat-icon-img"></span><span
+          id="score">0</span></div>
+      <div class="stat"><span class="stat-icon"><img src="img/icons/hud_level.png" class="stat-icon-img"></span><span
+          id="level">1</span></div>
+      <div class="stat"><span class="stat-icon"><img src="img/icons/hud_xp.png" class="stat-icon-img"></span><span
+          id="xp">0</span>/<span id="xpNeeded">5</span></div>
+      <div class="stat"><span class="stat-icon"><img src="img/icons/hud_health.png" class="stat-icon-img"></span><span
+          id="health">100</span></div>
+      <div class="stat">
+        <span class="stat-icon"><img src="img/icons/hud_enemies.png" class="stat-icon-img"></span>
+        <span id="totalKillsSpan">0</span>
+        (<span id="enemyCountSpan">0</span>/<span id="enemyLimitSpan">0</span>)
+      </div>
+      <div class="stat"><span class="stat-icon"><img src="img/icons/hud_time.png" class="stat-icon-img"></span><span
+          id="time">0</span></div>
+    </div>
+    <div id="joystickZone">
+      <div id="joystickBase"></div>
+      <div id="joystick"></div>
+    </div>
+  </div>
+
+  <div id="menuOverlay" class="retro-overlay" style="display:flex;">
+    <div class="menu-bg"></div>
+    <div class="menu-vignette"></div>
+
+    <div class="retro-frame">
+      <div id="view-main" class="menu-view active">
+        <div class="lang-quick-switch"
+          style="position:absolute; top:15px; right:15px; z-index:20; display:flex; gap:10px;">
+          <button id="btnLangPL" tabindex="0" title="Polski"
+            style="background:none; border:none; cursor:pointer; padding:0; filter:drop-shadow(2px 2px 0 #000);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="24" viewBox="0 0 32 24">
+              <rect width="32" height="24" fill="#eee" />
+              <rect y="12" width="32" height="12" fill="#dc143c" />
+              <rect width="32" height="24" fill="none" stroke="#000" stroke-width="1" opacity="0.2" />
+            </svg>
+          </button>
+          <button id="btnLangEN" tabindex="0" title="English"
+            style="background:none; border:none; cursor:pointer; padding:0; filter:drop-shadow(2px 2px 0 #000);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="24" viewBox="0 0 60 30">
+              <rect width="60" height="30" fill="#012169" />
+              <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6" />
+              <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="2" />
+              <path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10" />
+              <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6" />
+              <rect width="60" height="30" fill="none" stroke="#000" stroke-width="1" opacity="0.2" />
+            </svg>
+          </button>
+          <button id="btnLangRO" tabindex="0" title="Română"
+            style="background:none; border:none; cursor:pointer; padding:0; filter:drop-shadow(2px 2px 0 #000);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="24" viewBox="0 0 30 20">
+              <rect width="10" height="20" fill="#002B7F" />
+              <rect x="10" width="10" height="20" fill="#FCD116" />
+              <rect x="20" width="10" height="20" fill="#CE1126" />
+              <rect width="30" height="20" fill="none" stroke="#000" stroke-width="1" opacity="0.2" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="logo-area">
+          <img src="img/logo.png" alt="Szkeletal" class="pixel-logo">
+          <div class="version-tag" id="menuVersionTag"></div>
+        </div>
+
+        <div class="menu-list">
+          <button id="btnStart" class="retro-btn success pulse">NOWA GRA</button>
+          <button id="btnContinue" class="retro-btn warning" style="display:none;">KONTYNUUJ</button>
+          <button id="navShop" class="retro-btn blue">SKLEPIK</button>
+          <div class="spacer"></div>
+          <button id="navScores" class="retro-btn">KRONIKI POLEGŁYCH</button>
+          <button id="navConfig" class="retro-btn">OPCJE</button>
+          <button id="navGuide" class="retro-btn">PRZEWODNIK</button>
+          <button id="btnReplayIntroMain" class="retro-btn" onclick="window.wrappedDisplayIntro()">ODTWÓRZ
+            INTRO</button>
+          <button id="navCoffee" class="retro-btn" style="border-color:#E91E63; color:#E91E63;">HOT COFFEE ☕</button>
+          <div class="spacer"></div>
+          <button id="navDev" class="retro-btn small text-red">DEV TOOLS</button>
+        </div>
+
+        <div id="mainMenuStats"
+          style="margin-top: 15px; font-size: 1rem; color: #aaa; text-align: center; font-family: 'VT323', monospace; text-transform: uppercase;">
+          <span id="lblMainPlayers">GRACZY:</span> <span id="valMainPlayers"
+            style="color: #FFD700; margin-right: 10px;">...</span>
+          <span id="lblMainGames">GIER:</span> <span id="valMainGames" style="color: #4CAF50;">...</span>
+        </div>
+
+      </div>
+
+      <div id="view-shop" class="menu-view">
+        <h2 id="shopTitle" class="retro-title">SKLEPIK ZIEMNIACZANY</h2>
+
+        <div class="shop-wallet-container"
+          style="text-align:center; margin-bottom:10px; background:rgba(0,0,0,0.4); padding:15px; border:1px solid #444;">
+          <div id="lblShopWallet" style="font-size:1.8rem; color:#fff;">DOSTĘPNE PUNKTY: <span id="shopWalletPoints"
+              style="color:var(--accent-green);">0</span></div>
+        </div>
+
+        <div class="retro-scroll-box">
+          <div id="shopInfoNote"
+            style="font-size:1rem; color:#aaa; margin-bottom:15px; border-left:4px solid var(--accent-gold); padding-left:10px;">
+            <strong id="shopInfoNoteTitle">JAK TO DZIAŁA?</strong><br>
+            <span id="shopInfoNoteText">Twoim budżetem jest Twój najwyższy wynik (High Score) ze wszystkich sesji.
+              Punkty nie sumują się – aby mieć ich więcej, musisz pobić swój rekord! Zakupy ulepszeń dają
+              <strong>natychmiastowy bonus na start każdej gry</strong>, co pozwoli Ci szybciej progressować i wbijać
+              wyższe poziomy wertykalności. <br>
+              <strong>UWAGA:</strong> Każdy kolejny zakup kosztuje o ok. 50% więcej niż poprzedni, więc wydawaj punkty
+              rozważnie!</span>
+          </div>
+          <div id="shopContainer" class="perk-grid"></div>
+        </div>
+
+        <div class="menu-actions" style="display:flex; flex-direction:column; gap:10px;">
+          <button id="btnResetShop" class="retro-btn small danger">RESET ULEPSZEŃ (BEZ ZWROTU PKT)</button>
+          <button class="retro-btn nav-back">POWRÓT</button>
+        </div>
+      </div>
+
+      <div id="view-scores" class="menu-view">
+        <h2 id="scoresTitle" class="retro-title">KRONIKI POLEGŁYCH</h2>
+        <div class="score-tabs-container">
+          <button id="tabLocalScores" class="score-tab active">LOKALNE</button>
+          <button id="tabOnlineScores" class="score-tab">ONLINE</button>
+          <button id="tabStats" class="score-tab">STATYSTYKI</button>
+        </div>
+        <div id="onlineFilters" class="score-filters" style="display:none;">
+          <button class="filter-btn active" data-period="today">DZIŚ</button>
+          <button class="filter-btn" data-period="weekly">TYDZIEŃ</button>
+          <button class="filter-btn" data-period="monthly">MIESIĄC</button>
+          <button class="filter-btn" data-period="all">ALL</button>
+        </div>
+        <div class="retro-scroll-box" id="scoreScrollBox">
+          <div id="scoreLoading" style="display:none; text-align:center; padding:20px; color:#FFD700;">WCZYTYWANIE...
+          </div>
+          <table id="retroScoreTable" class="sortable-table">
+            <thead>
+              <tr>
+                <th data-sort="tempRank">#</th>
+                <th data-sort="name">NICK</th>
+                <th data-sort="score">PKT</th>
+                <th data-sort="kills">ZAB</th>
+                <th data-sort="level">LVL</th>
+                <th data-sort="time">CZAS</th>
+                <th data-sort="date">DATA</th>
+              </tr>
+            </thead>
+            <tbody id="scoresBodyMenu"></tbody>
+          </table>
+          <div id="scoresEmptyMsg" style="text-align:center; color:#666; padding:20px; display:none;">BRAK WYNIKÓW</div>
+        </div>
+        <div class="menu-actions">
+          <button id="btnClearScoresMenu" class="retro-btn small danger">WYCZYŚĆ LOKALNE</button>
+          <button class="retro-btn nav-back">POWRÓT</button>
+        </div>
+      </div>
+
+      <div id="view-config" class="menu-view">
+        <h2 id="configTitleMain" class="retro-title">KONFIGURACJA</h2>
+        <div class="retro-scroll-box config-list">
+          <input type="checkbox" id="chkHyper" style="display:none;">
+          <input type="checkbox" id="chkShake" checked style="display:none;">
+          <input type="checkbox" id="chkFPS" style="display:none;">
+          <input type="checkbox" id="chkPickupLabels" checked style="display:none;">
+          <input type="checkbox" id="chkTutorial" style="display:none;">
+
+          <div class="config-row" style="flex-direction:column; align-items:flex-start;">
+            <div id="lblSkin" style="width:100%; margin-bottom: 8px; color: #eee;">WYGLĄD POSTACI:</div>
+            <div class="skin-selector" id="skinSelector"></div>
+          </div>
+          <div class="config-row"><span id="lblJoy">JOYSTICK</span><button class="retro-toggle"
+              id="toggleJoy">PRAWA</button></div>
+          <div class="config-row" style="display:none;"><span id="lblHyper">HYPER MODE</span><button
+              class="retro-toggle off" id="toggleHyper">WYŁ</button></div>
+          <div class="config-row"><span id="lblShake">WSTRZĄSY</span><button class="retro-toggle on"
+              id="toggleShake">WŁ</button></div>
+          <div class="config-row"><span id="lblFPS">LICZNIK FPS</span><button class="retro-toggle off"
+              id="toggleFPS">WYŁ</button></div>
+          <div class="config-row"><span id="lblLabels">PODPISY</span><button class="retro-toggle on"
+              id="toggleLabels">WŁ</button></div>
+          <div class="config-row">
+            <span id="lblMusic">MUZYKA</span>
+            <input type="range" id="volMusic" class="retro-range" min="0" max="100" value="40">
+          </div>
+          <div class="config-row">
+            <span id="lblSFX">EFEKTY</span>
+            <input type="range" id="volSFX" class="retro-range" min="0" max="100" value="30">
+          </div>
+          <div class="config-row">
+            <span id="lblFOV">POLE WIDZENIA (ZOOM)</span>
+            <div style="display:flex; align-items:center; gap:10px; width:100%;">
+              <input type="range" id="zoomSlider" class="retro-range" min="60" max="130" value="100"
+                style="flex-grow:1;">
+              <span id="zoomValue"
+                style="min-width:50px; text-align:right; color:#FFD700; font-family:'VT323', monospace; font-size:1.5rem;">100%</span>
+            </div>
+          </div>
+          <div class="config-row">
+            <span id="lblTutorial">POKAZUJ SAMOUCZEK</span>
+            <button id="toggleTutorial" class="retro-toggle off">WYŁ</button>
+          </div>
+          <div class="config-row"><span id="lblLang">JĘZYK</span>
+            <div id="lang-selector-container" class="retro-lang-row"></div>
+          </div>
+          <div class="config-row" style="flex-direction:column; align-items:flex-start;">
+            <span id="lblNick" style="margin-bottom:5px; color:#FFD700;">TWOJA KSYWKA:</span>
+            <input type="text" id="inpPlayerNick" class="retro-input" maxlength="20" placeholder="Wpisz nick..."
+              value="GRACZ">
+            <span id="lblNickLimitConfig" style="font-size:0.8rem; color:#666;">(Max 20 znaków, A-Z, 0-9)</span>
+          </div>
+        </div>
+        <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
+      </div>
+
+      <div id="view-coffee" class="menu-view">
+        <h2 id="coffeeTitle" class="retro-title" style="color:#E91E63; border-color:#E91E63;">HOT COFFEE</h2>
+        <div class="retro-scroll-box text-center"
+          style="display:flex; flex-direction:column; justify-content:flex-start; align-items:center; padding-top: 20px; overflow-y: auto;">
+          <div style="font-size:48px; margin-bottom:15px; width:100%; text-align:center;">☕ + 🥔</div>
+          <p id="coffeeDesc" style="font-size:1.3rem; line-height:1.5; margin-bottom:20px; color:#eee; max-width:90%;">
+          </p>
+          <div
+            style="display:flex; flex-direction:row; justify-content:center; align-items:center; gap:30px; margin-bottom:20px;">
+            <div class="qr-wrapper" style="margin-bottom:0;">
+              <img src="img/qrcode.png" alt="QR Code"
+                style="width:150px; height:150px; display:block; image-rendering:pixelated;">
+            </div>
+            <img src="img/sink.png" alt="Zlew"
+              style="height:150px; width:auto; display:block; image-rendering:pixelated;">
+          </div>
+          <a id="coffeeBtn" href="https://suppi.pl/gregor" target="_blank" class="retro-btn primary pulse"
+            style="text-decoration:none; color:#fff; border-color:#E91E63; background:#C2185B;">
+            POSTAW KAWKĘ
+          </a>
+          <div id="supportersContainer"
+            style="margin-top: 30px; width: 90%; border-top: 2px dashed #444; padding-top: 15px; text-align: center;">
+            <h3 id="lblSupporters" style="color: #FFD700; margin-bottom: 10px;">🏆 OSTATNIA PIĄTKA ZIEMNIACZANYCH
+              MECENASÓW 🏆</h3>
+            <div id="supportersList" style="font-size: 1rem; color: #aaa; min-height: 50px;">Ładowanie listy
+              wspierających...</div>
+          </div>
+          <div id="coffeeFooter" style="margin-top:20px; opacity:0.6; font-size:0.9rem;">Code by Gregor & Gemini AI
+          </div>
+        </div>
+        <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
+      </div>
+
+      <div id="view-dev" class="menu-view">
+        <h2 id="devTitle" class="retro-title text-red">DEV TOOLS</h2>
+        <div class="retro-scroll-box">
+          <div class="dev-section">
+            <p id="devLblPresets" class="dev-label">PRESETY WROGÓW (AUTO-START)</p>
+            <div class="dev-grid">
+              <button id="devBtnStd" class="retro-btn small" onclick="window.devStartPreset('standard')">STD</button>
+              <button id="devBtnHorde" class="retro-btn small" onclick="window.devStartPreset('horde')">HRD</button>
+              <button id="devBtnRng" class="retro-btn small" onclick="window.devStartPreset('ranged')">RNG</button>
+              <button id="devBtnTank" class="retro-btn small" onclick="window.devStartPreset('tank')">TANK</button>
+              <button id="devBtnSplit" class="retro-btn small"
+                onclick="window.devStartPreset('splitter')">SPLIT</button>
+              <button id="devBtnTroll" class="retro-btn small"
+                onclick="window.devStartPreset('kamikaze')">TROLL</button>
+              <button id="devBtnWall" class="retro-btn small warning"
+                onclick="window.devStartPreset('wall')">WALL</button>
+              <button id="devBtnBoss" class="retro-btn small danger"
+                onclick="window.devStartPreset('elite')">BOSS</button>
+              <button id="devBtnAgr" class="retro-btn small" onclick="window.devStartPreset('aggressive')">AGR</button>
+              <button class="retro-btn small danger" onclick="window.devStartPreset('lumberjack')">DRWAL (BOSS)</button>
+              <button class="retro-btn small success" onclick="window.devStartPreset('snakeEater')">WĘŻOJAD
+                (BOSS)</button>
+            </div>
+          </div>
+          <div class="dev-section">
+            <p id="devLblScenarios" class="dev-label">SCENARIUSZE</p>
+            <div class="dev-grid">
+              <button id="devBtnMin" class="retro-btn small" onclick="window.devStartScenario('min')">MIN</button>
+              <button id="devBtnHigh" class="retro-btn small warning"
+                onclick="window.devStartScenario('high')">HIGH</button>
+              <button id="devBtnMax" class="retro-btn small danger"
+                onclick="window.devStartScenario('max')">MAX</button>
+              <button id="btnDevPeaceful" class="retro-btn small success"
+                onclick="window.devStartPeaceful()">SPACER</button>
+            </div>
+          </div>
+          <div class="dev-section">
+            <p id="devLblPlayer" class="dev-label">STAN GRACZA</p>
+            <div class="dev-control"><label id="lblDevLvl">Level:</label><input type="number" id="devLevel" min="1"
+                max="100" value="1"></div>
+            <div class="dev-control"><label id="lblDevHp">HP:</label><input type="number" id="devHealth" min="1"
+                max="9999" value="100"></div>
+            <div class="dev-control"><label>Max HP:</label><input type="number" id="devMaxHealth" min="1" max="9999"
+                value="100"></div>
+            <div class="dev-control"><label id="lblDevXp">XP:</label><input type="number" id="devXP" min="0" max="9999"
+                value="0"></div>
+            <div class="dev-control"><label id="lblDevGod">God Mode:</label><input type="checkbox" id="devGodMode"
+                style="width:24px; height:24px;"></div>
+            <div class="dev-control"><label id="lblDevHit">Hitboxy:</label><input type="checkbox" id="devDebugHitboxes"
+                style="width:24px; height:24px;"></div>
+          </div>
+          <div class="dev-section">
+            <p class="dev-label">TESTY SKLEPU</p>
+            <div class="dev-control">
+              <label>Persistent Score:</label>
+              <input type="number" id="devShopScore" min="0" value="0">
+              <button class="retro-btn small" onclick="window.devSetShopScore()">USTAW</button>
+            </div>
+          </div>
+          <div class="dev-section">
+            <p class="dev-label">SPAWN ITEM</p>
+            <div class="dev-grid">
+              <button class="retro-btn small" onclick="window.devSpawnPickup('heal')">HP</button>
+              <button class="retro-btn small" onclick="window.devSpawnPickup('magnet')">MAG</button>
+              <button class="retro-btn small" onclick="window.devSpawnPickup('shield')">TARCZA</button>
+              <button class="retro-btn small" onclick="window.devSpawnPickup('speed')">SPEED</button>
+              <button class="retro-btn small" onclick="window.devSpawnPickup('bomb')">BOMB</button>
+              <button class="retro-btn small" onclick="window.devSpawnPickup('freeze')">FREEZE</button>
+              <button class="retro-btn small warning" onclick="window.devSpawnPickup('chest')">BOX</button>
+            </div>
+          </div>
+          <div class="dev-section">
+            <p class="dev-label">SPAWN WROGÓW</p>
+            <div class="dev-control">
+              <label>Dozwoleni:</label>
+              <select id="devEnemyType" multiple style="background:#333; color:#fff; padding:5px; height:100px;">
+                <option value="all" selected>Wszyscy</option>
+                <option value="standard">Standard</option>
+                <option value="horde">Horda</option>
+                <option value="aggressive">Agresywni</option>
+                <option value="kamikaze">Kamikaze</option>
+                <option value="splitter">Splitter</option>
+                <option value="tank">Tank</option>
+                <option value="ranged">Ranged</option>
+                <option value="wall">Oblężnik (Wall)</option>
+                <option value="elite">Elite</option>
+                <option value="lumberjack">Drwal</option>
+                <option value="snakeEater">Wężojad</option>
+              </select>
+            </div>
+            <div class="dev-control"><label>Rate:</label><input type="number" id="devSpawnRate" step="0.001"
+                value="0.008"></div>
+            <div class="dev-control"><label>Max:</label><input type="number" id="devMaxEnemies" value="300"></div>
+          </div>
+          <button id="btnDevApply" onclick="window.applyDevSettings()" class="retro-btn primary"
+            style="margin-top:10px;">ZASTOSUJ</button>
+        </div>
+        <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
+      </div>
+
+      <div id="view-guide" class="menu-view">
+        <h2 id="guideTitle" class="retro-title">PRZEWODNIK</h2>
+        <div id="guideContent" class="retro-scroll-box"></div>
+        <div class="menu-actions"><button class="retro-btn nav-back">POWRÓT</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="resumeOverlay" class="retro-overlay" style="display:none; pointer-events:none; background:rgba(0,0,0,0.4);">
+    <div class="retro-frame small text-center"
+      style="border:4px solid #FFD700; background:rgba(10, 10, 10, 0.6); box-shadow:0 0 20px #FFD700; width:auto; padding:30px; backdrop-filter:blur(4px);">
+      <h2 id="resumeOverlayTitle" style="color:#FFD700; margin:0 0 10px 0; font-size:3rem; letter-spacing:2px;"
+        class="pulse">PRZYGOTUJ SIĘ</h2>
+      <div id="resumeText" style="font-size:2rem; color:#fff; text-shadow:1px 1px 0 #000;">Wznawianie...</div>
+    </div>
+  </div>
+
+  <div id="introOverlay" class="retro-overlay" style="display:none;">
+    <div class="retro-frame intro-frame">
+      <div class="intro-image-container"><img id="introImage" class="intro-image" src="" alt="Intro"></div>
+      <div class="intro-controls">
+        <button id="btnIntroPrev" class="retro-btn small">WSTECZ</button>
+        <button id="btnIntroSkip" class="retro-btn small danger">POMIŃ</button>
+        <button id="btnIntroNext" class="retro-btn small">DALEJ</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="levelUpOverlay" class="retro-overlay" style="display:none;">
+    <div id="levelUpPanel" class="retro-frame wide">
+      <h2 id="levelUpTitle" class="retro-title">LEVEL UP!</h2>
+      <div id="perks" class="perk-grid"></div>
+      <button id="btnContinueMaxLevel" class="retro-btn warning" style="display:none;">KONTYNUUJ</button>
+      <div class="stats-panel">
+        <h4 id="levelUpStatsTitle">STATYSTYKI</h4>
+        <div id="statsDisplay" class="stats-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pauseOverlay" class="retro-overlay" style="display:none; background:rgba(0,0,0,0.7);">
+    <div class="retro-frame small">
+      <h2 id="pauseTitle" class="retro-title">PAUZA</h2>
+      <div class="menu-list">
+        <button id="btnResume" class="retro-btn">WZNÓW</button>
+        <button id="btnPauseMenu" class="retro-btn warning">MENU</button>
+      </div>
+      <div style="margin-top:20px;">
+        <div id="statsDisplayPause" class="stats-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="chestOverlay" class="retro-overlay" style="display:none;">
+    <div class="retro-frame small text-center">
+      <h2 id="chestTitle" class="retro-title">SKRZYNIA</h2>
+      <div id="chestRewardDisplay" class="chest-content"></div>
+      <button id="chestButton" class="retro-btn primary pulse">ODBIERZ</button>
+    </div>
+  </div>
+
+  <div id="gameOverOverlay" class="retro-overlay" style="display:none;">
+    <div class="retro-frame">
+      <h2 id="gameOverTitle" class="retro-title text-red">KONIEC GRY</h2>
+      <div id="gameOverQuote" class="retro-quote pulse"
+        style="color:#FFA07A; font-style:italic; margin-bottom:20px; text-align:center; min-height:1.2em; font-size: 1.8rem; line-height: 1.4;">
+      </div>
+      <div class="gameover-stats-fancy">
+        <div class="fancy-stat-box main"><span id="lblGOScore" class="fancy-label">TWÓJ WYNIK</span><span
+            id="finalScore" class="fancy-value gold">0</span></div>
+        <div class="fancy-stat-row">
+          <div class="fancy-stat-box"><span id="lblGOTime" class="fancy-label">CZAS</span><span id="finalTime"
+              class="fancy-value">0:00</span></div>
+          <div class="fancy-stat-box"><span id="lblGOLevel" class="fancy-label">POZIOM</span><span id="finalLevel"
+              class="fancy-value">1</span></div>
+          <div class="fancy-stat-box"><span id="lblGOKills" class="fancy-label">ZABICI</span><span id="totalKillsSpanGO"
+              class="fancy-value kill-count">0</span></div>
+        </div>
+      </div>
+      <div class="score-tabs-container go-tabs">
+        <button id="tabGOLocal" class="score-tab active small">LOKALNE</button>
+        <button id="tabGOOnline" class="score-tab small">ONLINE</button>
+      </div>
+      <div id="goOnlineFilters" class="score-filters" style="display:none;">
+        <button class="filter-btn active" data-period="today">DZIŚ</button>
+        <button class="filter-btn" data-period="weekly">TYDZIEŃ</button>
+        <button class="filter-btn" data-period="monthly">MIESIĄC</button>
+        <button class="filter-btn" data-period="all">ALL</button>
+      </div>
+      <div class="retro-scroll-box">
+        <div id="goScoreLoading" style="display:none; text-align:center; padding:10px; color:#FFD700;">WCZYTYWANIE...
+        </div>
+        <table id="goScoreTable" class="sortable-table">
+          <thead>
+            <tr>
+              <th data-sort="tempRank">#</th>
+              <th data-sort="name">NICK</th>
+              <th data-sort="score">PKT</th>
+              <th data-sort="kills">ZAB</th>
+              <th data-sort="level">LVL</th>
+              <th data-sort="time">CZAS</th>
+              <th data-sort="date">DATA</th>
+            </tr>
+          </thead>
+          <tbody id="scoresBodyGameOver"></tbody>
+        </table>
+      </div>
+      <button id="btnSubmitScore" class="retro-btn small indigo" style="margin-bottom:10px; display:none;">WYŚLIJ
+        WYNIK</button>
+      <div id="submitMsg" style="text-align:center; font-size:1rem; margin-bottom:5px; height:20px;"></div>
+      <button id="btnClearScoresGO" class="retro-btn small danger" style="margin-bottom:10px;">WYCZYŚĆ LOKALNE</button>
+      <div class="menu-actions">
+        <button id="btnRetry" class="retro-btn primary">JESZCZE RAZ</button>
+        <button id="btnMenu" class="retro-btn">MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmOverlay" class="retro-overlay" style="display:none;">
+    <div class="retro-frame small text-center">
+      <h2 id="confirmTitle" class="retro-title">POTWIERDŹ</h2>
+      <p id="confirmText">Czy wyczyścić wyniki?</p>
+      <div class="menu-actions">
+        <button id="btnConfirmYes" class="retro-btn danger">TAK</button>
+        <button id="btnConfirmNo" class="retro-btn">NIE</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+  <script>
+    function menuNav(viewId) {
+      document.querySelectorAll('.menu-view').forEach(el => el.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+      if (viewId === 'view-scores' && window.wrappedDisplayScores) window.wrappedDisplayScores();
+      if (viewId === 'view-guide' && window.wrappedGenerateGuide) window.wrappedGenerateGuide();
+      if (viewId === 'view-shop' && window.wrappedGenerateShop) window.wrappedGenerateShop();
+    }
+    document.getElementById('navScores').onclick = () => menuNav('view-scores');
+    document.getElementById('navConfig').onclick = () => menuNav('view-config');
+    document.getElementById('navGuide').onclick = () => menuNav('view-guide');
+    document.getElementById('navCoffee').onclick = () => menuNav('view-coffee');
+    document.getElementById('navDev').onclick = () => menuNav('view-dev');
+    document.getElementById('navShop').onclick = () => menuNav('view-shop');
+
+    document.querySelectorAll('.nav-back').forEach(b => b.onclick = () => menuNav('view-main'));
+  </script>
+</body>
+
+</html>
