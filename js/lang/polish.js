@@ -1,5 +1,5 @@
 // ==============
-// POLISH.JS (v1.14c - Points Currency Localization)
+// POLISH.JS (v1.17 - Etap 5 Localization)
 // Lokalizacja: /js/lang/polish.js
 // ==============
 
@@ -8,44 +8,44 @@ export const LANG_PL = {
   ui_off: "WYŁ",
   ui_warning_new_enemy: "NADCHODZI",
   ui_hud_new_enemy: "NADCHODZI",
-  
+
   ui_nick_modal_title: "PODPISZ SIĘ",
   ui_nick_modal_text: "Zanim wyślesz wynik, podaj ksywkę:",
   ui_nick_modal_confirm: "ZATWIERDŹ",
   ui_nick_modal_cancel: "ANULUJ",
   ui_nick_limit_info: "(Max 20 znaków, A-Z, 0-9)",
-  
+
   ui_dev_scen_min: "MIN",
   ui_dev_scen_high: "HIGH",
   ui_dev_scen_max: "MAX",
   ui_dev_god: "God Mode:",
   ui_dev_hitbox: "Hitboxy:",
-  
+
   ui_coffee_title: "HOT COFFEE",
   ui_coffee_desc: "Gratulacje. Właśnie dokonałeś bezpowrotnej deprecjacji kilku minut swojego czasu, choć ja sam, w akcie czystego masochizmu, poświęciłem ich dziesiątki na wertykalne promptowanie algorytmów AI przez ostatnie dwa miesiące.<br><br>Musimy postawić sprawę obiektywnie: tak samo jak nasi rodzimi „ludolodzy” (nie miylić z faktycznymi groznawcami) de facto wykazują immanentny brak kompetencji w temacie mechanik, specjalizując się głównie w akwizycji cudzego contentu, tak i ja nie posiadam żadnej wiedzy o kodowaniu, estetyce pixel-artu czy narratologii. Ten projekt to „pato-konstrukt” zbudowany z klocków generatywnych – ziemniak po ziemniaku.<br><br>Czy ta teleologiczna pogoń była warta zachodu? Absolutnie nie. Kto o zdrowych zmysłach chciałby partycypować w tym paszyżu dłużej niż kilka minut? Nawet jeśli to tylko luźna parodia, a wszelkie podobieństwa do znanych nam „śmiechodojów” ze środowiska ludologicznego są oczywiście zupełnie stochastyczne i przypadkowe.<br><br>Niemniej, jeśli mimo wszystko dostrzegasz w tym chochole jakikolwiek walor napracowania, możesz dokonać dobrowolnej subwencji na moją wirtualną kawkę lub dorzucić się do worka kartofli. Dzięki temu sam zainicjuję proces kulinarny i przygotuję sobie pyszne ziemniaczki.<br><br>Aha, aktywacja poniższego interfejsu przyciskowego odblokuje – ot tak, w ramach radosnej transgresji – <span style=\"color:#E91E63;font-weight:bold;\">alternatywną, „gorącą” skórkę Drakula</span>.<br><br>Wejdź w mental. Have fun.",
   ui_coffee_btn: "POSTAW KAWKĘ",
   ui_coffee_unlocked: "NIKT TEGO NIE SPRAWDZA - SKIN ODBLOKOWANY",
   ui_coffee_footer: "Pozdrawiam wykopową gawędź z <a href=\"https://wykop.pl/tag/bekazludologuff\" target=\"_blank\" style=\"color:#FFD700;text-decoration:none;\">#bekazludologuff</a> i powiązanych tagów.",
   ui_coffee_supporters_header: "🏆 OSTATNIA PIĄTKA ZIEMNIACZANYCH MECENASÓW 🏆",
-  
+
   ui_dev_title: "DEV TOOLS",
   ui_dev_label_presets: "PRESETY WROGÓW (AUTO-START)",
   ui_dev_label_scenarios: "SCENARIUSZE (BROŃ)",
   ui_dev_label_player: "STAN GRACZA",
   ui_dev_btn_apply: "ZASTOSUJ",
   ui_dev_btn_peaceful: "SPACER",
-  
+
   ui_config_music: "MUZYKA",
   ui_config_sfx: "EFEKTY",
   ui_config_fov: "POLE WIDZENIA (ZOOM)",
-  
+
   ui_nav_back: "POWRÓT",
-  
+
   ui_ready_title: "PRZYGOTUJ SIĘ",
-  
+
   ui_game_title: "Szkeletal: Ziemniaczkowy Głód Estrogenowego Drakula",
   ui_player_name: "Drakul",
-  
+
   ui_tutorial_title: "PROTOKÓŁ WSTĘPNY",
   ui_tutorial_intro: "Witaj w symulacji ziemniaczkowego łakomstwa. Wcielasz się w Hrabiego Drakula, który po ucieczce z Res-krainy popadł w ludologiczny obłęd i cierpi na ciągły popęd do pysznych ziemniaczków [XP], w imię których jest gotów poświęcić każdego na swej drodze.",
   ui_tutorial_ctrl_title: "🕹️ Interfejs Kinestetyczny",
@@ -57,18 +57,18 @@ export const LANG_PL = {
   ui_tutorial_boss_title: "👾 Oponenci i Dysydenci",
   ui_tutorial_boss_desc: "Interesariusz czy wróg? Każdy chce odebrać Ci sytość, bez której zezgnonisz niczym menel na bulwarowej ławce. Przerabiaj ich na kartofle, by nie ulec przytłoczeniu. Z najsilniejszych dysydentów wypadają Ludoboxy (automatyczne losowe wzmocnienie).",
   ui_tutorial_btn_close: "ZACZYNAJMY",
-  
+
   quote_hunger_1: "Ziemniaczki jeść muszę, bo się uduszę!",
   quote_hunger_2: "Gdy głód doskwiera, to mi sytość odbiera!",
   quote_hunger_3: "Gdy nie zjem mych pyszności, to braknie mi mi sytości!",
   quote_hunger_4: "Dajcie mnie ziemniaki, bo mam w kiszkach braki!",
   quote_hunger_5: "Kiszki marsza grają, gdzieś tu się ziemniaczki czają!",
-  
+
   warning_hunger: "GŁÓD!",
   shrine_text: "Rzyć umyta, sytość zdobyta",
   snake_heal_text: "Rzyć wylizana, sytość odzyskana",
   snake_heal_quote_enemy: "Mmm, ja zrobić Panu dobrze, HAU HAU!",
-  
+
   quote_snake_1: "HAU HAU!",
   quote_snake_2: "Wiesz jak psy szczekają pu rumuńsku? HAM HAM!",
   quote_snake_3: "Nie trzeba skilla by grać w skradanki",
@@ -87,7 +87,7 @@ export const LANG_PL = {
   quote_snake_16: "Jestem mądrym chłopcem, HAU",
   quote_snake_17: "Maybe let's talk facts?",
   quote_snake_18: "Mogę ziemniaczka mój Panie?",
-  
+
   quote_gameplay_1: "Jebać wszystkich Dadgamerów i chuj wam w dupę",
   quote_gameplay_2: "Mam wyjebane na was melepetów",
   quote_gameplay_3: "Casuale się zesrali",
@@ -103,26 +103,33 @@ export const LANG_PL = {
   quote_gameplay_13: "Ja bym wam wszystkim najebał na tym czacie",
   quote_gameplay_14: "Typ by dostał w pizdę, to by mi oddał pieniądze",
   quote_gameplay_15: "Lubię Rocka ale pierdoli",
-  
+
   ui_hp_name: "Sytość",
   ui_hp_desc: "Ataki hejterów redukują Wskaźnik Sytości.",
   ui_xp_name: "Wertykalność",
   ui_xp_desc: "Akwizycja \"Ziemniaczków\".",
   ui_gem_name: "Ziemniaczki",
   ui_gem_desc: "Waluta i jedzenie w jednym.",
-  
+
   ui_levelup_name: "Poziom Wertykalności",
   ui_levelup_desc: "Awans społeczny Hrabiego.",
-  
+
   ui_hud_hp_name: "Sytość",
   ui_hud_xp_name: "Wertykalność",
+  item_drwal_name: "Drwal Zjebadło",
+  item_tluczek_name: "Tłuczek do Ziemniaków",
+  item_tluczek_desc: "Tłucze wrogów jak ziemniaki na puree. Odrzut +150%.",
   ui_hud_score: "Wynik",
+  ui_loading_resource_audio: "Strojenie instrumentów...",
+  ui_loading_resource_images: "Sadzenie ziemniaków...",
+  ui_loading_ready: "GOTOWE! (Kliknij)",
   ui_hud_level: "Poziom",
   ui_hud_enemies: "Wrogowie",
   ui_hud_time: "Czas",
   ui_hud_health: "Życia",
   ui_hud_spawn_in: "SPAWN ZA",
-  
+  loader_resources: "Wczytywanie ziemniaczanych zasobów...",
+
   ui_menu_tab_game: "Gra",
   ui_menu_tab_config: "Konfiguracja",
   ui_menu_tab_dev: "🛠️ Dev Menu",
@@ -132,11 +139,11 @@ export const LANG_PL = {
   ui_menu_continue: "⏯️ Kontynuuj Grę",
   ui_menu_replay_intro: "🎥 Włącz Intro",
   ui_menu_new_game_prompt: "Start Symulacji",
-  
+
   ui_shop_title: "SKLEPIK ZIEMNIACZANY",
   ui_shop_wallet: "DOSTĘPNE PUNKTY:",
   ui_shop_info_title: "JAK TO DZIAŁA?",
-  ui_shop_info: "Twoim budżetem jest Twój najwyższy wynik (High Score) ze wszystkich sesji. Punkty nie sumują się – aby mieć ich więcej, musisz pobić swój rekord! Zakupy ulepszeń dają <strong>natychmiastowy bonus na start każdej gry</strong>, co pozwoli Ci szybciej progressować i wbijać wyższe poziomy wertykalności. <br><br><strong>UWAGA:</strong> Każdy kolejny zakup kosztuje o ok. 50% więcej niż poprzedni, więc wydawaj punkty rozważnie!",
+  ui_shop_info: "Twój portfel to Twój <strong>Najlepszy Wynik (High Score)</strong>. Punkty nie znikają po zakupie, ale nie sumują się z kolejnych gier. Aby zwiększyć budżet, musisz po prostu <strong>pobić swój rekord</strong> w grze. <br><br>Zakupy dają stały bonus do statystyk. Każdy kolejny poziom jest o 50% droższy.",
   ui_shop_owned: "[WYKUPIONE]",
   ui_shop_maxed: "OSIĄGNIĘTO LIMIT",
   ui_shop_active_start: "AKTYWNE NA START",
@@ -150,7 +157,7 @@ export const LANG_PL = {
   ui_config_skin: "WYGLĄD POSTACI",
   ui_config_tutorial: "POKAZUJ SAMOUCZEK",
   ui_config_tutorial_btn: "ODTWÓRZ",
-  
+
   ui_config_joystick: "JOYSTICK",
   ui_config_joy_left: "LEWA",
   ui_config_joy_right: "PRAWA",
@@ -167,7 +174,7 @@ export const LANG_PL = {
   ui_config_style_circle: "🔵 Kółka",
   ui_config_style_emoji: "😀 Emoji",
   ui_config_title_lang: "JĘZYK",
-  
+
   ui_guide_title: "Przewodnik Hrabiego",
   ui_guide_intro: "Bądź Hrabią. Jedz ziemniaki. Biczuj wrogów.",
   ui_guide_basics_title: "🎮 Zasady",
@@ -176,29 +183,29 @@ export const LANG_PL = {
   ui_guide_basics_3: "Pauza: Klawisz ESC ⏸️ lub puszczenie joysticka (natychmiastowa autopauza)",
   ui_guide_basics_4: "Progres: Każdy Poziom Wertykalności = wybór jednego z trzech ulepszeń 🎁",
   ui_guide_basics_5: "Wrogowie: Z czasem Hejterzy stają się coraz twardsi 👾 ⏱️",
-  
+
   ui_guide_pickups_title: "🎁 Pickups",
   ui_guide_enemies_title: "👾 Hejterzy",
   ui_guide_hazards_title: "☢️ Zagrożenia",
   ui_guide_weapons_title: "⚔️ Arsenał",
   ui_guide_perks_title: "🔧 Ulepszenia",
-  
+
   ui_pause_title: "⏸️ Pauza",
   ui_pause_text: "Gra wstrzymana",
   ui_pause_resume: "Wznów",
   ui_pause_menu: "Menu główne",
-  
+
   ui_resume_text: "Wznawianie za:",
-  
+
   ui_levelup_title: "Wybierz ulepszenie",
   ui_levelup_stats: "📊 Statystyki",
   ui_levelup_max: "Max level!",
-  
+
   ui_chest_title: "🎁 LudoBox",
   ui_chest_button: "Otwórz",
   ui_chest_empty_title: "Pusty",
   ui_chest_empty_desc: "Wszystko masz!",
-  
+
   ui_gameover_title: "💀 GAME OVER",
   ui_gameover_score: "🎯 Wynik:",
   ui_gameover_level: "⭐ Poziom:",
@@ -209,10 +216,10 @@ export const LANG_PL = {
   ui_gameover_submit: "WYŚLIJ WYNIK",
   ui_gameover_sent: "WYSŁANO!",
   ui_gameover_error: "BŁĄD SIECI",
-  
+
   ui_scores_title: "KRONIKI POLEGŁYCH",
   ui_scores_clear: "🗑️ WYCZYŚĆ",
-  ui_scores_clear_local: "WYCZYŚĆ LOKALNE", 
+  ui_scores_clear_local: "WYCZYŚĆ LOKALNE",
   ui_scores_col_rank: "#",
   ui_scores_col_nick: "NICK",
   ui_scores_col_score: "PKT",
@@ -220,21 +227,23 @@ export const LANG_PL = {
   ui_scores_col_level: "LVL",
   ui_scores_col_time: "CZAS",
   ui_scores_col_date: "DATA",
-  
+
   ui_confirm_title: "POTWIERDŹ",
   ui_confirm_clear_scores: "Czy wyczyścić wyniki?",
   ui_confirm_yes: "TAK",
   ui_confirm_no: "NIE",
-  
+
   ui_intro_prev: "WSTECZ",
   ui_intro_skip: "POMIŃ",
   ui_intro_next: "DALEJ",
   ui_intro_finish: "MENU ▶️",
-  
+
   pickup_heal_name: "Talerz Hrabianki",
   pickup_heal_desc: "Relikt utraconej miłości. Natychmiast przywraca +30 punktów Sytości.",
   pickup_magnet_name: "Łakomstwo",
   pickup_magnet_desc: "2-sekundowy odpust, podczas którego Hrabia wykazuje magnetyczny pociąg do Ziemniaczków.",
+  ui_guide_pickup_shield_name: "Tarcza Ludo-Boga",
+  ui_guide_pickup_shield_desc: "Tymczasowa nieśmiertelność. Ignoruje obrażenia i odpycha wrogów.",
   pickup_shield_name: "Tarcza LodoBoga",
   pickup_shield_desc: "Transcendentalna aura 'Syndromu Boga'. Gwarantuje całkowitą nietykalność przez 8 sekund.",
   pickup_speed_name: "Trampki Menela",
@@ -245,7 +254,7 @@ export const LANG_PL = {
   pickup_freeze_desc: "Wywołuje 'Potężny Cringe', spowalniając wszystkich wrogów na ekranie (-75% speed) na 5 sekund.",
   pickup_chest_name: "LudoBox",
   pickup_chest_desc: "Zaproszenie do ludologicznej ruletki. Gwarantuje jeden losowy atrybut/perk. Wypada z Bossów.",
-  
+
   enemy_standard_name: "Dadgamer",
   enemy_standard_desc: "Podstawowy hejter, plaga gamingu. Porusza się ruchem sinusoidalnym, utrudniając celowanie.",
   enemy_horde_name: "Maciek z czatu",
@@ -268,12 +277,12 @@ export const LANG_PL = {
   enemy_lumberjack_desc: "Strażnik leśnego cringe'u. Rzuca wirującymi tęczowymi toporami i zostawia toksyczny 'Tęczowy Ślad'. Uważaj, bo Cię scanceluje!",
   enemy_snakeEater_name: "Wężojad",
   enemy_snakeEater_desc: "Mobilna Kapliczka. Nie atakuje. Podążą za Hrabią. Raz na minutę uleczy Cię, jeśli go dotkniesz.",
-  
+
   enemy_hazard_name: "Szambo",
   enemy_hazard_desc: "Spowalnia Hrabiego i zadaje obrażenia. Rani też hejterów (z wyjątkiem Szkeletala). Ziemniaki w Szambie gniją.",
   enemy_megahazard_name: "Pole Dramy",
   enemy_megahazard_desc: "Wersja Mega. Znacznie większy obszar Szamba, zadający zwiększone obrażenia.",
-  
+
   perk_whip_name: "Tłuczek",
   perk_whip_desc: "Broń startowa. Biczuje horyzontalnie. Przebija wszystkich wrogów. Kolejne poziomy zwiększają liczbę uderzeń (przód/tył).",
   perk_autogun_name: "Plujko Jad",
@@ -298,25 +307,25 @@ export const LANG_PL = {
   perk_pickup_desc: "Im większy głód, tym dłuższe ręce. +{val}% do zasięgu przyciągania Ziemniaków.",
   perk_health_name: "Zdrowie",
   perk_health_desc: "Większy żołądek na hejt. Zwiększa Max Sytość o +{val} i leczy.",
-  
+
   ui_stat_level: "Poziom",
   ui_stat_health: "Zdrowie",
   ui_stat_speed: "Spd",
   ui_stat_enemies: "Kill",
   ui_stat_time: "Czas",
-  
+
   ui_scores_local: "LOKALNE",
   ui_scores_online: "ONLINE",
   ui_filter_today: "DZIŚ",
   ui_filter_weekly: "TYDZIEŃ",
   ui_filter_monthly: "MIESIĄC",
   ui_filter_all: "WSZYSTKIE",
-  
+
   ui_gameover_score_label: "TWÓJ WYNIK",
   ui_gameover_time_label: "CZAS",
   ui_gameover_level_label: "POZIOM",
   ui_gameover_kills_label: "ZABICI",
-  
+
   quote_gameover_1: "Weź się za siebie, bo grasz jak ludolodzy.",
   quote_gameover_2: "W Soulsy to ty pewnie też tak lamisz jak ten Kiszczak...",
   quote_gameover_3: "Spokojnie. Kiszczak też ssie w inne gierki...",
@@ -331,20 +340,20 @@ export const LANG_PL = {
   quote_gameover_12: "Nawet Dadgamerom dłużej stoi niż Ty syty jesteś...",
   quote_gameover_13: "Z ciebie taki gamer jak z Kiszczaka ludolog.",
   quote_gameover_14: "Chyba dziś nic z tych ziemniaczków nie będzie...",
-  
+
   ui_tab_stats: "STATYSTYKI",
   ui_stat_header_name: "NAZWA DANEJ",
   ui_stat_header_local: "TY (Lokalnie)",
   ui_stat_header_global: "ŚWIAT (Globalnie)",
-  
+
   stat_games_played: "Rozegranych Gier",
   stat_unique_players: "Unikalnych Graczy",
   stat_deaths: "Zgonów Drakula",
   stat_enemies_killed: "Łącznie Zabito",
   stat_potatoes_collected: "Zebrano Ziemniaczków",
-  
+
   stat_total_playtime: "Łącznie Przegranego Czasu",
-  
+
   stat_killed_standard: "Zabitych Dadgamerów",
   stat_killed_horde: "Zabitych Maćków z Czatu",
   stat_killed_aggressive: "Zabitych Prowokatorów",
@@ -356,7 +365,7 @@ export const LANG_PL = {
   stat_killed_wall: "Zniszczonych Syndromów Oblężenia",
   stat_killed_lumberjack: "Zabitych Drwali Zjebadlo",
   stat_killed_snakeEater: "Zabitych Wężojadów",
-  
+
   ui_installed: "ZAINSTALOWANO",
   ui_multishot: "Multishot",
   ui_pierce: "Przebicie",

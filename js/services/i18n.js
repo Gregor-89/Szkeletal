@@ -38,11 +38,11 @@ if (!LANGUAGES[currentLangCode]) {
 export function getLang(key) {
   const langObj = LANGUAGES[currentLangCode];
   let text = langObj[key];
-  
+
   if (!text && currentLangCode !== 'pl') {
     text = LANGUAGES['pl'][key];
   }
-  
+
   return text || `[${key}]`;
 }
 
@@ -70,4 +70,12 @@ export function getAvailableLanguages() {
     { code: 'en', name: 'English' },
     { code: 'ro', name: 'Română' }
   ];
+}
+
+export function initLanguage() {
+  // Inicjalizacja odbywa się automatycznie przy imporcie modułu (top-level code).
+  // Ta funkcja służy jako wyraźny punkt wejścia dla main.js, aby wymusić załadowanie modułu.
+  if (!currentLangCode) {
+    currentLangCode = localStorage.getItem('szkeletal_lang') || 'pl';
+  }
 }

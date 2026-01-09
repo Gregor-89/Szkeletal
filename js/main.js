@@ -108,18 +108,28 @@ function initializeCanvas() {
     window.addEventListener('resize', () => { requestAnimationFrame(handleResize); });
 
     const worldSize = WORLD_CONFIG.SIZE;
-    const worldWidth = canvas.width * worldSize;
-    const worldHeight = canvas.height * worldSize;
+    // FIX ETAP 5: Stała baza dla świata gry, niezależna od rozmiaru okna przeglądarki.
+    // Zapobiega generowaniu "małego świata" na mniejszych ekranach i problemowi "pustej trawy" na krawędziach.
+    const BASE_WIDTH = 1920;
+    const BASE_HEIGHT = 1080;
+
+    // Obliczamy świat na podstawie stałej bazy
+    const worldWidth = BASE_WIDTH * worldSize;
+    const worldHeight = BASE_HEIGHT * worldSize;
 
     // FIX ETAP 3: Resetowanie timerów wizualnych przy nowej instancji gracza
     gameStateRef.game.playerHitFlashT = 0;
     gameStateRef.game.shakeT = 0;
     gameStateRef.game.isDying = false;
 
+    // Gracz startuje na środku świata
     gameStateRef.player = new Player(worldWidth / 2, worldHeight / 2);
+    // Kamera dostosowuje się do świata (ale jej 'view' to wciąż canvas)
+    // Kamera dostosowuje się do świata (ale jej 'view' to wciąż canvas)
     gameStateRef.camera = new Camera(worldWidth, worldHeight, canvas.width, canvas.height);
 
-    generateMap(gameStateRef.obstacles, gameStateRef.player, worldWidth, worldHeight);
+    // generateMap przeniesione do startNewGame() aby nie blokować startu aplikacji
+    // generateMap(gameStateRef.obstacles, gameStateRef.player, worldWidth, worldHeight);
 
     gameStateRef.bulletsPool = new ObjectPool(PlayerBullet, 500);
     gameStateRef.eBulletsPool = new ObjectPool(EnemyBullet, 500);
@@ -180,6 +190,10 @@ function initMenuAndEvents() {
     displayScores('scoresBodyMenu');
     return { wrappedLoadConfig, wrappedStartRun };
 }
+
+// FIX ETAP 5: Inicjalizacja języka PRZED ładowaniem assetów
+import { initLanguage } from './services/i18n.js';
+initLanguage();
 
 launchApp(gameStateRef, uiData, {
     updateGameTitle,

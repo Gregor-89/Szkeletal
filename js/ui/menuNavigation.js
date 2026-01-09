@@ -200,6 +200,16 @@ export function updateGamepadMenu() {
         return;
     }
 
+    // FIX ETAP 5: Blokada nawigacji klawiszami, gdy wpisujemy tekst (np. Nick)
+    // FIX ETAP 5: Blokada nawigacji klawiszami, gdy wpisujemy tekst (np. Nick)
+    // ALE pozwalamy na nawigację, gdy focus jest na suwaku (range), bo inaczej user utknie
+    if (document.activeElement &&
+        ((document.activeElement.tagName === 'INPUT' && document.activeElement.type !== 'range') ||
+            document.activeElement.tagName === 'TEXTAREA')) {
+        lastGpState = { ...input };
+        return;
+    }
+
     const focusables = getFocusableElements(); if (focusables.length === 0) return;
 
     if (!focusedElement || !focusables.includes(focusedElement)) {

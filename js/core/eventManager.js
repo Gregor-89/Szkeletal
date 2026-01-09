@@ -6,6 +6,7 @@
 import { switchView, updateStaticTranslations, forceFocusFirst, setFocusedElement, initRetroToggles } from '../ui/menus.js';
 import { setLanguage } from '../services/i18n.js';
 import { showMenu, resetAll, pauseGame, resumeGame, gameOver, startRun } from '../ui/ui.js';
+import { generateMap } from '../managers/mapManager.js';
 
 import { levelUp, pickPerk, openChest } from '../managers/levelManager.js';
 import { saveGame, loadGame } from '../services/saveManager.js';
@@ -45,6 +46,10 @@ async function wrappedResetAll() {
     if (window.SIEGE_EVENT_CONFIG) uiDataRef.settings.currentSiegeInterval = window.SIEGE_EVENT_CONFIG.SIEGE_EVENT_START_TIME;
 
     await resetAll(uiDataRef.canvas, uiDataRef.settings, uiDataRef.perkLevels, uiDataRef, uiDataRef.camera);
+
+    // FIX ETAP 5: Generowanie mapy na nowo przy każdym starcie gry (nie przy włączaniu aplikacji)
+    // Używa teraz SpatialHash, więc jest szybkie.
+    generateMap(gameStateRef.obstacles, gameStateRef.player, gameStateRef.camera.worldWidth, gameStateRef.camera.worldHeight);
 
     gameStateRef.enemyIdCounter = 0;
     uiDataRef.animationFrameId = null;
@@ -189,6 +194,8 @@ function initEvents() {
             if (overlay) overlay.style.display = 'none';
             localStorage.setItem('szkeletal_tutorial_seen', 'true');
             if (gameStateRef && gameStateRef.game) {
+                // FIX: Reset czasu klatki, aby uniknąć przeskoku kamery po długim czasie w samouczku
+                uiDataRef.lastTime = performance.now();
                 gameStateRef.game.paused = false;
             }
             playSound('Click');

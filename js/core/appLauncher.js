@@ -7,6 +7,7 @@ import { initAudio, loadAudio, playSound, AUDIO_ASSET_LIST } from '../services/a
 import { loadAssets, assetDefinitions } from '../services/assets.js';
 import { LeaderboardService } from '../services/leaderboard.js';
 import { initializeIntro } from '../managers/introManager.js';
+import { getLang } from '../services/i18n.js';
 
 // Konfiguracja Splashy
 const SPLASH_SEQUENCE = ['img/splash_dev.png', 'img/splash_ratings.png', 'img/splash_logo.jpg'];
@@ -30,30 +31,31 @@ const loadingText = document.getElementById('loadingText');
 export function launchApp(gameStateRef, uiData, callbacks) {
   initAudio();
   LeaderboardService.trackUniquePlayer();
-  
+
   const totalAssets = Object.keys(assetDefinitions).length + AUDIO_ASSET_LIST.length;
   let loadedCount = 0;
-  
+
   const updateProgress = () => {
     loadedCount++;
     const pct = Math.min(100, Math.floor((loadedCount / totalAssets) * 100));
     if (loadingBarFill) loadingBarFill.style.width = `${pct}%`;
-    if (loadingText) loadingText.textContent = `WCZYTYWANIE ZASOBÓW... (${loadedCount}/${totalAssets})`;
+    const loadTxt = getLang('loader_resources') || "WCZYTYWANIE ZASOBÓW...";
+    if (loadingText) loadingText.textContent = `${loadTxt} (${loadedCount}/${totalAssets})`;
   };
-  
+
   Promise.all([loadAssets(updateProgress), loadAudio(updateProgress)]).then(() => {
     setTimeout(() => {
       if (callbacks.updateGameTitle) callbacks.updateGameTitle();
       if (loadingOverlay) loadingOverlay.style.display = 'none';
       if (splashOverlay) splashOverlay.style.display = 'flex';
-      
+
       assetsLoaded = true;
       if (callbacks.initializeCanvas) callbacks.initializeCanvas();
       if (callbacks.initStars) callbacks.initStars();
-      
+
       // FIX: Wywołanie rejestracji zdarzeń i wejścia po załadowaniu zasobów
       if (callbacks.onAssetsReady) callbacks.onAssetsReady();
-      
+
       showSplash(currentSplashIndex);
     }, 500);
   }).catch((err) => {
@@ -73,7 +75,7 @@ function showSplash(index) {
   void splashImageEl.offsetWidth;
   splashImageEl.src = SPLASH_SEQUENCE[index];
   splashImageEl.classList.add('fade-in');
-  
+
   const duration = SPLASH_DURATIONS[index] || 4000;
   splashTimer = setTimeout(advanceSplash, duration);
   setTimeout(() => { splashAdvanceLocked = false; }, 500);
@@ -88,7 +90,7 @@ export function advanceSplash(e) {
   splashAdvanceLocked = true;
   clearTimeout(splashTimer);
   currentSplashIndex++;
-  
+
   if (currentSplashIndex >= SPLASH_SEQUENCE.length) finishSplashSequence();
   else showSplash(currentSplashIndex);
 }
@@ -97,14 +99,14 @@ function finishSplashSequence() {
   if (!splashSequenceActive) return;
   splashSequenceActive = false;
   clearTimeout(splashTimer);
-  
+
   window.removeEventListener('keydown', advanceSplash);
   window.removeEventListener('mousedown', advanceSplash);
   window.removeEventListener('touchstart', advanceSplash);
-  
+
   if (splashOverlay) splashOverlay.classList.add('fade-out');
   initAudio();
-  
+
   setTimeout(() => {
     if (splashOverlay) splashOverlay.style.display = 'none';
     const game = window.gameStateRef ? window.gameStateRef.game : null;

@@ -8,44 +8,44 @@ export const LANG_EN = {
   ui_off: "OFF",
   ui_warning_new_enemy: "INCOMING",
   ui_hud_new_enemy: "INCOMING",
-  
+
   ui_nick_modal_title: "SIGN YOUR NAME",
   ui_nick_modal_text: "Before submitting, enter your nickname:",
   ui_nick_modal_confirm: "CONFIRM",
   ui_nick_modal_cancel: "CANCEL",
   ui_nick_limit_info: "(Max 20 chars, A-Z, 0-9)",
-  
+
   ui_dev_scen_min: "MIN",
   ui_dev_scen_high: "HIGH",
   ui_dev_scen_max: "MAX",
   ui_dev_god: "God Mode:",
   ui_dev_hitbox: "Hitboxes:",
-  
+
   ui_coffee_title: "HOT COFFEE",
   ui_coffee_desc: "Congratulations. You have just irreversibly depreciated several minutes of your time, although I myself, in an act of pure masochism, have dedicated tens of them to vertical prompting of AI algorithms over the last two months.<br><br>Let's be objective: just as our native 'ludologists' (not to be confused with actual game scholars) de facto exhibit an immanent lack of competence in mechanics, specializing mainly in the acquisition of other people's content, I possess zero knowledge of coding, pixel-art aesthetics, or narratology. This project is a 'patho-construct' built from generative blocks – potato by potato.<br><br>Was this teleological pursuit worth the effort? Absolutely not. Who in their right mind would want to participate in this pastiche for more than a few minutes? Even if it's just a loose parody, and any resemblance to known 'lolcows' from the ludological environment is, of course, completely stochastic and accidental.<br><br>Nevertheless, if you perceive any value of effort in this straw man, you can make a voluntary subvention to my virtual coffee or chip in for a sack of potatoes. Thanks to this, I will initiate the culinary process myself and prepare delicious potatoes.<br><br>Oh, activating the button interface below will unlock – just like that, as a joyful transgression – <span style=\"color:#E91E63;font-weight:bold;\">an alternative, 'hot' Drakul skin</span>.<br><br>Enter the mental. Have fun.",
   ui_coffee_btn: "BUY COFFEE",
   ui_coffee_unlocked: "NO ONE CHECKS THIS - SKIN UNLOCKED",
   ui_coffee_footer: "Greetings to the Wykop crowd from <a href=\"https://wykop.pl/tag/bekazludologuff\" target=\"_blank\" style=\"color:#FFD700;text-decoration:none;\">#bekazludologuff</a> and related tags.",
   ui_coffee_supporters_header: "🏆 LAST 5 POTATO PATRONS 🏆",
-  
+
   ui_dev_title: "DEV TOOLS",
   ui_dev_label_presets: "ENEMY PRESETS (AUTO-START)",
   ui_dev_label_scenarios: "SCENARIOS (WEAPON)",
   ui_dev_label_player: "PLAYER STATE",
   ui_dev_btn_apply: "APPLY",
   ui_dev_btn_peaceful: "PEACEFUL",
-  
+
   ui_config_music: "MUSIC",
   ui_config_sfx: "SFX",
   ui_config_fov: "FIELD OF VIEW (ZOOM)",
-  
+
   ui_nav_back: "BACK",
-  
+
   ui_ready_title: "GET READY",
-  
+
   ui_game_title: "Szkeletal: Potato Famine of Estrogen Drakul",
   ui_player_name: "Drakul",
-  
+
   ui_tutorial_title: "INIT PROTOCOL",
   ui_tutorial_intro: "Welcome to the simulation of potato gluttony. You play as Count Drakul, who, after escaping Res-land, fell into ludological madness and suffers from a constant drive for delicious potatoes [XP], for which he is ready to sacrifice everyone in his path.",
   ui_tutorial_ctrl_title: "🕹️ Kinesthetic Interface",
@@ -57,18 +57,18 @@ export const LANG_EN = {
   ui_tutorial_boss_title: "👾 Opponents and Dissidents",
   ui_tutorial_boss_desc: "Stakeholder or enemy? Everyone wants to take away your satiety, without which you'll perish like a bum on a boulevard bench. Process them into potatoes to avoid being overwhelmed. The strongest dissidents drop LudoBoxes (automatic random upgrade).",
   ui_tutorial_btn_close: "LET'S START",
-  
+
   quote_hunger_1: "I must eat potatoes, or I'll suffocate!",
   quote_hunger_2: "When hunger strikes, my satiety it spikes!",
   quote_hunger_3: "If I don't eat my treats, my fullness depletes!",
   quote_hunger_4: "Give me potatoes, my gut has tornadoes!",
   quote_hunger_5: "My guts are marching, potatoes are lurking!",
-  
+
   warning_hunger: "HUNGER!",
   shrine_text: "Ass washed, satiety washed",
   snake_heal_text: "Ass licked, satiety kicked back",
   snake_heal_quote_enemy: "Mmm, me do Good for Master, WOOF WOOF!",
-  
+
   quote_snake_1: "WOOF WOOF!",
   quote_snake_2: "You know how dogs bark in Romanian? HAM HAM!",
   quote_snake_3: "No skill needed for stealth games",
@@ -87,7 +87,7 @@ export const LANG_EN = {
   quote_snake_16: "I am a smart boy, WOOF",
   quote_snake_17: "Maybe let's talk facts?",
   quote_snake_18: "Can I have a potato my Lord?",
-  
+
   quote_gameplay_1: "F**k all Dadgamers",
   quote_gameplay_2: "I don't give a f**k about you morons",
   quote_gameplay_3: "Casuals s**t themselves",
@@ -103,17 +103,17 @@ export const LANG_EN = {
   quote_gameplay_13: "I would beat you all up in this chat",
   quote_gameplay_14: "Guy would get punched, he'd give me back the money",
   quote_gameplay_15: "I like Rock but he talks bulls**t",
-  
+
   ui_hp_name: "Satiety",
   ui_hp_desc: "Hater attacks reduce Satiety Gauge.",
   ui_xp_name: "Verticality",
   ui_xp_desc: "Acquisition of \"Potatoes\".",
   ui_gem_name: "Potatoes",
   ui_gem_desc: "Currency and food in one.",
-  
+
   ui_levelup_name: "Verticality Level",
   ui_levelup_desc: "Count's social ascension.",
-  
+
   ui_hud_hp_name: "Satiety",
   ui_hud_xp_name: "Verticality",
   ui_hud_score: "Score",
@@ -122,7 +122,7 @@ export const LANG_EN = {
   ui_hud_time: "Time",
   ui_hud_health: "Health",
   ui_hud_spawn_in: "SPAWN IN",
-  
+
   ui_menu_tab_game: "Game",
   ui_menu_tab_config: "Config",
   ui_menu_tab_dev: "🛠️ Dev Menu",
@@ -136,7 +136,7 @@ export const LANG_EN = {
   ui_shop_title: "POTATO SHOP",
   ui_shop_wallet: "AVAILABLE POINTS:",
   ui_shop_info_title: "HOW IT WORKS?",
-  ui_shop_info: "Your budget is your highest score (High Score) from all sessions. Points do not accumulate – to have more, you must beat your record! Purchased upgrades give an <strong>immediate starting bonus</strong>, allowing you to progress faster and reach higher verticality levels. <br><br><strong>NOTE:</strong> Each subsequent purchase costs ~50% more, so spend wisely!",
+  ui_shop_info: "Your wallet is your <strong>High Score</strong>. Points do not persist after purchase, nor do they accumulate. To increase your budget, you simply must <strong>beat your record</strong> in the game. <br><br>Purchases grant a permanent stat bonus. Each subsequent level costs ~50% more.",
   ui_shop_owned: "[OWNED]",
   ui_shop_maxed: "LIMIT REACHED",
   ui_shop_active_start: "ACTIVE AT START",
@@ -144,13 +144,13 @@ export const LANG_EN = {
   ui_shop_requires: "REQUIRES:",
   ui_shop_reset_btn: "RESET UPGRADES (NO REFUND)",
   ui_shop_reset_confirm: "ARE YOU SURE? SPENT POINTS WILL NOT BE REFUNDED!",
-  
+
   ui_config_title_game: "Gameplay Settings",
   ui_config_nick: "YOUR NICKNAME",
   ui_config_skin: "CHARACTER SKIN",
   ui_config_tutorial: "SHOW TUTORIAL",
   ui_config_tutorial_btn: "PLAY",
-  
+
   ui_config_joystick: "JOYSTICK",
   ui_config_joy_left: "LEFT",
   ui_config_joy_right: "RIGHT",
@@ -167,7 +167,7 @@ export const LANG_EN = {
   ui_config_style_circle: "🔵 Circles",
   ui_config_style_emoji: "😀 Emoji",
   ui_config_title_lang: "LANGUAGE",
-  
+
   ui_guide_title: "Count's Guide",
   ui_guide_intro: "Be the Count. Eat potatoes. Whip enemies.",
   ui_guide_basics_title: "🎮 Rules",
@@ -176,29 +176,29 @@ export const LANG_EN = {
   ui_guide_basics_3: "Pause: ESC key ⏸️ or releasing joystick (instant auto-pause)",
   ui_guide_basics_4: "Progress: Each Level of Verticality = choice of one of three upgrades 🎁",
   ui_guide_basics_5: "Enemies: Haters get tougher over time 👾 ⏱️",
-  
+
   ui_guide_pickups_title: "🎁 Pickups",
   ui_guide_enemies_title: "👾 Haters",
   ui_guide_hazards_title: "☢️ Hazards",
   ui_guide_weapons_title: "⚔️ Arsenal",
   ui_guide_perks_title: "🔧 Upgrades",
-  
+
   ui_pause_title: "⏸️ Pause",
   ui_pause_text: "Game Paused",
   ui_pause_resume: "Resume",
   ui_pause_menu: "Main Menu",
-  
+
   ui_resume_text: "Resuming in:",
-  
+
   ui_levelup_title: "Choose Upgrade",
   ui_levelup_stats: "📊 Statistics",
   ui_levelup_max: "Max level!",
-  
+
   ui_chest_title: "🎁 LudoBox",
   ui_chest_button: "Open",
   ui_chest_empty_title: "Empty",
   ui_chest_empty_desc: "You have everything!",
-  
+
   ui_gameover_title: "💀 GAME OVER",
   ui_gameover_score: "🎯 Score:",
   ui_gameover_level: "⭐ Level:",
@@ -209,10 +209,10 @@ export const LANG_EN = {
   ui_gameover_submit: "SUBMIT SCORE",
   ui_gameover_sent: "SENT!",
   ui_gameover_error: "NETWORK ERROR",
-  
+
   ui_scores_title: "CHRONICLES OF FALLEN",
   ui_scores_clear: "🗑️ CLEAR",
-  ui_scores_clear_local: "CLEAR LOCAL", 
+  ui_scores_clear_local: "CLEAR LOCAL",
   ui_scores_col_rank: "#",
   ui_scores_col_nick: "NICK",
   ui_scores_col_score: "PTS",
@@ -220,17 +220,17 @@ export const LANG_EN = {
   ui_scores_col_level: "LVL",
   ui_scores_col_time: "TIME",
   ui_scores_col_date: "DATE",
-  
+
   ui_confirm_title: "CONFIRM",
   ui_confirm_clear_scores: "Confirm clearing scores?",
   ui_confirm_yes: "YES",
   ui_confirm_no: "NO",
-  
+
   ui_intro_prev: "PREV",
   ui_intro_skip: "SKIP",
   ui_intro_next: "NEXT",
   ui_intro_finish: "MENU ▶️",
-  
+
   pickup_heal_name: "Countess Plate",
   pickup_heal_desc: "Relic of lost love. Instantly restores +30 Satiety.",
   pickup_magnet_name: "Gluttony",
@@ -245,7 +245,7 @@ export const LANG_EN = {
   pickup_freeze_desc: "Induces 'Massive Cringe', slowing all enemies on screen (-75% speed) for 5 seconds.",
   pickup_chest_name: "LudoBox",
   pickup_chest_desc: "Invitation to ludological roulette. Guarantees one random attribute/perk. Drops from Bosses.",
-  
+
   enemy_standard_name: "Dadgamer",
   enemy_standard_desc: "Basic hater, plague of gaming. Moves in a sinusoidal pattern, complicating aiming.",
   enemy_horde_name: "Chat Maciek",
@@ -262,18 +262,20 @@ export const LANG_EN = {
   enemy_ranged_desc: "Ranger from Olszynki. Keeps distance and throws bottles, avoiding direct combat.",
   enemy_elite_name: "Elden Hater",
   enemy_elite_desc: "Elite Hater with huge Satiety. Uses special every 7s: charge, projectiles, or summon help. Drops LudoBox.",
-  enemy_wall_name: "Siege Syndrome",
-  enemy_wall_desc: "Spawns in a perfect ring. Very slow and tough. Detonates after ~34-40s, destroying everything nearby.",
-  enemy_lumberjack_name: "Lumberjack Zjebadlo",
+  ui_guide_pickup_shield_name: "Ludo-God Shield",
+  ui_guide_pickup_shield_desc: "Transcendental 'God Syndrome' aura. Guarantees total invulnerability for 8 seconds.",
+  pickup_shield_name: "Ludo-God Shield",
+
+  enemy_lumberjack_name: "Rotten Lumberjack",
   enemy_lumberjack_desc: "Guardian of forest cringe. Throws spinning rainbow axes and leaves toxic 'Rainbow Trail'. Watch out, or get cancelled!",
   enemy_snakeEater_name: "SnakeEater",
   enemy_snakeEater_desc: "Mobile Shrine. Does not attack. Follows the Count. Heals you once a minute if you touch him.",
-  
+
   enemy_hazard_name: "Cesspool",
   enemy_hazard_desc: "Slows the Count and deals damage. Also hurts haters (except Szkeletal). Potatoes rot in the Cesspool.",
   enemy_megahazard_name: "Drama Field",
   enemy_megahazard_desc: "Mega version. Significantly larger Cesspool area, dealing increased damage.",
-  
+
   perk_whip_name: "Meat Tenderizer",
   perk_whip_desc: "Starting weapon. Whips horizontally. Pierces all enemies. Levels increase number of strikes (front/back).",
   perk_autogun_name: "Spit Venom",
@@ -298,25 +300,25 @@ export const LANG_EN = {
   perk_pickup_desc: "The greater the hunger, the longer the hands. +{val}% Potato attraction range.",
   perk_health_name: "Health",
   perk_health_desc: "Bigger stomach for hate. Increases Max Satiety by +{val} and restores strength.",
-  
+
   ui_stat_level: "Level",
   ui_stat_health: "Health",
   ui_stat_speed: "Spd",
   ui_stat_enemies: "Kill",
   ui_stat_time: "Time",
-  
+
   ui_scores_local: "LOCAL",
   ui_scores_online: "ONLINE",
   ui_filter_today: "TODAY",
   ui_filter_weekly: "WEEKLY",
   ui_filter_monthly: "MONTHLY",
   ui_filter_all: "ALL",
-  
+
   ui_gameover_score_label: "YOUR SCORE",
   ui_gameover_time_label: "TIME",
   ui_gameover_level_label: "LEVEL",
   ui_gameover_kills_label: "KILLS",
-  
+
   quote_gameover_1: "Get a grip, you play like ludologists.",
   quote_gameover_2: "You probably suck at Souls games like Kiszczak too...",
   quote_gameover_3: "Relax. Kiszczak sucks at other games too...",
@@ -331,20 +333,20 @@ export const LANG_EN = {
   quote_gameover_12: "Even Dadgamers last longer than you stay full...",
   quote_gameover_13: "You're as much a gamer as Kiszczak is a ludologist.",
   quote_gameover_14: "Guess no potatoes for you today...",
-  
+
   ui_tab_stats: "STATS",
   ui_stat_header_name: "DATA NAME",
   ui_stat_header_local: "YOU (Local)",
   ui_stat_header_global: "WORLD (Global)",
-  
+
   stat_games_played: "Games Played",
   stat_unique_players: "Unique Players",
   stat_deaths: "Drakul Deaths",
   stat_enemies_killed: "Total Killed",
   stat_potatoes_collected: "Potatoes Collected",
-  
+
   stat_total_playtime: "Total Wasted Time",
-  
+
   stat_killed_standard: "Dadgamers Killed",
   stat_killed_horde: "Chat Macieks Killed",
   stat_killed_aggressive: "Provocateurs Killed",
@@ -363,5 +365,15 @@ export const LANG_EN = {
   ui_targets: "target(s)",
   ui_level_short: "LVL",
   // ZMIANA v0.110f: Dodano klucz dla waluty punktowej
-  ui_shop_currency: "PTS"
+  item_drwal_name: "Rotten Lumberjack",
+  item_tluczek_name: "Potato Masher",
+
+  enemy_wall_name: "Siege Syndrome",
+  enemy_snakeEater_name: "Snake Eater",
+
+  // Loadery
+  loader_audio: "Tuning instruments...",
+  loader_assets: "Planting potatoes...",
+  loader_ready: "READY! (Click)",
+  loader_resources: "Loading potato assets...",
 };

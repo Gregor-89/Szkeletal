@@ -8,44 +8,44 @@ export const LANG_RO = {
   ui_off: "OPRIT",
   ui_warning_new_enemy: "VINE",
   ui_hud_new_enemy: "VINE",
-  
+
   ui_nick_modal_title: "SEMNEAZĂ",
   ui_nick_modal_text: "Înainte de a trimite, introdu porecla:",
   ui_nick_modal_confirm: "CONFIRMĂ",
   ui_nick_modal_cancel: "ANULĂM",
   ui_nick_limit_info: "(Max 20 caractere, A-Z, 0-9)",
-  
+
   ui_dev_scen_min: "MIN",
   ui_dev_scen_high: "HIGH",
   ui_dev_scen_max: "MAX",
   ui_dev_god: "God Mode:",
   ui_dev_hitbox: "Hitboxes:",
-  
+
   ui_coffee_title: "CAFEA FIERBINTE",
   ui_coffee_desc: "Felicitări. Tocmai ți-ai depreciat ireversibil câteva minute din timp, deși eu însumi, într-un act de masochism pur, am dedicat zeci de ore promptării verticale a algoritmilor AI în ultimele două luni.<br><br>Să fim obiectivi: la fel cum 'ludologii' noștri nativi (a nu se confunda cu cercetătorii reali de jocuri) demonstrează de facto o lipsă imanentă de competență în mecanici, specializându-se în principal pe achiziția de conținut străin, nici eu nu posed nicio cunoștință de codare, estetică pixel-art sau naratologie. Acest projekt este un 'pato-construct' construit din blocuri generative – cartof cu cartof.<br><br>A meritat această urmărire teleologică efortul? Absolut nu. Cine în toate mințile ar vrea să participe la acest pastiș mai mult de câteva minute? Chiar dacă este doar o parodie lejeră, iar orice asemănare cu 'vaci de muls râsete' cunoscute din mediul ludologic este, desigur, complet stocastică și întâmplătoare.<br><br>Totuși, dacă în ciuda tuturor lucrurilor percepi vreo valoare a efortului în această sperietoare, poți face o subvenție voluntară pentru cafeaua mea virtuală sau să contribui la un sac de cartofi. Datorită acestui fapt, voi iniția singur procesul culinar și îmi voi pregăti cartofi delicioși.<br><br>Aha, activarea interfeței cu butoane de mai jos va debloca – pur și simplu, ca o transgresiune veselă – <span style=\"color:#E91E63;font-weight:bold;\">un skin alternativ, 'fierbinte', pentru Drakul</span>.<br><br>Intră în mental. Distracție plăcută.",
   ui_coffee_btn: "CUMPĂRĂ CAFEA",
   ui_coffee_unlocked: "NIMENI NU VERIFICĂ ASTA - SKIN DEBLOCAT",
   ui_coffee_footer: "Salutări mulțimii Wykop de la <a href=\"https://wykop.pl/tag/bekazludologuff\" target=\"_blank\" style=\"color:#FFD700;text-decoration:none;\">#bekazludologuff</a> și etichetele aferente.",
   ui_coffee_supporters_header: "🏆 ULTIMII 5 MECENAȚI AI CARTOFULUI 🏆",
-  
+
   ui_dev_title: "UNELTE DEV",
   ui_dev_label_presets: "PRESETĂRI INAMICI (AUTO-START)",
   ui_dev_label_scenarios: "SCENARII (ARMĂ)",
   ui_dev_label_player: "STARE JUCĂTOR",
   ui_dev_btn_apply: "APLICĂ",
   ui_dev_btn_peaceful: "PAȘNIC",
-  
+
   ui_config_music: "MUZYCĂ",
   ui_config_sfx: "SFX",
   ui_config_fov: "CÂMP VIZUAL (ZOOM)",
-  
+
   ui_nav_back: "ÎNAPOI",
-  
+
   ui_ready_title: "PREGĂTEȘTE-TE",
-  
+
   ui_game_title: "Szkeletal: Foametea de Cartofi a lui Drakul Estrogenic",
   ui_player_name: "Drakul",
-  
+
   ui_tutorial_title: "PROTOCOL INIȚIAL",
   ui_tutorial_intro: "Bine ai venit în simularea lăcomiei de cartofi. Joci ca Contele Drakul, care după ce a scăpat din Res-land a căzut în nebunie ludologică și suferă de o poftă constantă de cartofi delicioși [XP], pentru care este gata să sacrifice pe oricine îi stă în cale.",
   ui_tutorial_ctrl_title: "🕹️ Interfață Kinestetică",
@@ -57,18 +57,18 @@ export const LANG_RO = {
   ui_tutorial_boss_title: "👾 Oponenți și Disidenți",
   ui_tutorial_boss_desc: "Interesat sau dușman? Toți vor să îți ia sațietatea, fără de care vei pieri ca un vagabond pe o bancă de bulevard. Procesează-i în cartofi pentru a nu fi copleșit. Cei mai puternici disidenți lasă LudoBoxes (actualizare aleatorie automată).",
   ui_tutorial_btn_close: "SĂ ÎNCEPEM",
-  
+
   quote_hunger_1: "Trebuie să mănânc cartofi, altfel mă sufoc!",
   quote_hunger_2: "Când foamea lovește, sațietatea mea crește!",
   quote_hunger_3: "Dacă nu mănânc bunătăți, plinătatea dispare!",
   quote_hunger_4: "Dați-mi cartofi, stomacul meu are tornade!",
   quote_hunger_5: "Mațele mele mărșăluiesc, cartofii pândesc!",
-  
+
   warning_hunger: "FOAME!",
   shrine_text: "Fund spălat, sațietate câștigată",
   snake_heal_text: "Fund lins, sațietate recâștigată",
   snake_heal_quote_enemy: "Mmm, fac bine pentru Stăpân, HAU HAU!",
-  
+
   quote_snake_1: "HAU HAU!",
   quote_snake_2: "Știi cum latră câinii în română? HAM HAM!",
   quote_snake_3: "Nu e nevoie de skill pentru jocuri stealth",
@@ -87,7 +87,7 @@ export const LANG_RO = {
   quote_snake_16: "Sunt un băiat deștept, HAU",
   quote_snake_17: "Poate vorbim despre fapte?",
   quote_snake_18: "Pot avea un cartof Stăpâne?",
-  
+
   quote_gameplay_1: "La naiba cu toți Dadgamerii",
   quote_gameplay_2: "Nu dau doi bani pe voi idioților",
   quote_gameplay_3: "Casualii fac pe ei",
@@ -103,17 +103,17 @@ export const LANG_RO = {
   quote_gameplay_13: "V-aș bate pe toți din chatul ăsta",
   quote_gameplay_14: "Tipul ar lua bătaie, mi-ar da banii înapoi",
   quote_gameplay_15: "Îmi place Rock dar vorbește prostii",
-  
+
   ui_hp_name: "Sațietate",
   ui_hp_desc: "Atacurile haterilor reduc Indicatorul de Sațietate.",
   ui_xp_name: "Verticalitate",
   ui_xp_desc: "Achiziția de \"Cartofi\".",
   ui_gem_name: "Cartofi",
   ui_gem_desc: "Valută și mâncare într-unul.",
-  
+
   ui_levelup_name: "Nivel Verticalitate",
   ui_levelup_desc: "Ascensiunea socială a Contelui.",
-  
+
   ui_hud_hp_name: "Sațietate",
   ui_hud_xp_name: "Verticalitate",
   ui_hud_score: "Scor",
@@ -122,7 +122,7 @@ export const LANG_RO = {
   ui_hud_time: "Timp",
   ui_hud_health: "Viață",
   ui_hud_spawn_in: "SPAWN ÎN",
-  
+
   ui_menu_tab_game: "Joc",
   ui_menu_tab_config: "Config",
   ui_menu_tab_dev: "🛠️ Meniu Dev",
@@ -136,7 +136,7 @@ export const LANG_RO = {
   ui_shop_title: "MAGAZIN DE CARTOFI",
   ui_shop_wallet: "PUNCTE DISPONIBILE:",
   ui_shop_info_title: "CUM FUNCȚIONEAZĂ?",
-  ui_shop_info: "Bugetul tău este cel mai mare scor (High Score) din toate sesiunile. Punctele nu se acumulează – pentru a avea mai multe, trebuie să-ți bați recordul! Achizițiile oferă un <strong>bonus de pornire imediat</strong>, permițându-ți să progresezi mai rapid. <br><br><strong>NOTĂ:</strong> Fiecare achiziție ulterioară costă cu ~50% mai mult, așa că cheltuiește cu înțelepciune!",
+  ui_shop_info: "Portofelul tău este <strong>Scorul Maxim (High Score)</strong>. Punctele nu persistă după cumpărare și nu se cumulează. Pentru a crește bugetul, trebuie pur și simplu să <strong>îți bați recordul</strong> în joc. <br><br>Achizițiile oferă un bonus permanent. Fiecare nivel următor costă cu ~50% mai mult.",
   ui_shop_owned: "[CUMPĂRAT]",
   ui_shop_maxed: "LIMITĂ ATINSĂ",
   ui_shop_active_start: "ACTIV LA START",
@@ -144,13 +144,13 @@ export const LANG_RO = {
   ui_shop_requires: "NECESITĂ:",
   ui_shop_reset_btn: "RESETARE (FĂRĂ RAMBURSARE)",
   ui_shop_reset_confirm: "EȘTI SIGUR? PUNCTELE CHELTUITE NU VOR FI RAMBURSATE!",
-  
+
   ui_config_title_game: "Setări Joc",
   ui_config_nick: "PORECLA TA",
   ui_config_skin: "ASPECT CARACTER",
   ui_config_tutorial: "ARATĂ TUTORIAL",
   ui_config_tutorial_btn: "REDARE",
-  
+
   ui_config_joystick: "JOYSTICK",
   ui_config_joy_left: "STÂNGA",
   ui_config_joy_right: "DREAPTA",
@@ -167,7 +167,7 @@ export const LANG_RO = {
   ui_config_style_circle: "🔵 Cercuri",
   ui_config_style_emoji: "😀 Emoji",
   ui_config_title_lang: "LIMBĂ",
-  
+
   ui_guide_title: "Ghidul Contelui",
   ui_guide_intro: "Fii Conte. Mănâncă cartofi. Biciuiește inamici.",
   ui_guide_basics_title: "🎮 Reguli",
@@ -176,29 +176,29 @@ export const LANG_RO = {
   ui_guide_basics_3: "Pauză: Tasta ESC ⏸️ sau eliberarea joystick-ului (autopauză instantanee)",
   ui_guide_basics_4: "Progres: Fiecare Nivel de Verticalitate = alegerea uneia din trei îmbunătățiri 🎁",
   ui_guide_basics_5: "Inamici: Cu timpul Haterii devin tot mai duri 👾 ⏱️",
-  
+
   ui_guide_pickups_title: "🎁 Pickup-uri",
   ui_guide_enemies_title: "👾 Hateri",
   ui_guide_hazards_title: "☢️ Pericole",
   ui_guide_weapons_title: "⚔️ Arsenal",
   ui_guide_perks_title: "🔧 Îmbunătățiri",
-  
+
   ui_pause_title: "⏸️ Pauză",
   ui_pause_text: "Joc Întrerupt",
   ui_pause_resume: "Reia",
   ui_pause_menu: "Meniu Principal",
-  
+
   ui_resume_text: "Reluare în:",
-  
+
   ui_levelup_title: "Alege Îmbunătățire",
   ui_levelup_stats: "📊 Statistici",
   ui_levelup_max: "Nivel maxim!",
-  
+
   ui_chest_title: "🎁 LudoBox",
   ui_chest_button: "Deschide",
   ui_chest_empty_title: "Gol",
   ui_chest_empty_desc: "Ai totul!",
-  
+
   ui_gameover_title: "💀 GAME OVER",
   ui_gameover_score: "🎯 Scor:",
   ui_gameover_level: "⭐ Nivel:",
@@ -209,10 +209,10 @@ export const LANG_RO = {
   ui_gameover_submit: "TRIMITE SCOR",
   ui_gameover_sent: "TRIMIS!",
   ui_gameover_error: "EROARE REȚEA",
-  
+
   ui_scores_title: "CRONICILE CELOR CĂZUȚI",
   ui_scores_clear: "🗑️ ȘTERGE",
-  ui_scores_clear_local: "ȘTERGE LOCAL", 
+  ui_scores_clear_local: "ȘTERGE LOCAL",
   ui_scores_col_rank: "#",
   ui_scores_col_nick: "NICK",
   ui_scores_col_score: "PCT",
@@ -220,17 +220,17 @@ export const LANG_RO = {
   ui_scores_col_level: "NIV",
   ui_scores_col_time: "TIMP",
   ui_scores_col_date: "DATĂ",
-  
+
   ui_confirm_title: "CONFIRMĂ",
   ui_confirm_clear_scores: "Sigur vrei să ștergi scorurile?",
   ui_confirm_yes: "DA",
   ui_confirm_no: "NU",
-  
+
   ui_intro_prev: "ÎNAPOI",
   ui_intro_skip: "SARI",
   ui_intro_next: "ÎNAINTE",
   ui_intro_finish: "MENU ▶️",
-  
+
   pickup_heal_name: "Farfuria Contesei",
   pickup_heal_desc: "Relicvă a iubirii pierdute. Restaurează instantaneu +30 Sațietate.",
   pickup_magnet_name: "Lăcomie",
@@ -245,7 +245,7 @@ export const LANG_RO = {
   pickup_freeze_desc: "Provoacă 'Cringe Masiv', încetinind toți inamicii de pe ecran (-75% viteză) timp de 5 secunde.",
   pickup_chest_name: "LudoBox",
   pickup_chest_desc: "Invitație la ruleta ludologică. Garantează un atribut/perk aleatoriu. Pică de la Boși.",
-  
+
   enemy_standard_name: "Dadgamer",
   enemy_standard_desc: "Hater de bază, ciuma gamingului. Se mișcă sinusoidal, complicând țintirea.",
   enemy_horde_name: "Chat Maciek",
@@ -262,18 +262,18 @@ export const LANG_RO = {
   enemy_ranged_desc: "Distansier din Olszynki. Păstrează distanța și aruncă sticle, evitând lupta directă.",
   enemy_elite_name: "Elden Hater",
   enemy_elite_desc: "Hater de Elită cu Sațietate uriașă. Folosește specială la fiecare 7s: șarjă, proiectile sau chemare ajutor. Lasă LudoBox.",
-  enemy_wall_name: "Sindrom Asediu",
+  enemy_wall_name: "Sindromul de Asediu",
   enemy_wall_desc: "Apare într-un inel perfect. Foarte lent și dur. După aprox. 34-40s detonează, distrugând totul în jur.",
-  enemy_lumberjack_name: "Lumberjack Zjebadlo",
+  enemy_lumberjack_name: "Bădăranul Lumberjack",
   enemy_lumberjack_desc: "Gardian al cringe-ului forestier. Aruncă topoare curcubeu rotitoare și lasă o 'Urmă Toxică'. Ai grijă, sau te anulează!",
-  enemy_snakeEater_name: "MâncătorDeȘerpi",
+  enemy_snakeEater_name: "Mâncătorul de Șerpi",
   enemy_snakeEater_desc: "Altar Mobil. Nu atacă. Urmează Contele. Te vindecă o dată pe minut dacă îl atingi.",
-  
+
   enemy_hazard_name: "Fosă",
   enemy_hazard_desc: "Încetinește Contele și provoacă daune. Rănește și haterii (cu excepția Szkeletal). Cartofii putrezesc în Fosă.",
   enemy_megahazard_name: "Câmp de Dramă",
   enemy_megahazard_desc: "Versiunea Mega. Zonă de Fosă semnificativ mai mare, provocând daune crescute.",
-  
+
   perk_whip_name: "Bătător Carne",
   perk_whip_desc: "Armă de început. Biciuiește orizontal. Străpunge toți inamicii. Nivelurile cresc numărul de lovituri (față/spate).",
   perk_autogun_name: "Scuipă Venin",
@@ -298,25 +298,25 @@ export const LANG_RO = {
   perk_pickup_desc: "Cu cât foamea e mai mare, cu atât mâinile sunt mai lungi. +{val}% rază atracție Cartofi.",
   perk_health_name: "Sănătate",
   perk_health_desc: "Stomac mai mare pentru ură. Crește Sațietatea Max cu +{val} și restabilește forțele.",
-  
+
   ui_stat_level: "Nivel",
   ui_stat_health: "Sănătate",
   ui_stat_speed: "Viteză",
   ui_stat_enemies: "Ucideri",
   ui_stat_time: "Timp",
-  
+
   ui_scores_local: "LOCAL",
   ui_scores_online: "ONLINE",
   ui_filter_today: "AZI",
   ui_filter_weekly: "SĂPTÂMÂNAL",
   ui_filter_monthly: "LUNAR",
   ui_filter_all: "TOATE",
-  
+
   ui_gameover_score_label: "SCORUL TĂU",
   ui_gameover_time_label: "TIMP",
   ui_gameover_level_label: "NIVEL",
   ui_gameover_kills_label: "UCIDERI",
-  
+
   quote_gameover_1: "Adună-te, joci ca ludologii.",
   quote_gameover_2: "Probabil ești praf și la Souls ca Kiszczak...",
   quote_gameover_3: "Relaxează-te. Kiszczak e praf și la alte jocuri...",
@@ -331,20 +331,20 @@ export const LANG_RO = {
   quote_gameover_12: "Chiar și Dadgamerii rezistă mai mult decât ești tu sătul...",
   quote_gameover_13: "Ești la fel de gamer pe cât e Kiszczak ludolog.",
   quote_gameover_14: "Cred că azi nu pupi cartofi...",
-  
+
   ui_tab_stats: "STATISTICI",
   ui_stat_header_name: "NUME DATE",
   ui_stat_header_local: "TU (Local)",
   ui_stat_header_global: "LUME (Global)",
-  
+
   stat_games_played: "Jocuri Jucate",
   stat_unique_players: "Jucători Unici",
   stat_deaths: "Morți Drakul",
   stat_enemies_killed: "Total Uciși",
   stat_potatoes_collected: "Cartofi Colectați",
-  
+
   stat_total_playtime: "Timp Total Pierdut",
-  
+
   stat_killed_standard: "Dadgameri Uciși",
   stat_killed_horde: "Chat Macieks Uciși",
   stat_killed_aggressive: "Provocatori Uciși",
@@ -363,5 +363,18 @@ export const LANG_RO = {
   ui_targets: "ținte",
   ui_level_short: "NIV.",
   // ZMIANA v0.110f: Dodano klucz dla waluty punktowej
-  ui_shop_currency: "PCT"
+  ui_shop_currency: "PCT",
+  ui_loading_resource_audio: "Se încarcă audiosfera...",
+  ui_loading_resource_images: "Se încarcă resursele de cartofi...",
+  ui_loading_ready: "GATA! (Click)",
+
+  // NOWE KLUCZE v0.117
+  item_drwal_name: "Bădăranul Lumberjack",
+  item_tluczek_name: "Zdrobitor de Cartofi",
+  enemy_wall_name: "Sindromul de Asediu",
+  enemy_snakeEater_name: "Mâncătorul de Șerpi",
+  loader_audio: "Acordare instrumente...",
+  loader_assets: "Plantare cartofi...",
+  loader_ready: "GATA! (Click)",
+  loader_resources: "Se încarcă resursele de cartofi..."
 };

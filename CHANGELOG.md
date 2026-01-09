@@ -1,27 +1,34 @@
 # CHANGELOG
 
-## [v0.116] - 2026-01-09 (UI & CSS Polish)
-### 🐛 Bug Fixes & Improvements
-- **UI Stability**: Fixed "jumping" language flags in main menu by removing conflicting JS animations and excluding them from CSS fade-in effects.
-- **"Postaw Kawę" Button**: 
-  - Restored missing logic: button now correctly unlocks 'Hot Dracula' skin.
-  - Added visual feedback: button turns green (Success state) upon unlock.
-  - Fixed button overflow issues (cut-off glow) by adjusting margins and containers.
-  - Implemented one-time sound effect and text update upon unlock.
-- **Skin Manager**: Fixed ID mismatch (`skin_dracula_hot` vs `hot`) that prevented skin unlocking.
-- **CSS**: Removed horizontal scrollbar in Coffee menu and improved general element positioning.
+## [v0.117] - 2026-01-09 (Poprawki Spatial Spacing & Intro)
+### 🐛 Poprawki Błędów
+- **Nawigacja Intro**: Usunięto sterowanie klawiszami (Strzałki/Enter) w intro komiksowym. Nawigacja odbywa się teraz wyłącznie za pomocą przycisków na ekranie, aby zapobiec przypadkowemu pominięciu.
+- **Kamera w Samouczku**: Naprawiono "skok" pozycji kamery przy zamykaniu samouczka. Kamera teraz inicjalizuje się poprawnie z uwzględnieniem poziomu zoomu od samego początku.
+- **UI Samouczka**: Wyśrodkowano przycisk "Zaczynajmy" w oknie samouczka.
+- **Generowanie Mapy**: Zaimplementowano minimalny odstęp (1500px) przy generowaniu Kapliczek (Shrines), aby zapobiec ich grupowaniu się w jednym miejscu.
 
-## [v0.115] - 2025-01-08 (Beta Fixes)
-### 🐛 Bug Fixes
-- **Critical**: Fixed `Uncaught SyntaxError` in `obstacle.js` that caused game crash on load.
-- **Spawning**: Adjusted initial enemy spawn timer. First enemy now appears within ~3s (previously took too long), but correctly spawns off-screen.
-- **Visuals**: 
-  - Fixed projectile flash effect (Orbital/Nova) to be consistent with enemy hit flashes (white flash using CSS filters).
-  - Fixed object culling issue where tall obstacles (Trees/Huts) were vanishing too early at the bottom of the screen.
-- **UI**: Aligned "Submit Score" and "Clear Scores" buttons horizontally on Game Over screen.
+## [v0.116] - 2026-01-09 (Szlifowanie UI & CSS)
+### 🐛 Poprawki Błędów i Ulepszenia
+- **Stabilność UI**: Naprawiono "skaczące" flagi języka w menu głównym poprzez usunięcie konfliktujących animacji JS i wykluczenie ich z efektów fade-in CSS.
+- **Przycisk "Postaw Kawę"**: 
+  - Przywrócono logikę: przycisk poprawnie odblokowuje teraz skórkę 'Hot Dracula'.
+  - Dodano informację zwrotną: przycisk zmienia kolor na zielony (stan Sukces) po odblokowaniu.
+  - Naprawiono obcinanie poświaty przycisku poprzez korektę marginesów i kontenerów.
+  - Dodano jednorazowy efekt dźwiękowy i aktualizację tekstu po odblokowaniu.
+- **Skin Manager**: Naprawiono niezgodność ID (`skin_dracula_hot` vs `hot`), która uniemożliwiała odblokowanie skórki.
+- **CSS**: Usunięto poziomy pasek przewijania w menu Kawa i poprawiono ogólne pozycjonowanie elementów.
 
-### ⚙️ Balance
-- **Early Game**: Reduced `SPAWN_GRACE_PERIOD` to 0.5s to speed up first encounter.
+## [v0.115] - 2025-01-08 (Poprawki Beta)
+### 🐛 Poprawki Błędów
+- **Poważne**: Naprawiono błąd `Uncaught SyntaxError` w pliku `obstacle.js`, który powodował awarię gry podczas ładowania.
+- **Spawnowanie**: Dostosowano licznik początkowego spawnu wrogów. Pierwszy wróg pojawia się teraz w ciągu ok. 3s (wcześniej trwało to za długo), ale poprawnie spawnuje się poza ekranem.
+- **Oprawa Wizualna**: 
+  - Poprawiono efekt błysku pocisków (Orbital/Nova), aby był spójny z błyskami trafień wroga (biały błysk przy użyciu CSS filters).
+  - Naprawiono problem culling-u (znikania obiektów), gdzie wysokie przeszkody (Drzewa/Chaty) znikały zbyt wcześnie przy dolnej krawędzi ekranu.
+- **UI**: Wyrównano w poziomie przyciski "Wyślij Wynik" i "Wyczyść Wyniki" na ekranie końca gry.
+
+### ⚙️ Balans
+- **Wczesna Gra**: Zmniejszono `SPAWN_GRACE_PERIOD` do 0.5s, aby przyspieszyć pierwsze spotkanie z wrogiem.
 
 ## [v0.114] - 2025-01-07 (Beta Release Candidate)
 ### ⭐ Features

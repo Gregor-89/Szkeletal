@@ -90,10 +90,10 @@ export const HUNGER_CONFIG = {
 
 export const MAP_CONFIG = {
   // FIX: Zwiększono liczbę obiektów dla ogromnego świata gry
-  TREES_COUNT: 1200, // Poprzednio 450
-  ROCKS_COUNT: 600,  // Poprzednio 250
-  HUTS_COUNT: 150,   // Poprzednio 45
-  WATER_COUNT: 120,  // Poprzednio 60
+  TREES_COUNT: 3600, // Jeszcze więcej drzew (+50%)
+  ROCKS_COUNT: 1800,  // Jeszcze więcej skał (+50%)
+  HUTS_COUNT: 150,
+  WATER_COUNT: 120,
   SHRINE_COUNT: 15,
   SAFE_ZONE_RADIUS: 600,
 
@@ -132,9 +132,10 @@ export const MAP_CONFIG = {
 export const SIEGE_EVENT_CONFIG = {
   SIEGE_EVENT_INTERVAL: 45.0,
   SIEGE_EVENT_START_TIME: 180,
-  SIEGE_WARNING_TIME: 5.0,
-  SIEGE_EVENT_RADIUS: 900,
+  SIEGE_WARNING_TIME: 7.0,
+  SIEGE_EVENT_RADIUS: 800,
   SIEGE_EVENT_COUNT: 40,
+  WALL_HP_SCALE: 1.5,
 };
 
 export const WALL_DETONATION_CONFIG = {
@@ -232,14 +233,14 @@ export const ENEMY_STATS = {
   aggressive: {
     type: 'aggressive',
     hp: 12,
-    speed: 94,
+    speed: 100,
     size: 52,
     damage: 10,
     color: '#E91E63',
     score: 10,
     xp: 1,
     drops: BASE_DROP_RATES,
-    chargeBonus: 1.6
+    chargeBonus: 1.8
   },
   kamikaze: { type: 'kamikaze', hp: 5, speed: 150, size: 36, damage: 25, color: '#76FF03', score: 10, xp: 1, drops: BASE_DROP_RATES },
   splitter: { type: 'splitter', hp: 12, speed: 140, size: 52, damage: 10, color: '#B71C1C', score: 10, xp: 1, drops: BASE_DROP_RATES },

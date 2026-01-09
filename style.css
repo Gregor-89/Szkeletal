@@ -1636,3 +1636,14 @@ border: none !important;
     object-fit: contain;
     image-rendering: pixelated;
 }
+
+/* FIX ETAP 5: Centrowanie przycisku w samouczku */
+#btnCloseTutorial {
+    display: block;
+    margin: 30px auto 10px auto !important;
+    width: fit-content;
+    padding-left: 50px;
+    padding-right: 50px;
+    align-self: center;
+    /* Dodatkowe wymuszenie dla flexa */
+}

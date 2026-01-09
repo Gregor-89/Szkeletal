@@ -91,8 +91,8 @@ function drawFPS(ctx, fps, ui, canvas) {
         ctx.fillStyle = (fps >= 55) ? '#66bb6a' : (fps >= 40 ? '#ffca28' : '#ef5350');
         ctx.font = 'bold 16px Arial'; ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 4;
         const fpsText = `${fps} FPS`;
-        if (ui.fpsPosition === 'right') { ctx.textAlign = 'right'; ctx.fillText(fpsText, canvas.width - 20, 55); }
-        else { ctx.textAlign = 'left'; ctx.fillText(fpsText, 20, 55); }
+        if (ui.fpsPosition === 'right') { ctx.textAlign = 'right'; ctx.fillText(fpsText, canvas.width - 20, 85); }
+        else { ctx.textAlign = 'left'; ctx.fillText(fpsText, 20, 85); }
         ctx.shadowBlur = 0;
     }
 }
@@ -154,9 +154,10 @@ export function draw(ctx, state, ui, fps) {
 
     const margin = 800 / zoom;
 
-    // FIX v0.110k: Precyzyjne obliczanie środka skalowania
-    const viewLeft = camera.offsetX - (vWidth - canvas.width) / 2;
-    const viewTop = camera.offsetY - (vHeight - canvas.height) / 2;
+    // FIX v0.110k: Uproszczone obliczanie obszaru widzenia (współrzędne świata)
+    // viewLeft to po prostu offsetX kamery (lewy górny róg widoku w świecie)
+    const viewLeft = camera.offsetX;
+    const viewTop = camera.offsetY;
 
     const cullLeft = viewLeft - margin;
     const cullRight = viewLeft + vWidth + margin;
@@ -165,20 +166,23 @@ export function draw(ctx, state, ui, fps) {
 
     ctx.save();
 
-    // Skalowanie względem środka ekranu
-    ctx.translate(canvas.width / 2, canvas.height / 2);
+    // FIX: Standardowe skalowanie (bez centrowania), bo camera.offsetX w gameLogic.js 
+    // jest już obliczone tak, aby wycentrować gracza w ZESKALOWANYM widoku.
     ctx.scale(zoom, zoom);
-    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    // Przesunięcie o pozycję kamery (świata)
+    ctx.translate(-camera.offsetX, -camera.offsetY);
 
+    // Obsługa trzęsienia ziemi (Screen Shake)
     if (game.shakeT > 0 && !game.screenShakeDisabled) {
         const t = game.shakeT / 200;
         const mag = game.shakeMag * t;
-        ctx.translate((Math.random() * 2 - 1) * mag, (Math.random() * 2 - 1) * mag);
+        // Shake musi być niezależny od zoomu, więc dzielimy przez zoom
+        ctx.translate((Math.random() * 2 - 1) * mag / zoom, (Math.random() * 2 - 1) * mag / zoom);
         game.shakeT -= 16;
         if (game.shakeT <= 0) game.shakeMag = 0;
     }
 
-    ctx.translate(-camera.offsetX, -camera.offsetY);
+    // ctx.translate wykonane powyżej
 
     drawBackground(ctx, camera);
     ctx.globalAlpha = 1;

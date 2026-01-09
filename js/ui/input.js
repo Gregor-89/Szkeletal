@@ -24,6 +24,29 @@ export function initInput(escapeFn, joyStartFn, joyEndFn) {
     onEscapePress = escapeFn;
     onJoyStart = joyStartFn;
     onJoyEnd = joyEndFn;
+
+    // FIX ETAP 5: Auto-Joystick Configuration
+    // Domyślnie: Mobile -> Right, Desktop -> Off.
+    // Tylko przy pierwszym uruchomieniu (brak zapisanego ustawienia).
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const hasSavedSetting = localStorage.getItem('szkeletal_joy_side');
+
+    if (!hasSavedSetting && !localStorage.getItem('szkeletal_joystick_setup')) {
+        const defaultSide = isMobile ? 'right' : 'off';
+        setJoystickSide(defaultSide);
+
+        // Aktualizacja globalnej zmiennej UI (jeśli istnieje)
+        if (typeof window !== 'undefined') window.currentJoyMode = defaultSide;
+
+        // Zapisz, aby było to trwałe ustawienie użytkownika
+        localStorage.setItem('szkeletal_joy_side', defaultSide);
+        localStorage.setItem('szkeletal_joystick_setup', 'true');
+
+        console.log(`[Input] Auto-configured Joystick: ${defaultSide} (Mobile: ${isMobile})`);
+    } else if (hasSavedSetting) {
+        // Przywrócenie zapisanego stanu (na wypadek gdyby wrappedLoadConfig tego nie zrobił jeszcze)
+        setJoystickSide(hasSavedSetting);
+    }
 }
 
 window.addEventListener("gamepadconnected", (e) => {
@@ -194,6 +217,18 @@ document.addEventListener('keydown', e => {
     keys[k] = true;
     initAudio();
     if (k === 'escape') onEscapePress();
+
+    // FIX: Blokada domyślnych akcji przeglądarki
+    if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'enter', ' '].includes(k)) {
+        const tag = document.activeElement ? document.activeElement.tagName : '';
+        const type = document.activeElement ? document.activeElement.type : '';
+
+        // Zawsze blokuj ENTER i SPACE na przyciskach (blokada podwójnego kliku)
+        // ORAZ blokuj strzałki Góra/Dół na suwakach (Range), żeby służyły do nawigacji, a nie zmiany wartości
+        if ((tag !== 'INPUT' && tag !== 'TEXTAREA') || (tag === 'INPUT' && type === 'range' && (k === 'arrowup' || k === 'arrowdown'))) {
+            e.preventDefault();
+        }
+    }
 });
 
 document.addEventListener('keyup', e => {
