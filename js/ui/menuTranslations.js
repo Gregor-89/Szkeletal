@@ -9,13 +9,13 @@ import { VERSION } from '../config/version.js';
 import { generateGuide } from './menus.js';
 
 export const STATIC_TRANSLATION_MAP = {
-    'btnStart': 'ui_menu_start', 
-    'btnContinue': 'ui_menu_continue', 
-    'navScores': 'ui_scores_title', 
-    'navConfig': 'ui_menu_tab_config', 
-    'navGuide': 'ui_menu_tab_guide', 
+    'btnStart': 'ui_menu_start',
+    'btnContinue': 'ui_menu_continue',
+    'navScores': 'ui_scores_title',
+    'navConfig': 'ui_menu_tab_config',
+    'navGuide': 'ui_menu_tab_guide',
     'btnReplayIntroMain': 'ui_menu_replay_intro',
-    'navDev': 'ui_menu_tab_dev', 
+    'navDev': 'ui_menu_tab_dev',
     'navCoffee': 'ui_coffee_title',
     'navShop': 'ui_menu_shop',
     'coffeeFooter': 'ui_coffee_footer',
@@ -67,7 +67,7 @@ export function updateStaticTranslations() {
             }
         }
     }
-    
+
     const coffeeDesc = document.getElementById('coffeeDesc');
     if (coffeeDesc) coffeeDesc.innerHTML = getLang('ui_coffee_desc');
 
@@ -75,35 +75,35 @@ export function updateStaticTranslations() {
     if (walletLabel) {
         const translatedLabel = getLang('ui_shop_wallet') || "DOSTĘPNE PUNKTY:";
         const currency = getLang('ui_shop_currency') || "PKT";
-        
+
         const currentBalance = (window.shopManager ? window.shopManager.getWalletBalance() : 0).toLocaleString();
         walletLabel.innerHTML = `${translatedLabel} <span id="shopWalletPoints" style="color:var(--accent-green);">${currentBalance}</span> ${currency}`;
     }
 
     const btnSubmit = document.getElementById('btnSubmitScore');
-    if(btnSubmit && btnSubmit.style.display !== 'none' && btnSubmit.textContent !== getLang('ui_gameover_sent')) {
+    if (btnSubmit && btnSubmit.style.display !== 'none' && btnSubmit.textContent !== getLang('ui_gameover_sent')) {
         btnSubmit.textContent = getLang('ui_gameover_submit') || "WYŚLIJ WYNIK";
     }
-    
+
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        const period = btn.dataset.period; 
+        const period = btn.dataset.period;
         if (period) {
             const key = `ui_filter_${period}`;
             const txt = getLang(key);
             if (txt) btn.innerText = txt;
         }
     });
-    
+
     updateTutorialTexts();
     updateFlagHighlights();
-    
+
     const backText = getLang('ui_nav_back') || 'POWRÓT';
     document.querySelectorAll('.nav-back').forEach(el => el.innerText = backText);
 
     const headers = document.querySelectorAll('#retroScoreTable th, #goScoreTable th');
     if (headers.length > 0) {
         headers.forEach((th, index) => {
-            const mod = index % 7; 
+            const mod = index % 7;
             if (mod === 0) th.innerText = getLang('ui_scores_col_rank');
             if (mod === 1) th.innerText = getLang('ui_scores_col_nick');
             if (mod === 2) th.innerText = getLang('ui_scores_col_score');
@@ -113,14 +113,14 @@ export function updateStaticTranslations() {
             if (mod === 6) th.innerText = getLang('ui_scores_col_date');
         });
     }
-    
+
     const pageTitle = getLang('ui_game_title');
     if (pageTitle) document.title = `${pageTitle} v${VERSION}`;
 
     if (document.getElementById('view-guide') && document.getElementById('view-guide').classList.contains('active')) {
         generateGuide();
     }
-    
+
     updateJoystickToggleLabel();
     updateToggleLabels();
     updateMainMenuStats();
@@ -131,23 +131,28 @@ export function updateFlagHighlights() {
     ['btnLangPL', 'btnLangEN', 'btnLangRO'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
-            btn.style.transform = 'scale(1.0)';
-            btn.style.filter = 'grayscale(1.0) contrast(0.8)'; 
-            btn.style.outline = 'none';
-            btn.style.boxShadow = 'none';
-            btn.style.border = '2px solid transparent';
-            btn.style.borderRadius = '4px'; 
-            btn.style.transition = 'all 0.2s ease-in-out';
-
             const isActive = id.endsWith(currentLang.toUpperCase());
             const isFocused = btn.classList.contains('focused');
 
+            // PRZYWRACANIE: Skalowanie flag (teraz bezpieczne, bo wyłączone z animacji fadeIn menu w CSS)
             if (isActive || isFocused) {
                 btn.style.border = '2px solid #FFFFFF';
                 btn.style.transform = 'scale(1.15)';
-                btn.style.filter = 'grayscale(0) drop-shadow(0 0 8px rgba(255, 215, 0, 0.8))'; 
+                btn.style.filter = 'grayscale(0) drop-shadow(0 0 8px rgba(255, 215, 0, 0.8))';
                 btn.style.boxShadow = '0 0 10px rgba(255, 215, 0, 0.4)';
+                btn.style.opacity = '1.0';
+            } else {
+                btn.style.filter = 'grayscale(1.0) contrast(0.8)';
+                btn.style.opacity = '0.7';
+                btn.style.border = '2px solid transparent';
+                btn.style.transform = 'scale(1.0)';
+                btn.style.boxShadow = 'none';
             }
+            // Transition przywrócone dla płynności
+            btn.style.transition = 'all 0.2s ease-in-out';
+
+            // Czyszczenie zbędnych nadpisań
+            btn.style.outline = '';
         }
     });
 }
@@ -172,7 +177,7 @@ export function updateTutorialTexts() {
 
 export function updateJoystickToggleLabel() {
     const btn = document.getElementById('toggleJoy');
-    if(!btn) return;
+    if (!btn) return;
     let label = "JOY";
     const currentJoyMode = window.currentJoyMode || 'right';
     if (currentJoyMode === 'left') label = getLang('ui_config_joy_left');
@@ -185,7 +190,7 @@ export function updateToggleLabels() {
     const onTxt = getLang('ui_on') || "WŁ";
     const offTxt = getLang('ui_off') || "WYŁ";
     document.querySelectorAll('.retro-toggle').forEach(btn => {
-        if(btn.id !== 'toggleJoy') {
+        if (btn.id !== 'toggleJoy') {
             if (btn.classList.contains('on')) btn.textContent = onTxt;
             else if (btn.classList.contains('off')) btn.textContent = offTxt;
         }

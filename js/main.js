@@ -86,7 +86,7 @@ function handleResize() {
     if (hudBottom) availableHeight -= hudBottom.offsetHeight;
     canvas.width = window.innerWidth;
     canvas.height = Math.max(300, availableHeight - 10);
-    
+
     if (gameStateRef.camera) {
         gameStateRef.camera.updateViewDimensions(canvas.width, canvas.height);
         if (gameStateRef.game.inMenu && gameStateRef.player) {
@@ -100,33 +100,33 @@ function handleResize() {
 function initializeCanvas() {
     const canvas = document.getElementById('gameCanvas');
     if (!canvas || gameStateRef.canvas) return;
-    
+
     gameStateRef.canvas = canvas;
     gameStateRef.ctx = canvas.getContext('2d');
     handleResize();
-    
+
     window.addEventListener('resize', () => { requestAnimationFrame(handleResize); });
-    
+
     const worldSize = WORLD_CONFIG.SIZE;
     const worldWidth = canvas.width * worldSize;
     const worldHeight = canvas.height * worldSize;
-    
+
     // FIX ETAP 3: Resetowanie timerów wizualnych przy nowej instancji gracza
     gameStateRef.game.playerHitFlashT = 0;
     gameStateRef.game.shakeT = 0;
     gameStateRef.game.isDying = false;
-    
+
     gameStateRef.player = new Player(worldWidth / 2, worldHeight / 2);
     gameStateRef.camera = new Camera(worldWidth, worldHeight, canvas.width, canvas.height);
-    
+
     generateMap(gameStateRef.obstacles, gameStateRef.player, worldWidth, worldHeight);
-    
+
     gameStateRef.bulletsPool = new ObjectPool(PlayerBullet, 500);
     gameStateRef.eBulletsPool = new ObjectPool(EnemyBullet, 500);
     gameStateRef.gemsPool = new ObjectPool(Gem, 3000);
     gameStateRef.particlePool = new ObjectPool(Particle, 2000);
     gameStateRef.hitTextPool = new ObjectPool(HitText, 100);
-    
+
     gameStateRef.bullets = gameStateRef.bulletsPool.activeItems;
     gameStateRef.eBullets = gameStateRef.eBulletsPool.activeItems;
     gameStateRef.gems = gameStateRef.gemsPool.activeItems;
@@ -144,7 +144,7 @@ function updateUiDataReferences() {
     uiData.particles = gameStateRef.particles;
     uiData.hitTexts = gameStateRef.hitTexts;
     uiData.hazards = gameStateRef.hazards;
-    
+
     uiData.loopCallback = (t) => loop(t, gameStateRef, uiData);
     uiData.drawCallback = () => draw(gameStateRef.ctx, gameStateRef, uiData, fps);
 }
@@ -154,12 +154,12 @@ function initTabSwitching() {
         tab.addEventListener('click', (event) => {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            
+
             event.target.classList.add('active');
             const tabNames = ['game', 'config', 'dev', 'guide'];
             const activeTabName = tabNames[index];
             document.getElementById('tab-' + activeTabName).classList.add('active');
-            
+
             if (activeTabName === 'config') {
                 const balance = shopManager.getWalletBalance();
                 const shopPointsEl = document.getElementById('shopWalletPoints');
@@ -192,13 +192,54 @@ launchApp(gameStateRef, uiData, {
         const { wrappedLoadConfig, wrappedStartRun } = initMenuAndEvents();
         initDevTools(gameStateRef, wrappedLoadConfig, wrappedStartRun);
         initInput(handleEscape, handleJoyStart, handleJoyEnd);
-        
-        // FIX Ad 3: Przycisk KONTYNUUJ musi korzystać z logiki handleMenuBack,
-        // aby wymusić pokazanie poczekajki (odliczania) zamiast natychmiastowego wznowienia.
+
+        // FIX Ad 3: Przycisk KONTYNUUJ
         const btnContinue = document.getElementById('btnContinue');
         if (btnContinue) {
-            btnContinue.onclick = () => {
-                handleMenuBack();
+            btnContinue.onclick = () => { handleMenuBack(); };
+        }
+
+        // FIX Ad 4: Logika przycisku "Postaw Kawę" (Full Logic)
+        const btnCoffee = document.getElementById('coffeeBtn');
+        if (btnCoffee) {
+            btnCoffee.onclick = () => {
+                import('./services/skinManager.js').then(sm => {
+                    import('./services/i18n.js').then(i18n => {
+                        const unlockedSkins = sm.getUnlockedSkins();
+                        // FIX: Poprawne ID skina zgodne z gameData.js ('hot', a nie 'skin_dracula_hot')
+                        const skinId = 'hot';
+                        const isAlreadyUnlocked = unlockedSkins.includes(skinId);
+
+                        if (!isAlreadyUnlocked) {
+                            // 1. Odblokuj + Dźwięk
+                            import('./services/audio.js').then(m => m.playSound('LevelUp'));
+                            sm.unlockSkin(skinId);
+
+                            // 2. Auto-equip + Refresh
+                            sm.setCurrentSkin(skinId);
+                            import('./ui/menus.js').then(menus => {
+                                // Jeśli jesteśmy w widoku config, odświeżamy go
+                                const skinSelector = document.getElementById('skinSelector');
+                                if (skinSelector) menus.generateSkinSelector();
+                                // Hack: Jeśli funkcja nie jest wyeksportowana, wymuszamy odświeżenie widoku w następnej klatce
+                                if (window.wrappedGenerateGuide) { /* no-op */ }
+                            });
+
+                            // 3. UI Update (Jednorazowo)
+                            btnCoffee.innerText = i18n.getLang('ui_coffee_unlocked');
+                            // Wymuszenie zielonego tła przez styl inline (najsilniejszy)
+                            btnCoffee.style.backgroundColor = '#4CAF50';
+                            btnCoffee.style.borderColor = '#388E3C';
+                            btnCoffee.style.color = '#fff';
+                            btnCoffee.style.boxShadow = '0 0 20px #4CAF50';
+                            btnCoffee.classList.remove('primary');
+                            btnCoffee.classList.add('success');
+                        } else {
+                            // Już odblokowane - tylko zwykły klik
+                            import('./services/audio.js').then(m => m.playSound('Click'));
+                        }
+                    });
+                });
             };
         }
     }

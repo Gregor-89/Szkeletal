@@ -197,7 +197,10 @@ export function draw(ctx, state, ui, fps) {
         for (const obs of obstacles) {
             if (obs.type === 'water' || obs.isRuined) {
                 const r = obs.size;
-                if (obs.x + r < cullLeft || obs.x - r > cullRight || obs.y + r < cullTop || obs.y - r > cullBottom) continue;
+                // FIX: Culling dla wysokich obiektów (drzewa/chatki)
+                // Sprawdzamy czy "góra" sprite'a (y - r*3) nie wystaje poza dół ekranu
+                // oraz czy "dół" sprite'a (y + r) nie wystaje poza górę ekranu.
+                if (obs.x + r < cullLeft || obs.x - r > cullRight || obs.y + r < cullTop || obs.y - r * 4 > cullBottom) continue;
                 obs.update(state.dt || 0.016, player);
                 obs.draw(ctx, player, game.time);
             }
@@ -224,7 +227,8 @@ export function draw(ctx, state, ui, fps) {
         for (const obs of obstacles) {
             if (obs.type === 'water' || obs.isRuined) continue;
             const r = obs.size;
-            if (obs.x + r < cullLeft || obs.x - r > cullRight || obs.y + r < cullTop || obs.y - r > cullBottom) continue;
+            // FIX: Culling dla render listy (wysokie obiekty)
+            if (obs.x + r < cullLeft || obs.x - r > cullRight || obs.y + r < cullTop || obs.y - r * 4 > cullBottom) continue;
             obs.update(state.dt || 0.016, player);
             renderList.push(obs);
         }

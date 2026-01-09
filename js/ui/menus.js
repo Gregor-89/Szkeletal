@@ -249,7 +249,7 @@ export function switchView(viewId) {
     }
 }
 
-function generateSkinSelector() {
+export function generateSkinSelector() {
     const container = document.getElementById('skinSelector');
     if (!container) return;
     container.innerHTML = '';
