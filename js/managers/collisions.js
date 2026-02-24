@@ -335,7 +335,12 @@ export function checkCollisions(state) {
             if (obstacles) {
                 for (const obs of obstacles) {
                     if (obs.isDead || obs.isRuined) continue;
-                    if (checkCircleCollision(eb.x, eb.y, eb.size, obs.x, obs.y, obs.hitboxRadius)) { eb.release(); break; }
+                    if (checkCircleCollision(eb.x, eb.y, eb.size, obs.x, obs.y, obs.hitboxRadius)) {
+                        if (eb.type !== 'bomb') {
+                            eb.release();
+                            break;
+                        }
+                    }
                 }
             }
         }

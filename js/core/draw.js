@@ -66,7 +66,7 @@ function drawShadow(ctx, x, y, size, visualScale = 1.0, enemyType = 'default') {
 }
 
 function drawEnemyHealthBar(ctx, e) {
-    if ((e.type !== 'tank' && e.type !== 'elite' && e.type !== 'wall' && e.type !== 'lumberjack') || !e.showHealthBar) return;
+    if ((e.type !== 'tank' && e.type !== 'elite' && e.type !== 'wall' && e.type !== 'lumberjack' && e.type !== 'amenda') || !e.showHealthBar) return;
 
     const visualScale = e.visualScale || 1.5;
     const w = 40; const h = 6; const bx = -w / 2;
@@ -75,6 +75,7 @@ function drawEnemyHealthBar(ctx, e) {
     if (e.type === 'elite') yOffsetMod = 38;
     else if (e.type === 'wall') yOffsetMod = 44;
     else if (e.type === 'lumberjack') yOffsetMod = 20;
+    else if (e.type === 'amenda') yOffsetMod = 15;
 
     const by = -(spriteH / 2) - 8 + yOffsetMod;
     ctx.save(); ctx.translate(e.x, e.y);
@@ -328,7 +329,7 @@ export function draw(ctx, state, ui, fps) {
         const currentRadius = b.maxRadius * progress; const opacity = 0.9 * (1 - progress);
         if (b.isSiege) {
             const pulse = 1 + 0.2 * Math.sin(b.life * 8); const r = b.maxRadius * pulse;
-            ctx.lineWidth = 5; ctx.strokeStyle = `rgba(255, 0, 255, ${opacity})`; ctx.shadowBlur = 15;
+            ctx.lineWidth = 5; ctx.strokeStyle = `rgba(255, 0, 255, ${opacity})`; ctx.shadowBlur = 0;
             ctx.fillStyle = `rgba(255, 0, 255, ${0.15 * opacity})`; ctx.setLineDash([5, 3]);
             ctx.beginPath(); ctx.arc(Math.round(b.x), Math.round(b.y), r, 0, Math.PI * 2); ctx.stroke(); ctx.fill();
             ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;

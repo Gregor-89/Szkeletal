@@ -1,5 +1,5 @@
 // ==============
-// MAIN.JS (v0.114c - Full Restoration & Resume Fix)
+// MAIN.JS (v0.118 - Amenda Boss & API Fixes)
 // Lokalizacja: /js/main.js
 // ==============
 

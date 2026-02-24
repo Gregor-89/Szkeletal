@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [v0.118] - 2026-02-24 (Amenda, The Potato Queen Update)
+### ⭐ Nowości (Features)
+- **Nowy Boss (Amenda)**: Dodano unikalnego przeciwnika 'Amenda' z własnym zachowaniem, dedykowanymi sprite'ami, oraz skalowaniem zdrowia (poziom + minuty przetrwania).
+- **Ziemniaczana Bomba**: Implementacja nowego ataku obszarowego. Amenda rzuca granatami (kartoflami), które przelatują nad przeszkodami na mapie (chatki/drzewa) i ogłuszają gracza rykoszetem (obrażenia ignorują otoczenie).
+- **Przewodnik (Lore)**: Dodano wpisy o postaci (pato-świat) do systemu słownika, w tym do Przewodnika i Ekranu Statystyk (ilość pokonanych Amend). Wsparcie dla języka: Polskiego, Angielskiego i Rumuńskiego.
+- **Nawigacja (UI)**: Dodano powiadomienie o pojawieniu się bossa (AMENDA) w locie, wskaźnik off-screen (fioletowa strzałka na brzegu ekranu), oraz własny, widoczny pod postacią Boss Healthbar.
+
+### 🐛 Poprawki Błędów
+- **Nieśmiertelność DevTools**: Poprawiono obiegową logikę życia (`hpScale`), dzięki której zrespawnowani bossowie (Zombie State) prawidłowo upuszczają rzadki łup przy zjeściu do 0% HP zamiast błąkać się zacinając animację.
+- **Migotanie Kierunku Jittering**: Wyeliminowano drżączkę kamery celowania postaci. Amenda zachowuje teraz ustabilizowany tor patrzenia na Gracza wykorzystując deadzone w dystansie, a nie pędzie bezwładności.
+- **Crash Pocisków**: Usunięto krytyczny błąd de-referencji `TypeError: player is not defined` wyrzucający aplikację w funkcji `handleMovement()`.
+
+
 ## [v0.117] - 2026-01-09 (Poprawki Spatial Spacing & Intro)
 ### 🐛 Poprawki Błędów
 - **Nawigacja Intro**: Usunięto sterowanie klawiszami (Strzałki/Enter) w intro komiksowym. Nawigacja odbywa się teraz wyłącznie za pomocą przycisków na ekranie, aby zapobiec przypadkowemu pominięciu.

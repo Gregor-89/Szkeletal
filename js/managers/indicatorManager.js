@@ -23,7 +23,7 @@ function isOffScreen(obj, camera) {
   const viewRight = camera.offsetX + camera.viewWidth + margin;
   const viewTop = camera.offsetY - margin;
   const viewBottom = camera.offsetY + camera.viewHeight + margin;
-  
+
   return (
     obj.x < viewLeft ||
     obj.x > viewRight ||
@@ -42,15 +42,15 @@ export function updateIndicators(state, dt) {
     return; // Pomiń aktualizację w tej klatce
   }
   updateTimer = UPDATE_INTERVAL;
-  
+
   // 2. Wyczyść stary cache i pobierz potrzebne dane
   activeIndicators = [];
   const { player, enemies, pickups, chests, camera } = state;
-  
+
   if (!player || !camera) return;
-  
+
   // 3. Iteruj po obiektach o wysokim priorytecie
-  
+
   // A. Skrzynie (Chests)
   for (const chest of chests) {
     if (isOffScreen(chest, camera)) {
@@ -62,7 +62,7 @@ export function updateIndicators(state, dt) {
       });
     }
   }
-  
+
   // B. Pickupy (Bonusy)
   for (const pickup of pickups) {
     if (isOffScreen(pickup, camera)) {
@@ -74,23 +74,24 @@ export function updateIndicators(state, dt) {
       });
     }
   }
-  
+
   // C. Wrogowie (Bossowie: Elita, Drwal, Wężojad)
   // Definicja kolorów dla poszczególnych typów bossów
   const BOSS_COLORS = {
     'elite': '#e91e63', // Różowy
     'lumberjack': '#795548', // Brązowy
-    'snakeEater': '#4CAF50' // Zielony
+    'snakeEater': '#4CAF50', // Zielony
+    'amenda': '#E040FB' // Fioletowy
   };
-  
+
   for (const enemy of enemies) {
     const color = BOSS_COLORS[enemy.type];
-    
+
     // Jeśli to nie jest jeden z bossów, pomiń
     if (!color) {
       continue;
     }
-    
+
     if (isOffScreen(enemy, camera)) {
       activeIndicators.push({
         x: enemy.x,
@@ -110,38 +111,38 @@ export function drawIndicators(ctx, state) {
   if (!activeIndicators.length) {
     return;
   }
-  
+
   const { canvas, player, camera } = state;
-  
+
   // Granice rysowania na ekranie (HUD)
   const screenLeft = SCREEN_MARGIN;
   const screenRight = canvas.width - SCREEN_MARGIN;
   const screenTop = SCREEN_MARGIN;
   const screenBottom = canvas.height - SCREEN_MARGIN;
-  
+
   // Środek ekranu (nasz punkt odniesienia)
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
-  
+
   ctx.save();
   ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
   ctx.shadowBlur = 5;
-  
+
   for (const indicator of activeIndicators) {
     // Oblicz pozycję celu w przestrzeni ekranu
     const targetScreenX = indicator.x - camera.offsetX;
     const targetScreenY = indicator.y - camera.offsetY;
-    
+
     // Oblicz wektor od środka ekranu do celu
     const dx = targetScreenX - centerX;
     const dy = targetScreenY - centerY;
     const angle = Math.atan2(dy, dx);
-    
+
     // Znajdź punkt na krawędzi ekranu
     // (Uproszczona, ale wystarczająco szybka matematyka "clippingu")
     const H = canvas.height / 2 - SCREEN_MARGIN;
     const W = canvas.width / 2 - SCREEN_MARGIN;
-    
+
     // Sprawdź, z którą krawędzią (pionową czy poziomą) przetnie się wektor
     let finalX, finalY;
     if (Math.abs(dy / dx) < H / W) {
@@ -163,14 +164,14 @@ export function drawIndicators(ctx, state) {
         finalY = screenTop;
       }
     }
-    
+
     // Narysuj wskaźnik (trójkąt)
     ctx.fillStyle = indicator.color;
-    
+
     ctx.save();
     ctx.translate(finalX, finalY);
     ctx.rotate(angle); // Obróć wskaźnik w kierunku celu
-    
+
     const size = indicator.size;
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -178,9 +179,9 @@ export function drawIndicators(ctx, state) {
     ctx.lineTo(-size * 1.5, size * 0.8);
     ctx.closePath();
     ctx.fill();
-    
+
     ctx.restore();
   }
-  
+
   ctx.restore();
 }

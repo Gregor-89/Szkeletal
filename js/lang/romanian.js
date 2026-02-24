@@ -268,6 +268,8 @@ export const LANG_RO = {
   enemy_lumberjack_desc: "Gardian al cringe-ului forestier. Aruncă topoare curcubeu rotitoare și lasă o 'Urmă Toxică'. Ai grijă, sau te anulează!",
   enemy_snakeEater_name: "Mâncătorul de Șerpi",
   enemy_snakeEater_desc: "Altar Mobil. Nu atacă. Urmează Contele. Te vindecă o dată pe minut dacă îl atingi.",
+  enemy_amenda_name: "Amenda",
+  enemy_amenda_desc: "Fosta aleasă a Contelui, pentru care gătea cu răbdare cartofi delicioși. Acum, într-un act de dispreț, se întoarce din pato-lume să arunce cu cartofi explozivi în el!",
 
   enemy_hazard_name: "Fosă",
   enemy_hazard_desc: "Încetinește Contele și provoacă daune. Rănește și haterii (cu excepția Szkeletal). Cartofii putrezesc în Fosă.",
@@ -356,6 +358,7 @@ export const LANG_RO = {
   stat_killed_wall: "Sindroame Asediu Distruse",
   stat_killed_lumberjack: "Lumberjack Zjebadlos Uciși",
   stat_killed_snakeEater: "MâncătoriDeȘerpi Uciși",
+  stat_killed_amenda: "Amende Ucise",
 
   ui_installed: "INSTALAT",
   ui_multishot: "Multishot",

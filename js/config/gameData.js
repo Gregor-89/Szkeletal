@@ -170,7 +170,8 @@ export const WEAPON_CONFIG = {
   AUTOGUN: { BASE_SPEED: 800, BASE_DAMAGE: 5, BASE_FIRE_RATE: 900, BASE_SIZE: 3, SPRITE: 'projectile_venom', SPRITE_SCALE: 4.0 },
   NOVA: { SPRITE: 'projectile_nova', SPRITE_SCALE: 4.0, SPEED: 500 },
   RANGED_ENEMY_BULLET: { SPEED: 400, DAMAGE: 10, SIZE: 12, SPRITE_WIDTH: 22, SPRITE_HEIGHT: 64, TRAIL_COLOR: '#29b6f6', TRAIL_LIFE: 0.1, TRAIL_SPEED: 80, TRAIL_INTERVAL: 0.05 },
-  LUMBERJACK_AXE: { SPEED: 550, DAMAGE: 25, SIZE: 48, SPRITE_WIDTH: 40, SPRITE_HEIGHT: 86, TRAIL_INTERVAL: 0.015, TRAIL_SIZE: 20, TRAIL_OFFSET: 40, TRAIL_OPACITY: 0.40, ROTATION_SPEED: 8, IMPACT_PARTICLE_COUNT: 60 }
+  LUMBERJACK_AXE: { SPEED: 550, DAMAGE: 25, SIZE: 48, SPRITE_WIDTH: 40, SPRITE_HEIGHT: 86, TRAIL_INTERVAL: 0.015, TRAIL_SIZE: 20, TRAIL_OFFSET: 40, TRAIL_OPACITY: 0.40, ROTATION_SPEED: 8, IMPACT_PARTICLE_COUNT: 60 },
+  AMENDA_BOMB: { SPEED: 400, DAMAGE: 30, RADIUS: 270, FUSE_TIME: 3.0, SIZE: 16, SPRITE_WIDTH: 22, SPRITE_HEIGHT: 22 }
 };
 
 const BASE_DROP_RATES = { heal: 0.02, magnet: 0.012, speed: 0.01, shield: 0.007, bomb: 0.005, freeze: 0.005 };
@@ -280,6 +281,20 @@ export const ENEMY_STATS = {
     healthBarOffsetY: -125,
     quoteOffsetY: -100,
     hitTextOffsetY: 0
+  },
+  amenda: {
+    type: 'amenda',
+    hp: 250,
+    speed: 130,
+    size: 90,
+    damage: 15,
+    color: '#E040FB',
+    score: 120,
+    xp: 3,
+    drops: {},
+    attackRange: 450,
+    attackCooldown: 3.5,
+    shadowOffset: 0.20
   }
 };
 

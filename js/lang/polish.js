@@ -277,6 +277,8 @@ export const LANG_PL = {
   enemy_lumberjack_desc: "Strażnik leśnego cringe'u. Rzuca wirującymi tęczowymi toporami i zostawia toksyczny 'Tęczowy Ślad'. Uważaj, bo Cię scanceluje!",
   enemy_snakeEater_name: "Wężojad",
   enemy_snakeEater_desc: "Mobilna Kapliczka. Nie atakuje. Podążą za Hrabią. Raz na minutę uleczy Cię, jeśli go dotkniesz.",
+  enemy_amenda_name: "Amenda",
+  enemy_amenda_desc: "Niegdyś wybranka Hrabiego, dla którego cierpliwie gotowała pyszne ziemniaczki. Teraz w akcie pogardy powraca z patoświata, by rzucać w niego wybuchowymi kartoflami!",
 
   enemy_hazard_name: "Szambo",
   enemy_hazard_desc: "Spowalnia Hrabiego i zadaje obrażenia. Rani też hejterów (z wyjątkiem Szkeletala). Ziemniaki w Szambie gniją.",
@@ -365,6 +367,7 @@ export const LANG_PL = {
   stat_killed_wall: "Zniszczonych Syndromów Oblężenia",
   stat_killed_lumberjack: "Zabitych Drwali Zjebadlo",
   stat_killed_snakeEater: "Zabitych Wężojadów",
+  stat_killed_amenda: "Zabitych Amend",
 
   ui_installed: "ZAINSTALOWANO",
   ui_multishot: "Multishot",

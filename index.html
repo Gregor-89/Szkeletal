@@ -373,6 +373,9 @@
               <button class="retro-btn small danger" onclick="window.devStartPreset('lumberjack')">DRWAL (BOSS)</button>
               <button class="retro-btn small success" onclick="window.devStartPreset('snakeEater')">WĘŻOJAD
                 (BOSS)</button>
+              <button class="retro-btn small" style="color:#E040FB; border-color:#E040FB;"
+                onclick="window.devStartPreset('amenda')">AMENDA
+                (BOSS)</button>
             </div>
           </div>
           <div class="dev-section">
@@ -439,6 +442,7 @@
                 <option value="elite">Elite</option>
                 <option value="lumberjack">Drwal</option>
                 <option value="snakeEater">Wężojad</option>
+                <option value="amenda">Amenda</option>
               </select>
             </div>
             <div class="dev-control"><label>Rate:</label><input type="number" id="devSpawnRate" step="0.001"
@@ -515,94 +519,93 @@
   <div id="gameOverOverlay" class="retro-overlay" style="display:none;">
     <div class="retro-frame">
       <h2 id="gameOverTitle" class="retro-title text-red">KONIEC GRY</h2>
-      <div id="gameOverQuote" class="retro-quote pulse" 
+      <div id="gameOverQuote" class="retro-quote pulse"
         style="color:#FFA07A; font-style:italic; margin-bottom:40px; text-align:center; min-height:1.5em; font-size:1.6rem; line-height:1.4; padding:0 10px;">
       </div>
       <div class="gameover-stats-fancy">
-          <div class="fancy-stat-box main"><span id="lblGOScore" class="fancy-label">TWÓJ WYNIK</span><span
-              id="finalScore" class="fancy-value gold">0</span></div>
-          <div class="fancy-stat-row">
-            <div class="fancy-stat-box"><span id="lblGOTime" class="fancy-label">CZAS</span><span id="finalTime"
-                class="fancy-value">0:00</span></div>
-            <div class="fancy-stat-box"><span id="lblGOLevel" class="fancy-label">POZIOM</span><span id="finalLevel"
-                class="fancy-value">1</span></div>
-            <div class="fancy-stat-box"><span id="lblGOKills" class="fancy-label">ZABICI</span><span
-                id="totalKillsSpanGO" class="fancy-value kill-count">0</span></div>
-          </div>
-        </div>
-        <div class="score-tabs-container go-tabs">
-          <button id="tabGOLocal" class="score-tab active small">LOKALNE</button>
-          <button id="tabGOOnline" class="score-tab small">ONLINE</button>
-        </div>
-        <div id="goOnlineFilters" class="score-filters" style="display:none;">
-          <button class="filter-btn active" data-period="today">DZIŚ</button>
-          <button class="filter-btn" data-period="weekly">TYDZIEŃ</button>
-          <button class="filter-btn" data-period="monthly">MIESIĄC</button>
-          <button class="filter-btn" data-period="all">ALL</button>
-        </div>
-        <div class="retro-scroll-box">
-          <div id="goScoreLoading" style="display:none; text-align:center; padding:10px; color:#FFD700;">WCZYTYWANIE...
-          </div>
-          <table id="goScoreTable" class="sortable-table">
-            <thead>
-              <tr>
-                <th data-sort="tempRank">#</th>
-                <th data-sort="name">NICK</th>
-                <th data-sort="score">PKT</th>
-                <th data-sort="kills">ZAB</th>
-                <th data-sort="level">LVL</th>
-                <th data-sort="time">CZAS</th>
-                <th data-sort="date">DATA</th>
-              </tr>
-            </thead>
-            <tbody id="scoresBodyGameOver"></tbody>
-          </table>
-        </div>
-        <div class="gameover-extra-buttons"
-          style="display:flex; justify-content:center; gap:10px; width:100%; flex-wrap:wrap; margin-bottom:10px;">
-          <button id="btnSubmitScore" class="retro-btn small indigo"
-            style="display:none; flex:1; min-width:140px;">WYŚLIJ
-            WYNIK</button>
-          <button id="btnClearScoresGO" class="retro-btn small danger" style="flex:1; min-width:140px;">WYCZYŚĆ
-            LOKALNE</button>
-        </div>
-        <div id="submitMsg" style="text-align:center; font-size:1rem; margin-bottom:5px; height:20px;"></div>
-        <div class="menu-actions">
-          <button id="btnRetry" class="retro-btn primary">JESZCZE RAZ</button>
-          <button id="btnMenu" class="retro-btn">MENU</button>
+        <div class="fancy-stat-box main"><span id="lblGOScore" class="fancy-label">TWÓJ WYNIK</span><span
+            id="finalScore" class="fancy-value gold">0</span></div>
+        <div class="fancy-stat-row">
+          <div class="fancy-stat-box"><span id="lblGOTime" class="fancy-label">CZAS</span><span id="finalTime"
+              class="fancy-value">0:00</span></div>
+          <div class="fancy-stat-box"><span id="lblGOLevel" class="fancy-label">POZIOM</span><span id="finalLevel"
+              class="fancy-value">1</span></div>
+          <div class="fancy-stat-box"><span id="lblGOKills" class="fancy-label">ZABICI</span><span id="totalKillsSpanGO"
+              class="fancy-value kill-count">0</span></div>
         </div>
       </div>
-    </div>
-
-    <div id="confirmOverlay" class="retro-overlay" style="display:none;">
-      <div class="retro-frame small text-center">
-        <h2 id="confirmTitle" class="retro-title">POTWIERDŹ</h2>
-        <p id="confirmText">Czy wyczyścić wyniki?</p>
-        <div class="menu-actions">
-          <button id="btnConfirmYes" class="retro-btn danger">TAK</button>
-          <button id="btnConfirmNo" class="retro-btn">NIE</button>
+      <div class="score-tabs-container go-tabs">
+        <button id="tabGOLocal" class="score-tab active small">LOKALNE</button>
+        <button id="tabGOOnline" class="score-tab small">ONLINE</button>
+      </div>
+      <div id="goOnlineFilters" class="score-filters" style="display:none;">
+        <button class="filter-btn active" data-period="today">DZIŚ</button>
+        <button class="filter-btn" data-period="weekly">TYDZIEŃ</button>
+        <button class="filter-btn" data-period="monthly">MIESIĄC</button>
+        <button class="filter-btn" data-period="all">ALL</button>
+      </div>
+      <div class="retro-scroll-box">
+        <div id="goScoreLoading" style="display:none; text-align:center; padding:10px; color:#FFD700;">WCZYTYWANIE...
         </div>
+        <table id="goScoreTable" class="sortable-table">
+          <thead>
+            <tr>
+              <th data-sort="tempRank">#</th>
+              <th data-sort="name">NICK</th>
+              <th data-sort="score">PKT</th>
+              <th data-sort="kills">ZAB</th>
+              <th data-sort="level">LVL</th>
+              <th data-sort="time">CZAS</th>
+              <th data-sort="date">DATA</th>
+            </tr>
+          </thead>
+          <tbody id="scoresBodyGameOver"></tbody>
+        </table>
+      </div>
+      <div class="gameover-extra-buttons"
+        style="display:flex; justify-content:center; gap:10px; width:100%; flex-wrap:wrap; margin-bottom:10px;">
+        <button id="btnSubmitScore" class="retro-btn small indigo" style="display:none; flex:1; min-width:140px;">WYŚLIJ
+          WYNIK</button>
+        <button id="btnClearScoresGO" class="retro-btn small danger" style="flex:1; min-width:140px;">WYCZYŚĆ
+          LOKALNE</button>
+      </div>
+      <div id="submitMsg" style="text-align:center; font-size:1rem; margin-bottom:5px; height:20px;"></div>
+      <div class="menu-actions">
+        <button id="btnRetry" class="retro-btn primary">JESZCZE RAZ</button>
+        <button id="btnMenu" class="retro-btn">MENU</button>
       </div>
     </div>
+  </div>
 
-    <script type="module" src="js/main.js"></script>
-    <script>
-      function menuNav(viewId) {
-        document.querySelectorAll('.menu-view').forEach(el => el.classList.remove('active'));
-        document.getElementById(viewId).classList.add('active');
-        if (viewId === 'view-scores' && window.wrappedDisplayScores) window.wrappedDisplayScores();
-        if (viewId === 'view-guide' && window.wrappedGenerateGuide) window.wrappedGenerateGuide();
-        if (viewId === 'view-shop' && window.wrappedGenerateShop) window.wrappedGenerateShop();
-      }
-      document.getElementById('navScores').onclick = () => menuNav('view-scores');
-      document.getElementById('navConfig').onclick = () => menuNav('view-config');
-      document.getElementById('navGuide').onclick = () => menuNav('view-guide');
-      document.getElementById('navCoffee').onclick = () => menuNav('view-coffee');
-      document.getElementById('navDev').onclick = () => menuNav('view-dev');
-      document.getElementById('navShop').onclick = () => menuNav('view-shop');
+  <div id="confirmOverlay" class="retro-overlay" style="display:none;">
+    <div class="retro-frame small text-center">
+      <h2 id="confirmTitle" class="retro-title">POTWIERDŹ</h2>
+      <p id="confirmText">Czy wyczyścić wyniki?</p>
+      <div class="menu-actions">
+        <button id="btnConfirmYes" class="retro-btn danger">TAK</button>
+        <button id="btnConfirmNo" class="retro-btn">NIE</button>
+      </div>
+    </div>
+  </div>
 
-      document.querySelectorAll('.nav-back').forEach(b => b.onclick = () => menuNav('view-main'));
-    </script>
+  <script type="module" src="js/main.js"></script>
+  <script>
+    function menuNav(viewId) {
+      document.querySelectorAll('.menu-view').forEach(el => el.classList.remove('active'));
+      document.getElementById(viewId).classList.add('active');
+      if (viewId === 'view-scores' && window.wrappedDisplayScores) window.wrappedDisplayScores();
+      if (viewId === 'view-guide' && window.wrappedGenerateGuide) window.wrappedGenerateGuide();
+      if (viewId === 'view-shop' && window.wrappedGenerateShop) window.wrappedGenerateShop();
+    }
+    document.getElementById('navScores').onclick = () => menuNav('view-scores');
+    document.getElementById('navConfig').onclick = () => menuNav('view-config');
+    document.getElementById('navGuide').onclick = () => menuNav('view-guide');
+    document.getElementById('navCoffee').onclick = () => menuNav('view-coffee');
+    document.getElementById('navDev').onclick = () => menuNav('view-dev');
+    document.getElementById('navShop').onclick = () => menuNav('view-shop');
+
+    document.querySelectorAll('.nav-back').forEach(b => b.onclick = () => menuNav('view-main'));
+  </script>
 </body>
 
 </html>

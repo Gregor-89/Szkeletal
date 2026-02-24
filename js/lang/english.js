@@ -270,6 +270,8 @@ export const LANG_EN = {
   enemy_lumberjack_desc: "Guardian of forest cringe. Throws spinning rainbow axes and leaves toxic 'Rainbow Trail'. Watch out, or get cancelled!",
   enemy_snakeEater_name: "SnakeEater",
   enemy_snakeEater_desc: "Mobile Shrine. Does not attack. Follows the Count. Heals you once a minute if you touch him.",
+  enemy_amenda_name: "Amenda",
+  enemy_amenda_desc: "Once the Count's chosen one, for whom she patiently cooked delicious potatoes. Now, in an act of scorn, she returns from the patho-world to throw explosive spuds at him!",
 
   enemy_hazard_name: "Cesspool",
   enemy_hazard_desc: "Slows the Count and deals damage. Also hurts haters (except Szkeletal). Potatoes rot in the Cesspool.",
@@ -358,6 +360,7 @@ export const LANG_EN = {
   stat_killed_wall: "Siege Syndromes Destroyed",
   stat_killed_lumberjack: "Lumberjack Zjebadlos Killed",
   stat_killed_snakeEater: "SnakeEaters Killed",
+  stat_killed_amenda: "Amendas Killed",
 
   ui_installed: "INSTALLED",
   ui_multishot: "Multishot",

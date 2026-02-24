@@ -21,6 +21,7 @@ import { EliteEnemy } from '../entities/enemies/eliteEnemy.js';
 import { WallEnemy } from '../entities/enemies/wallEnemy.js';
 import { LumberjackEnemy } from '../entities/enemies/lumberjackEnemy.js';
 import { SnakeEaterEnemy } from '../entities/enemies/snakeEaterEnemy.js';
+import { AmendaEnemy } from '../entities/enemies/amendaEnemy.js';
 
 import { ENEMY_STATS, SIEGE_EVENT_CONFIG, WALL_DETONATION_CONFIG, GAME_CONFIG, SPAWN_TIMINGS } from '../config/gameData.js';
 
@@ -45,7 +46,8 @@ export const ENEMY_CLASS_MAP = {
     elite: EliteEnemy,
     wall: WallEnemy,
     lumberjack: LumberjackEnemy,
-    snakeEater: SnakeEaterEnemy
+    snakeEater: SnakeEaterEnemy,
+    amenda: AmendaEnemy
 };
 
 const PICKUP_CLASS_MAP = {
@@ -57,7 +59,7 @@ const PICKUP_CLASS_MAP = {
     freeze: FreezePickup
 };
 
-const BOSS_TYPES = ['elite', 'lumberjack', 'snakeEater'];
+const BOSS_TYPES = ['elite', 'lumberjack', 'snakeEater', 'amenda'];
 
 export function getAvailableEnemyTypes(game) {
     const t = game.time;
@@ -263,6 +265,9 @@ export function spawnElite(enemies, game, canvas, enemyIdCounter, camera) {
         if (bossType === 'snakeEater') {
             game.newEnemyWarningT = 3.0;
             game.newEnemyWarningType = getLang('enemy_snakeEater_name').toUpperCase();
+        } else if (bossType === 'amenda') {
+            game.newEnemyWarningT = 3.0;
+            game.newEnemyWarningType = getLang('enemy_amenda_name').toUpperCase();
         }
     }
 
@@ -408,7 +413,7 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
             }
         }
 
-        if (e.type === 'elite' || e.type === 'lumberjack' || e.type === 'snakeEater') {
+        if (e.type === 'elite' || e.type === 'lumberjack' || e.type === 'snakeEater' || e.type === 'amenda') {
             chests.push(new Chest(e.x, e.y));
         }
 
@@ -452,7 +457,7 @@ export function killEnemy(idx, e, game, settings, enemies, particlePool, gemsPoo
         }
     }
 
-    if ((e.type === 'elite' || e.type === 'lumberjack' || e.type === 'snakeEater') && preventDrops) {
+    if ((e.type === 'elite' || e.type === 'lumberjack' || e.type === 'snakeEater' || e.type === 'amenda') && preventDrops) {
         const color = ENEMY_STATS[e.type].color;
         spawnColorParticles(particlePool, e.x, e.y, color, 20, 350, 0.6);
     }

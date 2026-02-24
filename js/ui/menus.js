@@ -386,6 +386,7 @@ export function generateGuide() {
         { asset: 'enemy_elite', nameKey: 'enemy_elite_name', descKey: 'enemy_elite_desc' },
         { asset: 'enemy_lumberjack', nameKey: 'enemy_lumberjack_name', descKey: 'enemy_lumberjack_desc' },
         { asset: 'enemy_snakeEater', nameKey: 'enemy_snakeEater_name', descKey: 'enemy_snakeEater_desc' },
+        { asset: 'enemy_amenda', nameKey: 'enemy_amenda_name', descKey: 'enemy_amenda_desc' },
         { header: getLang('ui_guide_weapons_title') || "Bronie" },
         { asset: 'icon_whip', nameKey: 'perk_whip_name', descKey: 'perk_whip_desc' },
         { asset: 'icon_autogun', nameKey: 'perk_autogun_name', descKey: 'perk_autogun_desc' },
